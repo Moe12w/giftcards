@@ -6,6 +6,15 @@ export type OrderStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 export type VendorStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 
 export type AccentTone = 'teal' | 'pink' | 'lavender' | 'gold' | 'sky';
+
+/**
+ * How a gift card is redeemed.
+ * - `value`  : the balance is money and each redemption spends an amount.
+ * - `sessions`: the card holds a number of sessions (a massage, a class, a
+ *              night at the hotel). Every redemption uses exactly one session.
+ */
+export type RedemptionMode = 'value' | 'sessions';
+
 export type CategoryId =
   | 'coffee'
   | 'dining'
@@ -72,6 +81,10 @@ export interface Offer {
   occasions?: OccasionId[];
   rating?: number;
   location?: string;
+  /** Value cards spend money, experience cards spend sessions. */
+  redemption_mode?: RedemptionMode;
+  /** Number of sessions included when `redemption_mode` is `sessions`. */
+  session_count?: number;
 }
 
 export interface GiftCard {
@@ -98,6 +111,30 @@ export interface GiftCard {
   delivery_status?: 'scheduled' | 'delivered' | 'opened';
   scheduled_for?: string | null;
   message?: string | null;
+  /** Value cards spend money, experience cards spend sessions. */
+  redemption_mode?: RedemptionMode;
+  /** Sessions included on issue (experience cards only). */
+  sessions_total?: number;
+  /** Sessions still available (experience cards only). */
+  sessions_remaining?: number;
+  /** Vendor that issued the card — used by the vendor dashboard. */
+  vendor_id?: string;
+}
+
+/** One redemption against a gift card. */
+export interface RedemptionEntry {
+  id: string;
+  card_id: string;
+  /** A session was used, or money was spent. */
+  kind: 'session' | 'value';
+  /** Sessions consumed (always 1 for a session redemption). */
+  sessions?: number;
+  /** Minor units spent on a value card. */
+  amount_minor?: number;
+  /** Who performed the redemption — the vendor, or the card holder in demo. */
+  actor: string;
+  created_at: string;
+  note?: string;
 }
 
 export interface Order {

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -12,8 +12,9 @@ import { Money } from '@/src/components/Money';
 import { PageHeader } from '@/src/components/PageHeader';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
-import { listMyCards } from '@/src/lib/data';
-import type { CardStatus, GiftCard } from '@/src/lib/types';
+import { useCards } from '@/src/lib/cards';
+import { isSessionCard } from '@/src/lib/sessions';
+import type { CardStatus } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
@@ -39,19 +40,8 @@ const FILTERS = [
 
 export default function GiftsScreen() {
   const { t, i18n } = useTranslation();
-  const [cards, setCards] = useState<GiftCard[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    listMyCards()
-      .then((data) => active && setCards(data))
-      .catch(() => undefined)
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
-  }, []);
+  const { ready, myCards: cards, sessionsLeft, valueLeft } = useCards();
+  const loading = !ready;
 
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
 
@@ -60,13 +50,13 @@ export default function GiftsScreen() {
     const scheduled = cards.filter((card) => card.delivery_status === 'scheduled');
     return {
       totalBalance: active.reduce(
-        (sum, card) => sum + (card.balance_minor ?? card.original_value_minor),
+        (sum, card) => (isSessionCard(card) ? sum : sum + valueLeft(card)),
         0,
       ),
       activeCards: active,
       scheduledCards: scheduled,
     };
-  }, [cards]);
+  }, [cards, valueLeft]);
 
   return (
     <Screen tabbed>
@@ -138,7 +128,9 @@ export default function GiftsScreen() {
                 title={card.vendor_name ?? card.offer_title ?? t('gift.detailsTitle')}
                 icon={card.icon}
                 tone={card.tone}
-                amountMinor={card.balance_minor ?? card.original_value_minor}
+                amountMinor={valueLeft(card)}
+                sessionsTotal={isSessionCard(card) ? card.sessions_total ?? 1 : undefined}
+                sessionsRemaining={isSessionCard(card) ? sessionsLeft(card) : undefined}
                 message={card.message ?? undefined}
                 meta={
                   card.expires_at
@@ -170,6 +162,8 @@ export default function GiftsScreen() {
                     icon={card.icon}
                     tone={card.tone}
                     amountMinor={card.original_value_minor}
+                    sessionsTotal={isSessionCard(card) ? card.sessions_total ?? 1 : undefined}
+                    sessionsRemaining={isSessionCard(card) ? sessionsLeft(card) : undefined}
                     compact
                     meta={
                       card.scheduled_for

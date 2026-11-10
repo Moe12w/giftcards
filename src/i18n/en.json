@@ -724,7 +724,29 @@
     "offers": "Offers",
     "redeem": "Redeem",
     "transactions": "Transactions",
-    "onboarding": "Vendor onboarding"
+    "onboarding": "Vendor onboarding",
+    "dashboardSubtitle": "Serve the experience cards you sold",
+    "sessionsToServe": "Sessions to serve",
+    "experienceCards": "Experience cards",
+    "valueCards": "Value cards",
+    "expiringSoon": "Expiring soon",
+    "valueOutstanding": "Value still outstanding",
+    "noCards": "No cards yet",
+    "noCardsBody": "Cards bought from your offers will show up here.",
+    "holder": "Gift holder",
+    "serveSession": "Use one session for {{name}}",
+    "serveTitle": "Session used",
+    "served": "One session used for {{name}}. {{left}} left on the card.",
+    "noSessionsLeft": "This card has no sessions left.",
+    "allSessionsUsed": "All sessions used",
+    "expiredCard": "This card has expired.",
+    "redeemValue": "Redeem value",
+    "redeemTitle": "Redeem",
+    "noBalanceLeft": "There is no balance left on this card.",
+    "valueRedeemed": "Redeemed {{amount}} fils",
+    "sessionUsed": "One session used",
+    "recentActivity": "Recent activity",
+    "footerNote": "Session redemptions are recorded in the append-only ledger."
   },
   "admin": {
     "title": "Admin",
@@ -936,5 +958,18 @@
     "sendEmptyHint": "Add at least one gift card before sending.",
     "onlyOwnerTitle": "Only the creator can send",
     "onlyOwnerBody": "The basket creator sends the finished box to the recipient."
+  },
+  "sessions": {
+    "remaining": "Sessions left",
+    "leftOf": "{{remaining}} of {{total}} left",
+    "included": "Sessions included",
+    "sessionCount_one": "{{count}} session",
+    "sessionCount_other": "{{count}} sessions",
+    "packagePrice": "Package price",
+    "hint": "Each visit uses one session. The card closes when the last one is used.",
+    "scanHint": "The vendor scans this code to use one session.",
+    "howItWorks": "This is an experience card. There is no money balance — every visit uses one session, and the card is finished with the last session.",
+    "privacy": "One scan per visit. The card keeps track of the sessions left.",
+    "offerNote": "Includes {{count}} sessions — each visit uses one."
   }
 }

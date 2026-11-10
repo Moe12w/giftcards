@@ -174,6 +174,13 @@ export default function ProfileScreen() {
 
       <Card>
         <ListRow
+          icon="ticket"
+          tone="teal"
+          title={t('vendor.dashboard')}
+          value={t('vendor.title')}
+          onPress={() => router.push('/(vendor)/vendor')}
+        />
+        <ListRow
           icon="shield"
           tone="teal"
           title={t('profile.support')}

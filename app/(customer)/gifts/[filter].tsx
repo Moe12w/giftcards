@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +8,8 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { Screen } from '@/src/components/Screen';
-import { listMyCards } from '@/src/lib/data';
+import { useCards } from '@/src/lib/cards';
+import { isSessionCard } from '@/src/lib/sessions';
 import type { GiftCard } from '@/src/lib/types';
 import { colors, spacing } from '@/src/theme';
 
@@ -53,19 +54,8 @@ export default function GiftFilterScreen() {
   const { t, i18n } = useTranslation();
   const { filter: rawFilter } = useLocalSearchParams<{ filter: string }>();
   const filter = (FILTERS.includes(rawFilter as Filter) ? rawFilter : 'all') as Filter;
-  const [cards, setCards] = useState<GiftCard[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    listMyCards()
-      .then((data) => active && setCards(data))
-      .catch(() => undefined)
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
-  }, []);
+  const { ready, myCards: cards, sessionsLeft, valueLeft } = useCards();
+  const loading = !ready;
 
   const results = useMemo(() => cards.filter((card) => matches(card, filter)), [cards, filter]);
 
@@ -105,7 +95,9 @@ export default function GiftFilterScreen() {
               title={card.vendor_name ?? card.offer_title ?? t('gift.detailsTitle')}
               icon={card.icon}
               tone={card.tone}
-              amountMinor={card.balance_minor ?? card.original_value_minor}
+              amountMinor={valueLeft(card)}
+              sessionsTotal={isSessionCard(card) ? card.sessions_total ?? 1 : undefined}
+              sessionsRemaining={isSessionCard(card) ? sessionsLeft(card) : undefined}
               message={card.message ?? undefined}
               meta={
                 card.expires_at

@@ -13,6 +13,7 @@ import {
 } from '@expo-google-fonts/figtree';
 
 import { AuthProvider } from '@/src/lib/auth';
+import { CardProvider } from '@/src/lib/cards';
 import { initI18n } from '@/src/i18n';
 import { colors } from '@/src/theme';
 
@@ -55,21 +56,23 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-          animation: 'slide_from_right',
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(onboarding)" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(customer)" />
-        <Stack.Screen name="(vendor)" />
-        <Stack.Screen name="(admin)" />
-      </Stack>
+      <CardProvider>
+        <StatusBar style="dark" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+            animation: 'slide_from_right',
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(onboarding)" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(customer)" />
+          <Stack.Screen name="(vendor)" />
+          <Stack.Screen name="(admin)" />
+        </Stack>
+      </CardProvider>
     </AuthProvider>
   );
 }

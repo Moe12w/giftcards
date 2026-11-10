@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { MapPin, Star } from 'lucide-react-native';
+import { MapPin, Star, Ticket } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/src/components/Badge';
@@ -16,6 +16,7 @@ import { Screen } from '@/src/components/Screen';
 import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
+import { isSessionOffer } from '@/src/lib/sessions';
 import type { AccentTone, Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 
@@ -130,6 +131,16 @@ export default function GiftDetailScreen() {
           <Text style={styles.from}>{t('common.from')}</Text>
           <Money minor={offer.min_amount_minor} style={styles.amount} />
         </View>
+        {isSessionOffer(offer) ? (
+          <Card tone="teal" style={styles.sessionNote}>
+            <Ticket size={16} color={colors.ink} />
+            <Text style={styles.sessionNoteText}>
+              {t('sessions.offerNote', {
+                count: offer.session_count ?? 1,
+              })}
+            </Text>
+          </Card>
+        ) : null}
         <Badge
           label={
             offer.valid_until
@@ -196,8 +207,7 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.xs,
     color: colors.text,
   },
-  section: { gap: spacing.sm },
-  sectionTitle: {
+  section: { gap: spacing.sm },  sectionTitle: {
     fontFamily: fonts.bold,
     fontSize: fontSizes.lg,
     color: colors.text,
@@ -209,6 +219,8 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   amountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: spacing.xs },
+  sessionNote: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  sessionNoteText: { flex: 1, fontSize: fontSizes.sm, color: colors.text, lineHeight: 19 },
   from: {
     fontFamily: fonts.medium,
     fontSize: fontSizes.sm,

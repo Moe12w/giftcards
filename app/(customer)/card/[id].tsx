@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -7,13 +7,16 @@ import { Badge, type BadgeTone } from '@/src/components/Badge';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
+import { Glyph } from '@/src/components/Glyph';
 import { Money } from '@/src/components/Money';
 import { QRCode } from '@/src/components/QRCode';
 import { Screen } from '@/src/components/Screen';
-import { getMyCard } from '@/src/lib/data';
+import { SessionMeter } from '@/src/components/SessionMeter';
+import { useCards } from '@/src/lib/cards';
 import { formatMoney } from '@/src/lib/money';
+import { isSessionCard } from '@/src/lib/sessions';
 import type { CardStatus, GiftCard } from '@/src/lib/types';
-import { colors, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 const statusTone: Record<CardStatus, BadgeTone> = {
   issued: 'warning',
@@ -26,23 +29,27 @@ const statusTone: Record<CardStatus, BadgeTone> = {
 export default function CardDetailScreen() {
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { ready, getCard, sessionsLeft, valueLeft, canRedeem } = useCards();
   const [card, setCard] = useState<GiftCard | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let active = true;
     if (!id) return;
-    getMyCard(id)
-      .then((data) => active && setCard(data))
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [id]);
+    setCard(getCard(id));
+  }, [getCard, id]);
 
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
 
-  if (loading) {
+  const sessionCard = useMemo(() => (card ? isSessionCard(card) : false), [card]);
+  const remaining = card ? sessionsLeft(card) : 0;
+  const balance = card ? valueLeft(card) : 0;
+  const redeemable = card ? canRedeem(card) : false;
+  const redeemValue = `giftly:card:${card?.id ?? ''}`;
+
+  function walletUnavailable() {
+    Alert.alert(t('cards.addToWallet'), t('cards.walletNotConfigured'));
+  }
+
+  if (!ready) {
     return (
       <Screen>
         <ActivityIndicator color={colors.teal} style={styles.loader} />
@@ -59,14 +66,6 @@ export default function CardDetailScreen() {
     );
   }
 
-  const balance = card.balance_minor ?? card.original_value_minor;
-  const canRedeem = card.status === 'claimed' || card.status === 'issued';
-  const redeemValue = `giftly:card:${card.id}`;
-
-  function walletUnavailable() {
-    Alert.alert(t('cards.addToWallet'), t('cards.walletNotConfigured'));
-  }
-
   return (
     <Screen>
       <FlowHeader title={t('cards.details')} onBack={() => router.back()} />
@@ -76,8 +75,26 @@ export default function CardDetailScreen() {
           <Text style={styles.vendor}>{card.vendor_name ?? card.offer_title ?? 'Gift card'}</Text>
           <Badge label={t(`cards.${card.status}`)} tone={statusTone[card.status]} />
         </View>
-        <Text style={styles.balanceLabel}>{t('cards.balance')}</Text>
-        <Money minor={balance} style={styles.balance} />
+
+        {sessionCard ? (
+          <>
+            <Text style={styles.balanceLabel}>{t('sessions.remaining')}</Text>
+            <Text style={styles.sessionCount}>
+              {t('sessions.leftOf', { remaining, total: card.sessions_total ?? 1 })}
+            </Text>
+            <SessionMeter
+              remaining={remaining}
+              total={card.sessions_total ?? 1}
+              tone={card.tone ?? 'teal'}
+            />
+          </>
+        ) : (
+          <>
+            <Text style={styles.balanceLabel}>{t('cards.balance')}</Text>
+            <Money minor={balance} style={styles.balance} />
+          </>
+        )}
+
         <Text style={styles.expiry}>
           {card.expires_at
             ? t('cards.expires', {
@@ -87,23 +104,41 @@ export default function CardDetailScreen() {
         </Text>
       </Card>
 
-      {canRedeem ? (
+      {redeemable ? (
         <Card style={styles.qrCard}>
           <Text style={styles.qrTitle}>{t('cards.showCode')}</Text>
           <QRCode value={redeemValue} />
-          <Text style={styles.qrHint}>{t('cards.scanHint')}</Text>
+          <Text style={styles.qrHint}>
+            {sessionCard ? t('sessions.scanHint') : t('cards.scanHint')}
+          </Text>
         </Card>
       ) : null}
 
       <Card style={styles.infoCard}>
-        <Row label={t('cards.originalValue')} value={formatMoney(card.original_value_minor, lang)} />
+        <Row
+          label={sessionCard ? t('sessions.packagePrice') : t('cards.originalValue')}
+          value={formatMoney(card.original_value_minor, lang)}
+        />
+        {sessionCard ? (
+          <Row
+            label={t('sessions.included')}
+            value={t('sessions.sessionCount', { count: card.sessions_total ?? 1 })}
+          />
+        ) : null}
         {card.recipient_name ? <Row label={t('offer.recipientName')} value={card.recipient_name} /> : null}
       </Card>
+
+      {sessionCard ? (
+        <Card tone="teal" style={styles.howCard}>
+          <Glyph name="ticket" size={18} />
+          <Text style={styles.howText}>{t('sessions.howItWorks')}</Text>
+        </Card>
+      ) : null}
 
       <Button label={t('cards.appleWallet')} variant="secondary" onPress={walletUnavailable} />
       <Button label={t('cards.googleWallet')} variant="secondary" onPress={walletUnavailable} />
 
-      <Text style={styles.privacy}>{t('cards.codeOnce')}</Text>
+      <Text style={styles.privacy}>{sessionCard ? t('sessions.privacy') : t('cards.codeOnce')}</Text>
     </Screen>
   );
 }
@@ -119,14 +154,19 @@ function Row({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   loader: { marginTop: spacing.xxl },
-  back: { alignSelf: 'flex-start', paddingVertical: spacing.xs, color: colors.primary, fontWeight: '600' },
   title: { fontSize: fontSizes.xxl, fontWeight: '700', color: colors.text },
   hero: { gap: spacing.xs, alignItems: 'center' },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', alignSelf: 'stretch' },
   vendor: { fontSize: fontSizes.md, fontWeight: '700', color: colors.text, flex: 1 },
   balanceLabel: { fontSize: fontSizes.sm, color: colors.textMuted, marginTop: spacing.md },
   balance: { fontSize: 44, fontWeight: '800', color: colors.primaryDark },
-  expiry: { fontSize: fontSizes.sm, color: colors.textMuted },
+  sessionCount: {
+    fontFamily: fonts.extrabold,
+    fontSize: 40,
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  expiry: { fontSize: fontSizes.sm, color: colors.textMuted, marginTop: spacing.xs },
   qrCard: { alignItems: 'center', gap: spacing.sm },
   qrTitle: { fontSize: fontSizes.md, fontWeight: '700', color: colors.text },
   qrHint: { fontSize: fontSizes.sm, color: colors.textMuted, textAlign: 'center' },
@@ -134,5 +174,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
   rowLabel: { fontSize: fontSizes.md, color: colors.textMuted },
   rowValue: { fontSize: fontSizes.md, color: colors.text, fontWeight: '600', flexShrink: 1, textAlign: 'right' },
+  howCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  howText: { flex: 1, fontSize: fontSizes.sm, color: colors.text, lineHeight: 19 },
   privacy: { fontSize: fontSizes.xs, color: colors.textMuted, textAlign: 'center', lineHeight: 18 },
 });

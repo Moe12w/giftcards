@@ -17,6 +17,9 @@ interface GiftCardVisualProps {
   logoUrl?: string | null;
   tone?: AccentTone;
   amountMinor?: number;
+  /** Experience cards show the sessions left instead of a money balance. */
+  sessionsTotal?: number;
+  sessionsRemaining?: number;
   meta?: string;
   message?: string;
   badge?: { label: string; tone: BadgeTone };
@@ -38,6 +41,8 @@ export function GiftCardVisual({
   logoUrl,
   tone = 'lavender',
   amountMinor,
+  sessionsTotal,
+  sessionsRemaining,
   meta,
   message,
   badge,
@@ -45,6 +50,7 @@ export function GiftCardVisual({
   compact = false,
 }: GiftCardVisualProps) {
   const { t } = useTranslation();
+  const isSession = typeof sessionsTotal === 'number' && sessionsTotal > 0;
 
   const body = (
     <Card tone={cardTones[tone]} style={compact ? styles.compact : undefined}>
@@ -68,7 +74,17 @@ export function GiftCardVisual({
         {badge ? <Badge label={badge.label} tone={badge.tone} /> : null}
       </View>
 
-      {typeof amountMinor === 'number' ? (
+      {isSession ? (
+        <View style={styles.balanceWrap}>
+          <Text style={styles.balanceLabel}>{t('sessions.remaining')}</Text>
+          <Text style={styles.sessionCount}>
+            {t('sessions.leftOf', {
+              remaining: sessionsRemaining ?? sessionsTotal ?? 0,
+              total: sessionsTotal ?? 0,
+            })}
+          </Text>
+        </View>
+      ) : typeof amountMinor === 'number' ? (
         <View style={styles.balanceWrap}>
           <Text style={styles.balanceLabel}>{t('gifts.balance')}</Text>
           <Money minor={amountMinor} style={styles.balance} />
@@ -113,6 +129,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   balance: { fontSize: fontSizes.xxl, color: colors.text },
+  sessionCount: { fontFamily: fonts.extrabold, fontSize: fontSizes.xl, color: colors.text },
   meta: {
     marginTop: spacing.sm,
     fontFamily: fonts.medium,
