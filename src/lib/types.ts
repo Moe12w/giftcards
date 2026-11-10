@@ -65,7 +65,8 @@ export interface Offer {
   created_at: string;
   vendor?: Pick<Vendor, 'id' | 'name' | 'name_ar' | 'logo_url' | 'banner_url'>;
   // Presentation metadata used by the customer app.
-  emoji?: string;
+  /** Semantic glyph key from `src/lib/glyphs.ts`. */
+  icon?: string;
   tone?: AccentTone;
   category?: CategoryId;
   occasions?: OccasionId[];
@@ -91,7 +92,8 @@ export interface GiftCard {
   balance_minor?: number;
   vendor_name?: string;
   offer_title?: string;
-  emoji?: string;
+  /** Semantic glyph key from `src/lib/glyphs.ts`. */
+  icon?: string;
   tone?: AccentTone;
   delivery_status?: 'scheduled' | 'delivered' | 'opened';
   scheduled_for?: string | null;
@@ -178,7 +180,8 @@ export interface BasketItem {
   vendor_name: string;
   title: string;
   amount_minor: number;
-  emoji?: string;
+  /** Semantic glyph key from `src/lib/glyphs.ts`. */
+  icon?: string;
   tone?: AccentTone;
   logo_url?: string | null;
   banner_url?: string | null;

@@ -45,13 +45,13 @@ export default function PreferencesScreen() {
 
       <Card>
         <ListRow
-          icon="🌐"
+          icon="globe"
           tone="lavender"
           title={t('profile.language')}
           onPress={() => router.push('/(customer)/profile/language')}
         />
         <ListRow
-          icon="🔔"
+          icon="bell"
           tone="pink"
           title={t('profile.notifications')}
           last

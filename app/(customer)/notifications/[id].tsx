@@ -15,12 +15,12 @@ import type { NotificationKind } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 const KIND_ICON: Record<NotificationKind, string> = {
-  received: '🎁',
-  delivered: '📬',
-  opened: '👀',
-  redeemed: '✅',
-  expiry: '⏳',
-  promo: '✨',
+  received: 'gift',
+  delivered: 'mail',
+  opened: 'eye',
+  redeemed: 'check',
+  expiry: 'clock',
+  promo: 'justBecause',
 };
 
 const KIND_TONE: Record<NotificationKind, IconTileTone> = {
@@ -44,7 +44,7 @@ export default function NotificationDetailScreen() {
         <EmptyState
           title={t('states.not-found.title')}
           body={t('states.not-found.body')}
-          icon="🔔"
+          icon="bell"
           tone="lavender"
         />
       </Screen>
@@ -56,7 +56,7 @@ export default function NotificationDetailScreen() {
       <FlowHeader title={t('notifications.detailTitle')} onBack={() => router.back()} />
 
       <Card tone="teal" style={styles.card}>
-        <IconTile emoji={KIND_ICON[item.kind]} size={64} tone={KIND_TONE[item.kind]} />
+        <IconTile icon={KIND_ICON[item.kind]} size={64} tone={KIND_TONE[item.kind]} />
         <Text style={styles.title}>{t(item.titleKey)}</Text>
         <Text style={styles.date}>{formatDate(item.created_at, i18n.language)}</Text>
         <Text style={styles.body}>{t(item.bodyKey)}</Text>

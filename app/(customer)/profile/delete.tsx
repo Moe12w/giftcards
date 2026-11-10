@@ -9,6 +9,7 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function DeleteAccountScreen() {
   const { t } = useTranslation();
@@ -35,7 +36,7 @@ export default function DeleteAccountScreen() {
       <FlowHeader title={t('profile.deleteAccount')} onBack={() => router.back()} />
 
       <Card tone="pink">
-        <Text style={styles.warning}>⚠️</Text>
+        <Glyph name="warning" size={26} />
         <Text style={styles.body}>{t('profile.deleteBody')}</Text>
       </Card>
 
@@ -51,7 +52,6 @@ export default function DeleteAccountScreen() {
 }
 
 const styles = StyleSheet.create({
-  warning: { fontSize: 40, textAlign: 'center' },
   body: {
     fontFamily: fonts.regular,
     fontSize: fontSizes.md,

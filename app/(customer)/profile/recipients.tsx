@@ -24,7 +24,7 @@ export default function RecipientsScreen() {
         <EmptyState
           title={t('profile.noRecipients')}
           body={t('send.recipientSubtitle')}
-          icon="👥"
+          icon="users"
           tone="lavender"
         />
       ) : (

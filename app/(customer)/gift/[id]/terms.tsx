@@ -8,6 +8,7 @@ import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function GiftTermsScreen() {
   const { t } = useTranslation();
@@ -27,7 +28,7 @@ export default function GiftTermsScreen() {
       </Card>
 
       <View style={styles.ruleRow}>
-        <Text style={styles.ruleIcon}>✅</Text>
+        <Glyph name="check" size={18} />
         <Text style={styles.ruleText}>{t('gift.redemption')}</Text>
       </View>
       <Button
@@ -51,7 +52,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   ruleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  ruleIcon: { fontSize: 18 },
   ruleText: {
     flex: 1,
     fontFamily: fonts.semibold,

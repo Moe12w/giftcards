@@ -94,7 +94,7 @@ export default function GiftFilterScreen() {
         <EmptyState
           title={t('gifts.emptyTitle')}
           body={t('gifts.emptyBody')}
-          icon="🎁"
+          icon="gift"
           tone="teal"
         />
       ) : (
@@ -103,7 +103,7 @@ export default function GiftFilterScreen() {
             <GiftCardVisual
               key={card.id}
               title={card.vendor_name ?? card.offer_title ?? t('gift.detailsTitle')}
-              emoji={card.emoji}
+              icon={card.icon}
               tone={card.tone}
               amountMinor={card.balance_minor ?? card.original_value_minor}
               message={card.message ?? undefined}

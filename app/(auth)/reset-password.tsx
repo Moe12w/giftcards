@@ -8,6 +8,7 @@ import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function ResetPasswordScreen() {
   const { t } = useTranslation();
@@ -35,7 +36,7 @@ export default function ResetPasswordScreen() {
     return (
       <Screen>
         <View style={styles.center}>
-          <Text style={styles.icon}>✅</Text>
+          <Glyph name="check" size={40} />
           <Text style={styles.title}>{t('authExtra.passwordUpdated')}</Text>
           <Button label={t('auth.signIn')} onPress={() => router.replace('/(auth)/login')} />
         </View>
@@ -86,5 +87,4 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
-  icon: { fontSize: 56 },
 });

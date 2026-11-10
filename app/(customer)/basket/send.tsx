@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Sparkles } from 'lucide-react-native';
+import { PartyPopper } from 'lucide-react-native';
 
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
@@ -91,7 +91,7 @@ export default function SendBasketScreen() {
         <EmptyState
           title={t('states.not-found.title')}
           body={t('states.not-found.body')}
-          icon="🎁"
+          icon="gift"
           tone="lavender"
         />
       </Screen>
@@ -105,7 +105,7 @@ export default function SendBasketScreen() {
         <EmptyState
           title={t('basket.onlyOwnerTitle')}
           body={t('basket.onlyOwnerBody')}
-          icon="🔒"
+          icon="lock"
           tone="lavender"
         />
         <Button label={t('basket.backToBaskets')} onPress={() => router.back()} />
@@ -120,7 +120,7 @@ export default function SendBasketScreen() {
         <EmptyState
           title={t('basket.completedTitle')}
           body={t('basket.completedBody')}
-          icon="🎉"
+          icon="congratulations"
           tone="gold"
         />
         <Button label={t('basket.backToBaskets')} onPress={() => router.back()} />
@@ -165,7 +165,7 @@ export default function SendBasketScreen() {
       </Card>
 
       <Card tone="teal" style={styles.info}>
-        <Sparkles size={18} color={colors.ink} />
+        <PartyPopper size={18} color={colors.ink} />
         <Text style={styles.infoText}>{t('basket.sendBody')}</Text>
       </Card>
 

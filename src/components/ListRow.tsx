@@ -28,7 +28,7 @@ export function ListRow({
 }: ListRowProps) {
   const content = (
     <View style={[styles.row, !last && styles.divider]}>
-      {icon ? <IconTile emoji={icon} size={42} tone={tone} /> : null}
+      {icon ? <IconTile icon={icon} size={42} tone={tone} /> : null}
       <View style={styles.text}>
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}

@@ -46,7 +46,7 @@ export default function SendRecipientScreen() {
         <EmptyState
           title={t('profile.noRecipients')}
           body={t('send.recipientSubtitle')}
-          icon="👥"
+          icon="users"
           tone="lavender"
         />
       ) : (
@@ -74,13 +74,13 @@ export default function SendRecipientScreen() {
 
       <Card style={styles.actions}>
         <ListRow
-          icon="✍️"
+          icon="pen"
           tone="teal"
           title={t('send.addRecipient')}
           onPress={() => router.push('/(customer)/send/recipient-details')}
         />
         <ListRow
-          icon="📇"
+          icon="creditCard"
           tone="pink"
           title={t('send.contacts')}
           last

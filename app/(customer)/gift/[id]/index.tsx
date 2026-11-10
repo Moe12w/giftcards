@@ -13,7 +13,7 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { ListRow } from '@/src/components/ListRow';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
-import { offerEmoji, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import type { AccentTone, Offer } from '@/src/lib/types';
@@ -58,7 +58,7 @@ export default function GiftDetailScreen() {
         <EmptyState
           title={t('states.error.title')}
           body={t('states.error.body')}
-          icon="⚠️"
+          icon="warning"
           tone="pink"
         />
         <Button label={t('common.retry')} onPress={() => router.replace(`/(customer)/gift/${id}`)} />
@@ -73,7 +73,7 @@ export default function GiftDetailScreen() {
         <EmptyState
           title={t('states.not-found.title')}
           body={t('states.not-found.body')}
-          icon="🔍"
+          icon="warning"
           tone="lavender"
         />
       </Screen>
@@ -99,7 +99,7 @@ export default function GiftDetailScreen() {
       <Card tone={tone === 'sky' ? 'sky' : tone}>
         <View style={styles.heroTop}>
           <IconTile
-            emoji={offerEmoji(offer)}
+            icon={offerIcon(offer)}
             imageUrl={offer.vendor?.logo_url ?? undefined}
             size={72}
             tone={tone as IconTileTone}
@@ -146,13 +146,13 @@ export default function GiftDetailScreen() {
 
       <Card style={styles.section}>
         <ListRow
-          icon="📄"
+          icon="search"
           tone="teal"
           title={t('gift.terms')}
           onPress={() => router.push(`/(customer)/gift/${offer.id}/terms`)}
         />
         <ListRow
-          icon="📲"
+          icon="file"
           tone="lavender"
           title={t('gift.redemption')}
           last

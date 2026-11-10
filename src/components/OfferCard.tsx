@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, ArrowRight, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { offerEmoji, offerTitle, offerTone } from '../lib/catalog';
+import { offerIcon, offerTitle, offerTone } from '../lib/catalog';
 import type { AccentTone, Offer } from '../lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '../theme';
 import { Card, type CardTone } from './Card';
@@ -33,7 +33,7 @@ export function OfferCard({ offer, index = 0, onPress }: OfferCardProps) {
       <Card>
         <View style={styles.row}>
           <IconTile
-            emoji={offerEmoji(offer, index)}
+            icon={offerIcon(offer, index)}
             imageUrl={offer.vendor?.logo_url ?? undefined}
             size={64}
             tone={tone as IconTileTone}
@@ -94,7 +94,7 @@ export function OfferTile({ offer, index = 0, onPress }: OfferCardProps) {
     >
       <Card tone={tone as CardTone} style={styles.tileCard}>
         <IconTile
-          emoji={offerEmoji(offer, index)}
+          icon={offerIcon(offer, index)}
           imageUrl={offer.vendor?.logo_url ?? undefined}
           size={52}
           tone={tone as IconTileTone}

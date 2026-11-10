@@ -136,7 +136,7 @@ export default function ContributeScreen() {
         <EmptyState
           title={t('states.not-found.title')}
           body={t('states.not-found.body')}
-          icon="🎁"
+          icon="gift"
           tone="lavender"
         />
       </Screen>
@@ -150,7 +150,7 @@ export default function ContributeScreen() {
         <EmptyState
           title={t('basket.completedTitle')}
           body={t('basket.completedBody')}
-          icon="🎉"
+          icon="congratulations"
           tone="gold"
         />
         <Button label={t('basket.backToBaskets')} onPress={() => router.back()} />
@@ -165,7 +165,7 @@ export default function ContributeScreen() {
         <EmptyState
           title={t('basket.noItemsTitle')}
           body={t('basket.noItemsBody')}
-          icon="🎁"
+          icon="gift"
           tone="lavender"
         />
         <Button label={t('common.back')} onPress={() => router.back()} />
@@ -202,7 +202,7 @@ export default function ContributeScreen() {
         {items.map(({ offer, amountMinor }) => (
           <View key={offer.id} style={styles.itemRow}>
             <IconTile
-              emoji={offer.emoji}
+              icon={offer.icon}
               imageUrl={offer.vendor?.logo_url}
               size={42}
               tone={(offerTone(offer) as AccentTone) as IconTileTone}

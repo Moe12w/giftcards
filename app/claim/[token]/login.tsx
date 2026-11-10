@@ -8,6 +8,7 @@ import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function ClaimLoginScreen() {
   const { t } = useTranslation();
@@ -39,7 +40,7 @@ export default function ClaimLoginScreen() {
   return (
     <Screen>
       <View style={styles.hero}>
-        <Text style={styles.emoji}>👋</Text>
+        <Glyph name="users" size={38} />
         <Text style={styles.title}>{t('claimExtra.recipientLoginTitle')}</Text>
         <Text style={styles.body}>{t('claimExtra.recipientLoginBody')}</Text>
       </View>
@@ -73,7 +74,6 @@ export default function ClaimLoginScreen() {
 
 const styles = StyleSheet.create({
   hero: { gap: spacing.xs, marginTop: spacing.xl, marginBottom: spacing.sm },
-  emoji: { fontSize: 38 },
   title: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.display,

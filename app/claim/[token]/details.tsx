@@ -23,7 +23,7 @@ export default function ClaimDetailsScreen() {
 
       <Card tone="teal">
         <View style={styles.row}>
-          <IconTile emoji="☕" size={60} tone="gold" />
+          <IconTile icon="coffee" size={60} tone="gold" />
           <View style={styles.copy}>
             <Text style={styles.vendor}>{DEMO_CLAIM.vendor}</Text>
             <Text style={styles.from}>{t('claimExtra.from', { name: DEMO_CLAIM.sender })}</Text>
@@ -43,13 +43,13 @@ export default function ClaimDetailsScreen() {
 
       <Card>
         <ListRow
-          icon="📷"
+          icon="coffee"
           tone="teal"
           title={t('claimExtra.qrTitle')}
           onPress={() => router.push(`/claim/${token}/qr`)}
         />
         <ListRow
-          icon="📲"
+          icon="camera"
           tone="lavender"
           title={t('claimExtra.instructionsTitle')}
           last

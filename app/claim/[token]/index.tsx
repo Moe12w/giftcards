@@ -11,6 +11,7 @@ import { Screen } from '@/src/components/Screen';
 import { DEMO_CLAIM } from '@/src/lib/claim';
 import { formatDate } from '@/src/lib/time';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function ClaimLandingScreen() {
   const { t, i18n } = useTranslation();
@@ -20,7 +21,7 @@ export default function ClaimLandingScreen() {
     return (
       <Screen>
         <View style={styles.center}>
-          <Text style={styles.icon}>😕</Text>
+          <Glyph name="help" size={40} />
           <Text style={styles.title}>{t('claim.invalidTitle')}</Text>
           <Text style={styles.subtitle}>{t('claim.invalidBody')}</Text>
         </View>
@@ -33,7 +34,7 @@ export default function ClaimLandingScreen() {
       <View style={styles.hero}>
         <View style={styles.blob} />
         <View style={styles.heroCircle}>
-          <Text style={styles.heroEmoji}>🎁</Text>
+          <Glyph name="gift" size={44} />
         </View>
         <Text style={styles.title}>{t('claim.title')}</Text>
         <Text style={styles.subtitle}>{t('claim.subtitle', { vendor: DEMO_CLAIM.vendor, amount: '' })}</Text>
@@ -41,7 +42,7 @@ export default function ClaimLandingScreen() {
 
       <Card tone="teal">
         <View style={styles.vendorRow}>
-          <IconTile emoji="☕" size={56} tone="gold" />
+          <IconTile icon="coffee" size={56} tone="gold" />
           <View style={styles.vendorCopy}>
             <Text style={styles.vendor}>{DEMO_CLAIM.vendor}</Text>
             <Text style={styles.from}>{t('claim.from', { name: DEMO_CLAIM.sender })}</Text>
@@ -70,7 +71,6 @@ export default function ClaimLandingScreen() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.sm },
-  icon: { fontSize: 56 },
   hero: { alignItems: 'center', gap: spacing.xs, marginTop: spacing.lg },
   blob: {
     position: 'absolute',
@@ -91,7 +91,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
-  heroEmoji: { fontSize: 56 },
   title: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.display,

@@ -2,6 +2,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { colors, fonts, radii } from '../theme';
+import { Glyph } from './Glyph';
 
 interface AvatarProps {
   name?: string | null;
@@ -18,7 +19,7 @@ const tones = {
 } as const;
 
 export function Avatar({ name, size = 48, tone = 'lavender', style }: AvatarProps) {
-  const initial = name?.trim()?.charAt(0)?.toUpperCase() || '✦';
+  const initial = name?.trim()?.charAt(0)?.toUpperCase();
   return (
     <View
       style={[
@@ -32,7 +33,11 @@ export function Avatar({ name, size = 48, tone = 'lavender', style }: AvatarProp
         style,
       ]}
     >
-      <Text style={[styles.initial, { fontSize: size * 0.4 }]}>{initial}</Text>
+      {initial ? (
+        <Text style={[styles.initial, { fontSize: size * 0.4 }]}>{initial}</Text>
+      ) : (
+        <Glyph name="gift" size={size * 0.44} />
+      )}
     </View>
   );
 }

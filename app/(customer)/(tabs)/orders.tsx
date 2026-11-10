@@ -44,7 +44,7 @@ export default function OrdersScreen() {
       {loading ? (
         <ActivityIndicator color={colors.primary} style={styles.loader} />
       ) : orders.length === 0 ? (
-        <EmptyState title={t('orders.noOrders')} body={t('orders.noOrdersBody')} icon="🧾" />
+        <EmptyState title={t('orders.noOrders')} body={t('orders.noOrdersBody')} icon="receipt" />
       ) : (
         <View style={styles.list}>
           {orders.map((order) => (

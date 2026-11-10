@@ -16,12 +16,12 @@ import type { NotificationKind } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 const KIND_ICON: Record<NotificationKind, string> = {
-  received: '🎁',
-  delivered: '📬',
-  opened: '👀',
-  redeemed: '✅',
-  expiry: '⏳',
-  promo: '✨',
+  received: 'gift',
+  delivered: 'mail',
+  opened: 'eye',
+  redeemed: 'check',
+  expiry: 'clock',
+  promo: 'justBecause',
 };
 
 const KIND_TONE: Record<NotificationKind, IconTileTone> = {
@@ -64,7 +64,7 @@ export default function NotificationsScreen() {
         <EmptyState
           title={t('notifications.emptyTitle')}
           body={t('notifications.emptyBody')}
-          icon="🔔"
+          icon="bell"
           tone="lavender"
         />
       ) : (
@@ -79,7 +79,7 @@ export default function NotificationsScreen() {
             >
               <Card tone={item.read ? 'surface' : 'teal'} style={styles.item}>
                 <IconTile
-                  emoji={KIND_ICON[item.kind]}
+                  icon={KIND_ICON[item.kind]}
                   size={46}
                   tone={KIND_TONE[item.kind]}
                 />

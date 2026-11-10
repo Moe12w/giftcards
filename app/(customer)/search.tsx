@@ -65,7 +65,7 @@ export default function SearchScreen() {
         <EmptyState
           title={t('explore.noResults')}
           body={t('explore.noResultsBody')}
-          icon="🔍"
+          icon="search"
           tone="lavender"
         />
       ) : (

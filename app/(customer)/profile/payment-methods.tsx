@@ -35,7 +35,7 @@ export default function PaymentMethodsScreen() {
         <EmptyState
           title={t('profile.noPaymentMethods')}
           body={t('profile.addFirstCard')}
-          icon="💳"
+          icon="creditCard"
           tone="teal"
         />
       ) : (

@@ -7,6 +7,7 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Screen } from '@/src/components/Screen';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function ClaimAddScreen() {
   const { t } = useTranslation();
@@ -17,7 +18,7 @@ export default function ClaimAddScreen() {
       <View style={styles.center}>
         <View style={styles.blob} />
         <View style={styles.circle}>
-          <Text style={styles.emoji}>🔐</Text>
+          <Glyph name="key" size={38} />
         </View>
         <Text style={styles.title}>{t('claimExtra.addTitle')}</Text>
         <Text style={styles.body}>{t('claimExtra.addBody')}</Text>
@@ -64,7 +65,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.md,
   },
-  emoji: { fontSize: 68 },
   title: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.xxl,

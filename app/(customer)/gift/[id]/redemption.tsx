@@ -11,9 +11,9 @@ import { Screen } from '@/src/components/Screen';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 const STEPS = [
-  { emoji: '🔗', key: 'open' },
-  { emoji: '📷', key: 'scan' },
-  { emoji: '➗', key: 'partial' },
+  { icon: 'link', key: 'open' },
+  { icon: 'camera', key: 'scan' },
+  { icon: 'link', key: 'partial' },
 ] as const;
 
 export default function GiftRedemptionScreen() {
@@ -31,7 +31,7 @@ export default function GiftRedemptionScreen() {
       <View style={styles.steps}>
         {STEPS.map((step, index) => (
           <Card key={step.key} style={styles.step}>
-            <IconTile emoji={step.emoji} size={46} tone="lavender" />
+            <IconTile icon={step.icon} size={46} tone="lavender" />
             <View style={styles.stepCopy}>
               <Text style={styles.stepIndex}>{index + 1}</Text>
               <Text style={styles.stepText}>{t(`claimExtra.instructionsTitle`)}</Text>

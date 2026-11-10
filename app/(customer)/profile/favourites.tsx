@@ -37,7 +37,7 @@ export default function FavouritesScreen() {
         <EmptyState
           title={t('profile.noFavourites')}
           body={t('explore.browseBusinesses')}
-          icon="🏪"
+          icon="store"
           tone="lavender"
         />
       ) : (

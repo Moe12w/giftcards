@@ -11,8 +11,9 @@ import { Money } from './Money';
 
 interface GiftCardVisualProps {
   title: string;
-  emoji?: string;
-  /** Vendor logo image URL — renders the logo instead of the emoji when present. */
+  /** Semantic glyph key — shown when the card has no vendor logo. */
+  icon?: string;
+  /** Vendor logo image URL — renders the logo instead of the glyph when present. */
   logoUrl?: string | null;
   tone?: AccentTone;
   amountMinor?: number;
@@ -33,7 +34,7 @@ const cardTones: Record<AccentTone, CardTone> = {
 
 export function GiftCardVisual({
   title,
-  emoji = '🎁',
+  icon = 'gift',
   logoUrl,
   tone = 'lavender',
   amountMinor,
@@ -49,7 +50,7 @@ export function GiftCardVisual({
     <Card tone={cardTones[tone]} style={compact ? styles.compact : undefined}>
       <View style={styles.topRow}>
         <IconTile
-          emoji={emoji}
+          icon={icon}
           imageUrl={logoUrl}
           size={compact ? 42 : 48}
           tone={tone as IconTileTone}

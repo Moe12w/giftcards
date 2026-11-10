@@ -65,7 +65,7 @@ export default function DeliveryScreen() {
             >
               <Card tone={active ? 'teal' : 'surface'} style={styles.method}>
                 <Text style={styles.methodEmoji}>
-                  {method === 'email' ? '✉️' : method === 'sms' ? '💬' : '🔗'}
+                  {method === 'email' ? 'mail' : method === 'sms' ? 'message' : 'link'}
                 </Text>
                 <Text style={styles.methodLabel}>
                   {method === 'email'

@@ -43,7 +43,7 @@ export default function CollectionScreen() {
         <EmptyState
           title={t('explore.noResults')}
           body={t('explore.noResultsBody')}
-          icon="🎁"
+          icon="gift"
           tone="lavender"
         />
       ) : (

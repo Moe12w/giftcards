@@ -1,67 +1,22 @@
 // src/components/CollectionTile.tsx
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import {
-  Cake,
-  Clapperboard,
-  Coffee,
-  Dumbbell,
-  Gift,
-  GraduationCap,
-  HandHeart,
-  Heart,
-  HeartHandshake,
-  Leaf,
-  PartyPopper,
-  ShoppingBag,
-  Snowflake,
-  Sparkles,
-  Star,
-  TreePalm,
-  UtensilsCrossed,
-  type LucideIcon,
-} from 'lucide-react-native';
+
 import { colors, edges, fonts, fontSizes, radii, spacing } from '../theme';
+import { glyphIcon } from '../lib/glyphs';
 import type { AccentTone } from '../lib/types';
 
 interface CollectionTileProps {
   label: string;
-  emoji?: string;
+  /** Semantic glyph key from `src/lib/glyphs.ts`. */
+  icon?: string;
   tone?: AccentTone;
   onPress?: () => void;
   wide?: boolean;
 }
 
-const ICONS: Record<string, LucideIcon> = {
-  '☕': Coffee,
-  '🍽️': UtensilsCrossed,
-  '🧁': Cake,
-  '🌿': Leaf,
-  '🛍️': ShoppingBag,
-  '🏜️': TreePalm,
-  '💅': Sparkles,
-  '🏋️': Dumbbell,
-  '🎬': Clapperboard,
-  '🎁': Gift,
-  '🎂': Cake,
-  '💞': Heart,
-  '💍': HeartHandshake,
-  '🎓': GraduationCap,
-  '🙏': HandHeart,
-  '🎉': PartyPopper,
-  '✨': Sparkles,
-  '❄️': Snowflake,
-  '🌟': Star,
-  '💐': Heart,
-  '🕶️': Star,
-};
-
-export function collectionIcon(emoji?: string): LucideIcon {
-  return (emoji && ICONS[emoji]) || Gift;
-}
-
-export function CollectionTile({ label, emoji, tone = 'lavender', onPress, wide = false }: CollectionTileProps) {
-  const Icon = emoji ? ICONS[emoji] : Gift;
+export function CollectionTile({ label, icon, tone = 'lavender', onPress, wide = false }: CollectionTileProps) {
+  const Icon = glyphIcon(icon);
   return (
     <Pressable
       onPress={onPress}

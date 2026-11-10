@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ArrowRight, Gift, Link2, Sparkles, Users } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, Gift, HeartHandshake, Link2, Users } from 'lucide-react-native';
 
 import { Badge } from '@/src/components/Badge';
 import { BasketPreviewCard } from '@/src/components/BasketPreviewCard';
@@ -222,7 +222,7 @@ export default function GiftBasketHubScreen() {
       )}
 
       <Card tone="lavender" style={styles.tip}>
-        <Sparkles size={18} color={colors.ink} />
+        <HeartHandshake size={18} color={colors.ink} />
         <Text style={styles.tipText}>{t('basket.tip')}</Text>
       </Card>
     </Screen>

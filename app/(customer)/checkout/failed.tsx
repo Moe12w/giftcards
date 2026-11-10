@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function CheckoutFailedScreen() {
   const { t } = useTranslation();
@@ -15,7 +16,7 @@ export default function CheckoutFailedScreen() {
       <View style={styles.center}>
         <View style={styles.blob} />
         <View style={styles.circle}>
-          <Text style={styles.emoji}>💳</Text>
+          <Glyph name="creditCard" size={44} />
         </View>
         <Text style={styles.title}>{t('checkout.failedTitle')}</Text>
         <Text style={styles.body}>{t('checkout.failedBody')}</Text>
@@ -57,7 +58,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.md,
   },
-  emoji: { fontSize: 68 },
   title: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.xxl,

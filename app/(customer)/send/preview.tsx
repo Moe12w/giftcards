@@ -11,7 +11,7 @@ import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { Screen } from '@/src/components/Screen';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
-import { offerEmoji, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
 import type { Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
@@ -51,7 +51,7 @@ export default function SendPreviewScreen() {
         <EmptyState
           title={t('states.not-found.title')}
           body={t('states.not-found.body')}
-          icon="🎁"
+          icon="gift"
           tone="lavender"
         />
         <Button label={t('home.quickSend')} onPress={() => router.replace('/(customer)/(tabs)/send')} />
@@ -71,7 +71,7 @@ export default function SendPreviewScreen() {
 
       <GiftCardVisual
         title={title}
-        emoji={offerEmoji(offer)}
+        icon={offerIcon(offer)}
         tone={offerTone(offer)}
         amountMinor={draft.amountMinor}
         message={draft.message || undefined}

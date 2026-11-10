@@ -11,6 +11,7 @@ import { Screen } from '@/src/components/Screen';
 import { DEMO_CLAIM } from '@/src/lib/claim';
 import { formatDate } from '@/src/lib/time';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function ClaimRevealScreen() {
   const { t, i18n } = useTranslation();
@@ -19,14 +20,14 @@ export default function ClaimRevealScreen() {
   return (
     <Screen>
       <View style={styles.hero}>
-        <Text style={styles.sparkleA}>✦</Text>
-        <Text style={styles.sparkleB}>✦</Text>
-        <Text style={styles.sparkleC}>✦</Text>
+        <Glyph name="star" size={22} color={colors.pink} style={styles.sparkleA} />
+        <Glyph name="star" size={16} color={colors.gold} style={styles.sparkleB} />
+        <Glyph name="star" size={12} color={colors.teal} style={styles.sparkleC} />
         <Text style={styles.heroTitle}>{t('claimExtra.revealTitle')}</Text>
       </View>
 
       <Card tone="lavender" style={styles.card}>
-        <IconTile emoji="☕" size={68} tone="gold" />
+        <IconTile icon="coffee" size={68} tone="gold" />
         <Text style={styles.vendor}>{DEMO_CLAIM.vendor}</Text>
         <Money minor={DEMO_CLAIM.amountMinor} style={styles.amount} />
         <Text style={styles.from}>{t('claimExtra.from', { name: DEMO_CLAIM.sender })}</Text>

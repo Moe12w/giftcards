@@ -8,10 +8,11 @@ import { Card } from '@/src/components/Card';
 import { Chip } from '@/src/components/Chip';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
+import { Glyph } from '@/src/components/Glyph';
 import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
-import { offerEmoji, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft, type DeliveryMethod } from '@/src/lib/gift-draft';
 import { formatMoney, toMinorUnits } from '@/src/lib/money';
@@ -20,10 +21,10 @@ import type { Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 
 const DESIGNS = [
-  { id: 'classic', background: colors.surface, edge: colors.ink, text: colors.ink, emoji: '🎀' },
-  { id: 'confetti', background: colors.pinkTint, edge: colors.pink, text: colors.ink, emoji: '🎉' },
-  { id: 'minimal', background: colors.tealTint, edge: colors.teal, text: colors.ink, emoji: '🌿' },
-  { id: 'midnight', background: colors.plum, edge: colors.ink, text: colors.surface, emoji: '🌙' },
+  { id: 'classic', background: colors.surface, edge: colors.ink, text: colors.ink, icon: 'gift' },
+  { id: 'confetti', background: colors.pinkTint, edge: colors.pink, text: colors.ink, icon: 'congratulations' },
+  { id: 'minimal', background: colors.tealTint, edge: colors.teal, text: colors.ink, icon: 'wellness' },
+  { id: 'midnight', background: colors.plum, edge: colors.ink, text: colors.surface, icon: 'moon' },
 ] as const;
 
 const DELIVERY_METHODS: DeliveryMethod[] = ['email', 'sms', 'link'];
@@ -109,7 +110,7 @@ export default function GiftComposeScreen() {
         <EmptyState
           title={t('states.not-found.title')}
           body={t('states.not-found.body')}
-          icon="🎁"
+          icon="gift"
           tone="lavender"
         />
       </Screen>
@@ -214,7 +215,7 @@ export default function GiftComposeScreen() {
       <GiftCardVisual
         compact
         title={offerTitle(offer, i18n.language)}
-        emoji={offerEmoji(offer)}
+        icon={offerIcon(offer)}
         logoUrl={offer.vendor?.logo_url}
         tone={previewTone}
         amountMinor={amount}
@@ -272,7 +273,7 @@ export default function GiftComposeScreen() {
                     active && styles.designSwatchActive,
                   ]}
                 >
-                  <Text style={styles.designEmoji}>{design.emoji}</Text>
+                  <Glyph name={design.icon} size={26} color={design.text} />
                 </View>
                 <Text style={[styles.designLabel, active && styles.designLabelActive]}>
                   {t(`gift.designs.${design.id}`)}
@@ -433,7 +434,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   designSwatchActive: { transform: [{ translateY: -2 }] },
-  designEmoji: { fontSize: 24 },
   designLabel: {
     fontFamily: fonts.semibold,
     fontSize: fontSizes.xs,

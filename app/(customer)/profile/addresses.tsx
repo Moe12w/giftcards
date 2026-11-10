@@ -49,7 +49,7 @@ export default function AddressesScreen() {
         <EmptyState
           title={t('profile.noAddresses')}
           body={t('profile.addAddress')}
-          icon="📍"
+          icon="location"
           tone="teal"
         />
       ) : (

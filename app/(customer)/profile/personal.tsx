@@ -21,19 +21,19 @@ export default function PersonalInfoScreen() {
 
       <Card>
         <ListRow
-          icon="👤"
+          icon="user"
           tone="teal"
           title={t('auth.fullName')}
           value={(user?.user_metadata?.full_name as string | undefined) ?? '—'}
         />
         <ListRow
-          icon="✉️"
+          icon="mail"
           tone="pink"
           title={t('auth.email')}
           value={user?.email ?? '—'}
         />
         <ListRow
-          icon="📱"
+          icon="mail"
           tone="lavender"
           title={t('auth.phone')}
           value={(user?.user_metadata?.phone as string | undefined) ?? '—'}

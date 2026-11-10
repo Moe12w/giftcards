@@ -9,6 +9,7 @@ import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -43,7 +44,7 @@ export default function LoginScreen() {
       <View style={styles.hero}>
         <View style={styles.blob} />
         <View style={styles.logoCircle}>
-          <Text style={styles.logo}>🎁</Text>
+          <Glyph name="gift" size={46} />
         </View>
         <Text style={styles.title}>{t('auth.welcomeTitle')}</Text>
         <Text style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Text>
@@ -129,7 +130,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logo: { fontSize: 48 },
   title: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.display,

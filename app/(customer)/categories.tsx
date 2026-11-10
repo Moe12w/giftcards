@@ -23,7 +23,7 @@ export default function CategoriesScreen() {
           <View key={category.slug} style={styles.item}>
             <CollectionTile
               label={t(category.titleKey)}
-              emoji={category.emoji}
+              icon={category.icon}
               tone={category.tone}
               onPress={() => router.push(`/(customer)/category/${category.slug}`)}
             />
@@ -37,7 +37,7 @@ export default function CategoriesScreen() {
           <View key={occasion.slug} style={styles.item}>
             <CollectionTile
               label={t(occasion.titleKey)}
-              emoji={occasion.emoji}
+              icon={occasion.icon}
               tone={occasion.tone}
               onPress={() => router.push(`/(customer)/collection/${occasion.slug}`)}
             />

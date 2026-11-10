@@ -46,13 +46,13 @@ export default function PrivacyScreen() {
 
       <Card>
         <ListRow
-          icon="📄"
+          icon="file"
           tone="teal"
           title={t('info.privacy.title')}
           onPress={() => router.push('/(customer)/info/privacy')}
         />
         <ListRow
-          icon="📜"
+          icon="file"
           tone="lavender"
           title={t('info.terms.title')}
           last

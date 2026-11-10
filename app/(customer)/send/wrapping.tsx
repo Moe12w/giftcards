@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
+import { Glyph } from '@/src/components/Glyph';
 import { Screen } from '@/src/components/Screen';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
@@ -40,15 +41,18 @@ export default function WrappingScreen() {
               style={({ pressed }) => [styles.item, pressed && styles.pressed]}
             >
               <Card tone={active ? 'lavender' : 'surface'} style={styles.themeCard}>
-                <Text style={styles.themeEmoji}>
-                  {theme === 'confetti'
-                    ? '🎊'
-                    : theme === 'floral'
-                      ? '🌸'
-                      : theme === 'stars'
-                        ? '✨'
-                        : '◻️'}
-                </Text>
+                <Glyph
+                  name={
+                    theme === 'confetti'
+                      ? 'congratulations'
+                      : theme === 'floral'
+                        ? 'bloom'
+                        : theme === 'stars'
+                          ? 'justBecause'
+                          : 'package'
+                  }
+                  size={26}
+                />
                 <Text style={styles.themeLabel}>{t(`send.themes.${theme}`)}</Text>
               </Card>
             </Pressable>
@@ -102,7 +106,6 @@ const styles = StyleSheet.create({
   },
   item: { width: '48%' },
   themeCard: { alignItems: 'center', gap: 4, paddingVertical: spacing.md },
-  themeEmoji: { fontSize: 30 },
   themeLabel: {
     fontFamily: fonts.bold,
     fontSize: fontSizes.sm,

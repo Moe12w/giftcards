@@ -47,7 +47,7 @@ export default function CardsScreen() {
       {loading ? (
         <ActivityIndicator color={colors.primary} style={styles.loader} />
       ) : cards.length === 0 ? (
-        <EmptyState title={t('cards.noCards')} body={t('cards.noCardsBody')} icon="🎁" />
+        <EmptyState title={t('cards.noCards')} body={t('cards.noCardsBody')} icon="gift" />
       ) : (
         <View style={styles.list}>
           {cards.map((card) => (

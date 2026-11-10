@@ -18,7 +18,7 @@ export const DEMO_CLAIM: ClaimGift = {
   vendor: 'The Coffee House',
   amountMinor: 10000,
   sender: 'Sara',
-  message: 'Enjoy a coffee on me ☕',
+  message: 'Enjoy a coffee on me',
   expiresAt: daysFromNow(365),
   code: 'GIFTLY-DEMO-2026',
 };

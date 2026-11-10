@@ -1,13 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Gift, Sparkles } from 'lucide-react-native';
+import { Gift, PartyPopper } from 'lucide-react-native';
 
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Chip } from '@/src/components/Chip';
 import { FlowHeader } from '@/src/components/FlowHeader';
+import { Glyph } from '@/src/components/Glyph';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { OCCASIONS } from '@/src/lib/catalog';
@@ -21,6 +22,7 @@ export default function CreateBasketScreen() {
   const { t, i18n } = useTranslation();
   const [name, setName] = useState('');
   const [recipient, setRecipient] = useState('');
+  const params = useLocalSearchParams<{ preset?: string }>();
   const [occasion, setOccasion] = useState<OccasionId>('birthday');
   const [goal, setGoal] = useState(50000);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export default function CreateBasketScreen() {
     router.push(
       `/(customer)/basket/pick?name=${encodeURIComponent(name.trim())}&recipient=${encodeURIComponent(
         recipient.trim(),
-      )}&occasion=${occasion}&target=${goal}`,
+      )}&occasion=${occasion}&target=${goal}${params.preset ? `&preset=${params.preset}` : ''}`,
     );
   }
 
@@ -102,7 +104,7 @@ export default function CreateBasketScreen() {
                   pressed && styles.pressed,
                 ]}
               >
-                <Text style={styles.occasionEmoji}>{entry.emoji}</Text>
+                <Glyph name={entry.icon} size={20} />
                 <Text style={[styles.occasionText, active && styles.occasionTextActive]}>
                   {t(entry.titleKey)}
                 </Text>
@@ -130,7 +132,7 @@ export default function CreateBasketScreen() {
       {selectedOccasion ? (
         <Card tone="teal" style={styles.preview}>
           <View style={styles.previewRow}>
-            <Sparkles size={18} color={colors.ink} />
+            <PartyPopper size={18} color={colors.ink} />
             <Text style={styles.previewText}>
               {t('basket.previewLine', {
                 occasion: t(selectedOccasion.titleKey),
@@ -192,7 +194,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   occasionChipActive: { backgroundColor: colors.teal },
-  occasionEmoji: { fontSize: 14 },
   occasionText: { fontFamily: fonts.semibold, fontSize: fontSizes.xs, color: colors.ink },
   occasionTextActive: { color: colors.textOnAccent },
   goalRow: { gap: spacing.sm, paddingRight: spacing.md },

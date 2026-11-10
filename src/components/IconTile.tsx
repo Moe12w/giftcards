@@ -1,6 +1,8 @@
 // src/components/IconTile.tsx
 import React from 'react';
-import { Image, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+
+import { glyphIcon } from '../lib/glyphs';
 import { colors, radii } from '../theme';
 
 export type IconTileTone = 'lilac' | 'lavender' | 'teal' | 'pink' | 'gold' | 'sky' | 'surface';
@@ -16,8 +18,9 @@ const tones: Record<IconTileTone, string> = {
 };
 
 interface IconTileProps {
-  emoji?: string;
-  /** Vendor logo image URL — renders the logo instead of the emoji when present. */
+  /** Semantic glyph key — rendered as an outline icon when there is no logo. */
+  icon?: string | null;
+  /** Vendor logo image URL — renders the logo instead of the glyph when present. */
   imageUrl?: string | null;
   size?: number;
   tone?: IconTileTone;
@@ -25,7 +28,8 @@ interface IconTileProps {
 }
 
 /** Rounded pastel tile with an ink outline, used for offer and list artwork. */
-export function IconTile({ emoji, imageUrl, size = 64, tone = 'lavender', style }: IconTileProps) {
+export function IconTile({ icon, imageUrl, size = 64, tone = 'lavender', style }: IconTileProps) {
+  const Icon = glyphIcon(icon);
   return (
     <View
       style={[
@@ -42,7 +46,7 @@ export function IconTile({ emoji, imageUrl, size = 64, tone = 'lavender', style 
       {imageUrl ? (
         <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="contain" />
       ) : (
-        <Text style={{ fontSize: size * 0.46 }}>{emoji ?? '🎁'}</Text>
+        <Icon size={size * 0.48} color={colors.ink} strokeWidth={2} />
       )}
     </View>
   );

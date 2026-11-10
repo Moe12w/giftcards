@@ -15,13 +15,14 @@ import type { TFunction } from 'i18next';
 import {
   ArrowLeft,
   ArrowRight,
+  Bell,
   CheckCircle2,
+  CircleDot,
   Gift,
   Link2,
   PartyPopper,
   Plus,
   Share2,
-  Sparkles,
   UserPlus,
   Users,
   X,
@@ -158,7 +159,7 @@ export default function BasketDetailScreen() {
         <EmptyState
           title={t('states.not-found.title')}
           body={t('states.not-found.body')}
-          icon="🎁"
+          icon="gift"
           tone="lavender"
         />
         <Button label={t('basket.backToBaskets')} onPress={() => router.replace('/(customer)/(tabs)/baskets')} />
@@ -328,7 +329,7 @@ export default function BasketDetailScreen() {
         />
         {basket.items.length === 0 ? (
           <Card style={styles.emptyCard}>
-            <EmptyState title={t('basket.noItemsTitle')} body={t('basket.noItemsBody')} icon="🎁" tone="lavender" />
+            <EmptyState title={t('basket.noItemsTitle')} body={t('basket.noItemsBody')} icon="gift" tone="lavender" />
             {basket.status !== 'completed' ? (
               <Button
                 label={t('basket.addFirstGift')}
@@ -348,7 +349,7 @@ export default function BasketDetailScreen() {
               >
                 <Card style={styles.voucherCard}>
                   <IconTile
-                    emoji={item.emoji}
+                    icon={item.icon}
                     imageUrl={item.logo_url}
                     size={48}
                     tone={(item.tone ?? 'lavender') as IconTileTone}
@@ -448,7 +449,7 @@ export default function BasketDetailScreen() {
 
       {notice ? (
         <View style={styles.toast} pointerEvents="none">
-          <Sparkles size={18} color={colors.ink} />
+          <Bell size={18} color={colors.ink} />
           <Text style={styles.toastText} numberOfLines={3}>
             {notice}
           </Text>
@@ -481,7 +482,7 @@ export default function BasketDetailScreen() {
                 <>
                   <View style={styles.modalHero}>
                     <IconTile
-                      emoji={selectedItem.emoji}
+                      icon={selectedItem.icon}
                       imageUrl={selectedItem.logo_url}
                       size={64}
                       tone={(selectedItem.tone ?? 'lavender') as IconTileTone}
@@ -534,7 +535,7 @@ function ActivityIcon({ kind }: { kind: BasketActivityKind }) {
     case 'completed':
       return <CheckCircle2 size={15} color={colors.ink} />;
     default:
-      return <Sparkles size={15} color={colors.ink} />;
+      return <CircleDot size={15} color={colors.ink} />;
   }
 }
 

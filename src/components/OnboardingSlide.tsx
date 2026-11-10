@@ -6,9 +6,11 @@ import { Button } from './Button';
 import { ProgressDots } from './ProgressDots';
 import { Screen } from './Screen';
 import type { AccentTone } from '../lib/types';
+import { Glyph } from './Glyph';
 
 interface OnboardingSlideProps {
-  emoji: string;
+  /** Semantic glyph key from `src/lib/glyphs.ts`. */
+  icon: string;
   tone: AccentTone;
   title: string;
   body: string;
@@ -37,7 +39,7 @@ const blobs: Record<AccentTone, string> = {
 };
 
 export function OnboardingSlide({
-  emoji,
+  icon,
   tone,
   title,
   body,
@@ -62,11 +64,11 @@ export function OnboardingSlide({
       <View style={styles.illustration}>
         <View style={[styles.blob, { backgroundColor: blobs[tone] }]} />
         <View style={[styles.circle, { backgroundColor: backgrounds[tone] }]}>
-          <Text style={styles.emoji}>{emoji}</Text>
+          <Glyph name={icon} size={54} />
         </View>
-        <Text style={[styles.sparkle, styles.sparkleA]}>✦</Text>
-        <Text style={[styles.sparkle, styles.sparkleB]}>✦</Text>
-        <Text style={[styles.sparkle, styles.sparkleC]}>✦</Text>
+        <Glyph name="star" size={20} color={colors.pink} style={[styles.sparkle, styles.sparkleA]} />
+        <Glyph name="star" size={14} color={colors.gold} style={[styles.sparkle, styles.sparkleB]} />
+        <Glyph name="star" size={11} color={colors.teal} style={[styles.sparkle, styles.sparkleC]} />
       </View>
 
       <View style={styles.copy}>
@@ -126,7 +128,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emoji: { fontSize: 92 },
   sparkle: {
     position: 'absolute',
     color: colors.ink,

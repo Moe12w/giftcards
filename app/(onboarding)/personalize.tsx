@@ -15,7 +15,7 @@ export default function PersonalizeSlide() {
 
   return (
     <OnboardingSlide
-      emoji="💌"
+      icon="mail"
       tone="lavender"
       title={t('onboarding.personalize.title')}
       body={t('onboarding.personalize.body')}

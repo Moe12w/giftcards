@@ -12,7 +12,7 @@ export default function AdminHome() {
   return (
     <Screen>
       <Text style={styles.title}>{t('admin.title')}</Text>
-      <EmptyState title={t('admin.vendors')} body={t('common.loading')} icon="🛡️" />
+      <EmptyState title={t('admin.vendors')} body={t('common.loading')} icon="shield" />
     </Screen>
   );
 }

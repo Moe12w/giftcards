@@ -22,7 +22,7 @@ export default function RefundStatusScreen() {
       <EmptyState
         title={t('support.refundStatusTitle')}
         body={t('support.refundStatusBody')}
-        icon="📊"
+        icon="chart"
         tone="lavender"
       />
       <Button label={t('common.back')} variant="secondary" onPress={() => router.back()} />

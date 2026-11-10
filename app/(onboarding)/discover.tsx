@@ -15,7 +15,7 @@ export default function DiscoverSlide() {
 
   return (
     <OnboardingSlide
-      emoji="🧭"
+      icon="compass"
       tone="teal"
       title={t('onboarding.discover.title')}
       body={t('onboarding.discover.body')}

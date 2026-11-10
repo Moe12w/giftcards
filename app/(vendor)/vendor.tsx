@@ -12,7 +12,7 @@ export default function VendorHome() {
   return (
     <Screen>
       <Text style={styles.title}>{t('vendor.title')}</Text>
-      <EmptyState title={t('vendor.onboarding')} body={t('common.loading')} icon="🏪" />
+      <EmptyState title={t('vendor.onboarding')} body={t('common.loading')} icon="store" />
     </Screen>
   );
 }

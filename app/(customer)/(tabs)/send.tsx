@@ -17,6 +17,7 @@ import { useGiftDraft } from '@/src/lib/gift-draft';
 import { MOCK_RECIPIENTS } from '@/src/lib/mock-data';
 import type { Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function SendScreen() {
   const { t, i18n } = useTranslation();
@@ -49,7 +50,7 @@ export default function SendScreen() {
       <Card tone="teal" style={styles.hero}>
         <View style={styles.heroTop}>
           <View style={styles.heroCircle}>
-            <Text style={styles.heroEmoji}>🎁</Text>
+            <Glyph name="gift" size={44} />
           </View>
           <View style={styles.heroCopy}>
             <Text style={styles.heroTitle}>{t('onboarding.personalize.title')}</Text>
@@ -145,7 +146,7 @@ export default function SendScreen() {
             accessibilityRole="button"
             style={({ pressed }) => [styles.occasionChip, pressed && styles.pressed]}
           >
-            <Text style={styles.occasionEmoji}>{occasion.emoji}</Text>
+            <Glyph name={occasion.icon} size={20} />
             <Text style={styles.occasionLabel}>{t(occasion.titleKey)}</Text>
           </Pressable>
         ))}
@@ -187,7 +188,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroEmoji: { fontSize: 42 },
   heroCopy: { flex: 1, gap: 2 },
   heroTitle: {
     fontFamily: fonts.extrabold,
@@ -247,7 +247,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
-  occasionEmoji: { fontSize: 16 },
   occasionLabel: {
     fontFamily: fonts.bold,
     fontSize: fontSizes.sm,

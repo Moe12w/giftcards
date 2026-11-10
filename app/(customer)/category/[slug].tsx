@@ -45,7 +45,7 @@ export default function CategoryScreen() {
         <EmptyState
           title={t('explore.noResults')}
           body={t('explore.noResultsBody')}
-          icon={entry?.emoji ?? '🎁'}
+          icon={entry?.icon ?? 'gift'}
           tone="teal"
         />
       ) : (

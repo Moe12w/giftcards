@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Screen } from '@/src/components/Screen';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function ClaimOpenScreen() {
   const { t } = useTranslation();
@@ -21,8 +22,8 @@ export default function ClaimOpenScreen() {
           accessibilityLabel={t('claimExtra.revealBody')}
           style={({ pressed }) => [styles.box, pressed && styles.pressed]}
         >
-          <Text style={styles.emoji}>🎁</Text>
-          <Text style={styles.ribbon}>✦</Text>
+          <Glyph name="gift" size={40} />
+          <Glyph name="star" size={16} color={colors.gold} />
         </Pressable>
         <Text style={styles.title}>{t('claimExtra.revealTitle')}</Text>
         <Text style={styles.body}>{t('claimExtra.revealBody')}</Text>
@@ -61,8 +62,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.md,
   },
-  emoji: { fontSize: 92 },
-  ribbon: { position: 'absolute', top: 22, right: 34, fontSize: 22, color: colors.ink },
   pressed: { transform: [{ scale: 0.97 }] },
   title: {
     fontFamily: fonts.extrabold,

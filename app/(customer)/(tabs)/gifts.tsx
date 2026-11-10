@@ -15,6 +15,7 @@ import { SectionHeader } from '@/src/components/SectionHeader';
 import { listMyCards } from '@/src/lib/data';
 import type { CardStatus, GiftCard } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 const statusTone: Record<CardStatus, BadgeTone> = {
   issued: 'warning',
@@ -78,7 +79,7 @@ export default function GiftsScreen() {
             <Money minor={totalBalance} style={styles.summaryAmount} />
           </View>
           <View style={styles.summaryIcon}>
-            <Text style={styles.summaryEmoji}>💳</Text>
+            <Glyph name="creditCard" size={30} />
           </View>
         </View>
         <View style={styles.summaryStats}>
@@ -102,6 +103,7 @@ export default function GiftsScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.filterScrollOuter}
         contentContainerStyle={styles.filterScroll}
       >
         {FILTERS.map((filter) => (
@@ -119,7 +121,7 @@ export default function GiftsScreen() {
         <EmptyState
           title={t('gifts.emptyWalletTitle')}
           body={t('gifts.emptyWalletBody')}
-          icon="🎁"
+          icon="gift"
           tone="teal"
         />
       ) : (
@@ -134,7 +136,7 @@ export default function GiftsScreen() {
               <GiftCardVisual
                 key={card.id}
                 title={card.vendor_name ?? card.offer_title ?? t('gift.detailsTitle')}
-                emoji={card.emoji}
+                icon={card.icon}
                 tone={card.tone}
                 amountMinor={card.balance_minor ?? card.original_value_minor}
                 message={card.message ?? undefined}
@@ -165,7 +167,7 @@ export default function GiftsScreen() {
                   <GiftCardVisual
                     key={card.id}
                     title={card.vendor_name ?? card.offer_title ?? t('gift.detailsTitle')}
-                    emoji={card.emoji}
+                    icon={card.icon}
                     tone={card.tone}
                     amountMinor={card.original_value_minor}
                     compact
@@ -221,7 +223,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  summaryEmoji: { fontSize: 30 },
   summaryStats: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -241,7 +242,10 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   statDivider: { width: 1, height: 28, backgroundColor: colors.borderSoft },
-  filterScroll: { gap: spacing.sm, paddingRight: spacing.md },
+  // The row breaks out of the page gutter so the filters can slide all the way
+  // across the screen, the same way the Explore carousels do.
+  filterScrollOuter: { marginHorizontal: -spacing.gutter },
+  filterScroll: { gap: spacing.sm, paddingHorizontal: spacing.gutter },
   loader: { marginVertical: spacing.lg },
   list: { gap: spacing.sm },
   historyCard: { gap: spacing.sm, alignItems: 'flex-start' },

@@ -22,43 +22,43 @@ export default function SupportScreen() {
 
       <Card>
         <ListRow
-          icon="❓"
+          icon="help"
           tone="teal"
           title={t('support.faq')}
           onPress={() => router.push('/(customer)/support/faq')}
         />
         <ListRow
-          icon="✉️"
+          icon="mail"
           tone="pink"
           title={t('support.contact')}
           onPress={() => router.push('/(customer)/support/contact')}
         />
         <ListRow
-          icon="💬"
+          icon="help"
           tone="lavender"
           title={t('support.chat')}
           onPress={() => router.push('/(customer)/support/chat')}
         />
         <ListRow
-          icon="⚠️"
+          icon="warning"
           tone="gold"
           title={t('support.report')}
           onPress={() => router.push('/(customer)/support/report')}
         />
         <ListRow
-          icon="🎁"
+          icon="mail"
           tone="teal"
           title={t('support.reportGift')}
           onPress={() => router.push('/(customer)/support/report-gift')}
         />
         <ListRow
-          icon="💸"
+          icon="message"
           tone="pink"
           title={t('support.refund')}
           onPress={() => router.push('/(customer)/support/refund')}
         />
         <ListRow
-          icon="📊"
+          icon="warning"
           tone="lavender"
           title={t('support.refundStatus')}
           last

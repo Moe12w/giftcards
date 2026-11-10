@@ -10,7 +10,7 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { PaymentMethods } from '@/src/components/PaymentMethods';
 import { Screen } from '@/src/components/Screen';
-import { offerEmoji, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { formatMoney } from '@/src/lib/money';
@@ -63,7 +63,7 @@ export default function PaymentScreen() {
         <EmptyState
           title={t('states.not-found.title')}
           body={t('states.not-found.body')}
-          icon="🧾"
+          icon="receipt"
           tone="lavender"
         />
         <Button label={t('checkout.backHome')} onPress={() => router.replace('/(customer)/(tabs)')} />
@@ -89,7 +89,7 @@ export default function PaymentScreen() {
       <GiftCardVisual
         compact
         title={offerTitle(offer, i18n.language)}
-        emoji={offerEmoji(offer)}
+        icon={offerIcon(offer)}
         logoUrl={offer.vendor?.logo_url}
         tone={offerTone(offer)}
         amountMinor={draft.amountMinor}

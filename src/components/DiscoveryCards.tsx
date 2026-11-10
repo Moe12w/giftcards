@@ -8,12 +8,12 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, Check, Plus, Star } from 'lucide-react-native';
 
 import { offerTitle, offerTone } from '../lib/catalog';
+import { glyphIcon } from '../lib/glyphs';
 import type { AccentTone, Offer } from '../lib/types';
 import { colors, edges, fonts, fontSizes, radii, spacing } from '../theme';
 import { Card, type CardTone } from './Card';
 import { IconTile, type IconTileTone } from './IconTile';
 import { Money } from './Money';
-import { collectionIcon } from './CollectionTile';
 
 const BACKGROUNDS: Record<AccentTone, string> = {
   teal: colors.tealTint,
@@ -48,13 +48,14 @@ function vendorBanner(offer: Offer): string {
 
 interface CategoryShortcutProps {
   label: string;
-  emoji: string;
+  /** Semantic glyph key from `src/lib/glyphs.ts`. */
+  icon: string;
   tone: AccentTone;
   onPress: () => void;
 }
 
-export function CategoryShortcut({ label, emoji, tone, onPress }: CategoryShortcutProps) {
-  const Icon = collectionIcon(emoji);
+export function CategoryShortcut({ label, icon, tone, onPress }: CategoryShortcutProps) {
+  const Icon = glyphIcon(icon);
   return (
     <Pressable
       onPress={onPress}
@@ -82,7 +83,8 @@ export function CategoryShortcut({ label, emoji, tone, onPress }: CategoryShortc
 interface CuratedCollectionCardProps {
   label: string;
   subtitle: string;
-  emoji: string;
+  /** Semantic glyph key from `src/lib/glyphs.ts`. */
+  icon: string;
   tone: AccentTone;
   onPress: () => void;
 }
@@ -90,12 +92,12 @@ interface CuratedCollectionCardProps {
 export function CuratedCollectionCard({
   label,
   subtitle,
-  emoji,
+  icon,
   tone,
   onPress,
 }: CuratedCollectionCardProps) {
   const { i18n } = useTranslation();
-  const Icon = collectionIcon(emoji);
+  const Icon = glyphIcon(icon);
   const rtl = i18n.language === 'ar';
   const Arrow = rtl ? ArrowLeft : ArrowRight;
 
@@ -153,7 +155,7 @@ export function FeaturedBusinessCard({ offer, onPress }: FeaturedBusinessCardPro
         <View style={styles.businessBody}>
           <View style={styles.businessLogo}>
             <IconTile
-              emoji={offer.emoji}
+              icon={offer.icon}
               imageUrl={offer.vendor?.logo_url}
               size={48}
               tone={tone as IconTileTone}
@@ -213,7 +215,7 @@ export function TrendingGiftCard({
       <Card tone={CARD_TONES[tone]} style={styles.trendingCard}>
         <View style={styles.trendingTop}>
           <IconTile
-            emoji={offer.emoji}
+            icon={offer.icon}
             imageUrl={offer.vendor?.logo_url}
             size={46}
             tone={tone as IconTileTone}
@@ -277,7 +279,7 @@ export function RecommendationRow({ offer, reason, onPress }: RecommendationRowP
       <Card>
         <View style={styles.recommendRow}>
           <IconTile
-            emoji={offer.emoji}
+            icon={offer.icon}
             imageUrl={offer.vendor?.logo_url}
             size={54}
             tone={tone as IconTileTone}

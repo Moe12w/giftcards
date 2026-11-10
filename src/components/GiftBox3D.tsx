@@ -17,11 +17,12 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Sparkles, Star } from 'lucide-react-native';
+import { Star } from 'lucide-react-native';
 
 import type { AccentTone, BasketItem, GiftBasket } from '../lib/types';
 import { basketTotal } from '../lib/baskets';
 import { colors, edges, fonts, fontSizes, radii, spacing } from '../theme';
+import { Glyph } from './Glyph';
 import { IconTile } from './IconTile';
 import { Money } from './Money';
 
@@ -176,7 +177,7 @@ export function GiftBox3D({
   const boxW = size * 0.72;
   const boxH = size * 0.52;
   const lidH = size * 0.15;
-  const stageH = size * 0.8;
+  const stageH = size * 0.86;
 
   const rotateY = rotation.interpolate({
     inputRange: [-1.4, 0, 1.4],
@@ -198,7 +199,7 @@ export function GiftBox3D({
   return (
     <View style={[styles.wrapper, { width: size }]}>
       <View style={[styles.stage, { height: stageH, width: size }]} {...pan.panHandlers}>
-        {/* Confetti / sparkles for a finished gift */}
+        {/* Confetti for a finished gift */}
         {completed ? (
           <Animated.View
             pointerEvents="none"
@@ -266,7 +267,7 @@ export function GiftBox3D({
                     {item.logo_url ? (
                       <IconTile imageUrl={item.logo_url} size={26} tone="surface" />
                     ) : (
-                      <Text style={styles.voucherEmoji}>{item.emoji ?? '🎁'}</Text>
+                      <Glyph name={item.icon ?? 'gift'} size={16} />
                     )}
                   </View>
                 ))}
@@ -335,7 +336,7 @@ export function GiftBox3D({
               {latest?.logo_url ? (
                 <IconTile imageUrl={latest.logo_url} size={30} tone="surface" />
               ) : (
-                <Text style={styles.flyingEmoji}>{latest?.emoji ?? '🎁'}</Text>
+                <Glyph name={latest?.icon ?? 'gift'} size={20} />
               )}
               <View style={styles.flyingCopy}>
                 <Text style={styles.flyingTitle} numberOfLines={1}>
@@ -346,15 +347,14 @@ export function GiftBox3D({
             </View>
           </Animated.View>
         </Pressable>
-
-        {/* Live hint */}
-        {interactive ? (
-          <View style={styles.tapHint}>
-            <Sparkles size={12} color={colors.textMuted} />
-            <Text style={styles.tapHintText}>{open ? 'Tap to close' : 'Tap to open'}</Text>
-          </View>
-        ) : null}
       </View>
+
+      {/* Live hint, sat just below the box so it never covers the artwork */}
+      {interactive ? (
+        <View style={styles.tapHint}>
+          <Text style={styles.tapHintText}>{open ? 'Tap to close' : 'Tap to open'}</Text>
+        </View>
+      ) : null}
 
       {showMeta ? (
         <View style={styles.metaRow}>
@@ -545,7 +545,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginHorizontal: -3,
   },
-  voucherEmoji: { fontSize: 15 },
   moreVouchers: {
     marginLeft: 4,
     borderRadius: radii.pill,
@@ -572,7 +571,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 5,
   },
-  flyingEmoji: { fontSize: 20 },
   flyingCopy: { gap: 0 },
   flyingTitle: {
     fontFamily: fonts.bold,
@@ -582,11 +580,16 @@ const styles = StyleSheet.create({
   },
   flyingAmount: { fontSize: fontSizes.xs, color: colors.textMuted },
   tapHint: {
-    position: 'absolute',
-    bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    marginTop: -spacing.xs,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
   },
   tapHintText: {
     fontFamily: fonts.medium,

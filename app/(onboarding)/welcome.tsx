@@ -15,7 +15,7 @@ export default function WelcomeSlide() {
 
   return (
     <OnboardingSlide
-      emoji="🎁"
+      icon="gift"
       tone="pink"
       title={t('onboarding.welcome.title')}
       body={t('onboarding.welcome.body')}

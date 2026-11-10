@@ -117,7 +117,7 @@ function toBasketItem(
     vendor_name: offer.vendor?.name ?? offer.title,
     title: offer.title,
     amount_minor: amountMinor,
-    emoji: offer.emoji,
+    icon: offer.icon,
     tone: (offer.tone ?? 'lavender') as AccentTone,
     logo_url: offer.vendor?.logo_url ?? null,
     banner_url: offer.vendor?.banner_url ?? null,

@@ -8,11 +8,12 @@ import {
   View,
 } from 'react-native';
 import { router } from 'expo-router';
-import { Bell, Gift, Sparkles } from 'lucide-react-native';
+import { Bell, Gift, Heart } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/src/components/Avatar';
 import { Badge } from '@/src/components/Badge';
+import { BasketPickerModal } from '@/src/components/BasketPickerModal';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { EmptyState } from '@/src/components/EmptyState';
@@ -27,7 +28,7 @@ import {
   RecommendationRow,
   TrendingGiftCard,
 } from '@/src/components/DiscoveryCards';
-import { CATEGORIES, CURATED_COLLECTIONS, groupOffersByVendor, offersForCollection } from '@/src/lib/catalog';
+import { CATEGORIES, CURATED_COLLECTIONS, groupOffersByVendor, offerTitle, offersForCollection } from '@/src/lib/catalog';
 import { listActiveOffers } from '@/src/lib/data';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
 import { MOCK_NOTIFICATIONS } from '@/src/lib/mock-data';
@@ -38,10 +39,11 @@ import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 export default function ExploreHomeScreen() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const { activeBasket } = useBaskets();
+  const { activeBasket, baskets } = useBaskets();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [pickerOffer, setPickerOffer] = useState<Offer | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -70,22 +72,41 @@ export default function ExploreHomeScreen() {
   );
 
   const basketOfferIds = useMemo(
-    () => new Set(activeBasket?.items.map((item) => item.offer_id) ?? []),
-    [activeBasket],
+    () =>
+      new Set(
+        baskets
+          .filter((basket) => basket.status !== 'completed')
+          .flatMap((basket) => basket.items.map((item) => item.offer_id)),
+      ),
+    [baskets],
   );
 
   function quickAdd(offer: Offer) {
-    if (!activeBasket) {
-      router.push(`/(customer)/gift/${offer.id}`);
-      return;
-    }
+    // The customer picks the gift box the card should join before paying.
+    setPickerOffer(offer);
+  }
+
+  function contributeTo(basketId: string) {
+    const offer = pickerOffer;
+    if (!offer) return;
     const amountMinor = offer.preset_amounts_minor[0] ?? offer.min_amount_minor;
+    setPickerOffer(null);
     router.push({
       pathname: '/(customer)/basket/contribute',
       params: {
-        basketId: activeBasket.id,
+        basketId,
         items: JSON.stringify([{ offerId: offer.id, amountMinor }]),
       },
+    });
+  }
+
+  function startNewBasket() {
+    const offer = pickerOffer;
+    setPickerOffer(null);
+    // The card is carried into the new box so it is not lost.
+    router.push({
+      pathname: '/(customer)/basket/create',
+      params: offer ? { preset: offer.id } : undefined,
     });
   }
 
@@ -180,7 +201,7 @@ export default function ExploreHomeScreen() {
                 <Gift size={26} color={colors.ink} />
               </View>
               <View style={styles.heroSparkle}>
-                <Sparkles size={16} color={colors.ink} />
+                <Heart size={16} color={colors.ink} />
               </View>
             </View>
           </View>
@@ -217,7 +238,7 @@ export default function ExploreHomeScreen() {
             <CategoryShortcut
               key={category.slug}
               label={t(category.titleKey)}
-              emoji={category.emoji}
+              icon={category.icon}
               tone={category.tone}
               onPress={() => router.push(`/(customer)/category/${category.slug}`)}
             />
@@ -237,7 +258,7 @@ export default function ExploreHomeScreen() {
               key={collection.slug}
               label={t(collection.titleKey)}
               subtitle={t(collection.subtitleKey)}
-              emoji={collection.emoji}
+              icon={collection.icon}
               tone={collection.tone}
               onPress={() => router.push(`/(customer)/collection/${collection.slug}`)}
             />
@@ -257,7 +278,7 @@ export default function ExploreHomeScreen() {
             <EmptyState
               title={t('states.error.title')}
               body={t('states.error.body')}
-              icon="⚠️"
+              icon="warning"
               tone="pink"
             />
             <Button label={t('common.retry')} onPress={() => router.replace('/(customer)/(tabs)')} />
@@ -266,7 +287,7 @@ export default function ExploreHomeScreen() {
           <EmptyState
             title={t('home.noOffers')}
             body={t('home.noOffersBody')}
-            icon="🎁"
+            icon="warning"
             tone="lavender"
           />
         ) : (
@@ -307,11 +328,7 @@ export default function ExploreHomeScreen() {
                 offer={offer}
                 added={basketOfferIds.has(offer.id)}
                 onPress={() => router.push(`/(customer)/gift/${offer.id}`)}
-                onAdd={() =>
-                  basketOfferIds.has(offer.id) && activeBasket
-                    ? router.push(`/(customer)/basket/${activeBasket.id}`)
-                    : quickAdd(offer)
-                }
+                onAdd={() => quickAdd(offer)}
                 addLabel={t('discovery.quickAdd')}
               />
             ))}
@@ -337,6 +354,16 @@ export default function ExploreHomeScreen() {
 
         <Text style={styles.footnote}>{t('discovery.footnote', { language: i18n.language })}</Text>
       </Screen>
+
+      <BasketPickerModal
+        visible={pickerOffer !== null}
+        itemTitle={pickerOffer ? offerTitle(pickerOffer, i18n.language) : undefined}
+        baskets={baskets}
+        selectedId={activeBasket?.id ?? null}
+        onClose={() => setPickerOffer(null)}
+        onSelect={contributeTo}
+        onCreateNew={startNewBasket}
+      />
     </View>
   );
 }

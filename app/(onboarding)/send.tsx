@@ -15,7 +15,7 @@ export default function SendSlide() {
 
   return (
     <OnboardingSlide
-      emoji="🚀"
+      icon="rocket"
       tone="gold"
       title={t('onboarding.send.title')}
       body={t('onboarding.send.body')}

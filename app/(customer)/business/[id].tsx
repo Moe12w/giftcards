@@ -13,7 +13,7 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
-import { offerEmoji, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
 import { listActiveOffers } from '@/src/lib/data';
 import { MOCK_LOCATIONS } from '@/src/lib/mock-data';
 import type { AccentTone, Offer } from '@/src/lib/types';
@@ -55,7 +55,7 @@ export default function BusinessScreen() {
         <EmptyState
           title={t('states.not-found.title')}
           body={t('states.not-found.body')}
-          icon="🏪"
+          icon="store"
           tone="lavender"
         />
       ) : (
@@ -77,7 +77,7 @@ export default function BusinessScreen() {
           <Card tone={tone === 'sky' ? 'sky' : tone}>
             <View style={styles.heroRow}>
               <IconTile
-                emoji={offerEmoji(primary)}
+                icon={offerIcon(primary)}
                 imageUrl={primary.vendor?.logo_url ?? undefined}
                 size={72}
                 tone={tone === 'sky' ? 'sky' : (tone as IconTileTone)}

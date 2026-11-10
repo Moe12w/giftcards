@@ -8,6 +8,7 @@ import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function ForgotPasswordScreen() {
   const { t } = useTranslation();
@@ -40,7 +41,7 @@ export default function ForgotPasswordScreen() {
 
       {sent ? (
         <View style={styles.success}>
-          <Text style={styles.successIcon}>📬</Text>
+          <Glyph name="mail" size={40} />
           <Text style={styles.successText}>{t('authExtra.resetSent')}</Text>
         </View>
       ) : null}
@@ -95,7 +96,6 @@ const styles = StyleSheet.create({
     borderColor: colors.ink,
     backgroundColor: colors.tealTint,
   },
-  successIcon: { fontSize: 24 },
   successText: {
     flex: 1,
     fontFamily: fonts.semibold,

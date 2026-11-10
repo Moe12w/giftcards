@@ -105,31 +105,31 @@ export default function ProfileScreen() {
 
       <Card>
         <ListRow
-          icon="👤"
+          icon="user"
           tone="teal"
           title={t('profile.personalInfo')}
           onPress={() => router.push('/(customer)/profile/personal')}
         />
         <ListRow
-          icon="💳"
+          icon="creditCard"
           tone="pink"
           title={t('profile.paymentMethods')}
           onPress={() => router.push('/(customer)/profile/payment-methods')}
         />
         <ListRow
-          icon="🏪"
+          icon="store"
           tone="gold"
           title={t('profile.favourites')}
           onPress={() => router.push('/(customer)/profile/favourites')}
         />
         <ListRow
-          icon="👥"
+          icon="users"
           tone="lavender"
           title={t('profile.recipients')}
           onPress={() => router.push('/(customer)/profile/recipients')}
         />
         <ListRow
-          icon="📍"
+          icon="location"
           tone="teal"
           title={t('profile.addresses')}
           last
@@ -139,32 +139,32 @@ export default function ProfileScreen() {
 
       <Card>
         <ListRow
-          icon="🌐"
+          icon="globe"
           tone="lavender"
           title={t('profile.language')}
           value={i18n.language === 'ar' ? t('account.arabic') : t('account.english')}
           onPress={() => router.push('/(customer)/profile/language')}
         />
         <ListRow
-          icon="⚙️"
+          icon="settings"
           tone="teal"
           title={t('profile.preferences')}
           onPress={() => router.push('/(customer)/profile/preferences')}
         />
         <ListRow
-          icon="🔔"
+          icon="settings"
           tone="pink"
           title={t('profile.notifications')}
           onPress={() => router.push('/(customer)/notifications/preferences')}
         />
         <ListRow
-          icon="🔒"
+          icon="bell"
           tone="gold"
           title={t('profile.security')}
           onPress={() => router.push('/(customer)/profile/security')}
         />
         <ListRow
-          icon="🛡️"
+          icon="lock"
           tone="teal"
           title={t('profile.privacy')}
           last
@@ -174,19 +174,19 @@ export default function ProfileScreen() {
 
       <Card>
         <ListRow
-          icon="💬"
+          icon="shield"
           tone="teal"
           title={t('profile.support')}
           onPress={() => router.push('/(customer)/support')}
         />
         <ListRow
-          icon="✨"
+          icon="justBecause"
           tone="lavender"
           title={t('profile.about')}
           onPress={() => router.push('/(customer)/info/about')}
         />
         <ListRow
-          icon="📱"
+          icon="message"
           tone="gold"
           title={t('profile.version')}
           value="1.0.0"

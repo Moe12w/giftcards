@@ -10,7 +10,7 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { IconTile } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
-import { offerEmoji, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import type { AccentTone, Offer } from '@/src/lib/types';
@@ -52,7 +52,7 @@ export default function SendConfirmScreen() {
         <EmptyState
           title={t('states.not-found.title')}
           body={t('states.not-found.body')}
-          icon="🎁"
+          icon="gift"
           tone="lavender"
         />
       </Screen>
@@ -71,7 +71,7 @@ export default function SendConfirmScreen() {
 
       <Card tone={tone === 'sky' ? 'sky' : tone}>
         <View style={styles.offerRow}>
-          <IconTile emoji={offerEmoji(offer)} size={56} tone={tone === 'sky' ? 'sky' : tone} />
+          <IconTile icon={offerIcon(offer)} size={56} tone={tone === 'sky' ? 'sky' : tone} />
           <View style={styles.offerCopy}>
             <Text style={styles.offerTitle}>{offerTitle(offer, i18n.language)}</Text>
             <Text style={styles.offerVendor}>{offer.vendor?.name ?? ''}</Text>

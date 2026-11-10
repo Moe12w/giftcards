@@ -7,14 +7,15 @@ import { IconTile, type IconTileTone } from './IconTile';
 interface EmptyStateProps {
   title: string;
   body?: string;
+  /** Semantic glyph key from `src/lib/glyphs.ts`. */
   icon?: string;
   tone?: IconTileTone;
 }
 
-export function EmptyState({ title, body, icon = '✦', tone = 'lilac' }: EmptyStateProps) {
+export function EmptyState({ title, body, icon = 'gift', tone = 'lilac' }: EmptyStateProps) {
   return (
     <View style={styles.wrapper}>
-      <IconTile emoji={icon} size={88} tone={tone} />
+      <IconTile icon={icon} size={88} tone={tone} />
       <Text style={styles.title}>{title}</Text>
       {body ? <Text style={styles.body}>{body}</Text> : null}
     </View>

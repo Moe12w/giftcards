@@ -34,7 +34,7 @@ export default function StateScreen() {
       <EmptyState
         title={t(`states.${key}.title`)}
         body={t(`states.${key}.body`)}
-        icon={key === 'loading' ? '⏳' : key === 'maintenance' ? '🛠️' : '⚠️'}
+        icon={key === 'loading' ? 'clock' : key === 'maintenance' ? 'tools' : 'warning'}
         tone="lavender"
       />
       <Button label={t('common.back')} variant="secondary" onPress={() => router.back()} />

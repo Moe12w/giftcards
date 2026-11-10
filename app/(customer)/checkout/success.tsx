@@ -9,6 +9,7 @@ import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 export default function CheckoutSuccessScreen() {
   const { t, i18n } = useTranslation();
@@ -25,7 +26,7 @@ export default function CheckoutSuccessScreen() {
       <View style={styles.center}>
         <View style={styles.blob} />
         <View style={styles.circle}>
-          <Text style={styles.emoji}>🎉</Text>
+          <Glyph name="congratulations" size={44} />
         </View>
         <Text style={styles.title}>
           {scheduled ? t('checkout.scheduledTitle') : t('checkout.successTitle')}
@@ -90,7 +91,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.md,
   },
-  emoji: { fontSize: 72 },
   title: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.xxl,

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -26,6 +26,7 @@ import { listActiveOffers } from '@/src/lib/data';
 import { formatMoney } from '@/src/lib/money';
 import type { AccentTone, CategoryId, OccasionId, Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { Glyph } from '@/src/components/Glyph';
 
 type Selection = Record<string, number>;
 
@@ -37,6 +38,7 @@ export default function PickGiftsScreen() {
     occasion?: string;
     target?: string;
     basketId?: string;
+    preset?: string;
   }>();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +59,20 @@ export default function PickGiftsScreen() {
       active = false;
     };
   }, []);
+
+  // A card picked from the basket picker arrives already selected. It is only
+  // applied once so the customer can still remove it afterwards.
+  const presetApplied = useRef(false);
+  useEffect(() => {
+    if (presetApplied.current) return;
+    if (!params.preset) return;
+    const preset = offers.find((offer) => offer.id === params.preset);
+    if (!preset) return;
+    presetApplied.current = true;
+    setSelection({
+      [preset.id]: preset.preset_amounts_minor[0] ?? preset.min_amount_minor,
+    });
+  }, [offers, params.preset]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -147,7 +163,7 @@ export default function PickGiftsScreen() {
         <Card tone="lavender" style={styles.context}>
           <View style={styles.contextRow}>
             <View style={styles.contextIcon}>
-              <Text style={styles.contextEmoji}>🎁</Text>
+              <Glyph name="gift" size={30} />
             </View>
             <View style={styles.contextCopy}>
               <Text style={styles.contextName} numberOfLines={1}>
@@ -170,7 +186,7 @@ export default function PickGiftsScreen() {
             <Money minor={total} style={styles.summaryAmount} />
           </View>
           <View style={styles.summaryIcon}>
-            <Text style={styles.summaryEmoji}>🧾</Text>
+            <Glyph name="receipt" size={24} />
           </View>
         </View>
         {selectedOffers.length > 0 ? (
@@ -178,7 +194,7 @@ export default function PickGiftsScreen() {
             {selectedOffers.map((offer) => (
               <View key={offer.id} style={styles.selectedRow}>
                 <IconTile
-                  emoji={offer.emoji}
+                  icon={offer.icon}
                   imageUrl={offer.vendor?.logo_url}
                   size={34}
                   tone={(offerTone(offer) as AccentTone) as IconTileTone}
@@ -234,7 +250,7 @@ export default function PickGiftsScreen() {
           <EmptyState
             title={t('states.error.title')}
             body={t('states.error.body')}
-            icon="⚠️"
+            icon="warning"
             tone="pink"
           />
           <Button label={t('common.retry')} onPress={() => router.replace('/(customer)/(tabs)')} />
@@ -243,7 +259,7 @@ export default function PickGiftsScreen() {
         <EmptyState
           title={t('explore.noResults')}
           body={t('explore.noResultsBody')}
-          icon="🔍"
+          icon="warning"
           tone="lavender"
         />
       ) : (
@@ -255,7 +271,7 @@ export default function PickGiftsScreen() {
               <Card key={offer.id} tone={selected ? 'gold' : 'surface'} style={styles.offerCard}>
                 <View style={styles.offerRow}>
                   <IconTile
-                    emoji={offer.emoji}
+                    icon={offer.icon}
                     imageUrl={offer.vendor?.logo_url}
                     size={56}
                     tone={tone}
@@ -361,7 +377,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  contextEmoji: { fontSize: 20 },
   contextCopy: { flex: 1, gap: 1 },
   contextName: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
   contextMeta: { fontFamily: fonts.regular, fontSize: fontSizes.xs, color: colors.textMuted },
@@ -380,7 +395,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  summaryEmoji: { fontSize: 26 },
   summaryHint: {
     fontFamily: fonts.regular,
     fontSize: fontSizes.sm,

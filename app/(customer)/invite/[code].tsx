@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Gift, Link2, Sparkles, UserPlus, Users } from 'lucide-react-native';
+import { CheckCircle2, Gift, Link2, UserPlus, Users } from 'lucide-react-native';
 
 import { Badge } from '@/src/components/Badge';
 import { Button } from '@/src/components/Button';
@@ -75,7 +75,7 @@ export default function InviteScreen() {
         <EmptyState
           title={t('basket.inviteMissingTitle')}
           body={t('basket.inviteMissingBody')}
-          icon="🎁"
+          icon="gift"
           tone="lavender"
         />
         <Button label={t('basket.joinTitle')} onPress={() => router.replace('/(customer)/basket/join')} />
@@ -139,7 +139,7 @@ export default function InviteScreen() {
 
       {alreadyJoined ? (
         <Card tone="teal" style={styles.joinedCard}>
-          <Sparkles size={18} color={colors.ink} />
+          <CheckCircle2 size={18} color={colors.ink} />
           <Text style={styles.joinedText}>{t('basket.alreadyJoined')}</Text>
         </Card>
       ) : (
@@ -160,7 +160,7 @@ export default function InviteScreen() {
           basket.items.map((item) => (
             <View key={item.id} style={styles.itemRow}>
               <IconTile
-                emoji={item.emoji}
+                icon={item.icon}
                 imageUrl={item.logo_url}
                 size={40}
                 tone={(item.tone ?? 'lavender') as AccentTone as IconTileTone}
