@@ -73,6 +73,24 @@ export default function BasketDetailScreen() {
   const rtl = i18n.language === 'ar';
   const Arrow = rtl ? ArrowLeft : ArrowRight;
 
+  // This screen is the last step of the create/pay or send flow. Once the flow
+  // has finished, Back should leave it entirely and return to the tabs instead
+  // of reopening the previous checkout screen.
+  const flowFinished =
+    params.created === '1' || params.paid === '1' || params.sent === '1';
+
+  function goBack() {
+    if (!flowFinished) {
+      router.back();
+      return;
+    }
+    if (router.canDismiss()) {
+      router.dismissAll();
+      return;
+    }
+    router.replace('/(customer)/(tabs)');
+  }
+
   useEffect(() => {
     simulateRef.current = simulateContribution;
   }, [simulateContribution]);
@@ -127,7 +145,7 @@ export default function BasketDetailScreen() {
   if (!ready) {
     return (
       <Screen>
-        <FlowHeader title={t('basket.title')} onBack={() => router.back()} />
+        <FlowHeader title={t('basket.title')} onBack={goBack} />
         <ActivityIndicator color={colors.teal} style={styles.loader} />
       </Screen>
     );
@@ -136,7 +154,7 @@ export default function BasketDetailScreen() {
   if (!basket) {
     return (
       <Screen>
-        <FlowHeader title={t('basket.title')} onBack={() => router.back()} />
+        <FlowHeader title={t('basket.title')} onBack={goBack} />
         <EmptyState
           title={t('states.not-found.title')}
           body={t('states.not-found.body')}
@@ -171,7 +189,7 @@ export default function BasketDetailScreen() {
         <FlowHeader
           title={basket.name}
           subtitle={t('basket.forRecipient', { name: basket.recipient_name })}
-          onBack={() => router.back()}
+          onBack={goBack}
         />
 
         {/* Celebration / joined banner */}

@@ -86,6 +86,18 @@ export default function ContributeScreen() {
 
   const total = items.reduce((sum, item) => sum + item.amountMinor, 0);
 
+  // Open the finished basket as a fresh screen on top of the tabs. Dropping the
+  // create → pick → pay screens first means Back from the basket leaves the
+  // checkout flow instead of stepping into the payment screen again.
+  function openBasket(id: string, query: string) {
+    if (router.canDismiss()) {
+      router.dismissAll();
+      router.push(`/(customer)/basket/${id}?${query}`);
+      return;
+    }
+    router.replace(`/(customer)/basket/${id}?${query}`);
+  }
+
   function pay() {
     if (paying || items.length === 0) return;
     setPaying(true);
@@ -94,7 +106,7 @@ export default function ContributeScreen() {
     setTimeout(() => {
       if (basket) {
         items.forEach((item) => addItem(basket.id, item));
-        router.replace(`/(customer)/basket/${basket.id}?paid=1`);
+        openBasket(basket.id, 'paid=1');
         return;
       }
       const created = createBasket({
@@ -104,7 +116,7 @@ export default function ContributeScreen() {
         targetMinor: Number(params.target ?? 0) || 0,
         items,
       });
-      router.replace(`/(customer)/basket/${created.id}?paid=1&created=1`);
+      openBasket(created.id, 'paid=1&created=1');
     }, 900);
   }
 

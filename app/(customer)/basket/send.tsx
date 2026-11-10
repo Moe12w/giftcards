@@ -64,6 +64,13 @@ export default function SendBasketScreen() {
     // production. Demo mode completes after a short simulated hand-off.
     setTimeout(() => {
       sendBasket(basket.id, { recipientName: name.trim(), message: message.trim() });
+      // Close the send screen and the basket screen beneath it, then open the
+      // finished basket fresh so Back returns to the tabs, not to this form.
+      if (router.canDismiss()) {
+        router.dismissAll();
+        router.push(`/(customer)/basket/${basket.id}?sent=1`);
+        return;
+      }
       router.replace(`/(customer)/basket/${basket.id}?sent=1`);
     }, 900);
   }
