@@ -7,7 +7,7 @@ import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
 export default function SignUpScreen() {
@@ -19,6 +19,7 @@ export default function SignUpScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
 
   async function onSubmit() {
     const next: Record<string, string> = {};
@@ -30,14 +31,25 @@ export default function SignUpScreen() {
 
     setSubmitting(true);
     setFormError(null);
+    setAlreadyRegistered(false);
     try {
       await signUp(email.trim(), password, fullName.trim());
       router.push({
         pathname: '/(auth)/verify-email',
         params: { email: email.trim(), name: fullName.trim() },
       });
-    } catch {
-      setFormError(t('common.errorGeneric'));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (/already registered|already been registered/i.test(message)) {
+        setFormError(t('auth.emailAlreadyRegistered'));
+        setAlreadyRegistered(true);
+      } else if (/rate limit|too many/i.test(message)) {
+        setFormError(t('auth.tooManyAttempts'));
+      } else if (/password/i.test(message)) {
+        setFormError(t('auth.passwordTooShort'));
+      } else {
+        setFormError(t('auth.signUpFailed'));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -77,7 +89,18 @@ export default function SignUpScreen() {
         error={errors.password}
       />
 
-      {formError ? <Text style={styles.formError}>{formError}</Text> : null}
+      {formError ? (
+        <View style={styles.errorBox}>
+          <Text style={styles.formError}>{formError}</Text>
+          {alreadyRegistered ? (
+            <Link href="/(auth)/login" asChild>
+              <Pressable accessibilityRole="link" hitSlop={8}>
+                <Text style={styles.link}>{t('auth.signInInstead')}</Text>
+              </Pressable>
+            </Link>
+          ) : null}
+        </View>
+      ) : null}
 
       <Button label={t('auth.signUpCta')} onPress={onSubmit} loading={submitting} />
 
@@ -110,6 +133,14 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     fontSize: fontSizes.sm,
     color: colors.danger,
+  },
+  errorBox: {
+    gap: spacing.xs,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    backgroundColor: colors.pinkTint,
+    padding: spacing.sm + 2,
   },
   footer: {
     flexDirection: 'row',

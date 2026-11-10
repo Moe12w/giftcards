@@ -7,11 +7,13 @@ import { BackButton } from '@/src/components/BackButton';
 import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { useAuth } from '@/src/lib/auth';
+import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
 export default function ForgotPasswordScreen() {
   const { t } = useTranslation();
+  const { resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -24,11 +26,19 @@ export default function ForgotPasswordScreen() {
     }
     setError(null);
     setSubmitting(true);
-    // In production this calls Supabase Auth resetPasswordForEmail.
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      await resetPassword(email.trim());
       setSent(true);
-    }, 600);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : '';
+      if (/rate limit|too many/i.test(message)) {
+        setError(t('auth.tooManyAttempts'));
+      } else {
+        setError(t('authExtra.resetFailed'));
+      }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -42,30 +52,41 @@ export default function ForgotPasswordScreen() {
       {sent ? (
         <View style={styles.success}>
           <Glyph name="mail" size={40} />
-          <Text style={styles.successText}>{t('authExtra.resetSent')}</Text>
+          <View style={styles.successCopy}>
+            <Text style={styles.successTitle}>{t('authExtra.resetSentTitle')}</Text>
+            <Text style={styles.successText}>
+              {t('authExtra.resetSentBody', { email: email.trim() })}
+            </Text>
+          </View>
         </View>
       ) : null}
 
       <TextField
         label={t('auth.email')}
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(value) => {
+          setEmail(value);
+          if (sent) setSent(false);
+          setError(null);
+        }}
         placeholder={t('auth.emailPlaceholder')}
         keyboardType="email-address"
         autoCapitalize="none"
+        autoComplete="email"
         error={error ?? undefined}
       />
 
       <Button
-        label={t('authExtra.sendReset')}
+        label={sent ? t('authExtra.resendReset') : t('authExtra.sendReset')}
         onPress={onSubmit}
         loading={submitting}
       />
+
       {sent ? (
         <Button
-          label={t('authExtra.resetTitle')}
+          label={t('auth.backToSignIn')}
           variant="secondary"
-          onPress={() => router.push('/(auth)/reset-password')}
+          onPress={() => router.replace('/(auth)/login')}
         />
       ) : null}
     </Screen>
@@ -91,15 +112,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     padding: spacing.md,
-    borderRadius: 18,
+    borderRadius: radii.md,
     borderWidth: 2,
     borderColor: colors.ink,
     backgroundColor: colors.tealTint,
   },
-  successText: {
-    flex: 1,
-    fontFamily: fonts.semibold,
-    fontSize: fontSizes.sm,
+  successCopy: { flex: 1, gap: 2 },
+  successTitle: {
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.md,
     color: colors.text,
+  },
+  successText: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+    lineHeight: 19,
   },
 });

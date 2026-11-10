@@ -55,7 +55,16 @@
     "invalidEmail": "Enter a valid email address.",
     "passwordTooShort": "Password must be at least 8 characters.",
     "signedOutTitle": "You're signed out",
-    "demoHint": "Demo mode — any valid email and 8+ character password works."
+    "demoHint": "Demo mode — any valid email and 8+ character password works.",
+    "noAccountFound": "We could not sign you in with that email and password.",
+    "createAccountCta": "Create an account",
+    "signInInstead": "Sign in instead",
+    "emailAlreadyRegistered": "That email already has an account with us.",
+    "emailNotConfirmed": "Please confirm your email first, then sign in.",
+    "tooManyAttempts": "Too many attempts. Please wait a minute and try again.",
+    "signInFailed": "We could not sign you in right now. Please try again.",
+    "signUpFailed": "We could not create your account right now. Please try again.",
+    "backToSignIn": "Back to sign in"
   },
   "authExtra": {
     "forgotTitle": "Forgot password?",
@@ -87,7 +96,14 @@
     "passwordUpdated": "Password updated.",
     "resetSent": "Reset link sent.",
     "codeSent": "Code sent.",
-    "phonePlaceholder": "+974 5555 0000"
+    "phonePlaceholder": "+974 5555 0000",
+    "resetSentTitle": "Check your inbox",
+    "resetSentBody": "If an account exists for {{email}}, a password reset link is on its way. The link opens this app.",
+    "resendReset": "Send the link again",
+    "resetFailed": "We could not send the reset link. Please try again.",
+    "passwordUpdatedBody": "Your new password is ready. Sign in to continue.",
+    "resetLinkNeededTitle": "Open this screen from your email",
+    "resetLinkNeededBody": "This page needs the secure link we emailed you. Request a new link and open it on this device."
   },
   "onboarding": {
     "skip": "Skip",
