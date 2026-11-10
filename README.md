@@ -8,8 +8,10 @@ Read `PROJECT_BRIEF.md` first — it is the source of truth for rules and scope.
 
 ## What works today
 
-- Customer app shell: Home, offer detail + buy flow, My cards, card detail with
-  a large QR code, Orders, Account.
+- Customer app: Explore home, offer detail + single-screen gift compose and
+  checkout, My Gifts, card detail with a large QR code, Orders, Account.
+- Collaborative gift baskets: create, invite, per-card contributions (a card
+  joins the box only after its payment), and a creator "send gift box" step.
 - English + Arabic strings with device-locale detection and RTL support.
 - Shared design system in `src/theme.ts` and `src/components/`.
 - Money helpers that only use integer minor units (fils).
@@ -23,7 +25,7 @@ Vendor and admin areas are placeholders for the next phase.
 
 ## Prerequisites
 
-- Node.js 20+ and npm.
+- Node.js **22.13+** (22 LTS or 24 LTS) and npm. Expo 58 does not support Node 20.
 - The **Expo Go** app on your phone (iOS/Android), or a browser for web.
 
 ## Run the app (no credentials needed)
@@ -34,6 +36,10 @@ npx expo start
 ```
 
 Then scan the QR code with Expo Go, or press `w` for web.
+
+Demo data (offers, cards, baskets and gift drafts) is stored on the device with
+AsyncStorage. Nothing syncs between devices until Supabase is configured, so two
+people running the repo see independent demo data.
 
 - Customer home: `/`
 - Login (demo): `/login`
