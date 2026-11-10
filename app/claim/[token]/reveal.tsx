@@ -1,0 +1,82 @@
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+
+import { Button } from '@/src/components/Button';
+import { Card } from '@/src/components/Card';
+import { IconTile } from '@/src/components/IconTile';
+import { Money } from '@/src/components/Money';
+import { Screen } from '@/src/components/Screen';
+import { DEMO_CLAIM } from '@/src/lib/claim';
+import { formatDate } from '@/src/lib/time';
+import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+
+export default function ClaimRevealScreen() {
+  const { t, i18n } = useTranslation();
+  const { token } = useLocalSearchParams<{ token: string }>();
+
+  return (
+    <Screen>
+      <View style={styles.hero}>
+        <Text style={styles.sparkleA}>✦</Text>
+        <Text style={styles.sparkleB}>✦</Text>
+        <Text style={styles.sparkleC}>✦</Text>
+        <Text style={styles.heroTitle}>{t('claimExtra.revealTitle')}</Text>
+      </View>
+
+      <Card tone="lavender" style={styles.card}>
+        <IconTile emoji="☕" size={68} tone="gold" />
+        <Text style={styles.vendor}>{DEMO_CLAIM.vendor}</Text>
+        <Money minor={DEMO_CLAIM.amountMinor} style={styles.amount} />
+        <Text style={styles.from}>{t('claimExtra.from', { name: DEMO_CLAIM.sender })}</Text>
+        <View style={styles.messageBox}>
+          <Text style={styles.messageLabel}>{t('claimExtra.message')}</Text>
+          <Text style={styles.message}>{DEMO_CLAIM.message}</Text>
+        </View>
+        <Text style={styles.expires}>
+          {t('claimExtra.expires', { date: formatDate(DEMO_CLAIM.expiresAt, i18n.language) })}
+        </Text>
+      </Card>
+
+      <Button
+        label={t('claimExtra.openCta')}
+        onPress={() => router.push(`/claim/${token}/details`)}
+      />
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  hero: { alignItems: 'center', marginTop: spacing.md },
+  heroTitle: {
+    fontFamily: fonts.extrabold,
+    fontSize: fontSizes.xxl,
+    color: colors.text,
+  },
+  sparkleA: { position: 'absolute', top: -4, left: '24%', fontSize: 20, color: colors.ink },
+  sparkleB: { position: 'absolute', top: 14, right: '24%', fontSize: 14, color: colors.ink },
+  sparkleC: { position: 'absolute', top: -10, right: '38%', fontSize: 12, color: colors.ink },
+  card: { alignItems: 'center', gap: spacing.xs, marginTop: spacing.sm },
+  vendor: { fontFamily: fonts.bold, fontSize: fontSizes.lg, color: colors.text },
+  amount: { fontSize: fontSizes.hero, color: colors.text },
+  from: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted },
+  messageBox: {
+    alignSelf: 'stretch',
+    marginTop: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    backgroundColor: colors.surface,
+    gap: 2,
+  },
+  messageLabel: {
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+  },
+  message: { fontFamily: fonts.regular, fontSize: fontSizes.md, color: colors.text, lineHeight: 21 },
+  expires: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
+});

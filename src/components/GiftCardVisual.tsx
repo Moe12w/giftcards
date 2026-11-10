@@ -1,0 +1,123 @@
+// src/components/GiftCardVisual.tsx
+import React from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import type { AccentTone } from '../lib/types';
+import { colors, fonts, fontSizes, spacing } from '../theme';
+import { Badge, type BadgeTone } from './Badge';
+import { Card, type CardTone } from './Card';
+import { IconTile, type IconTileTone } from './IconTile';
+import { Money } from './Money';
+
+interface GiftCardVisualProps {
+  title: string;
+  emoji?: string;
+  /** Vendor logo image URL — renders the logo instead of the emoji when present. */
+  logoUrl?: string | null;
+  tone?: AccentTone;
+  amountMinor?: number;
+  meta?: string;
+  message?: string;
+  badge?: { label: string; tone: BadgeTone };
+  onPress?: () => void;
+  compact?: boolean;
+}
+
+const cardTones: Record<AccentTone, CardTone> = {
+  teal: 'teal',
+  pink: 'pink',
+  lavender: 'lavender',
+  gold: 'gold',
+  sky: 'sky',
+};
+
+export function GiftCardVisual({
+  title,
+  emoji = '🎁',
+  logoUrl,
+  tone = 'lavender',
+  amountMinor,
+  meta,
+  message,
+  badge,
+  onPress,
+  compact = false,
+}: GiftCardVisualProps) {
+  const { t } = useTranslation();
+
+  const body = (
+    <Card tone={cardTones[tone]} style={compact ? styles.compact : undefined}>
+      <View style={styles.topRow}>
+        <IconTile
+          emoji={emoji}
+          imageUrl={logoUrl}
+          size={compact ? 42 : 48}
+          tone={tone as IconTileTone}
+        />
+        <View style={styles.titleWrap}>
+          <Text style={styles.title} numberOfLines={1}>
+            {title}
+          </Text>
+          {message ? (
+            <Text style={styles.message} numberOfLines={1}>
+              {message}
+            </Text>
+          ) : null}
+        </View>
+        {badge ? <Badge label={badge.label} tone={badge.tone} /> : null}
+      </View>
+
+      {typeof amountMinor === 'number' ? (
+        <View style={styles.balanceWrap}>
+          <Text style={styles.balanceLabel}>{t('gifts.balance')}</Text>
+          <Money minor={amountMinor} style={styles.balance} />
+        </View>
+      ) : null}
+
+      {meta ? <Text style={styles.meta}>{meta}</Text> : null}
+    </Card>
+  );
+
+  if (!onPress) return body;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      style={({ pressed }) => pressed && styles.pressed}
+    >
+      {body}
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  titleWrap: { flex: 1, gap: 1 },
+  title: {
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.md,
+    color: colors.text,
+  },
+  message: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+  },
+  balanceWrap: { marginTop: spacing.sm, gap: 1 },
+  balanceLabel: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+  },
+  balance: { fontSize: fontSizes.xxl, color: colors.text },
+  meta: {
+    marginTop: spacing.sm,
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+  },
+  compact: { padding: spacing.sm + 2 },
+  pressed: { opacity: 0.9 },
+});

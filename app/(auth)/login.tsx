@@ -1,0 +1,175 @@
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Link, router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+
+import { Button } from '@/src/components/Button';
+import { Card } from '@/src/components/Card';
+import { Screen } from '@/src/components/Screen';
+import { TextField } from '@/src/components/TextField';
+import { useAuth } from '@/src/lib/auth';
+import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+
+export default function LoginScreen() {
+  const { t } = useTranslation();
+  const { signIn, isDemo } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  async function onSubmit() {
+    const next: Record<string, string> = {};
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) next.email = t('auth.invalidEmail');
+    if (password.length < 8) next.password = t('auth.passwordTooShort');
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      await signIn(email.trim(), password);
+      router.replace('/(customer)/(tabs)');
+    } catch {
+      setFormError(t('common.errorGeneric'));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Screen>
+      <View style={styles.hero}>
+        <View style={styles.blob} />
+        <View style={styles.logoCircle}>
+          <Text style={styles.logo}>🎁</Text>
+        </View>
+        <Text style={styles.title}>{t('auth.welcomeTitle')}</Text>
+        <Text style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Text>
+      </View>
+
+      {isDemo ? (
+        <Card tone="teal">
+          <Text style={styles.demoText}>{t('auth.demoHint')}</Text>
+        </Card>
+      ) : null}
+
+      <TextField
+        label={t('auth.email')}
+        value={email}
+        onChangeText={setEmail}
+        placeholder={t('auth.emailPlaceholder')}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoComplete="email"
+        error={errors.email}
+      />
+      <TextField
+        label={t('auth.password')}
+        value={password}
+        onChangeText={setPassword}
+        placeholder={t('auth.passwordPlaceholder')}
+        secureTextEntry
+        error={errors.password}
+      />
+
+      <Pressable
+        onPress={() => router.push('/(auth)/forgot-password')}
+        accessibilityRole="button"
+        style={styles.forgot}
+      >
+        <Text style={styles.link}>{t('auth.forgotPassword')}</Text>
+      </Pressable>
+
+      {formError ? <Text style={styles.formError}>{formError}</Text> : null}
+
+      <Button label={t('auth.signInCta')} onPress={onSubmit} loading={submitting} />
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>{t('auth.noAccount')} </Text>
+        <Link href="/(auth)/sign-up" asChild>
+          <Pressable accessibilityRole="link">
+            <Text style={styles.link}>{t('auth.signUp')}</Text>
+          </Pressable>
+        </Link>
+      </View>
+
+      <Button
+        label={t('common.skip')}
+        variant="ghost"
+        onPress={() => router.replace('/(customer)/(tabs)')}
+      />
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  hero: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
+  },
+  blob: {
+    position: 'absolute',
+    top: -10,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: colors.pinkTint,
+  },
+  logoCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: radii.pill,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logo: { fontSize: 48 },
+  title: {
+    fontFamily: fonts.extrabold,
+    fontSize: fontSizes.display,
+    color: colors.text,
+    textAlign: 'center',
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.md,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 21,
+  },
+  demoText: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.sm,
+    color: colors.text,
+    lineHeight: 19,
+  },
+  forgot: { alignSelf: 'flex-end', paddingVertical: spacing.xs },
+  formError: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.sm,
+    color: colors.danger,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  footerText: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.md,
+    color: colors.textMuted,
+  },
+  link: {
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.md,
+    color: colors.tealDark,
+  },
+});

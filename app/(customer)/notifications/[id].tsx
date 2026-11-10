@@ -1,0 +1,94 @@
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+
+import { Button } from '@/src/components/Button';
+import { Card } from '@/src/components/Card';
+import { EmptyState } from '@/src/components/EmptyState';
+import { FlowHeader } from '@/src/components/FlowHeader';
+import { IconTile, type IconTileTone } from '@/src/components/IconTile';
+import { Screen } from '@/src/components/Screen';
+import { MOCK_NOTIFICATIONS } from '@/src/lib/mock-data';
+import { formatDate } from '@/src/lib/time';
+import type { NotificationKind } from '@/src/lib/types';
+import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+
+const KIND_ICON: Record<NotificationKind, string> = {
+  received: '🎁',
+  delivered: '📬',
+  opened: '👀',
+  redeemed: '✅',
+  expiry: '⏳',
+  promo: '✨',
+};
+
+const KIND_TONE: Record<NotificationKind, IconTileTone> = {
+  received: 'pink',
+  delivered: 'teal',
+  opened: 'lavender',
+  redeemed: 'teal',
+  expiry: 'gold',
+  promo: 'lavender',
+};
+
+export default function NotificationDetailScreen() {
+  const { t, i18n } = useTranslation();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const item = MOCK_NOTIFICATIONS.find((notification) => notification.id === id);
+
+  if (!item) {
+    return (
+      <Screen>
+        <FlowHeader title={t('notifications.detailTitle')} onBack={() => router.back()} />
+        <EmptyState
+          title={t('states.not-found.title')}
+          body={t('states.not-found.body')}
+          icon="🔔"
+          tone="lavender"
+        />
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen>
+      <FlowHeader title={t('notifications.detailTitle')} onBack={() => router.back()} />
+
+      <Card tone="teal" style={styles.card}>
+        <IconTile emoji={KIND_ICON[item.kind]} size={64} tone={KIND_TONE[item.kind]} />
+        <Text style={styles.title}>{t(item.titleKey)}</Text>
+        <Text style={styles.date}>{formatDate(item.created_at, i18n.language)}</Text>
+        <Text style={styles.body}>{t(item.bodyKey)}</Text>
+      </Card>
+
+      {item.gift_id ? (
+        <Button
+          label={t('notifications.viewGift')}
+          onPress={() => router.push(`/(customer)/card/${item.gift_id}`)}
+        />
+      ) : null}
+      <Button label={t('common.back')} variant="secondary" onPress={() => router.back()} />
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: { alignItems: 'center', gap: spacing.xs },
+  title: {
+    fontFamily: fonts.extrabold,
+    fontSize: fontSizes.xl,
+    color: colors.text,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
+  date: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
+  body: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.md,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginTop: spacing.xs,
+  },
+});
