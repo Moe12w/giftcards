@@ -103,7 +103,13 @@
     "resetFailed": "We could not send the reset link. Please try again.",
     "passwordUpdatedBody": "Your new password is ready. Sign in to continue.",
     "resetLinkNeededTitle": "Open this screen from your email",
-    "resetLinkNeededBody": "This page needs the secure link we emailed you. Request a new link and open it on this device."
+    "resetLinkNeededBody": "This page needs the secure link we emailed you. Request a new link and open it on this device.",
+    "codeLength": "Enter the 6 digit code from the email.",
+    "codeInvalid": "That code does not match. Check it and try again.",
+    "codeExpired": "That code has expired. Send yourself a new one.",
+    "codeResent": "A new code is on its way to your inbox.",
+    "verifyFailed": "We could not verify that code. Please try again.",
+    "resendFailed": "We could not send a new code. Please try again."
   },
   "onboarding": {
     "skip": "Skip",

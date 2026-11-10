@@ -33,7 +33,6 @@ export default function NotificationsPermissionScreen() {
 
       <View style={styles.footer}>
         <Button label={t('authExtra.enableNotifications')} onPress={finish} />
-        <Button label={t('authExtra.maybeLater')} variant="ghost" onPress={finish} />
       </View>
     </Screen>
   );

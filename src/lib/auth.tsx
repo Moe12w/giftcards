@@ -14,7 +14,15 @@ interface AuthState {
   loading: boolean;
   isDemo: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  /**
+   * Creates an account. Returns the session when the project confirms emails
+   * automatically, and null when the user still has to confirm by email.
+   */
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+  ) => Promise<{ session: Session | null }>;
   signOut: () => Promise<void>;
   /** Sends a password recovery link to the given address. */
   resetPassword: (email: string) => Promise<void>;
@@ -78,13 +86,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) throw error;
       },
       async signUp(email, password, fullName) {
-        if (!hasSupabaseConfig) return;
-        const { error } = await getSupabase().auth.signUp({
+        if (!hasSupabaseConfig) return { session: null };
+        const { data, error } = await getSupabase().auth.signUp({
           email,
           password,
           options: { data: { full_name: fullName } },
         });
         if (error) throw error;
+        return { session: data.session ?? null };
       },
       async signOut() {
         if (!hasSupabaseConfig) return;

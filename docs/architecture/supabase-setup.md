@@ -42,6 +42,34 @@ SUPABASE_ACCESS_TOKEN=<from supabase.com/dashboard/account/tokens>
 > npx supabase secrets set ENTERPRISE_CODE_ENCRYPTION_KEY=<long random string>
 > ```
 
+## 2a. Authentication settings
+
+Two settings in **Supabase Dashboard → Authentication → URL Configuration** and
+**→ Sign In / Providers → Email** matter for the app.
+
+| Setting | Value | Why |
+|---|---|---|
+| Redirect URLs | `giftly://**`, `http://localhost:8081/**` | the password reset email sends the user back into the app |
+| Auto-confirm email | **on** while testing | without an SMTP provider the built in mailer cannot deliver, so sign ups would fail |
+
+They can also be set through the Management API:
+
+```bash
+curl -X PATCH "https://api.supabase.com/v1/projects/<ref>/config/auth" \
+  -H "Authorization: Bearer <access token>" \
+  -H "Content-Type: application/json" \
+  -d '{"uri_allow_list":"giftly://**,http://localhost:8081/**","mailer_autoconfirm":true}'
+```
+
+### Sending real email
+
+Supabase's built in mailer only delivers to project team members, and only a
+couple of messages per hour. For the password reset email to reach a real
+customer, add your own SMTP provider (Resend, SendGrid, Postmark, …) under
+**Authentication → Sign In / Providers → Email → SMTP**. Until then the reset
+screen works, but the email itself is never delivered — keep the auto-confirm
+setting on while developing.
+
 ## 3. Apply the migrations
 
 ### Option A — Supabase CLI (recommended)

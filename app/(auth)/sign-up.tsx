@@ -33,7 +33,12 @@ export default function SignUpScreen() {
     setFormError(null);
     setAlreadyRegistered(false);
     try {
-      await signUp(email.trim(), password, fullName.trim());
+      const { session } = await signUp(email.trim(), password, fullName.trim());
+      if (session) {
+        // The project confirms emails automatically, so the account is ready.
+        router.replace('/(customer)/(tabs)');
+        return;
+      }
       router.push({
         pathname: '/(auth)/verify-email',
         params: { email: email.trim(), name: fullName.trim() },
