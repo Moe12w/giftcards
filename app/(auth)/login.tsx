@@ -19,6 +19,7 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [needsAccount, setNeedsAccount] = useState(false);
 
   async function onSubmit() {
     const next: Record<string, string> = {};
@@ -29,11 +30,24 @@ export default function LoginScreen() {
 
     setSubmitting(true);
     setFormError(null);
+    setNeedsAccount(false);
     try {
       await signIn(email.trim(), password);
       router.replace('/(customer)/(tabs)');
-    } catch {
-      setFormError(t('common.errorGeneric'));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (/invalid login credentials/i.test(message)) {
+        // Supabase gives the same answer for an unknown address and for a wrong
+        // password, so both next steps are offered instead of a dead end.
+        setFormError(t('auth.noAccountFound'));
+        setNeedsAccount(true);
+      } else if (/email not confirmed/i.test(message)) {
+        setFormError(t('auth.emailNotConfirmed'));
+      } else if (/rate limit|too many/i.test(message)) {
+        setFormError(t('auth.tooManyAttempts'));
+      } else {
+        setFormError(t('auth.signInFailed'));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -83,7 +97,18 @@ export default function LoginScreen() {
         <Text style={styles.link}>{t('auth.forgotPassword')}</Text>
       </Pressable>
 
-      {formError ? <Text style={styles.formError}>{formError}</Text> : null}
+      {formError ? (
+        <View style={styles.errorBox}>
+          <Text style={styles.formError}>{formError}</Text>
+          {needsAccount ? (
+            <Link href="/(auth)/sign-up" asChild>
+              <Pressable accessibilityRole="link" hitSlop={8}>
+                <Text style={styles.link}>{t('auth.createAccountCta')}</Text>
+              </Pressable>
+            </Link>
+          ) : null}
+        </View>
+      ) : null}
 
       <Button label={t('auth.signInCta')} onPress={onSubmit} loading={submitting} />
 
@@ -95,12 +120,6 @@ export default function LoginScreen() {
           </Pressable>
         </Link>
       </View>
-
-      <Button
-        label={t('common.skip')}
-        variant="ghost"
-        onPress={() => router.replace('/(customer)/(tabs)')}
-      />
     </Screen>
   );
 }
@@ -155,6 +174,14 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     fontSize: fontSizes.sm,
     color: colors.danger,
+  },
+  errorBox: {
+    gap: spacing.xs,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    backgroundColor: colors.pinkTint,
+    padding: spacing.sm + 2,
   },
   footer: {
     flexDirection: 'row',

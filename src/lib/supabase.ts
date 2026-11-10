@@ -20,7 +20,11 @@ export function getSupabase(): SupabaseClient {
         storage: AsyncStorage,
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: false,
+        // The web build reads the recovery link straight from the URL. On a
+        // phone the same link arrives through Linking and is handled by
+        // `src/lib/auth-link.ts`.
+        detectSessionInUrl: true,
+        flowType: 'pkce',
       },
     });
   }

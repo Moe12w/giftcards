@@ -2,7 +2,9 @@
 // Authentication context. Uses Supabase Auth when configured; otherwise runs a
 // demo session so the customer app is testable in Expo Go before setup.
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import * as Linking from 'expo-linking';
 import type { Session, User } from '@supabase/supabase-js';
+import { handleAuthUrl, passwordResetLink } from './auth-link';
 import { hasSupabaseConfig } from './env';
 import { getSupabase } from './supabase';
 
@@ -14,6 +16,10 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Sends a password recovery link to the given address. */
+  resetPassword: (email: string) => Promise<void>;
+  /** Sets a new password, used by the recovery screen. */
+  updatePassword: (password: string) => Promise<void>;
   updateProfile: (patch: { full_name?: string; phone?: string }) => Promise<void>;
 }
 
@@ -45,7 +51,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(next?.user ?? null);
     });
 
-    return () => sub.subscription.unsubscribe();
+    // A password recovery link opens the app directly. The session has to be
+    // established before the reset screen can be used.
+    Linking.getInitialURL().then((url) => {
+      if (url) handleAuthUrl(url);
+    });
+    const linkSub = Linking.addEventListener('url', ({ url }) => {
+      handleAuthUrl(url);
+    });
+
+    return () => {
+      sub.subscription.unsubscribe();
+      linkSub.remove();
+    };
   }, []);
 
   const value = useMemo<AuthState>(
@@ -71,6 +89,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async signOut() {
         if (!hasSupabaseConfig) return;
         const { error } = await getSupabase().auth.signOut();
+        if (error) throw error;
+      },
+      async resetPassword(email) {
+        if (!hasSupabaseConfig) return;
+        const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
+          redirectTo: passwordResetLink(),
+        });
+        if (error) throw error;
+      },
+      async updatePassword(password) {
+        if (!hasSupabaseConfig) return;
+        const { error } = await getSupabase().auth.updateUser({ password });
         if (error) throw error;
       },
       async updateProfile(patch) {
