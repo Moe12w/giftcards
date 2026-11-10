@@ -8,12 +8,14 @@ export type VendorStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 export type AccentTone = 'teal' | 'pink' | 'lavender' | 'gold' | 'sky';
 
 /**
- * How a gift card is redeemed.
- * - `value`  : the balance is money and each redemption spends an amount.
- * - `sessions`: the card holds a number of sessions (a massage, a class, a
- *              night at the hotel). Every redemption uses exactly one session.
+ * How a gift card is fulfilled and redeemed.
+ * - `monetary`      : the balance is money and each redemption spends an amount.
+ * - `experience`    : the card holds a number of sessions (a massage, a class, a
+ *                     night at the hotel). Every redemption uses one session.
+ * - `enterprise_code`: the card is fulfilled from a partner's own code
+ *                     inventory and is confirmed by the partner.
  */
-export type RedemptionMode = 'value' | 'sessions';
+export type FulfilmentType = 'monetary' | 'experience' | 'enterprise_code';
 
 export type CategoryId =
   | 'coffee'
@@ -82,8 +84,8 @@ export interface Offer {
   rating?: number;
   location?: string;
   /** Value cards spend money, experience cards spend sessions. */
-  redemption_mode?: RedemptionMode;
-  /** Number of sessions included when `redemption_mode` is `sessions`. */
+  fulfilment_type?: FulfilmentType;
+  /** Number of sessions included when `fulfilment_type` is `experience`. */
   session_count?: number;
 }
 
@@ -112,11 +114,11 @@ export interface GiftCard {
   scheduled_for?: string | null;
   message?: string | null;
   /** Value cards spend money, experience cards spend sessions. */
-  redemption_mode?: RedemptionMode;
+  fulfilment_type?: FulfilmentType;
   /** Sessions included on issue (experience cards only). */
-  sessions_total?: number;
+  total_sessions?: number;
   /** Sessions still available (experience cards only). */
-  sessions_remaining?: number;
+  remaining_sessions?: number;
   /** Vendor that issued the card — used by the vendor dashboard. */
   vendor_id?: string;
 }
@@ -126,7 +128,7 @@ export interface RedemptionEntry {
   id: string;
   card_id: string;
   /** A session was used, or money was spent. */
-  kind: 'session' | 'value';
+  kind: 'monetary' | 'session' | 'enterprise_code';
   /** Sessions consumed (always 1 for a session redemption). */
   sessions?: number;
   /** Minor units spent on a value card. */

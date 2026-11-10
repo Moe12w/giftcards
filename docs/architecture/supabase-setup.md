@@ -162,6 +162,25 @@ npx supabase db reset --linked   # re-applies migrations + seed on a dev project
 # or paste supabase/seed.sql into the SQL editor
 ```
 
+The seed is **generated from the mobile app's own catalogue** so the database and
+the app always show the same vendors and products. After changing the app's demo
+data, regenerate it:
+
+```bash
+node scripts/generate-seed.cjs
+```
+
+Test accounts created by the seed (password for all: `GiftlyTest123`):
+
+| Email | Role |
+|---|---|
+| `customer@giftly.test` | customer |
+| `owner@giftly.test` | vendor owner (The Coffee House + Dune Spa) |
+| `manager@giftly.test` | vendor manager |
+| `staff@giftly.test` | redemption staff |
+| `partner@giftly.test` | enterprise partner |
+| `admin@giftly.test` | platform admin |
+
 ## 8. Point the Expo app at the database
 
 With `.env` in place, the app leaves demo mode automatically

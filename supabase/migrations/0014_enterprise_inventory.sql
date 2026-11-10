@@ -166,7 +166,7 @@ volatile
 security definer
 set search_path = public
 as $$
-  select pgp_sym_encrypt(p_code, public.enterprise_code_key());
+  select extensions.pgp_sym_encrypt(p_code, public.enterprise_code_key());
 $$;
 
 create or replace function public.decrypt_enterprise_code(p_ciphertext bytea)
@@ -176,7 +176,7 @@ volatile
 security definer
 set search_path = public
 as $$
-  select pgp_sym_decrypt(p_ciphertext, public.enterprise_code_key());
+  select extensions.pgp_sym_decrypt(p_ciphertext, public.enterprise_code_key());
 $$;
 
 -- Duplicate detection without storing anything readable.
@@ -189,7 +189,7 @@ language sql
 immutable
 as $$
   select encode(
-    digest(p_partner_id::text || ':' || upper(trim(p_code)), 'sha256'),
+    extensions.digest(p_partner_id::text || ':' || upper(trim(p_code)), 'sha256'),
     'hex'
   );
 $$;

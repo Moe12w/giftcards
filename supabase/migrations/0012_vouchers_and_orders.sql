@@ -52,10 +52,21 @@ exception when duplicate_object then null; end $$;
 
 -- ---------------------------------------------------------------------------
 -- gift_cards -> vouchers
+--
+-- The two views depend on the old table and column names, and Postgres will
+-- not let a column change while a view uses it, so they are dropped first and
+-- rebuilt at the end of this migration.
 -- ---------------------------------------------------------------------------
-alter table public.gift_cards rename to public.vouchers;
+drop view if exists public.vendor_cards;
+drop view if exists public.card_balances;
+
+alter table public.gift_cards rename to vouchers;
 alter table public.vouchers rename column offer_id to product_id;
 alter table public.vouchers rename column original_value_minor to initial_value_minor;
+
+-- The column default has to go first: Postgres cannot cast a card_status
+-- default into voucher_status automatically.
+alter table public.vouchers alter column status drop default;
 
 alter table public.vouchers
   alter column status type public.voucher_status
@@ -67,6 +78,8 @@ alter table public.vouchers
     when 'voided' then 'void'
     else 'issued'
   end::public.voucher_status;
+
+alter table public.vouchers alter column status set default 'issued';
 
 alter table public.vouchers
   add column if not exists voucher_code text;
@@ -254,15 +267,8 @@ set remaining_value_minor = initial_value_minor
 where remaining_value_minor is null and fulfilment_type = 'monetary';
 
 -- ---------------------------------------------------------------------------
--- Views
---
--- Both views change shape, and Postgres cannot change a view's columns with
--- CREATE OR REPLACE, so they are dropped and rebuilt. `vendor_cards` depends
--- on `card_balances`, so it goes first.
+-- Views (rebuilt after the rename)
 -- ---------------------------------------------------------------------------
-drop view if exists public.vendor_cards;
-drop view if exists public.card_balances;
-
 create or replace view public.card_balances
 with (security_invoker = true) as
 select

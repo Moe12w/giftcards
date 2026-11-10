@@ -47,29 +47,29 @@ function sessionEntry(sessions: number, at = '2026-01-02T00:00:00.000Z'): Redemp
 
 describe('redemptionMode', () => {
   it('defaults to money value', () => {
-    expect(redemptionMode(null)).toBe('value');
-    expect(redemptionMode({})).toBe('value');
-    expect(redemptionMode({ redemption_mode: 'value' })).toBe('value');
+    expect(redemptionMode(null)).toBe('monetary');
+    expect(redemptionMode({})).toBe('monetary');
+    expect(redemptionMode({ fulfilment_type: 'monetary' })).toBe('monetary');
   });
 
   it('reads the session mode', () => {
-    expect(redemptionMode({ redemption_mode: 'sessions' })).toBe('sessions');
-    expect(isSessionOffer({ redemption_mode: 'sessions' })).toBe(true);
-    expect(isSessionOffer({ redemption_mode: 'value' })).toBe(false);
-    expect(isSessionCard({ redemption_mode: 'sessions' })).toBe(true);
+    expect(redemptionMode({ fulfilment_type: 'experience' })).toBe('experience');
+    expect(isSessionOffer({ fulfilment_type: 'experience' })).toBe(true);
+    expect(isSessionOffer({ fulfilment_type: 'monetary' })).toBe(false);
+    expect(isSessionCard({ fulfilment_type: 'experience' })).toBe(true);
   });
 });
 
 describe('single session cards', () => {
   it('holds exactly one session', () => {
-    const massage = card({ redemption_mode: 'sessions', sessions_total: 1 });
+    const massage = card({ fulfilment_type: 'experience', total_sessions: 1 });
     expect(sessionTotal(massage)).toBe(1);
     expect(sessionsRemaining(massage, [])).toBe(1);
     expect(canRedeemSession(massage, [])).toBe(true);
   });
 
   it('is finished after one use', () => {
-    const massage = card({ redemption_mode: 'sessions', sessions_total: 1 });
+    const massage = card({ fulfilment_type: 'experience', total_sessions: 1 });
     const entries = [sessionEntry(1)];
     expect(sessionsUsed(entries)).toBe(1);
     expect(sessionsRemaining(massage, entries)).toBe(0);
@@ -80,7 +80,7 @@ describe('single session cards', () => {
 
 describe('session packages', () => {
   it('drops by one session per use', () => {
-    const pack = card({ redemption_mode: 'sessions', sessions_total: 5 });
+    const pack = card({ fulfilment_type: 'experience', total_sessions: 5 });
     let entries: RedemptionEntry[] = [];
 
     expect(sessionsRemaining(pack, entries)).toBe(5);
@@ -96,7 +96,7 @@ describe('session packages', () => {
   });
 
   it('never goes below zero', () => {
-    const pack = card({ redemption_mode: 'sessions', sessions_total: 1 });
+    const pack = card({ fulfilment_type: 'experience', total_sessions: 1 });
     const entries = [sessionEntry(1), sessionEntry(1)];
     expect(sessionsRemaining(pack, entries)).toBe(0);
     expect(sessionProgress(pack, entries)).toBe(1);
@@ -110,7 +110,7 @@ describe('value cards', () => {
       {
         id: 'value-1',
         card_id: 'card-test',
-        kind: 'value',
+        kind: 'monetary',
         amount_minor: 5000,
         actor: 'The Coffee House',
         created_at: '2026-01-03T00:00:00.000Z',

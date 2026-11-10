@@ -171,7 +171,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
           candidate.id === cardId
             ? {
                 ...candidate,
-                sessions_remaining: remaining,
+                remaining_sessions: remaining,
                 status: remaining <= 0 ? 'redeemed' : candidate.status,
                 balance_minor: candidate.balance_minor ?? 0,
               }
@@ -196,7 +196,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       const entry: RedemptionEntry = {
         id: makeId('redemption'),
         card_id: cardId,
-        kind: 'value',
+        kind: 'monetary',
         amount_minor: amountMinor,
         actor,
         created_at: new Date().toISOString(),

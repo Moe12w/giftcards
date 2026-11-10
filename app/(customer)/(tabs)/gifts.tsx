@@ -129,7 +129,7 @@ export default function GiftsScreen() {
                 icon={card.icon}
                 tone={card.tone}
                 amountMinor={valueLeft(card)}
-                sessionsTotal={isSessionCard(card) ? card.sessions_total ?? 1 : undefined}
+                sessionsTotal={isSessionCard(card) ? card.total_sessions ?? 1 : undefined}
                 sessionsRemaining={isSessionCard(card) ? sessionsLeft(card) : undefined}
                 message={card.message ?? undefined}
                 meta={
@@ -162,7 +162,7 @@ export default function GiftsScreen() {
                     icon={card.icon}
                     tone={card.tone}
                     amountMinor={card.original_value_minor}
-                    sessionsTotal={isSessionCard(card) ? card.sessions_total ?? 1 : undefined}
+                    sessionsTotal={isSessionCard(card) ? card.total_sessions ?? 1 : undefined}
                     sessionsRemaining={isSessionCard(card) ? sessionsLeft(card) : undefined}
                     compact
                     meta={

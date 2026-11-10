@@ -408,7 +408,7 @@ set search_path = public
 as $$
 begin
   insert into public.profiles (id, full_name, email)
-  values (new.id, new.raw_user_data ->> 'full_name', new.email)
+  values (new.id, new.raw_user_meta_data ->> 'full_name', new.email)
   on conflict (id) do nothing;
 
   insert into public.user_roles (user_id, role)

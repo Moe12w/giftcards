@@ -110,6 +110,9 @@ export default function BusinessScreen() {
                 key={offer.id}
                 offer={offer}
                 index={index}
+                // We are already on this business page, so the vendor name is
+                // plain text here instead of a link to itself.
+                vendorLink={false}
                 onPress={() => router.push(`/(customer)/gift/${offer.id}`)}
               />
             ))}

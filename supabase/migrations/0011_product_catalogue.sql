@@ -100,7 +100,7 @@ create index if not exists enterprise_products_partner_idx
 -- ---------------------------------------------------------------------------
 -- offers -> products
 -- ---------------------------------------------------------------------------
-alter table public.offers rename to public.products;
+alter table public.offers rename to products;
 
 alter table public.products
   add column if not exists slug text;

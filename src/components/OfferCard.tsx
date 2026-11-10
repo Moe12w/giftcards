@@ -15,9 +15,14 @@ interface OfferCardProps {
   offer: Offer;
   index?: number;
   onPress: () => void;
+  /**
+   * Whether the vendor name opens the business page. Turn it off on the
+   * business page itself, where the link would only reopen the same screen.
+   */
+  vendorLink?: boolean;
 }
 
-export function OfferCard({ offer, index = 0, onPress }: OfferCardProps) {
+export function OfferCard({ offer, index = 0, onPress, vendorLink = true }: OfferCardProps) {
   const { t, i18n } = useTranslation();
   const title = offerTitle(offer, i18n.language);
   const tone = offerTone(offer, index) as AccentTone;
@@ -42,16 +47,22 @@ export function OfferCard({ offer, index = 0, onPress }: OfferCardProps) {
             <Text style={styles.title} numberOfLines={1}>
               {title}
             </Text>
-            <Pressable
-              onPress={() => router.push(`/(customer)/business/${offer.vendor_id}`)}
-              accessibilityRole="button"
-              accessibilityLabel={offer.vendor?.name ?? title}
-              hitSlop={6}
-            >
+            {vendorLink ? (
+              <Pressable
+                onPress={() => router.push(`/(customer)/business/${offer.vendor_id}`)}
+                accessibilityRole="button"
+                accessibilityLabel={offer.vendor?.name ?? title}
+                hitSlop={6}
+              >
+                <Text style={styles.vendor} numberOfLines={1}>
+                  {t('home.fromVendor', { vendor: offer.vendor?.name ?? title })}
+                </Text>
+              </Pressable>
+            ) : (
               <Text style={styles.vendor} numberOfLines={1}>
                 {t('home.fromVendor', { vendor: offer.vendor?.name ?? title })}
               </Text>
-            </Pressable>
+            )}
             <View style={styles.meta}>
               <Star size={12} color={colors.gold} />
               <Text style={styles.metaText}>{(offer.rating ?? 4.8).toFixed(1)}</Text>

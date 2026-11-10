@@ -171,7 +171,7 @@ export default function VendorHome() {
         <View style={styles.list}>
           {sessionCards.map((card) => {
             const remaining = sessionsLeft(card);
-            const total = card.sessions_total ?? 1;
+            const total = card.total_sessions ?? 1;
             const expired = card.expires_at ? new Date(card.expires_at).getTime() < Date.now() : false;
             return (
               <Card key={card.id} style={styles.card}>

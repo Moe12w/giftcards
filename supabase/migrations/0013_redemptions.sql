@@ -115,7 +115,7 @@ begin
   select * into v_voucher
   from public.vouchers
   where voucher_code = upper(trim(p_code))
-     or card_code_hash = encode(digest(upper(trim(p_code)), 'sha256'), 'hex')
+     or card_code_hash = encode(extensions.digest(upper(trim(p_code)), 'sha256'), 'hex')
   limit 1;
 
   if v_voucher.id is null then
@@ -168,26 +168,6 @@ begin
       end
     );
 end;
-$$;
-
--- ---------------------------------------------------------------------------
--- Convenience wrapper: one session, same rules.
--- The legacy single-session function is replaced so there is only one
--- session-redemption path with the staff checks applied.
--- ---------------------------------------------------------------------------
-drop function if exists public.redeem_session(uuid);
-
-create or replace function public.redeem_session(p_card_id uuid)
-returns table (
-  card_id uuid,
-  sessions_remaining integer,
-  new_status public.voucher_status
-)
-language sql
-security definer
-set search_path = public
-as $$
-  select * from public.redeem_sessions(p_card_id, 1, null, null);
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -439,6 +419,30 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- Convenience wrapper: one session, same rules.
+-- The legacy single-session function is replaced so there is only one
+-- session-redemption path, with the staff checks applied.
+-- ---------------------------------------------------------------------------
+drop function if exists public.redeem_session(uuid);
+
+create or replace function public.redeem_session(p_card_id uuid)
+returns table (
+  card_id uuid,
+  sessions_remaining integer,
+  new_status public.voucher_status
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    r.redemption_id as card_id,
+    r.sessions_remaining,
+    r.new_status
+  from public.redeem_sessions(p_card_id, 1, null::text, null::text) r;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Browser entry point: manual code entry from the vendor dashboard
 -- ---------------------------------------------------------------------------
 create or replace function public.redeem_voucher_by_code(
@@ -466,7 +470,7 @@ begin
   select * into v_voucher
   from public.vouchers
   where voucher_code = upper(trim(p_code))
-     or card_code_hash = encode(digest(upper(trim(p_code)), 'sha256'), 'hex')
+     or card_code_hash = encode(extensions.digest(upper(trim(p_code)), 'sha256'), 'hex')
   limit 1;
 
   if v_voucher.id is null then

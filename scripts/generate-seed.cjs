@@ -57,6 +57,49 @@ push("begin;");
 push('');
 
 // ---------------------------------------------------------------------------
+// Reset the demo tables so the seed can be run again at any time.
+// (This is demo data for a development project, not production content.)
+// ---------------------------------------------------------------------------
+push('-- Clear the demo rows before inserting them again.');
+const RESET = [
+  'redemption_items',
+  'redemptions',
+  'vouchers',
+  'order_items',
+  'orders',
+  'product_media',
+  'product_variants',
+  'products',
+  'vendor_locations',
+  'vendor_applications',
+  'vendor_members',
+  'vendors',
+  'categories',
+  'enterprise_code_events',
+  'enterprise_code_inventory',
+  'enterprise_import_batches',
+  'enterprise_products',
+  'enterprise_members',
+  'enterprise_partners',
+  'favourites',
+  'recipients',
+  'campaign_placements',
+  'campaigns',
+  'banners',
+];
+// The append-only triggers protect live history, so they are lifted for the
+// reset and restored straight afterwards. The ledger is cleared before the
+// vouchers, because every voucher is referenced by it.
+push('alter table public.ledger_entries disable trigger ledger_no_update;');
+push('alter table public.audit_log disable trigger audit_no_update;');
+push('delete from public.ledger_entries;');
+push('delete from public.audit_log;');
+RESET.forEach((table) => push(`delete from public.${table};`));
+push('alter table public.ledger_entries enable trigger ledger_no_update;');
+push('alter table public.audit_log enable trigger audit_no_update;');
+push('');
+
+// ---------------------------------------------------------------------------
 // Test users
 // ---------------------------------------------------------------------------
 push('-- ---------------------------------------------------------------------');
@@ -70,26 +113,35 @@ const USERS = [
   ['55555555-5555-4555-8555-555555555555', 'partner@giftly.test', 'Enterprise Partner'],
   ['66666666-6666-4666-8666-666666666666', 'admin@giftly.test', 'Platform Admin'],
 ];
+
+// The people who bought the vouchers the vendors still have to serve.
+const BUYERS = [...new Set(MOCK_VENDOR_CARDS.map((card) => card.recipient_name))].map((name) => [
+  uuidFor(`buyer:${name}`),
+  `${name.toLowerCase().replace(/[^a-z]+/g, '.')}@giftly.test`,
+  name,
+]);
+const ALL_USERS = [...USERS, ...BUYERS];
+
 push("insert into auth.users (id, email, encrypted_password, email_confirmed_at, created_at, raw_user_meta_data)");
 push("values");
-USERS.forEach(([id, email, name], index) => {
-  const comma = index === USERS.length - 1 ? ';' : ',';
-  push(
-    `  ('${id}', '${email}', crypt('GiftlyTest123', gen_salt('bf')), now(), now(), '{"full_name":"${name}"}'::jsonb)${comma}`,
-  );
-});
+const userRows = ALL_USERS.map(
+  ([id, email, name]) =>
+    `  ('${id}', '${email}', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"${name}"}'::jsonb)`,
+);
+push(userRows.join(',\n'));
+push('on conflict (id) do nothing;');
 push('');
 push('insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)');
 push('select');
 push('  gen_random_uuid(), id, id::text, jsonb_build_object(\'sub\', id, \'email\', email), \'email\', now(), now(), now()');
 push('from auth.users');
-push(`where email in (${USERS.map(([, email]) => q(email)).join(', ')})`);
+push(`where email in (${ALL_USERS.map(([, email]) => q(email)).join(', ')})`);
 push('on conflict do nothing;');
 push('');
 
 push('insert into public.profiles (id, full_name, email, preferred_language)');
 push('select id, raw_user_meta_data ->> \'full_name\', email, \'en\' from auth.users');
-push(`where email in (${USERS.map(([, email]) => q(email)).join(', ')})`);
+push(`where email in (${ALL_USERS.map(([, email]) => q(email)).join(', ')})`);
 push('on conflict (id) do nothing;');
 push('');
 
@@ -117,11 +169,11 @@ const CATEGORIES = [
 push('-- ---------------------------------------------------------------------');
 push('-- Categories');
 push('-- ---------------------------------------------------------------------');
-push('insert into public.categories (slug, name, name_ar, icon, sort_order) values');
+push('insert into public.categories (id, slug, name, name_ar, icon, sort_order) values');
 push(
   CATEGORIES.map(
     ([slug, name, nameAr, icon, order]) =>
-      `  (${q(slug)}, ${q(name)}, ${q(nameAr)}, ${q(icon)}, ${order})`,
+      `  (${q(uuidFor('category:' + slug))}, ${q(slug)}, ${q(name)}, ${q(nameAr)}, ${q(icon)}, ${order})`,
   ).join(',\n') + ';',
 );
 push('');
@@ -148,7 +200,7 @@ const slugFor = (name) =>
 push('-- ---------------------------------------------------------------------');
 push('-- Vendors');
 push('-- ---------------------------------------------------------------------');
-push('insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, status, commission_bps, rating, location, approved_at, created_at) values');
+push('insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, status, commission_bps, rating, city, approved_at, created_at) values');
 const vendorValues = [...vendorRows.entries()].map(([vendorId, vendor]) => {
   const offers = MOCK_OFFERS.filter((o) => o.vendor_id === vendorId);
   const rating = Math.max(...offers.map((o) => o.rating ?? 4.8)).toFixed(1);
@@ -163,7 +215,7 @@ push('insert into public.vendor_members (vendor_id, user_id, role, permissions) 
 push(`  (${q(uuidFor('vendor-1'))}, '22222222-2222-4222-8222-222222222222', 'owner', '{"all":true}'::jsonb),`);
 push(`  (${q(uuidFor('vendor-1'))}, '33333333-3333-4333-8333-333333333333', 'manager', '{"products":true,"redeem":true,"staff":true}'::jsonb),`);
 push(`  (${q(uuidFor('vendor-1'))}, '44444444-4444-4444-8444-444444444444', 'redemption_staff', '{"redeem":true}'::jsonb),`);
-push(`  (${q(uuidFor('vendor-2'))}, '22222222-2222-4222-8222-222222222222', 'owner', '{"all":true}'::jsonb),`);
+push(`  (${q(uuidFor('vendor-2'))}, '22222222-2222-4222-8222-222222222222', 'owner', '{"all":true}'::jsonb)`);
 push('on conflict (vendor_id, user_id) do update set role = excluded.role, permissions = excluded.permissions;');
 push('');
 
@@ -205,10 +257,11 @@ push(') values');
 
 const productValues = [];
 const variantValues = [];
+const firstVariantByOffer = new Map();
 for (const offer of MOCK_OFFERS) {
   const productId = uuidFor(offer.id);
   productUuid.set(offer.id, productId);
-  const isSession = offer.redemption_mode === 'sessions';
+  const isSession = offer.fulfilment_type === 'experience';
   const categoryId = offer.category ? uuidFor(`category:${offer.category}`) : 'null';
   const fulfilment = isSession ? 'experience' : 'monetary';
   const sessionCount = isSession ? offer.session_count : 'null';
@@ -223,8 +276,10 @@ for (const offer of MOCK_OFFERS) {
       .filter((n) => n >= 1 && n <= 10)
       .sort((a, b) => a - b);
     packages.forEach((sessions, index) => {
+      const variantId = uuidFor(offer.id + ':pkg:' + sessions);
+      if (index === 0) firstVariantByOffer.set(offer.id, variantId);
       variantValues.push(
-        `  (${q(uuidFor(`${offer.id}:pkg:${sessions}`))}, ${q(productId)}, 'package', ${q(`${sessions} session${sessions === 1 ? '' : 's'}`)}, null, ${sessions}, ${offer.min_amount_minor * sessions}, 'QAR', ${q(offer.valid_until)}, true, ${index})`,
+        `  (${q(variantId)}, ${q(productId)}, 'package', ${q(`${sessions} session${sessions === 1 ? '' : 's'}`)}, null, ${sessions}, ${offer.min_amount_minor * sessions}, 'QAR', ${q(offer.valid_until)}, true, ${index})`,
       );
     });
   } else {
@@ -232,6 +287,7 @@ for (const offer of MOCK_OFFERS) {
     denominations.forEach((amount, index) => {
       const label = 'QAR ' + (amount / 100).toFixed(2);
       const variantId = uuidFor(offer.id + ':den:' + amount);
+      if (index === 0) firstVariantByOffer.set(offer.id, variantId);
       variantValues.push(
         `  (${q(variantId)}, ${q(productId)}, 'denomination', ${q(label)}, ${amount}, null, ${amount}, 'QAR', ${q(offer.valid_until)}, true, ${index})`,
       );
@@ -259,11 +315,11 @@ push(
 );
 push('');
 
-push('insert into public.favourites (customer_id, vendor_id, product_id) values');
+push('insert into public.favourites (id, customer_id, vendor_id, product_id) values');
 push(
   [...MOCK_OFFERS]
     .slice(0, 3)
-    .map((o) => `  ('${CUSTOMER_ID}', ${q(uuidFor(o.vendor_id))}, ${q(uuidFor(o.id))})`)
+    .map((o) => `  (${q(uuidFor('fav:' + o.id))}, '${CUSTOMER_ID}', null, ${q(uuidFor(o.id))})`)
     .join(',\n') + ';',
 );
 push('');
@@ -281,7 +337,7 @@ push('-- ---------------------------------------------------------------------')
 push('insert into public.orders (');
 push('  id, order_ref, buyer_id, status, currency, subtotal_minor, discount_minor, fee_minor,');
 push('  total_minor, sender_name, gift_message, delivery_method, payment_status,');
-push('  payment_provider, provider_reference, paid_at, created_at');
+push('  payment_provider, payment_reference, paid_at, created_at');
 push(') values');
 
 const orderValues = [];
@@ -296,7 +352,7 @@ MOCK_ORDERS.forEach((order, index) => {
   const offer = MOCK_OFFERS.find((o) => o.id === order.offer_id);
   if (!offer) return;
   const itemId = uuidFor(`${order.id}:item`);
-  const variantId = uuidFor(`${offer.id}:den:${offer.preset_amounts_minor[0]}`) || uuidFor(`${order.id}:item:v`);
+  const variantId = firstVariantByOffer.get(offer.id) ?? null;
   const voucherId = uuidFor(order.gift_card_id || `${order.id}:voucher`);
   const productId = uuidFor(offer.id);
   const card = MOCK_CARDS.find((c) => c.id === order.gift_card_id);
@@ -308,19 +364,19 @@ MOCK_ORDERS.forEach((order, index) => {
     `  (${q(itemId)}, ${q(orderId)}, ${q(productId)}, ${q(variantId)}, ${q(uuidFor(offer.vendor_id))}, 1, ${order.amount_minor}, ${order.amount_minor}, ${order.commission_minor}, ${order.vendor_share_minor}, 'QAR', ${q(card?.message ?? null)}, ${q(card?.recipient_name ?? null)}, ${q(card?.recipient_email ?? null)}, null, 'email', null, ${q(order.created_at)})`,
   );
 
-  const isSession = offer.redemption_mode === 'sessions';
+  const isSession = offer.fulfilment_type === 'experience';
   const totalSessions = isSession ? offer.session_count : null;
-  const remaining = card ? (card.sessions_remaining ?? totalSessions ?? null) : null;
+  const remaining = card ? (card.remaining_sessions ?? totalSessions ?? null) : null;
   voucherValues.push(
-    `  (${q(voucherId)}, ${q(uuidFor(`code:${voucherId}`))}, ${q(`GFT-${voucherId.slice(0, 6).toUpperCase()}`)}, ${q(`giftly:redeem:GFT-${voucherId.slice(0, 6).toUpperCase()}`)}, ${q(productId)}, ${q(variantId)}, ${q(uuidFor(offer.vendor_id))}, ${q(itemId)}, '${CUSTOMER_ID}', ${q(card?.recipient_name ?? 'Demo Customer')}, ${q(card?.recipient_email ?? null)}, ${q(card?.recipient_email ?? null)}, '${isSession ? 'experience' : 'monetary'}', 'claimed', ${order.amount_minor}, ${isSession ? 'null' : order.amount_minor}, ${totalSessions}, ${remaining}, ${isSession ? (totalSessions - (remaining ?? 0)) : 0}, 'QAR', ${q(card?.expires_at ?? null)}, '${CUSTOMER_ID}', ${q(card?.claimed_at ?? order.created_at)}, ${q(card?.delivery_status ?? 'delivered')}, null, ${q(card?.message ?? null)}, ${q(order.created_at)}, ${q(order.created_at)})`,
+    `  (${q(voucherId)}, ${q(`GFT-${voucherId.slice(0, 6).toUpperCase()}`)}, ${q(`giftly:redeem:GFT-${voucherId.slice(0, 6).toUpperCase()}`)}, ${q(productId)}, ${q(variantId)}, ${q(uuidFor(offer.vendor_id))}, ${q(itemId)}, '${CUSTOMER_ID}', ${q(card?.recipient_name ?? 'Demo Customer')}, ${q(card?.recipient_email ?? null)}, ${q(card?.recipient_email ?? null)}, '${isSession ? 'experience' : 'monetary'}', 'claimed', ${order.amount_minor}, ${isSession ? 'null' : (card?.balance_minor ?? order.amount_minor)}, ${totalSessions}, ${remaining}, ${isSession ? (totalSessions - (remaining ?? 0)) : 0}, 'QAR', ${q(card?.expires_at ?? null)}, '${CUSTOMER_ID}', ${q(card?.claimed_at ?? order.created_at)}, ${q(card?.delivery_status ?? 'delivered')}, null, ${q(card?.message ?? null)}, ${q(order.created_at)}, ${q(order.created_at)})`,
   );
 
   ledgerValues.push(
-    `  (${q(uuidFor(`${order.id}:issue`))}, ${q(voucherId)}, ${q(orderId)}, 'issue', ${order.amount_minor}, ${isSession ? totalSessions : 0}, null, null, ${q(order.created_at)})`,
+    `  (${q(uuidFor(`${order.id}:issue`))}, ${q(voucherId)}, ${q(orderId)}, 'issue', ${order.amount_minor}, ${isSession ? totalSessions : 0}, ${q(order.created_at)})`,
   );
   if (!isSession && card && card.balance_minor !== undefined && card.balance_minor < order.amount_minor) {
     ledgerValues.push(
-      `  (${q(uuidFor(`${order.id}:redeem`))}, ${q(voucherId)}, null, 'redeem', ${card.balance_minor - order.amount_minor}, 0, null, null, ${q(card.created_at)})`,
+      `  (${q(uuidFor(`${order.id}:redeem`))}, ${q(voucherId)}, null, 'redeem', ${card.balance_minor - order.amount_minor}, 0, ${q(card.created_at)})`,
     );
   }
 });
@@ -366,9 +422,9 @@ for (const card of MOCK_VENDOR_CARDS) {
   const offer = MOCK_OFFERS.find((o) => o.id === card.offer_id);
   if (!offer) continue;
   const voucherId = uuidFor(card.id);
-  const isSession = card.redemption_mode === 'sessions';
-  const totalSessions = isSession ? card.sessions_total : null;
-  const remaining = isSession ? card.sessions_remaining : null;
+  const isSession = card.fulfilment_type === 'experience';
+  const totalSessions = isSession ? card.total_sessions : null;
+  const remaining = isSession ? card.remaining_sessions : null;
   const used = isSession ? totalSessions - remaining : 0;
   const code = `GFT-${voucherId.slice(0, 6).toUpperCase()}`;
 
@@ -378,7 +434,7 @@ for (const card of MOCK_VENDOR_CARDS) {
   vendorLedgerValues.push(
     `  (${q(uuidFor(`${card.id}:issue`))}, ${q(voucherId)}, null, 'issue', ${card.original_value_minor}, ${isSession ? totalSessions : 0}, ${q(card.created_at)})`,
   );
-  if (used > 0) {
+  if (used > 0 || (!isSession && card.balance_minor !== card.original_value_minor)) {
     vendorLedgerValues.push(
       `  (${q(uuidFor(`${card.id}:used`))}, ${q(voucherId)}, null, 'redeem', ${isSession ? '0' : card.balance_minor - card.original_value_minor}, ${isSession ? -used : 0}, ${q(card.created_at)})`,
     );
@@ -393,10 +449,10 @@ for (const entry of MOCK_REDEMPTIONS) {
   const redemptionId = uuidFor(entry.id);
   const reference = `RDM-SEED-${entry.id.replace(/\D/g, '').padStart(4, '0')}`;
   vendorRedemptionValues.push(
-    `  (${q(redemptionId)}, ${q(reference)}, ${q(voucherId)}, ${q(uuidFor(offer?.vendor_id ?? 'vendor-1'))}, ${q(uuidFor('staff:44444444-4444-4444-8444-444444444444'))}, '${entry.kind === 'session' ? 'session' : 'monetary'}', ${entry.kind === 'session' ? (entry.sessions ?? 1) : 'null'}, ${entry.kind === 'value' ? (entry.amount_minor ?? 0) : 'null'}, ${entry.kind === 'session' ? (entry.sessions ?? 1) : 1}, 'completed', ${q(offer?.title ?? null)}, ${q(entry.note ?? null)}, ${q(entry.created_at)}, ${q(entry.created_at)})`,
+    `  (${q(redemptionId)}, ${q(reference)}, ${q(voucherId)}, ${q(uuidFor(offer?.vendor_id ?? 'vendor-1'))}, ${q('44444444-4444-4444-8444-444444444444')}, '${entry.kind === 'session' ? 'session' : 'monetary'}', ${entry.kind === 'session' ? (entry.sessions ?? 1) : 'null'}, ${entry.kind === 'value' ? (entry.amount_minor ?? 0) : 'null'}, ${entry.kind === 'session' ? (entry.sessions ?? 1) : 1}, 'completed', ${q(offer?.title ?? null)}, ${q(entry.note ?? null)}, ${q(entry.created_at)}, ${q(entry.created_at)})`,
   );
   vendorRedemptionItemValues.push(
-    `  (${q(uuidFor(`${entry.id}:item`))}, ${q(redemptionId)}, ${q(voucherId)}, ${entry.kind === 'session' ? (entry.sessions ?? 1) : 'null'}, ${entry.kind === 'value' ? (entry.amount_minor ?? 0) : 'null'}, ${q(offer?.title ?? null)}, ${q(uuidFor('staff:44444444-4444-4444-8444-444444444444'))}, ${q(entry.created_at)})`,
+    `  (${q(uuidFor(`${entry.id}:item`))}, ${q(redemptionId)}, ${q(voucherId)}, ${entry.kind === 'session' ? (entry.sessions ?? 1) : 'null'}, ${entry.kind === 'value' ? (entry.amount_minor ?? 0) : 'null'}, ${q(offer?.title ?? null)}, ${q('44444444-4444-4444-8444-444444444444')}, ${q(entry.created_at)})`,
   );
 }
 
@@ -482,7 +538,7 @@ push('');
 
 // Import a batch of codes straight into the inventory, encrypted.
 push('insert into public.enterprise_import_batches (id, partner_id, filename, source, status, created_by) values');
-push(`  ${q(uuidFor('batch:retailplus'))}, ${q(PARTNER_ID)}, 'retailplus-q1.csv', 'csv', 'completed', '55555555-5555-4555-8555-555555555555')`);
+push(`  (${q(uuidFor('batch:retailplus'))}, ${q(PARTNER_ID)}, 'retailplus-q1.csv', 'csv', 'completed', '55555555-5555-4555-8555-555555555555')`);
 push('on conflict (id) do nothing;');
 push('');
 
@@ -491,8 +547,11 @@ for (let i = 1; i <= 120; i += 1) {
   const code = `RP-${String(100000 + i * 137).slice(0, 6)}-${i.toString().padStart(4, '0')}`;
   const product = i % 3 === 0 ? EP2 : EP1;
   const denomination = i % 3 === 0 ? 25000 : 10000;
+  // Only codes that were never allocated may sit without an order.
+  const status =
+    i <= 100 ? 'available' : i <= 105 ? 'quarantined' : i <= 110 ? 'expired' : 'invalid';
   codeRows.push(
-    `  ('${code}', ${q(uuidFor('ep:' + product))}, ${denomination}, '${i <= 40 ? 'sold' : 'available'}')`,
+    `  ('${code}', ${q(product)}, ${denomination}, '${status}')`,
   );
 }
 
@@ -504,9 +563,9 @@ push('select');
 push(`  '${PARTNER_ID}',`);
 push(`  v.enterprise_product_id::uuid,`);
 push(`  ${q(uuidFor('batch:retailplus'))},`);
-push(`  'INV-' || upper(substr(v.fingerprint, 1, 10)),`);
-push('  pgp_sym_encrypt(v.code, public.enterprise_code_key()),');
-push('  v.fingerprint,');
+push(`  'INV-' || upper(substr(public.enterprise_code_fingerprint('${PARTNER_ID}', v.code), 1, 10)),`);
+push('  extensions.pgp_sym_encrypt(v.code, public.enterprise_code_key()),');
+push(`  public.enterprise_code_fingerprint('${PARTNER_ID}', v.code),`);
 push("  right(v.code, 4),");
 push('  v.denomination_minor,');
 push("  'QAR',");

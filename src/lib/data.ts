@@ -9,17 +9,24 @@ import type { GiftCard, Offer, Order } from './types';
 
 export interface OfferWithBalance extends Offer {}
 
+/** The database stores a category id; the app filters by its slug. */
+function withCategorySlug(offer: Offer & { category?: { slug?: string } | null }): Offer {
+  const slug = offer.category?.slug;
+  return { ...offer, category: slug } as Offer;
+}
+
 export async function listActiveOffers(): Promise<Offer[]> {
   if (!hasSupabaseConfig) {
     return MOCK_OFFERS.filter((o) => o.is_active);
   }
   const { data, error } = await getSupabase()
-    .from('offers')
-    .select('*, vendor:vendors(id, name, name_ar, logo_url, banner_url)')
+    .from('products')
+    .select('*, vendor:vendors(id, name, name_ar, logo_url, banner_url), category:categories(slug)')
     .eq('is_active', true)
+    .eq('status', 'published')
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []) as Offer[];
+  return ((data ?? []) as Offer[]).map(withCategorySlug);
 }
 
 export async function getOffer(id: string): Promise<Offer | null> {
@@ -27,12 +34,13 @@ export async function getOffer(id: string): Promise<Offer | null> {
     return MOCK_OFFERS.find((o) => o.id === id) ?? null;
   }
   const { data, error } = await getSupabase()
-    .from('offers')
-    .select('*, vendor:vendors(id, name, name_ar, logo_url, banner_url)')
+    .from('products')
+    .select('*, vendor:vendors(id, name, name_ar, logo_url, banner_url), category:categories(slug)')
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
-  return (data as Offer | null) ?? null;
+  const offer = data as (Offer & { category?: { slug?: string } | null }) | null;
+  return offer ? withCategorySlug(offer) : null;
 }
 
 export async function listMyCards(): Promise<GiftCard[]> {
@@ -41,7 +49,7 @@ export async function listMyCards(): Promise<GiftCard[]> {
   }
   const supabase = getSupabase();
   const { data, error } = await supabase
-    .from('gift_cards')
+    .from('vouchers')
     .select('*')
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -78,7 +86,7 @@ export async function getMyCard(id: string): Promise<GiftCard | null> {
   }
   const supabase = getSupabase();
   const { data, error } = await supabase
-    .from('gift_cards')
+    .from('vouchers')
     .select('*')
     .eq('id', id)
     .maybeSingle();

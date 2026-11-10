@@ -80,11 +80,11 @@ export default function CardDetailScreen() {
           <>
             <Text style={styles.balanceLabel}>{t('sessions.remaining')}</Text>
             <Text style={styles.sessionCount}>
-              {t('sessions.leftOf', { remaining, total: card.sessions_total ?? 1 })}
+              {t('sessions.leftOf', { remaining, total: card.total_sessions ?? 1 })}
             </Text>
             <SessionMeter
               remaining={remaining}
-              total={card.sessions_total ?? 1}
+              total={card.total_sessions ?? 1}
               tone={card.tone ?? 'teal'}
             />
           </>
@@ -122,7 +122,7 @@ export default function CardDetailScreen() {
         {sessionCard ? (
           <Row
             label={t('sessions.included')}
-            value={t('sessions.sessionCount', { count: card.sessions_total ?? 1 })}
+            value={t('sessions.sessionCount', { count: card.total_sessions ?? 1 })}
           />
         ) : null}
         {card.recipient_name ? <Row label={t('offer.recipientName')} value={card.recipient_name} /> : null}
