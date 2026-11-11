@@ -13,6 +13,7 @@ import { requireAdmin } from '@/lib/auth';
 import { formatDate, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
+import { HelpButton } from '@/components/HelpButton';
 
 export default async function AdminOverviewPage() {
   const ctx = await requireAdmin();
@@ -88,6 +89,7 @@ export default async function AdminOverviewPage() {
         description="Applications, sales, vouchers and the support queue. Everything that needs a decision is linked below."
         actions={
           <>
+            <HelpButton step="lifecycle" />
             <Link className="btn sm" href="/admin/support">
               <LifeBuoy size={15} /> Support
             </Link>

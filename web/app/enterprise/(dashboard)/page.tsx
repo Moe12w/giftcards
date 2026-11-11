@@ -15,6 +15,7 @@ import { requireEnterprise } from '@/lib/auth';
 import { formatDate, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
+import { HelpButton } from '@/components/HelpButton';
 
 export default async function EnterpriseOverviewPage() {
   const ctx = await requireEnterprise();
@@ -90,6 +91,7 @@ export default async function EnterpriseOverviewPage() {
         description={`Inventory, allocations and redemptions for ${partner.name}. Codes are encrypted and shown masked.`}
         actions={
           <>
+            <HelpButton step="lifecycle" />
             <Link className="btn sm" href="/enterprise/products">
               <Package size={15} /> Products
             </Link>

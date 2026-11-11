@@ -1,17 +1,21 @@
 'use client';
 
-import { Fragment, type ReactNode } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   BarChart3,
+  BookOpen,
   Boxes,
   Building2,
+  ChevronDown,
+  CircleHelp,
   ClipboardList,
   CreditCard,
   FileBarChart,
   LayoutDashboard,
   LifeBuoy,
+  Menu,
   Package,
   Percent,
   ScanLine,
@@ -26,9 +30,13 @@ import {
   UserRound,
   Users,
   Warehouse,
+  X,
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
+import { TutorialProvider, useTutorial } from '@/components/TutorialProvider';
 import { signOut } from '@/lib/actions/auth';
+import { setDashboardLanguage } from '@/lib/actions/tutorial';
+import { stepForPath, type TutorialScript } from '@/lib/tutorial';
 
 const icons: Record<string, typeof LayoutDashboard> = {
   dashboard: LayoutDashboard,
@@ -58,13 +66,41 @@ const icons: Record<string, typeof LayoutDashboard> = {
 export interface NavItem {
   href: string;
   label: string;
+  labelAr?: string;
   icon: keyof typeof icons | string;
+  /** Shown when the pointer or keyboard focus lands on the item. */
+  hint?: string;
+  hintAr?: string;
 }
 
 export interface NavGroup {
+  /** Position in the gift life cycle, shown as a number in the flow. */
+  step?: number;
   label: string;
+  labelAr?: string;
   items: NavItem[];
 }
+
+const CHROME = {
+  en: {
+    tutorial: 'Tutorial',
+    tutorialHint: 'How the whole gift life cycle works',
+    menu: 'Open the menu',
+    closeMenu: 'Close the menu',
+    flow: 'Gift life cycle',
+    howItWorks: 'How this works',
+    language: 'Language',
+  },
+  ar: {
+    tutorial: 'الدليل',
+    tutorialHint: 'كيف تعمل دورة حياة الهدية كاملة',
+    menu: 'افتح القائمة',
+    closeMenu: 'أغلق القائمة',
+    flow: 'دورة حياة الهدية',
+    howItWorks: 'كيف تعمل هذه الصفحة',
+    language: 'اللغة',
+  },
+};
 
 export function DashShell({
   portalLabel,
@@ -77,6 +113,9 @@ export function DashShell({
   nav,
   workspaceSwitcher,
   topRight,
+  tutorial,
+  locale = 'en',
+  autoOpenTutorial = false,
   children,
 }: {
   portalLabel: string;
@@ -89,9 +128,76 @@ export function DashShell({
   nav: NavGroup[];
   workspaceSwitcher?: ReactNode;
   topRight?: ReactNode;
+  tutorial?: TutorialScript;
+  locale?: 'en' | 'ar';
+  autoOpenTutorial?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <TutorialProvider script={tutorial ?? EMPTY_SCRIPT} locale={locale} autoOpen={autoOpenTutorial}>
+      <DashShellInner
+        portalLabel={portalLabel}
+        workspaceName={workspaceName}
+        workspaceMeta={workspaceMeta}
+        userName={userName}
+        userEmail={userEmail}
+        userInitials={userInitials}
+        accent={accent}
+        nav={nav}
+        workspaceSwitcher={workspaceSwitcher}
+        topRight={topRight}
+        locale={locale}
+        script={tutorial ?? EMPTY_SCRIPT}
+      >
+        {children}
+      </DashShellInner>
+    </TutorialProvider>
+  );
+}
+
+const EMPTY_SCRIPT: TutorialScript = {
+  id: 'vendor',
+  title: 'Tutorial',
+  titleAr: 'الدليل',
+  intro: '',
+  introAr: '',
+  steps: [],
+};
+
+function DashShellInner({
+  portalLabel,
+  workspaceName,
+  workspaceMeta,
+  userName,
+  userEmail,
+  userInitials,
+  accent,
+  nav,
+  workspaceSwitcher,
+  topRight,
+  locale,
+  script,
+  children,
+}: {
+  portalLabel: string;
+  workspaceName: string;
+  workspaceMeta?: string;
+  userName: string;
+  userEmail: string;
+  userInitials: string;
+  accent: 'mint' | 'lavender' | 'coral';
+  nav: NavGroup[];
+  workspaceSwitcher?: ReactNode;
+  topRight?: ReactNode;
+  locale: 'en' | 'ar';
+  script: TutorialScript;
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const { open } = useTutorial();
+  const [navOpen, setNavOpen] = useState(false);
+  const rtl = locale === 'ar';
+  const chrome = CHROME[locale];
   const homeHref = `/${pathname.split('/').filter(Boolean)[0] ?? ''}`;
 
   function active(href: string) {
@@ -101,7 +207,13 @@ export function DashShell({
   }
 
   return (
-    <div className="dash">
+    <div className={`dash${rtl ? ' rtl' : ''}${navOpen ? ' nav-open' : ''}`}>
+      <button
+        type="button"
+        className="dash-scrim"
+        aria-label={chrome.closeMenu}
+        onClick={() => setNavOpen(false)}
+      />
       <aside className="dash-side">
         <Logo href={homeHref} />
         <div className="dash-workspace">
@@ -111,11 +223,24 @@ export function DashShell({
           {workspaceSwitcher}
         </div>
         <nav className="dash-nav" aria-label={portalLabel}>
-          {nav.map((group) => (
+          <span className="group-label flow-label">
+            <span className="flow-dot" aria-hidden="true" />
+            {chrome.flow}
+          </span>
+          {nav.map((group, groupIndex) => (
             <Fragment key={group.label}>
-              <span className="group-label">{group.label}</span>
+              {groupIndex > 0 ? (
+                <span className="flow-arrow" aria-hidden="true">
+                  <ChevronDown size={15} />
+                </span>
+              ) : null}
+              <span className="group-label">
+                {group.step ? <span className="group-step">{group.step}</span> : null}
+                {rtl ? (group.labelAr ?? group.label) : group.label}
+              </span>
               {group.items.map((item) => {
                 const Icon = icons[item.icon] ?? LayoutDashboard;
+                const hint = rtl ? item.hintAr ?? item.hint : item.hint;
                 return (
                   <Link
                     key={item.href}
@@ -123,7 +248,13 @@ export function DashShell({
                     className={`${active(item.href) ? 'active' : ''} ${active(item.href) ? accent : ''}`}
                     aria-current={active(item.href) ? 'page' : undefined}
                   >
-                    <Icon size={17} /> {item.label}
+                    <Icon size={17} />
+                    <span className="nav-text">
+                      <span className="nav-label">
+                        {rtl ? item.labelAr ?? item.label : item.label}
+                      </span>
+                      {hint ? <span className="nav-hint">{hint}</span> : null}
+                    </span>
                   </Link>
                 );
               })}
@@ -131,6 +262,36 @@ export function DashShell({
           ))}
         </nav>
         <div className="dash-user">
+          <button type="button" className="tut-launch" onClick={() => open()}>
+            <span className="tut-launch-icon">
+              <BookOpen size={16} />
+            </span>
+            <span>
+              <strong>{chrome.tutorial}</strong>
+              <span className="small muted">{chrome.tutorialHint}</span>
+            </span>
+          </button>
+          <form action={setDashboardLanguage} className="lang-switch">
+            <span className="small muted">{chrome.language}</span>
+            <button
+              type="submit"
+              name="locale"
+              value="en"
+              className={locale === 'en' ? 'active' : ''}
+              aria-pressed={locale === 'en'}
+            >
+              EN
+            </button>
+            <button
+              type="submit"
+              name="locale"
+              value="ar"
+              className={locale === 'ar' ? 'active' : ''}
+              aria-pressed={locale === 'ar'}
+            >
+              ع
+            </button>
+          </form>
           <div className="who">
             <span className="avatar">{userInitials}</span>
             <div style={{ minWidth: 0 }}>
@@ -151,11 +312,38 @@ export function DashShell({
       </aside>
       <div className="dash-main">
         <header className="dash-top">
+          <button
+            type="button"
+            className="dash-menu-button"
+            aria-label={chrome.menu}
+            aria-expanded={navOpen}
+            onClick={() => setNavOpen(true)}
+          >
+            <Menu size={20} />
+          </button>
           <div className="title">
             <span>{portalLabel}</span>
             <strong>{workspaceName}</strong>
           </div>
-          <div className="btn-row">{topRight}</div>
+          <div className="btn-row">
+            <button
+              type="button"
+              className="btn sm ghost dash-help"
+              onClick={() => open(stepForPath(pathname, script))}
+            >
+              <CircleHelp size={15} />
+              {chrome.howItWorks}
+            </button>
+            {topRight}
+          </div>
+          <button
+            type="button"
+            className="dash-menu-close"
+            aria-label={chrome.closeMenu}
+            onClick={() => setNavOpen(false)}
+          >
+            <X size={18} />
+          </button>
         </header>
         {children}
       </div>

@@ -33,6 +33,7 @@ export interface Profile {
   is_admin: boolean;
   status: string;
   avatar_url: string | null;
+  tutorial_completed_at: string | null;
   created_at: string;
 }
 

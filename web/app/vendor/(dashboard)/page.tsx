@@ -17,6 +17,7 @@ import { requireVendor } from '@/lib/auth';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
+import { HelpButton } from '@/components/HelpButton';
 import { fulfilmentLabel } from '@/lib/catalog';
 
 export default async function VendorOverviewPage() {
@@ -111,6 +112,7 @@ export default async function VendorOverviewPage() {
         description={`Here is how ${vendor.name} is doing on Giftly. Sales and redemptions update as they happen.`}
         actions={
           <>
+            <HelpButton step="lifecycle" />
             <Link className="btn sm" href="/vendor/products/new">
               <Plus size={15} /> New gift
             </Link>
