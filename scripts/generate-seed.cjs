@@ -77,6 +77,10 @@ const RESET = [
   'redemption_items',
   'redemptions',
   'notifications',
+  'gift_basket_activity',
+  'gift_basket_items',
+  'gift_basket_participants',
+  'gift_baskets',
   'vouchers',
   'order_items',
   'orders',
@@ -799,6 +803,18 @@ push(
 );
 push('');
 
+
+push('insert into public.ledger_entries (id, voucher_id, order_id, entry_type, amount_minor, sessions, created_at) values');
+push(
+  '  (' +
+    q(uuidFor('voucher:claimable:issue')) +
+    ', ' +
+    q(claimVoucherId) +
+    ", null, 'issue', 10000, 0, " +
+    q(daysFromNow(-1)) +
+    ');',
+);
+push('');
 push('-- ---------------------------------------------------------------------');
 push('-- Campaigns and featured placements');
 push('-- ---------------------------------------------------------------------');
