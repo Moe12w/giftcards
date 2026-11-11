@@ -280,7 +280,43 @@ export async function listVendorLocations(vendorId: string): Promise<BusinessLoc
   );
 }
 
-/** The customer's favourite businesses and products. */
+/** A partner business (enterprise partner), for public storefronts. */
+export interface PartnerBusiness {
+  id: string;
+  name: string;
+  slug: string | null;
+  logo_url: string | null;
+  banner_url: string | null;
+  description: string | null;
+  status: string;
+  gift_count: number;
+}
+
+/** Fetches a single partner business by id or slug for the public storefront. */
+export async function getPartner(idOrSlug: string): Promise<PartnerBusiness | null> {
+  if (!hasSupabaseConfig) return null;
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+  let query = getSupabase()
+    .from('enterprise_partners')
+    .select('id, name, slug, logo_url, banner_url, description, status')
+    .eq('status', 'active');
+  query = isUuid ? query.eq('id', idOrSlug) : query.eq('slug', idOrSlug);
+  const { data, error } = await query.maybeSingle();
+  if (error) throw error;
+  return (data ?? null) as PartnerBusiness | null;
+}
+
+/** The public business directory: vendors and partners combined. */
+export async function listMarketplaceBusinesses(): Promise<PartnerBusiness[]> {
+  if (!hasSupabaseConfig) return [];
+  const { data, error } = await getSupabase()
+    .from('marketplace_businesses')
+    .select('id, name, slug, logo_url, banner_url, description, status, gift_count')
+    .order('gift_count', { ascending: false })
+    .order('rating', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as PartnerBusiness[];
+}
 export async function listFavourites(): Promise<Offer[]> {
   if (!hasSupabaseConfig) return [];
   const { data, error } = await getSupabase()

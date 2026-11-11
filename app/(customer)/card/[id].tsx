@@ -101,7 +101,7 @@ export default function CardDetailScreen() {
 
       <Card style={styles.hero}>
         <View style={styles.heroTop}>
-          <Text style={styles.vendor}>{card.vendor_name ?? card.offer_title ?? 'Gift card'}</Text>
+          <Text style={styles.vendor}>{card.partner_name ?? card.vendor_name ?? card.offer_title ?? 'Gift card'}</Text>
           <Badge label={t(`cards.${card.status}`)} tone={statusTone[card.status]} />
         </View>
 

@@ -59,7 +59,7 @@ export default function CardsScreen() {
             >
               <Card style={styles.card}>
                 <View style={styles.cardTop}>
-                  <Text style={styles.vendor}>{card.vendor_name ?? card.offer_title ?? 'Gift card'}</Text>
+                  <Text style={styles.vendor}>{card.partner_name ?? card.vendor_name ?? card.offer_title ?? 'Gift card'}</Text>
                   <Badge label={t(`cards.${card.status}`)} tone={statusTone[card.status]} />
                 </View>
                 <Text style={styles.balanceLabel}>{t('cards.balance')}</Text>

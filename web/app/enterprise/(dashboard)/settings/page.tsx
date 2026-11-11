@@ -1,9 +1,11 @@
 import Link from 'next/link';
-import { Building2, ShieldCheck, Users } from 'lucide-react';
+import { Building2, ShieldCheck, Users, Image } from 'lucide-react';
 import { requireEnterprise } from '@/lib/auth';
 import { saveEnterpriseProfile } from '@/lib/actions/enterprise';
+import { uploadPartnerImage, removePartnerImage } from '@/lib/actions/partner';
 import { formatDate, initials, titleCase } from '@/lib/format';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
+import { VendorImageUpload } from '@/components/VendorImageUpload';
 
 export default async function EnterpriseSettingsPage({
   searchParams,
@@ -87,6 +89,24 @@ export default async function EnterpriseSettingsPage({
                 ) : null}
               </div>
             </form>
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <h3>Storefront images</h3>
+            <Image size={16} />
+          </div>
+          <div className="panel-body">
+            <p className="small muted" style={{ marginBottom: 14 }}>
+              Your logo and banner show on your public business page and on every
+              enterprise gift your company issues. The business name on a gift is
+              your company name, not the gift's name.
+            </p>
+            <div style={{ display: 'grid', gap: 16 }}>
+              <VendorImageUpload kind="logo" currentUrl={partner.logo_url} />
+              <VendorImageUpload kind="banner" currentUrl={partner.banner_url} />
+            </div>
           </div>
         </section>
 

@@ -20,10 +20,10 @@ import { initials } from '@/lib/format';
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-async function getVendor(slug: string) {
+async function getBusiness(slug: string) {
   const supabase = await createClient();
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
-  let query = supabase.from('vendors').select('*').eq('status', 'approved');
+  let query = supabase.from('marketplace_businesses').select('*');
   query = isUuid ? query.eq('id', slug) : query.eq('slug', slug);
   const { data } = await query.maybeSingle();
   return data;
@@ -31,36 +31,40 @@ async function getVendor(slug: string) {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const vendor = await getVendor(slug);
-  if (!vendor) return { title: 'Vendor not found' };
+  const business = await getBusiness(slug);
+  if (!business) return { title: 'Business not found' };
   return {
-    title: vendor.name,
-    description: vendor.description ?? `Gift cards from ${vendor.name} on Giftly.`,
+    title: business.name,
+    description: business.description ?? `Gifts from ${business.name} on Giftly.`,
   };
 }
 
-export default async function VendorDetailPage({ params }: PageProps) {
+export default async function BusinessDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const vendor = await getVendor(slug);
-  if (!vendor) notFound();
+  const business = await getBusiness(slug);
+  if (!business) notFound();
 
   const supabase = await createClient();
+  const isPartner = business.business_kind === 'partner';
+
   const [productsResult, locationsResult] = await Promise.all([
     supabase
       .from('products')
       .select('*, product_variants(*)')
-      .eq('vendor_id', vendor.id)
+      .eq(isPartner ? 'partner_id' : 'vendor_id', business.id)
       .eq('status', 'published')
       .eq('is_active', true)
       .order('rating', { ascending: false }),
-    supabase
-      .from('vendor_locations')
-      .select('*')
-      .eq('vendor_id', vendor.id)
-      .order('is_primary', { ascending: false }),
+    isPartner
+      ? Promise.resolve({ data: null, error: null })
+      : supabase
+          .from('vendor_locations')
+          .select('*')
+          .eq('vendor_id', business.id)
+          .order('is_primary', { ascending: false }),
   ]);
 
-  const products = mapProducts(productsResult.data);
+  const products = mapProducts(productsResult.data ?? []);
   const locations = locationsResult.data ?? [];
 
   return (
@@ -68,34 +72,35 @@ export default async function VendorDetailPage({ params }: PageProps) {
       <section className="vendor-hero">
         <div className="container">
           <Link className="back-link" href="/vendors">
-            <ArrowLeft size={16} /> All vendors
+            <ArrowLeft size={16} /> All businesses
           </Link>
           <div className="vendor-hero-card">
             <span className="vendor-logo xl">
-              {vendor.logo_url ? <img src={vendor.logo_url} alt="" /> : initials(vendor.name)}
+              {business.logo_url ? <img src={business.logo_url} alt="" /> : initials(business.name)}
             </span>
             <div className="vendor-hero-copy">
               <div className="pill-row">
-                <span className="tag mint">Verified vendor</span>
+                {isPartner ? (
+                  <span className="tag mint">Enterprise partner</span>
+                ) : (
+                  <span className="tag mint">Verified business</span>
+                )}
                 <span className="tag gold">
-                  <Star size={12} fill="currentColor" /> {Number(vendor.rating ?? 0).toFixed(1)}
+                  <Star size={12} fill="currentColor" /> {Number(business.rating ?? 0).toFixed(1)}
                 </span>
               </div>
-              <h1>{vendor.name}</h1>
-              <p className="lede">{vendor.description ?? 'A local favourite on Giftly.'}</p>
+              <h1>{business.name}</h1>
+              <p className="lede">{business.description ?? 'A local favourite on Giftly.'}</p>
               <div className="hero-trust">
-                <span>
-                  <MapPin size={16} />{' '}
-                  {[vendor.area, vendor.city].filter(Boolean).join(', ') || 'Qatar'}
-                </span>
-                {vendor.phone ? (
+                {!isPartner && (
                   <span>
-                    <Phone size={16} /> {vendor.phone}
+                    <MapPin size={16} />{' '}
+                    {[business.area, business.city].filter(Boolean).join(', ') || 'Qatar'}
                   </span>
-                ) : null}
-                {vendor.website ? (
+                )}
+                {(!isPartner && business.website) || (isPartner && business.website) ? (
                   <span>
-                    <Globe size={16} /> {vendor.website.replace(/^https?:\/\//, '')}
+                    <Globe size={16} /> {business.website.replace(/^https?:\/\//, '')}
                   </span>
                 ) : null}
               </div>
@@ -113,7 +118,7 @@ export default async function VendorDetailPage({ params }: PageProps) {
       <section className="container section tight">
         <div className="section-head">
           <div className="copy">
-            <span className="eyebrow mint">Gifts from {vendor.name}</span>
+            <span className="eyebrow mint">Gifts from {business.name}</span>
             <h2>Pick something they will remember.</h2>
           </div>
         </div>
@@ -121,7 +126,7 @@ export default async function VendorDetailPage({ params }: PageProps) {
         {products.length === 0 ? (
           <div className="empty">
             <h3>Gifts are on the way</h3>
-            <p>{vendor.name} has not published an offer yet. Check back shortly.</p>
+            <p>{business.name} has not published an offer yet. Check back shortly.</p>
           </div>
         ) : (
           <div className="offer-grid">

@@ -81,7 +81,8 @@ export interface ProductVariant {
 
 export interface Offer {
   id: string;
-  vendor_id: string;
+  vendor_id: string | null;
+  partner_id?: string | null;
   title: string;
   title_ar: string | null;
   description: string | null;
@@ -264,6 +265,18 @@ export interface BusinessLocation {
   area: string;
   address: string;
   hours: string;
+}
+
+/** A partner business (enterprise partner), for public storefronts. */
+export interface PartnerBusiness {
+  id: string;
+  name: string;
+  slug: string | null;
+  logo_url: string | null;
+  banner_url: string | null;
+  description: string | null;
+  status: string;
+  gift_count: number;
 }
 
 export type BasketStatus = 'open' | 'ready' | 'completed';

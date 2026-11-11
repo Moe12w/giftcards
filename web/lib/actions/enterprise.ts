@@ -63,6 +63,7 @@ async function syncCatalogueProduct(
     description: values.instructions ?? values.terms,
     fulfilment_type: 'enterprise_code',
     vendor_id: null,
+    partner_id: ctx.partner.id,
     enterprise_product_id: enterpriseProductId,
     min_amount_minor: values.sellingPrice,
     max_amount_minor: values.sellingPrice,

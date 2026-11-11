@@ -76,7 +76,7 @@ export default function GiftFilterScreen() {
           {visible.map((card: GiftCard) => (
             <GiftCardVisual
               key={card.id}
-              title={card.vendor_name ?? card.offer_title ?? t('gift.detailsTitle')}
+              title={card.partner_name ?? card.vendor_name ?? card.offer_title ?? t('gift.detailsTitle')}
               icon={card.icon}
               tone={card.tone}
               amountMinor={valueLeft(card)}

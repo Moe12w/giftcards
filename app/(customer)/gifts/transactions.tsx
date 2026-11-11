@@ -55,7 +55,7 @@ export default function GiftTransactionsScreen() {
               </View>
               <View style={styles.copy}>
                 <Text style={styles.title} numberOfLines={1}>
-                  {card?.offer_title ?? card?.vendor_name ?? t('gifts.transactionsTitle')}
+                  {card?.partner_name ?? card?.vendor_name ?? card?.offer_title ?? t('gifts.transactionsTitle')}
                 </Text>
                 <Text style={styles.meta}>
                   {entry.kind === 'session'
