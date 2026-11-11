@@ -142,6 +142,7 @@ export default async function VendorDashboardLayout({ children }: { children: Re
     <DashShell
       portalLabel="Vendor dashboard"
       workspaceName={vendor.name}
+      workspaceLogoUrl={vendor.logo_url ?? null}
       workspaceMeta={`${[vendor.area, vendor.city].filter(Boolean).join(' · ') || 'Qatar'} · ${titleCase(vendor.status)}`}
       userName={ctx.profile?.full_name ?? ctx.user.email ?? 'Vendor'}
       userEmail={ctx.user.email ?? ''}

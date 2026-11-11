@@ -38,7 +38,7 @@ export function IconTile({ icon, imageUrl, size = 64, tone = 'lavender', style }
           width: size,
           height: size,
           borderRadius: Math.max(radii.sm, size * 0.3),
-          backgroundColor: tones[tone],
+          backgroundColor: tones[tone] ?? tones.lavender,
         },
         style,
       ]}

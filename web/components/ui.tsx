@@ -40,17 +40,23 @@ export function PageHead({
   title,
   description,
   actions,
+  logoUrl,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
+  /** Logo shown next to the title, when the business has uploaded one. */
+  logoUrl?: string | null;
 }) {
   return (
     <div className="page-head">
       <div className="copy">
         {eyebrow ? <span className="eyebrow mint">{eyebrow}</span> : null}
-        <h1>{title}</h1>
+        <h1 className={logoUrl ? 'page-title-logo' : undefined}>
+          {logoUrl ? <img className="page-logo" src={logoUrl} alt="" /> : null}
+          {title}
+        </h1>
         {description ? <p>{description}</p> : null}
       </div>
       {actions ? <div className="btn-row">{actions}</div> : null}

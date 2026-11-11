@@ -16,7 +16,7 @@ export default async function AdminVendorsPage({
 
   const { data, error } = await ctx.supabase
     .from('vendors')
-    .select('id, name, slug, status, email, phone, city, area, rating, commission_bps, is_featured, created_at, approved_at, products(id), vendor_applications(status)')
+    .select('id, name, slug, status, email, phone, city, area, rating, commission_bps, is_featured, created_at, approved_at, logo_url, banner_url, products(id), vendor_applications(status)')
     .order('created_at', { ascending: false })
     .limit(500);
 
@@ -111,9 +111,17 @@ export default async function AdminVendorsPage({
                       <tr key={vendor.id}>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <span className="avatar" style={{ width: 32, height: 32, fontSize: '0.7rem' }}>
-                              {initials(vendor.name)}
-                            </span>
+                            {vendor.logo_url ? (
+                              <img
+                                className="table-logo"
+                                src={vendor.logo_url}
+                                alt=""
+                              />
+                            ) : (
+                              <span className="avatar" style={{ width: 32, height: 32, fontSize: '0.7rem' }}>
+                                {initials(vendor.name)}
+                              </span>
+                            )}
                             <div>
                               <Link href={`/admin/vendors/${vendor.id}`} className="strong">
                                 {vendor.name}

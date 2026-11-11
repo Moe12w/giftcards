@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireVendor } from '@/lib/auth';
 import { slugify } from '@/lib/format';
+import { normalizeTone } from '@/lib/catalog';
 import { parseMoneyToMinor } from '@/lib/money';
 
 function str(formData: FormData, key: string): string {
@@ -289,9 +290,10 @@ export async function createProduct(formData: FormData) {
       is_active: status === 'published',
       status,
       icon: str(formData, 'icon') || (fulfilmentType === 'experience' ? 'sparkles' : 'gift'),
-      tone:
-        str(formData, 'tone') ||
-        (fulfilmentType === 'experience' ? 'lavender' : 'mint'),
+      tone: normalizeTone(
+        str(formData, 'tone'),
+        fulfilmentType === 'experience' ? 'lavender' : 'teal',
+      ),
       location: optional(formData, 'location'),
       occasions: parseOccasions(str(formData, 'occasions')),
       image_url: optional(formData, 'image_url'),
@@ -358,7 +360,7 @@ export async function updateProduct(formData: FormData) {
     multi_session_per_visit: checkbox(formData, 'multi_session_per_visit'),
     status,
     is_active: status === 'published',
-    tone: str(formData, 'tone') || 'mint',
+    tone: normalizeTone(str(formData, 'tone')),
     location: optional(formData, 'location'),
     occasions: parseOccasions(str(formData, 'occasions')),
     image_url: optional(formData, 'image_url'),

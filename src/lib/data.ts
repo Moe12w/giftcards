@@ -14,6 +14,7 @@ import {
   MOCK_RECIPIENTS,
 } from './mock-data';
 import { getSupabase } from './supabase';
+import { resolveTone } from './tone';
 import type {
   AccentTone,
   CustomerAddress,
@@ -129,7 +130,7 @@ export function mapVoucher(row: VoucherRow): GiftCard {
     vendor_name: vendor?.name ?? undefined,
     offer_title: product?.title ?? undefined,
     icon: product?.icon ?? 'gift',
-    tone: (product?.tone as AccentTone) ?? 'lavender',
+    tone: resolveTone(product?.tone),
     delivery_status: (row.delivery_status as GiftCard['delivery_status']) ?? undefined,
     scheduled_for: row.scheduled_for,
     message: row.gift_message,

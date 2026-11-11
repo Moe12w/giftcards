@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowRight, CalendarHeart, Gift } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { minorToInput } from '@/lib/money';
+import { normalizeTone } from '@/lib/catalog';
 
 export function ProductForm({
   action,
@@ -205,13 +206,14 @@ export function ProductForm({
         </div>
         <div className="field">
           <label htmlFor="tone">Card colour</label>
-          <select id="tone" name="tone" defaultValue={product?.tone ?? 'mint'}>
-            <option value="mint">Mint</option>
+          <select id="tone" name="tone" defaultValue={normalizeTone(product?.tone)}>
+            <option value="teal">Teal</option>
+            <option value="pink">Pink</option>
             <option value="lavender">Lavender</option>
-            <option value="coral">Coral</option>
             <option value="gold">Gold</option>
             <option value="sky">Sky</option>
           </select>
+          <span className="hint">The same five colours the app uses.</span>
         </div>
         <div className="field">
           <label htmlFor="image_url">Image URL (optional)</label>

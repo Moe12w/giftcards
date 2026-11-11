@@ -276,7 +276,7 @@ export default async function VendorOnboardingPage({
         </div>
         <div className="panel-body">
           <p className="small muted" style={{ marginBottom: 16 }}>
-            A logo and a banner make your card recognisable. Upload them here and they are used
+            A logo and a banner make your card recognisable. Save them here and they are used
             everywhere the gift appears.
           </p>
           <div className="dash-grid">

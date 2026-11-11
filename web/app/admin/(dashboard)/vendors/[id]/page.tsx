@@ -134,6 +134,7 @@ export default async function AdminVendorDetailPage({
           [category?.name, vendor.area, vendor.city].filter(Boolean).join(' · ') ||
           'Vendor on the Giftly marketplace.'
         }
+        logoUrl={vendor.logo_url ?? null}
         actions={
           <>
             <StatusTag status={vendor.status} />

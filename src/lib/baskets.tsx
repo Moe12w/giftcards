@@ -16,6 +16,7 @@ import React, {
 import { useAuth } from './auth';
 import { getSupabase } from './supabase';
 import { hasSupabaseConfig } from './env';
+import { resolveTone } from './tone';
 import type {
   BasketActivity,
   BasketItem,
@@ -134,7 +135,7 @@ function mapBasket(row: BasketRow): GiftBasket {
         title: item.title,
         amount_minor: item.amount_minor,
         icon: item.emoji ?? 'gift',
-        tone: (item.tone as BasketItem['tone']) ?? 'lavender',
+        tone: resolveTone(item.tone),
         logo_url: item.logo_url,
         banner_url: item.banner_url,
         added_by_id: item.added_by,
@@ -329,7 +330,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           title: item.offer.title,
           amount_minor: item.amountMinor,
           emoji: item.offer.icon ?? 'gift',
-          tone: item.offer.tone ?? 'lavender',
+          tone: resolveTone(item.offer.tone),
           logo_url: item.offer.vendor?.logo_url ?? null,
           banner_url: item.offer.vendor?.banner_url ?? null,
           added_by: ownerId,
@@ -365,7 +366,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           title: input.offer.title,
           amount_minor: input.amountMinor,
           emoji: input.offer.icon ?? 'gift',
-          tone: input.offer.tone ?? 'lavender',
+          tone: resolveTone(input.offer.tone),
           logo_url: input.offer.vendor?.logo_url ?? null,
           banner_url: input.offer.vendor?.banner_url ?? null,
           added_by: user.id,
@@ -394,7 +395,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
         title: input.offer.title,
         amount_minor: input.amountMinor,
         icon: input.offer.icon ?? 'gift',
-        tone: input.offer.tone ?? 'lavender',
+        tone: resolveTone(input.offer.tone),
         added_by_id: user.id,
         added_by_name: ownerName,
         added_at: new Date().toISOString(),

@@ -33,7 +33,8 @@ interface CardProps {
  * `style` applies to the card surface so existing row/gap styles keep working.
  */
 export function Card({ children, style, padded = true, tone = 'surface', edgeColor }: CardProps) {
-  const palette = tones[tone];
+  // An unknown tone must never take the screen down.
+  const palette = tones[tone] ?? tones.surface;
   return (
     <View style={[styles.edge, { backgroundColor: edgeColor ?? palette.edge }]}>
       <View style={[styles.card, { backgroundColor: palette.background }, padded && styles.padded, style]}>

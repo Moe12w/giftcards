@@ -3589,3 +3589,50 @@ table.data .sub {
     padding: 9px 11px;
   }
 }
+/* ------------------------------------------------------------------ */
+/* Business logos in the dashboards                                    */
+/* ------------------------------------------------------------------ */
+
+.dash-workspace-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dash-workspace-logo {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border: 2px solid var(--ink);
+  border-radius: 11px;
+  background: #fff;
+  object-fit: cover;
+}
+
+.page-title-logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-logo {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  border: 2px solid var(--ink);
+  border-radius: 15px;
+  background: #fff;
+  object-fit: cover;
+  box-shadow: 0 3px 0 var(--ink);
+}
+
+.table-logo {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  object-fit: cover;
+}

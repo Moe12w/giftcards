@@ -112,6 +112,7 @@ export function DashShell({
   portalLabel,
   workspaceName,
   workspaceMeta,
+  workspaceLogoUrl,
   userName,
   userEmail,
   userInitials,
@@ -127,6 +128,8 @@ export function DashShell({
   portalLabel: string;
   workspaceName: string;
   workspaceMeta?: string;
+  /** Logo of the business, shown next to its name in the menu. */
+  workspaceLogoUrl?: string | null;
   userName: string;
   userEmail: string;
   userInitials: string;
@@ -145,6 +148,7 @@ export function DashShell({
         portalLabel={portalLabel}
         workspaceName={workspaceName}
         workspaceMeta={workspaceMeta}
+        workspaceLogoUrl={workspaceLogoUrl}
         userName={userName}
         userEmail={userEmail}
         userInitials={userInitials}
@@ -174,6 +178,7 @@ function DashShellInner({
   portalLabel,
   workspaceName,
   workspaceMeta,
+  workspaceLogoUrl,
   userName,
   userEmail,
   userInitials,
@@ -188,6 +193,7 @@ function DashShellInner({
   portalLabel: string;
   workspaceName: string;
   workspaceMeta?: string;
+  workspaceLogoUrl?: string | null;
   userName: string;
   userEmail: string;
   userInitials: string;
@@ -258,7 +264,12 @@ function DashShellInner({
         </div>
         <div className="dash-workspace">
           <span className="label">{portalLabel}</span>
-          <strong>{workspaceName}</strong>
+          <div className="dash-workspace-name">
+            {workspaceLogoUrl ? (
+              <img className="dash-workspace-logo" src={workspaceLogoUrl} alt="" />
+            ) : null}
+            <strong>{workspaceName}</strong>
+          </div>
           {workspaceMeta ? <span className="small muted">{workspaceMeta}</span> : null}
           {workspaceSwitcher}
         </div>

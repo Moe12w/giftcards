@@ -6,6 +6,7 @@
 // by emoji character, so every card uses the same outlined icon style.
 
 import type { AccentTone, CategoryId, OccasionId, Offer, ProductVariant } from './types';
+import { resolveTone } from './tone';
 
 export interface CatalogEntry {
   slug: string;
@@ -137,7 +138,7 @@ export function offerIcon(offer: Offer, index = 0): string {
 }
 
 export function offerTone(offer: Offer, index = 0): AccentTone {
-  return offer.tone ?? TONE_CYCLE[index % TONE_CYCLE.length];
+  return resolveTone(offer.tone, TONE_CYCLE[index % TONE_CYCLE.length]);
 }
 
 /** Vendor-defined packages for an experience gift, in the vendor's order. */

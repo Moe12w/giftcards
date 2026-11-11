@@ -37,13 +37,47 @@ export function fulfilmentLabel(type: string): string {
   return 'Gift card';
 }
 
+/**
+ * The tones the platform stores. The mobile app paints these five, so the
+ * dashboard writes the same names and nothing else can reach the database.
+ */
+export const PRODUCT_TONES = ['teal', 'pink', 'lavender', 'gold', 'sky'] as const;
+export type ProductTone = (typeof PRODUCT_TONES)[number];
+
+/** Older gifts used the dashboard palette names. They still read correctly. */
+const TONE_ALIASES: Record<string, ProductTone> = {
+  mint: 'teal',
+  teal: 'teal',
+  coral: 'pink',
+  pink: 'pink',
+  lavender: 'lavender',
+  gold: 'gold',
+  sky: 'sky',
+};
+
+/** Turns anything into a tone the platform and the app both understand. */
+export function normalizeTone(
+  tone: string | null | undefined,
+  fallback: ProductTone = 'teal',
+): ProductTone {
+  if (!tone) return fallback;
+  const key = tone.trim().toLowerCase();
+  return TONE_ALIASES[key] ?? fallback;
+}
+
+/** The colour class used by the website for a gift. */
 export function productTone(product: Pick<Product, 'tone' | 'fulfilment_type'>): string {
-  if (product.tone && ['mint', 'lavender', 'coral', 'gold', 'sky'].includes(product.tone)) {
-    return product.tone;
-  }
-  if (product.fulfilment_type === 'experience') return 'lavender';
-  if (product.fulfilment_type === 'enterprise_code') return 'sky';
-  return 'mint';
+  const tone = normalizeTone(
+    product.tone,
+    product.fulfilment_type === 'experience'
+      ? 'lavender'
+      : product.fulfilment_type === 'enterprise_code'
+        ? 'sky'
+        : 'teal',
+  );
+  if (tone === 'teal') return 'mint';
+  if (tone === 'pink') return 'coral';
+  return tone;
 }
 
 export function packageSummary(variant: ProductVariant): string {

@@ -53,7 +53,7 @@ export function GiftCardVisual({
   const isSession = typeof sessionsTotal === 'number' && sessionsTotal > 0;
 
   const body = (
-    <Card tone={cardTones[tone]} style={compact ? styles.compact : undefined}>
+    <Card tone={cardTones[tone] ?? cardTones.lavender} style={compact ? styles.compact : undefined}>
       <View style={styles.topRow}>
         <IconTile
           icon={icon}

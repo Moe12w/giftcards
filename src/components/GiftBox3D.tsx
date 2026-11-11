@@ -20,6 +20,7 @@ import {
 import { Star } from 'lucide-react-native';
 
 import type { AccentTone, BasketItem, GiftBasket } from '../lib/types';
+import { resolveTone } from '../lib/tone';
 import { basketTotal } from '../lib/baskets';
 import { colors, edges, fonts, fontSizes, radii, spacing } from '../theme';
 import { Glyph } from './Glyph';
@@ -60,7 +61,7 @@ function MiniGiftCard({
   icon?: string | null;
   size?: number;
 }) {
-  const palette = PALETTE[tone];
+  const palette = PALETTE[tone] ?? PALETTE.lavender;
   return (
     <View
       style={[
@@ -93,8 +94,8 @@ export function GiftBox3D({
   const prevCount = useRef(basket.items.length);
   const loopRef = useRef<Animated.CompositeAnimation | null>(null);
 
-  const tone = (basket.items[0]?.tone ?? 'lavender') as AccentTone;
-  const palette = PALETTE[tone];
+  const tone = resolveTone(basket.items[0]?.tone);
+  const palette = PALETTE[tone] ?? PALETTE.lavender;
   const completed = basket.status !== 'open';
   const total = basketTotal(basket);
   const latest = newestItem(basket);
@@ -293,7 +294,7 @@ export function GiftBox3D({
                     ]}
                   >
                     <MiniGiftCard
-                      tone={(item.tone ?? 'lavender') as AccentTone}
+                      tone={resolveTone(item.tone)}
                       icon={item.icon}
                       size={28}
                     />
@@ -362,7 +363,7 @@ export function GiftBox3D({
           >
             <View style={styles.flyingVoucherInner}>
               <MiniGiftCard
-                tone={(latest?.tone ?? 'lavender') as AccentTone}
+                tone={resolveTone(latest?.tone)}
                 icon={latest?.icon}
                 size={34}
               />

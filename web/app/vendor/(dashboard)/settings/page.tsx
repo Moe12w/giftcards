@@ -54,6 +54,7 @@ export default async function VendorSettingsPage({
         eyebrow="Settings"
         title="Your business, on your terms."
         description="Keep your storefront details accurate. Commission and account status are managed by the Giftly team."
+        logoUrl={vendor.logo_url ?? null}
         actions={
           <Link className="btn sm" href={`/vendors/${vendor.slug ?? vendor.id}`} target="_blank">
             View public page
@@ -149,7 +150,7 @@ export default async function VendorSettingsPage({
             </div>
             <div className="panel-body">
               <p className="small muted" style={{ marginBottom: 16 }}>
-                Upload your logo and banner here. They appear on the website, in the app and on your
+                Choose your logo and banner here. They appear on the website, in the app and on your
                 gift cards straight away.
               </p>
               <div style={{ display: 'grid', gap: 20 }}>
