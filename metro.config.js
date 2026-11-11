@@ -36,4 +36,9 @@ config.resolver.blockList = [
   ...blocked,
 ];
 
+// This machine has four cores and little spare memory, so Metro keeps its
+// worker count low and the bundling stays out of the way of everything else.
+config.maxWorkers = 2;
+config.retryWaitForChunkSize = 2;
+
 module.exports = config;
