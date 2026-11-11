@@ -845,3 +845,109 @@ export async function redeemScannedVoucher(input: {
     status: result.new_status,
   };
 }
+/* -------------------------------------------------------------------------
+ * Storefront images
+ *
+ * The logo and the banner are uploaded by the vendor and stored in the
+ * vendor-media bucket. The row keeps the public link, so the website and
+ * the mobile app both pick the new picture up straight away.
+ * ---------------------------------------------------------------------- */
+
+const MEDIA_BUCKET = 'vendor-media';
+
+export interface ImageActionResult {
+  ok: boolean;
+  error?: string;
+  url?: string;
+}
+
+function mediaPathFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const marker = `${MEDIA_BUCKET}/`;
+  const index = url.indexOf(marker);
+  if (index < 0) return null;
+  return url.slice(index + marker.length);
+}
+
+async function deleteStoredImage(ctx: Awaited<ReturnType<typeof requireVendor>>, url: string | null) {
+  const path = mediaPathFromUrl(url);
+  if (!path) return;
+  if (!path.startsWith(`${ctx.vendor.id}/`)) return;
+  await ctx.supabase.storage.from(MEDIA_BUCKET).remove([path]);
+}
+
+export async function uploadVendorImage(formData: FormData): Promise<ImageActionResult> {
+  const ctx = await requireVendor();
+  if (ctx.role === 'redemption_staff') {
+    return { ok: false, error: 'Only owners and managers can change the storefront images.' };
+  }
+
+  const kind = str(formData, 'kind') === 'banner' ? 'banner' : 'logo';
+  const file = formData.get('file');
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: 'Choose an image to upload.' };
+  }
+  if (!file.type.startsWith('image/')) {
+    return { ok: false, error: 'That file is not an image.' };
+  }
+  if (file.size > 4 * 1024 * 1024) {
+    return { ok: false, error: 'That image is too large. Keep it under 4 MB.' };
+  }
+
+  const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+  const path = `${ctx.vendor.id}/${kind}-${Date.now()}.${extension}`;
+
+  const { error } = await ctx.supabase.storage.from(MEDIA_BUCKET).upload(path, file, {
+    contentType: file.type,
+    upsert: true,
+  });
+  if (error) return { ok: false, error: error.message };
+
+  const { data } = ctx.supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
+  const publicUrl = data.publicUrl;
+
+  const column = kind === 'logo' ? 'logo_url' : 'banner_url';
+  const previous = kind === 'logo' ? ctx.vendor.logo_url : ctx.vendor.banner_url;
+
+  const { error: updateError } = await ctx.supabase
+    .from('vendors')
+    .update({ [column]: publicUrl, updated_at: new Date().toISOString() })
+    .eq('id', ctx.vendor.id);
+  if (updateError) return { ok: false, error: updateError.message };
+
+  await deleteStoredImage(ctx, previous);
+
+  revalidatePath('/vendor/settings');
+  revalidatePath('/vendor/onboarding');
+  revalidatePath('/vendor');
+  if (ctx.vendor.slug) revalidatePath(`/vendors/${ctx.vendor.slug}`);
+  revalidatePath('/vendors');
+
+  return { ok: true, url: publicUrl };
+}
+
+export async function removeVendorImage(kind: 'logo' | 'banner'): Promise<ImageActionResult> {
+  const ctx = await requireVendor();
+  if (ctx.role === 'redemption_staff') {
+    return { ok: false, error: 'Only owners and managers can change the storefront images.' };
+  }
+
+  const column = kind === 'logo' ? 'logo_url' : 'banner_url';
+  const previous = kind === 'logo' ? ctx.vendor.logo_url : ctx.vendor.banner_url;
+
+  const { error } = await ctx.supabase
+    .from('vendors')
+    .update({ [column]: null, updated_at: new Date().toISOString() })
+    .eq('id', ctx.vendor.id);
+  if (error) return { ok: false, error: error.message };
+
+  await deleteStoredImage(ctx, previous);
+
+  revalidatePath('/vendor/settings');
+  revalidatePath('/vendor/onboarding');
+  revalidatePath('/vendor');
+  if (ctx.vendor.slug) revalidatePath(`/vendors/${ctx.vendor.slug}`);
+  revalidatePath('/vendors');
+
+  return { ok: true };
+}

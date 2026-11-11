@@ -1,9 +1,19 @@
 import Link from 'next/link';
-import { AlertCircle, ArrowRight, CheckCircle2, Circle, Clock, FileText, Send } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  Circle,
+  Clock,
+  FileText,
+  ImagePlus,
+  Send,
+} from 'lucide-react';
 import { requireVendor } from '@/lib/auth';
 import { saveVendorProfile, submitVendorApplication } from '@/lib/actions/vendor';
 import { formatDate, titleCase } from '@/lib/format';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
+import { VendorImageUpload } from '@/components/VendorImageUpload';
 
 export default async function VendorOnboardingPage({
   searchParams,
@@ -13,6 +23,7 @@ export default async function VendorOnboardingPage({
   const params = await searchParams;
   const ctx = await requireVendor();
   const vendor = ctx.vendor;
+  const locale = ctx.profile?.preferred_language === 'ar' ? 'ar' : 'en';
 
   const [applicationResult, categoriesResult, locationsCount, productsCount] = await Promise.all([
     ctx.supabase
@@ -247,14 +258,6 @@ export default async function VendorOnboardingPage({
                 <label htmlFor="description">Description</label>
                 <textarea id="description" name="description" defaultValue={vendor.description ?? ''} />
               </div>
-              <div className="field">
-                <label htmlFor="logo_url">Logo URL</label>
-                <input id="logo_url" name="logo_url" defaultValue={vendor.logo_url ?? ''} />
-              </div>
-              <div className="field">
-                <label htmlFor="banner_url">Banner URL</label>
-                <input id="banner_url" name="banner_url" defaultValue={vendor.banner_url ?? ''} />
-              </div>
             </div>
             <div className="btn-row">
               <button className="btn primary" type="submit">
@@ -263,6 +266,23 @@ export default async function VendorOnboardingPage({
               <span className="small muted">Current status: {titleCase(vendor.status)}</span>
             </div>
           </form>
+        </div>
+      </section>
+
+      <section className="panel" style={{ marginTop: 20 }}>
+        <div className="panel-head">
+          <h3>Your images</h3>
+          <ImagePlus size={16} />
+        </div>
+        <div className="panel-body">
+          <p className="small muted" style={{ marginBottom: 16 }}>
+            A logo and a banner make your card recognisable. Upload them here and they are used
+            everywhere the gift appears.
+          </p>
+          <div className="dash-grid">
+            <VendorImageUpload kind="logo" currentUrl={vendor.logo_url ?? null} locale={locale} />
+            <VendorImageUpload kind="banner" currentUrl={vendor.banner_url ?? null} locale={locale} />
+          </div>
         </div>
       </section>
     </div>

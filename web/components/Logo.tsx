@@ -7,7 +7,7 @@ export function Logo({ href = '/', label = 'Giftly' }: { href?: string; label?: 
       <span className="logo-mark" aria-hidden="true">
         <Gift size={22} strokeWidth={2.4} />
       </span>
-      {label}
+      <span className="logo-label">{label}</span>
     </Link>
   );
 }

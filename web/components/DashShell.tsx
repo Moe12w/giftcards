@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -17,6 +17,8 @@ import {
   LifeBuoy,
   Menu,
   Package,
+  PanelLeftClose,
+  PanelLeftOpen,
   Percent,
   ScanLine,
   ScrollText,
@@ -90,6 +92,8 @@ const CHROME = {
     flow: 'Gift life cycle',
     howItWorks: 'How this works',
     language: 'Language',
+    collapseMenu: 'Collapse the menu',
+    expandMenu: 'Expand the menu',
   },
   ar: {
     tutorial: 'الدليل',
@@ -99,6 +103,8 @@ const CHROME = {
     flow: 'دورة حياة الهدية',
     howItWorks: 'كيف تعمل هذه الصفحة',
     language: 'اللغة',
+    collapseMenu: 'طيّ القائمة',
+    expandMenu: 'توسيع القائمة',
   },
 };
 
@@ -196,6 +202,7 @@ function DashShellInner({
   const pathname = usePathname();
   const { open } = useTutorial();
   const [navOpen, setNavOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const rtl = locale === 'ar';
   const chrome = CHROME[locale];
   const homeHref = `/${pathname.split('/').filter(Boolean)[0] ?? ''}`;
@@ -206,8 +213,30 @@ function DashShellInner({
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  // Remember the narrow menu between visits.
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem('giftly.dash.collapsed');
+      if (stored === '1') setCollapsed(true);
+    } catch {
+      /* storage is not available */
+    }
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((value) => {
+      const next = !value;
+      try {
+        window.localStorage.setItem('giftly.dash.collapsed', next ? '1' : '0');
+      } catch {
+        /* storage is not available */
+      }
+      return next;
+    });
+  }
+
   return (
-    <div className={`dash${rtl ? ' rtl' : ''}${navOpen ? ' nav-open' : ''}`}>
+    <div className={`dash${rtl ? ' rtl' : ''}${navOpen ? ' nav-open' : ''}${collapsed ? ' collapsed' : ''}`}>
       <button
         type="button"
         className="dash-scrim"
@@ -215,7 +244,18 @@ function DashShellInner({
         onClick={() => setNavOpen(false)}
       />
       <aside className="dash-side">
-        <Logo href={homeHref} />
+        <div className="dash-side-top">
+          <Logo href={homeHref} />
+          <button
+            type="button"
+            className="dash-collapse"
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? chrome.expandMenu : chrome.collapseMenu}
+            title={collapsed ? chrome.expandMenu : chrome.collapseMenu}
+          >
+            {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
+        </div>
         <div className="dash-workspace">
           <span className="label">{portalLabel}</span>
           <strong>{workspaceName}</strong>
@@ -247,6 +287,7 @@ function DashShellInner({
                     href={item.href}
                     className={`${active(item.href) ? 'active' : ''} ${active(item.href) ? accent : ''}`}
                     aria-current={active(item.href) ? 'page' : undefined}
+                    title={rtl ? item.labelAr ?? item.label : item.label}
                   >
                     <Icon size={17} />
                     <span className="nav-text">
