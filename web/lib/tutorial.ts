@@ -162,12 +162,12 @@ export const VENDOR_SCRIPT: TutorialScript = {
       title: 'Redeeming at the counter',
       titleAr: 'الاستبدال عند الكاونتر',
       body:
-        'At the till, scan the code or type it. The amount spent comes off the balance immediately, a redemption record is written, and the customer can come back and spend the rest.',
+        'Ask the customer to open the app, or their wallet pass, and scan the code with the camera. You see the gift, the recipient and the balance left, and the amount comes off the moment you confirm. You can still type a code by hand.',
       bodyAr:
-        'عند الصندوق، امسح الرمز أو اكتبه. يُخصم المبلغ من الرصيد فوراً، ويُسجَّل الاستبدال، ويمكن للعميل العودة وإنفاق الباقي.',
-      tip: 'Redemption staff can do this. Only owners and managers can change prices, team roles or settings.',
+        'اطلب من العميل فتح التطبيق أو بطاقة المحفظة وامسح الرمز بالكاميرا. ترى الهدية والمستلم والرصيد المتبقي، ويُخصم المبلغ فور تأكيدك. ويمكنك أيضاً كتابة الرمز يدوياً.',
+      tip: 'A handheld scanner works too: it types the code and presses enter, so keep the code field ready.',
       tipAr:
-        'يستطيع موظفو الاستبدال تنفيذ هذه الخطوة، بينما 수정 الأسعار أو أدوار الفريق أو الإعدادات من صلاحية المالك والمدير فقط.',
+        'الماسح اليدوي يعمل أيضاً: يكتب الرمز ويضغط Enter، لذا أبقِ حقل الرمز جاهزاً.',
       href: '/vendor/redeem',
     },
     {

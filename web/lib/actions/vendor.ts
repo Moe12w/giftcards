@@ -624,3 +624,224 @@ export async function updateStaffRole(formData: FormData) {
   revalidatePath('/vendor/staff');
   redirect('/vendor/staff?saved=1');
 }
+
+/* -------------------------------------------------------------------------
+ * Scanning redemption
+ *
+ * The customer shows the QR from the app or their wallet pass, the counter
+ * staff scan it with the camera and the balance comes off straight away.
+ * The manual code entry stays in place for when a camera is not practical.
+ * ---------------------------------------------------------------------- */
+
+export interface ScannedVoucher {
+  id: string;
+  code: string;
+  title: string;
+  recipient: string | null;
+  fulfilmentType: string;
+  status: string;
+  remainingValueMinor: number | null;
+  remainingSessions: number | null;
+  totalSessions: number | null;
+  expiresAt: string | null;
+}
+
+export interface ScanLookupResult {
+  ok: boolean;
+  error?: string;
+  voucher?: ScannedVoucher;
+  reference?: string;
+  remaining?: number;
+  sessions?: number;
+  status?: string;
+  kind?: string;
+}
+
+/**
+ * Works out what was scanned. The app can show a voucher id
+ * (giftly:card:...), a wallet link, or the printed code itself.
+ */
+function parseScanPayload(raw: string): { id?: string; code?: string } {
+  const value = (raw ?? '').trim();
+  if (!value) return {};
+
+  const scheme = value.match(/^giftly:(?:card|redeem|voucher|pass):([0-9a-f-]{36})$/i);
+  if (scheme) return { id: scheme[1] };
+
+  const uuid = value.match(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+  );
+  if (uuid) return { id: value };
+
+  const link = value.match(/redeem\/([A-Za-z0-9-]{6,64})/i);
+  if (link) return { code: link[1].toUpperCase() };
+
+  const query = value.match(/[?&](?:code|voucher)=([A-Za-z0-9-]{6,64})/i);
+  if (query) return { code: query[1].toUpperCase() };
+
+  if (/^[A-Za-z0-9-]{6,64}$/.test(value)) return { code: value.toUpperCase() };
+
+  return {};
+}
+
+const REDEEMABLE = ['issued', 'claimed', 'active', 'partially_redeemed'];
+
+/**
+ * Finds the scanned gift and makes sure it belongs to this vendor.
+ */
+async function resolveScannedVoucher(
+  ctx: Awaited<ReturnType<typeof requireVendor>>,
+  payload: string,
+): Promise<{ ok: false; error: string } | { ok: true; voucher: ScannedVoucher }> {
+  const parsed = parseScanPayload(payload);
+  if (!parsed.id && !parsed.code) {
+    return { ok: false, error: 'That code is not a Giftly gift.' };
+  }
+
+  let query = ctx.supabase
+    .from('vouchers')
+    .select(
+      'id, voucher_code, fulfilment_type, status, remaining_value_minor, remaining_sessions, total_sessions, vendor_id, recipient_name, expires_at, products(title)',
+    )
+    .limit(1);
+
+  query = parsed.id ? query.eq('id', parsed.id) : query.eq('voucher_code', parsed.code!);
+
+  const { data, error } = await query.maybeSingle();
+  if (error) return { ok: false, error: error.message };
+  if (!data) {
+    return { ok: false, error: 'We could not find that gift. Check the code and try again.' };
+  }
+  if (data.vendor_id !== ctx.vendor.id) {
+    return { ok: false, error: 'That gift belongs to another business.' };
+  }
+  if (!REDEEMABLE.includes(String(data.status))) {
+    return { ok: false, error: `That gift cannot be redeemed (${String(data.status).replace('_', ' ')}).` };
+  }
+
+  const product = Array.isArray(data.products) ? data.products[0] : data.products;
+  return {
+    ok: true,
+    voucher: {
+      id: data.id as string,
+      code: (data.voucher_code ?? '') as string,
+      title: product?.title ?? 'Gift card',
+      recipient: (data.recipient_name ?? null) as string | null,
+      fulfilmentType: String(data.fulfilment_type),
+      status: String(data.status),
+      remainingValueMinor:
+        data.remaining_value_minor === null || data.remaining_value_minor === undefined
+          ? null
+          : Number(data.remaining_value_minor),
+      remainingSessions:
+        data.remaining_sessions === null || data.remaining_sessions === undefined
+          ? null
+          : Number(data.remaining_sessions),
+      totalSessions:
+        data.total_sessions === null || data.total_sessions === undefined
+          ? null
+          : Number(data.total_sessions),
+      expiresAt: (data.expires_at ?? null) as string | null,
+    } as ScannedVoucher,
+  };
+}
+
+/** Called right after a scan: shows the vendor what is about to be redeemed. */
+export async function lookupScannedVoucher(payload: string): Promise<ScanLookupResult> {
+  const ctx = await requireVendor();
+  const result = await resolveScannedVoucher(ctx, payload);
+  if (!result.ok) return { ok: false, error: result.error };
+  return { ok: true, voucher: result.voucher };
+}
+
+/** Redeems the scanned gift. The amount defaults to the full balance. */
+export async function redeemScannedVoucher(input: {
+  payload: string;
+  amount?: string | null;
+  sessions?: string | null;
+  notes?: string | null;
+}): Promise<ScanLookupResult> {
+  const ctx = await requireVendor();
+  const resolved = await resolveScannedVoucher(ctx, input.payload ?? '');
+  if (!resolved.ok) return { ok: false, error: resolved.error };
+  const voucher = resolved.voucher;
+
+  let amount: number | null = null;
+  let sessions: number | null = null;
+  const notes = (input.notes ?? '').trim() || null;
+
+  if (voucher.fulfilmentType === 'monetary') {
+    const raw = (input.amount ?? '').trim();
+    if (!raw) {
+      amount = voucher.remainingValueMinor;
+    } else {
+      try {
+        amount = parseMoneyToMinor(raw);
+      } catch {
+        return { ok: false, error: 'That amount is not valid.' };
+      }
+    }
+    if (!amount || amount <= 0) {
+      return { ok: false, error: 'There is no balance left to redeem on this gift.' };
+    }
+    if (voucher.remainingValueMinor !== null && amount > voucher.remainingValueMinor) {
+      return {
+        ok: false,
+        error: 'That is more than the balance left on this gift.',
+      };
+    }
+  } else {
+    const raw = (input.sessions ?? '').trim();
+    sessions = raw ? Number.parseInt(raw, 10) : 1;
+    if (!Number.isFinite(sessions) || sessions <= 0) {
+      return { ok: false, error: 'Enter a valid number of sessions.' };
+    }
+    if (
+      voucher.remainingSessions !== null &&
+      voucher.totalSessions !== null &&
+      sessions > voucher.remainingSessions
+    ) {
+      return { ok: false, error: 'That is more sessions than this gift has left.' };
+    }
+  }
+
+  const { data, error } = await ctx.supabase.rpc('redeem_voucher_by_code', {
+    p_code: voucher.code,
+    p_amount_minor: amount,
+    p_sessions: sessions,
+    p_notes: notes,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  const result = (Array.isArray(data) ? data[0] : data) as
+    | {
+        redemption_reference?: string;
+        kind?: string;
+        remaining_value_minor?: number | null;
+        sessions_remaining?: number | null;
+        new_status?: string;
+      }
+    | null;
+
+  if (!result) return { ok: false, error: 'The redemption did not return a result.' };
+
+  revalidatePath('/vendor/vouchers');
+  revalidatePath('/vendor/redeem');
+
+  return {
+    ok: true,
+    voucher,
+    reference: result.redemption_reference,
+    kind: result.kind,
+    remaining:
+      result.remaining_value_minor === null || result.remaining_value_minor === undefined
+        ? undefined
+        : Number(result.remaining_value_minor),
+    sessions:
+      result.sessions_remaining === null || result.sessions_remaining === undefined
+        ? undefined
+        : Number(result.sessions_remaining),
+    status: result.new_status,
+  };
+}

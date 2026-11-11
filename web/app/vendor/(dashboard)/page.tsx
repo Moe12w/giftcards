@@ -383,7 +383,7 @@ export default async function VendorOverviewPage() {
                 <span className="icon-tile gold">
                   <ScanLine size={18} />
                 </span>
-                Redeem
+                Scan a gift
               </Link>
               <Link className="quick-link" href="/vendor/orders">
                 <span className="icon-tile lavender">

@@ -5,6 +5,7 @@ import { formatDateTime } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { PageHead, StatusTag } from '@/components/ui';
 import { redeemVoucher } from '@/lib/actions/vendor';
+import { RedeemPanel } from '@/components/RedeemPanel';
 
 export default async function VendorRedeemPage({
   searchParams,
@@ -34,7 +35,7 @@ export default async function VendorRedeemPage({
       <PageHead
         eyebrow="At the counter"
         title="Redeem a voucher"
-        description="Enter the code from the customer's gift. Use the amount for gift cards, or the number of sessions for an experience."
+        description="Scan the customer's app or wallet pass with the camera, or type the code by hand. Use the amount for gift cards, or the number of sessions for an experience."
       />
 
       {params.error ? (
@@ -90,7 +91,10 @@ export default async function VendorRedeemPage({
             </span>
           </div>
           <div className="panel-body">
-            <form action={redeemVoucher} style={{ display: 'grid', gap: 16 }}>
+            <RedeemPanel
+              locale={ctx.profile?.preferred_language === 'ar' ? 'ar' : 'en'}
+              manual={
+                <form action={redeemVoucher} style={{ display: 'grid', gap: 16 }}>
               <div className="field">
                 <label htmlFor="code">Voucher code</label>
                 <input
@@ -128,7 +132,9 @@ export default async function VendorRedeemPage({
               <button className="btn primary" type="submit">
                 <ScanLine size={16} /> Record redemption
               </button>
-            </form>
+                </form>
+              }
+            />
           </div>
         </section>
 
@@ -142,22 +148,29 @@ export default async function VendorRedeemPage({
                 <div className="timeline-item">
                   <span className="timeline-dot" />
                   <div>
-                    <strong>1. Check the code</strong>
-                    <span>The app shows the gift, recipient and remaining balance before you confirm.</span>
+                    <strong>1. Scan the gift</strong>
+                    <span>
+                      The customer opens the app or their wallet pass and the camera reads the code.
+                      You can still type a code by hand.
+                    </span>
                   </div>
                 </div>
                 <div className="timeline-item">
                   <span className="timeline-dot" />
                   <div>
-                    <strong>2. Enter what was used</strong>
-                    <span>An amount for gift cards, or sessions for experiences.</span>
+                    <strong>2. Check what is owed</strong>
+                    <span>
+                      You see the gift, the recipient and the balance left before you confirm.
+                    </span>
                   </div>
                 </div>
                 <div className="timeline-item">
                   <span className="timeline-dot" />
                   <div>
                     <strong>3. Confirm once</strong>
-                    <span>The balance is deducted immediately and a reference is saved for your reports.</span>
+                    <span>
+                      The balance is deducted immediately and a reference is saved for your reports.
+                    </span>
                   </div>
                 </div>
               </div>

@@ -159,7 +159,7 @@ export default async function VendorDashboardLayout({ children }: { children: Re
             View public page
           </Link>
           <Link className="btn sm primary" href="/vendor/redeem">
-            <ScanLine size={15} /> Redeem
+            <ScanLine size={15} /> Scan a gift
           </Link>
         </>
       }
