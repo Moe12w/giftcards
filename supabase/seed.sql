@@ -47,23 +47,38 @@ alter table public.audit_log enable trigger audit_no_update;
 -- ---------------------------------------------------------------------
 -- Test accounts (password for all of them: GiftlyTest123)
 -- ---------------------------------------------------------------------
-insert into auth.users (id, email, encrypted_password, email_confirmed_at, created_at, raw_user_meta_data)
-values
-  ('11111111-1111-4111-8111-111111111111', 'customer@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Demo Customer"}'::jsonb),
-  ('22222222-2222-4222-8222-222222222222', 'owner@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Vendor Owner"}'::jsonb),
-  ('33333333-3333-4333-8333-333333333333', 'manager@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Vendor Manager"}'::jsonb),
-  ('44444444-4444-4444-8444-444444444444', 'staff@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Redemption Staff"}'::jsonb),
-  ('55555555-5555-4555-8555-555555555555', 'partner@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Enterprise Partner"}'::jsonb),
-  ('66666666-6666-4666-8666-666666666666', 'admin@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Platform Admin"}'::jsonb),
-  ('72215636-34c1-4635-9479-dba62aa65c56', 'layla@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Layla"}'::jsonb),
-  ('131437af-94dd-46ed-b3dd-8576e10ceaba', 'omar@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Omar"}'::jsonb),
-  ('29eb9902-b88e-4490-8785-737206825852', 'noor@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Noor"}'::jsonb),
-  ('77a7a268-c84b-42ac-a7db-e25fe395b6fe', 'sara@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Sara"}'::jsonb),
-  ('cdca534d-1d61-46ef-a179-13588d899a74', 'mariam@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Mariam"}'::jsonb),
-  ('83924abf-bf07-4e7b-8d09-9313fbbba40f', 'faris@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Faris"}'::jsonb),
-  ('c20aca36-9957-41f4-9b53-9c2a415178b4', 'hind@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Hind"}'::jsonb),
-  ('ff2c387d-ec50-4a87-bd8c-dd8b2e277828', 'aisha@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Aisha"}'::jsonb),
-  ('7e322058-fbcb-4c77-8da8-8b52d393d709', 'ahmed@giftly.test', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"Ahmed"}'::jsonb)
+insert into auth.users (
+  id, instance_id, email, encrypted_password, email_confirmed_at, created_at, updated_at,
+  raw_user_meta_data, raw_app_meta_data, aud, role,
+  confirmation_token, recovery_token, email_change_token_new, email_change, phone_change
+)
+select
+  u.id,
+  '00000000-0000-0000-0000-000000000000'::uuid,
+  u.email,
+  extensions.crypt('GiftlyTest123', extensions.gen_salt('bf', 10)),
+  now(), now(), now(),
+  jsonb_build_object('sub', u.id, 'email', u.email, 'full_name', u.name, 'email_verified', true),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  'authenticated', 'authenticated',
+  '', '', '', '', ''
+from (values
+  ('11111111-1111-4111-8111-111111111111'::uuid, 'customer@giftly.test', 'Demo Customer'),
+  ('22222222-2222-4222-8222-222222222222'::uuid, 'owner@giftly.test', 'Vendor Owner'),
+  ('33333333-3333-4333-8333-333333333333'::uuid, 'manager@giftly.test', 'Vendor Manager'),
+  ('44444444-4444-4444-8444-444444444444'::uuid, 'staff@giftly.test', 'Redemption Staff'),
+  ('55555555-5555-4555-8555-555555555555'::uuid, 'partner@giftly.test', 'Enterprise Partner'),
+  ('66666666-6666-4666-8666-666666666666'::uuid, 'admin@giftly.test', 'Platform Admin'),
+  ('72215636-34c1-4635-9479-dba62aa65c56'::uuid, 'layla@giftly.test', 'Layla'),
+  ('131437af-94dd-46ed-b3dd-8576e10ceaba'::uuid, 'omar@giftly.test', 'Omar'),
+  ('29eb9902-b88e-4490-8785-737206825852'::uuid, 'noor@giftly.test', 'Noor'),
+  ('77a7a268-c84b-42ac-a7db-e25fe395b6fe'::uuid, 'sara@giftly.test', 'Sara'),
+  ('cdca534d-1d61-46ef-a179-13588d899a74'::uuid, 'mariam@giftly.test', 'Mariam'),
+  ('83924abf-bf07-4e7b-8d09-9313fbbba40f'::uuid, 'faris@giftly.test', 'Faris'),
+  ('c20aca36-9957-41f4-9b53-9c2a415178b4'::uuid, 'hind@giftly.test', 'Hind'),
+  ('ff2c387d-ec50-4a87-bd8c-dd8b2e277828'::uuid, 'aisha@giftly.test', 'Aisha'),
+  ('7e322058-fbcb-4c77-8da8-8b52d393d709'::uuid, 'ahmed@giftly.test', 'Ahmed')
+) as u(id, email, name)
 on conflict (id) do nothing;
 
 insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)

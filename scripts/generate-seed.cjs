@@ -148,13 +148,27 @@ const BUYERS = BUYER_NAMES.map((name) => [
 ]);
 const ALL_USERS = [...USERS, ...BUYERS];
 
-push("insert into auth.users (id, email, encrypted_password, email_confirmed_at, created_at, raw_user_meta_data)");
-push("values");
+push('insert into auth.users (');
+push('  id, instance_id, email, encrypted_password, email_confirmed_at, created_at, updated_at,');
+push('  raw_user_meta_data, raw_app_meta_data, aud, role,');
+push('  confirmation_token, recovery_token, email_change_token_new, email_change, phone_change');
+push(')');
+push('select');
+push('  u.id,');
+push("  '00000000-0000-0000-0000-000000000000'::uuid,");
+push('  u.email,');
+push("  extensions.crypt('GiftlyTest123', extensions.gen_salt('bf', 10)),");
+push('  now(), now(), now(),');
+push("  jsonb_build_object('sub', u.id, 'email', u.email, 'full_name', u.name, 'email_verified', true),");
+push("  '{\"provider\":\"email\",\"providers\":[\"email\"]}'::jsonb,");
+push("  'authenticated', 'authenticated',");
+push("  '', '', '', '', ''");
+push('from (values');
 const userRows = ALL_USERS.map(
-  ([id, email, name]) =>
-    `  ('${id}', '${email}', extensions.crypt('GiftlyTest123', extensions.gen_salt('bf')), now(), now(), '{"full_name":"${name}"}'::jsonb)`,
+  ([id, email, name]) => `  ('${id}'::uuid, ${q(email)}, ${q(name)})`,
 );
 push(userRows.join(',\n'));
+push(') as u(id, email, name)');
 push('on conflict (id) do nothing;');
 push('');
 push('insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)');
