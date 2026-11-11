@@ -513,8 +513,8 @@ p {
 
 .hero {
   position: relative;
-  overflow: hidden;
-  padding: 70px 0 46px;
+  overflow: visible;
+  padding: 70px 0 0;
 }
 
 .hero::before {
@@ -532,7 +532,11 @@ p {
   display: grid;
   grid-template-columns: 1.02fr 0.98fr;
   gap: 54px;
-  align-items: center;
+  align-items: end;
+}
+
+.hero h1 {
+  font-size: clamp(3rem, 6.4vw, 5.2rem);
 }
 
 .hero h1 .highlight {
@@ -558,6 +562,11 @@ p {
   display: grid;
   gap: 22px;
   justify-items: start;
+}
+
+/* Keeps the copy clear of the stat table that starts under the gift card. */
+.hero .hero-copy {
+  padding-bottom: 26px;
 }
 
 .hero-copy p.lede {
@@ -669,7 +678,8 @@ p {
 
 .gc-3 {
   background: var(--coral);
-  transform: rotate(-2deg) translate(6px, 96px);
+  align-self: end;
+  transform: rotate(-2deg) translate(6px, 0);
   z-index: 3;
   width: min(320px, 74%);
 }
@@ -714,6 +724,11 @@ p {
 
 .section.tight {
   padding: 44px 0;
+}
+
+/* The stat table sits directly against the gift card that lands on it. */
+.hero + .section.tight {
+  padding-top: 0;
 }
 
 .section-head {
@@ -828,11 +843,14 @@ p {
 }
 
 .card-type {
+  position: relative;
+  overflow: hidden;
   display: grid;
   gap: 14px;
   align-content: start;
 }
 
+/* The colour bar lives inside the card border and curves with its corners. */
 .card-type .ribbon {
   height: 12px;
   margin: -24px -24px 8px;

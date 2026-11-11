@@ -11,7 +11,6 @@ import {
   QrCode,
   Send,
   ShieldCheck,
-  Sparkles,
   Star,
   Store,
   Ticket,
@@ -62,12 +61,13 @@ export default async function HomePage() {
       <section className="hero">
         <div className="container hero-grid">
           <div className="hero-copy">
-            <span className="eyebrow">Qatar&apos;s gift card marketplace</span>
             <h1>
-              Give a gift they&apos;ll <span className="highlight">actually use</span>.
+              Give a gift they&apos;ll
+              <br />
+              <span className="highlight">actually use</span>.
             </h1>
             <p className="lede">
-              The best independent cafés, salons, spas and adventures in Qatar — wrapped into one
+              The best independent cafés, salons, spas and adventures in Qatar, wrapped into one
               thoughtful gift. Send it in seconds, spend it in parts, keep it in your wallet.
             </p>
             <div className="btn-row">
@@ -85,9 +85,7 @@ export default async function HomePage() {
               <span>
                 <ShieldCheck size={16} /> Spend in parts
               </span>
-              <span>
-                <Sparkles size={16} /> English &amp; Arabic
-              </span>
+              <span>English &amp; Arabic</span>
             </div>
           </div>
 
@@ -125,12 +123,7 @@ export default async function HomePage() {
               </div>
               <div className="gift-card-visual gc-3">
                 <div className="gc-top">
-                  <span className="gc-brand">
-                    <span className="gc-icon">
-                      <Sparkles size={18} />
-                    </span>
-                    Sunset Kayak
-                  </span>
+                  <span className="gc-brand">Sunset Kayak</span>
                 </div>
                 <div>
                   <div className="gc-amount">One adventure</div>
