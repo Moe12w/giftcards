@@ -7,6 +7,7 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Chip } from '@/src/components/Chip';
 import { FlowHeader } from '@/src/components/FlowHeader';
+import { Glyph } from '@/src/components/Glyph';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useGiftDraft, type DeliveryMethod } from '@/src/lib/gift-draft';
@@ -64,21 +65,36 @@ export default function DeliveryScreen() {
               style={({ pressed }) => [styles.methodWrap, pressed && styles.pressed]}
             >
               <Card tone={active ? 'teal' : 'surface'} style={styles.method}>
-                <Text style={styles.methodEmoji}>
-                  {method === 'email' ? 'mail' : method === 'sms' ? 'message' : 'link'}
-                </Text>
+                <Glyph
+                  name={
+                    method === 'email'
+                      ? 'mail'
+                      : method === 'sms'
+                        ? 'smartphone'
+                        : method === 'whatsapp'
+                          ? 'message'
+                          : 'link'
+                  }
+                  size={24}
+                />
                 <Text style={styles.methodLabel}>
                   {method === 'email'
                     ? t('send.deliveryEmail')
                     : method === 'sms'
                       ? t('send.deliverySms')
-                      : t('send.deliveryLink')}
+                      : method === 'whatsapp'
+                        ? t('send.deliveryWhatsapp')
+                        : t('send.deliveryLink')}
                 </Text>
               </Card>
             </Pressable>
           );
         })}
       </View>
+
+      {draft.deliveryMethod === 'whatsapp' ? (
+        <Text style={styles.hint}>{t('send.deliveryWhatsappBody')}</Text>
+      ) : null}
 
       <View style={styles.modeRow}>
         <Chip
@@ -112,12 +128,17 @@ const styles = StyleSheet.create({
   methods: { flexDirection: 'row', gap: spacing.sm },
   methodWrap: { flex: 1 },
   method: { alignItems: 'center', gap: 4, paddingVertical: spacing.sm + 2 },
-  methodEmoji: { fontSize: 26 },
   methodLabel: {
     fontFamily: fonts.bold,
     fontSize: fontSizes.xs,
     color: colors.text,
     textAlign: 'center',
+  },
+  hint: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+    lineHeight: 17,
   },
   modeRow: { flexDirection: 'row', gap: spacing.sm },
   pressed: { opacity: 0.9 },

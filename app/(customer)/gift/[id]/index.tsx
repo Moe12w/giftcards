@@ -13,7 +13,7 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { ListRow } from '@/src/components/ListRow';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
-import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerIcon, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { isSessionOffer } from '@/src/lib/sessions';
@@ -83,12 +83,15 @@ export default function GiftDetailScreen() {
 
   const title = offerTitle(offer, i18n.language);
   const tone = offerTone(offer) as AccentTone;
+  const packages = offerPackages(offer);
+  const isExperience = offer.fulfilment_type === 'experience';
 
   function startGift() {
     if (!offer) return;
     update({
       offerId: offer.id,
-      amountMinor: offer.preset_amounts_minor[1] ?? offer.min_amount_minor,
+      variantId: null,
+      amountMinor: isExperience ? 0 : offer.preset_amounts_minor[1] ?? offer.min_amount_minor,
     });
     router.push(`/(customer)/gift/${offer.id}/design`);
   }
@@ -129,14 +132,19 @@ export default function GiftDetailScreen() {
         <Text style={styles.body}>{offer.description}</Text>
         <View style={styles.amountRow}>
           <Text style={styles.from}>{t('common.from')}</Text>
-          <Money minor={offer.min_amount_minor} style={styles.amount} />
+          <Money minor={offerStartingPriceMinor(offer)} style={styles.amount} />
         </View>
+        {isExperience && packages.length > 0 ? (
+          <Text style={styles.packageCount}>
+            {t('gift.packagesAvailable', { count: packages.length })}
+          </Text>
+        ) : null}
         {isSessionOffer(offer) ? (
           <Card tone="teal" style={styles.sessionNote}>
             <Ticket size={16} color={colors.ink} />
             <Text style={styles.sessionNoteText}>
               {t('sessions.offerNote', {
-                count: offer.session_count ?? 1,
+                count: packages[0]?.session_count ?? offer.session_count ?? 1,
               })}
             </Text>
           </Card>
@@ -219,6 +227,11 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   amountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: spacing.xs },
+  packageCount: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+  },
   sessionNote: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   sessionNoteText: { flex: 1, fontSize: fontSizes.sm, color: colors.text, lineHeight: 19 },
   from: {

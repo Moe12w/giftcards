@@ -7,7 +7,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, Check, Plus, Star } from 'lucide-react-native';
 
-import { offerTitle, offerTone } from '../lib/catalog';
+import { offerStartingPriceMinor, offerTitle, offerTone } from '../lib/catalog';
 import { glyphIcon } from '../lib/glyphs';
 import type { AccentTone, Offer } from '../lib/types';
 import { colors, edges, fonts, fontSizes, radii, spacing } from '../theme';
@@ -178,7 +178,7 @@ export function FeaturedBusinessCard({ offer, onPress }: FeaturedBusinessCardPro
           </View>
           <View style={styles.businessFooter}>
             <Text style={styles.businessFrom}>{t('common.from')}</Text>
-            <Money minor={offer.min_amount_minor} style={styles.businessAmount} />
+            <Money minor={offerStartingPriceMinor(offer)} style={styles.businessAmount} />
           </View>
         </View>
       </View>
@@ -234,7 +234,7 @@ export function TrendingGiftCard({
         <View style={styles.trendingFooter}>
           <View style={styles.trendingPrice}>
             <Text style={styles.trendingFrom}>{t('common.from')}</Text>
-            <Money minor={offer.min_amount_minor} style={styles.trendingAmount} />
+            <Money minor={offerStartingPriceMinor(offer)} style={styles.trendingAmount} />
           </View>
           {onAdd ? (
             <Pressable
@@ -302,7 +302,7 @@ export function RecommendationRow({ offer, reason, onPress }: RecommendationRowP
           </View>
           <View style={styles.recommendRight}>
             <Text style={styles.recommendFrom}>{t('common.from')}</Text>
-            <Money minor={offer.min_amount_minor} style={styles.recommendAmount} />
+            <Money minor={offerStartingPriceMinor(offer)} style={styles.recommendAmount} />
             <View style={styles.chevron}>
               <Arrow size={14} color={colors.ink} />
             </View>

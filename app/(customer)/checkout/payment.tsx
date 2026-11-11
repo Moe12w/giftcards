@@ -76,7 +76,12 @@ export default function PaymentScreen() {
       ? 'send.deliveryEmail'
       : draft.deliveryMethod === 'sms'
         ? 'send.deliverySms'
-        : 'send.deliveryLink';
+        : draft.deliveryMethod === 'whatsapp'
+          ? 'send.deliveryWhatsapp'
+          : 'send.deliveryLink';
+
+  const selectedVariant =
+    offer.variants?.find((variant) => variant.id === draft.variantId) ?? null;
 
   return (
     <Screen>
@@ -92,7 +97,9 @@ export default function PaymentScreen() {
         icon={offerIcon(offer)}
         logoUrl={offer.vendor?.logo_url}
         tone={offerTone(offer)}
-        amountMinor={draft.amountMinor}
+        amountMinor={selectedVariant ? undefined : draft.amountMinor}
+        sessionsTotal={selectedVariant?.session_count ?? undefined}
+        sessionsRemaining={selectedVariant?.session_count ?? undefined}
         message={draft.message || undefined}
         meta={
           draft.recipient
@@ -102,6 +109,9 @@ export default function PaymentScreen() {
       />
 
       <Card style={styles.summary}>
+        {selectedVariant ? (
+          <Row label={t('gift.package')} value={selectedVariant.label} />
+        ) : null}
         <Row label={t('checkout.amount')} value={formatMoney(draft.amountMinor, lang)} />
         <Row label={t('send.recipientTitle')} value={draft.recipient?.name ?? '—'} />
         <Row label={t('send.deliveryTitle')} value={t(deliveryKey)} />

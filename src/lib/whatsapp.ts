@@ -28,12 +28,10 @@ export function whatsappLink(phone: string, message: string): string {
 /** Opens WhatsApp with the message ready to send. */
 export async function shareOnWhatsapp(phone: string, message: string): Promise<boolean> {
   if (!isUsablePhone(phone)) return false;
-  const url = whatsappLink(phone, message);
-  const supported = await Linking.canOpenURL(url).catch(() => true);
-  if (!supported) {
-    await Linking.openURL(url).catch(() => undefined);
+  try {
+    await Linking.openURL(whatsappLink(phone, message));
+    return true;
+  } catch {
     return false;
   }
-  await Linking.openURL(url).catch(() => undefined);
-  return true;
 }

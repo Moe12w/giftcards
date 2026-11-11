@@ -61,6 +61,24 @@ export interface Vendor {
   created_at: string;
 }
 
+/**
+ * A vendor-defined denomination or experience package. Experience products
+ * always price from here — the customer never chooses a free amount.
+ */
+export interface ProductVariant {
+  id: string;
+  product_id: string;
+  kind: 'denomination' | 'package';
+  label: string;
+  amount_minor: number | null;
+  session_count: number | null;
+  price_minor: number;
+  currency: string;
+  valid_until: string | null;
+  active: boolean;
+  sort_order: number;
+}
+
 export interface Offer {
   id: string;
   vendor_id: string;
@@ -75,6 +93,8 @@ export interface Offer {
   is_active: boolean;
   created_at: string;
   vendor?: Pick<Vendor, 'id' | 'name' | 'name_ar' | 'logo_url' | 'banner_url'>;
+  /** Active denominations/packages, ordered by the vendor. */
+  variants?: ProductVariant[];
   // Presentation metadata used by the customer app.
   /** Semantic glyph key from `src/lib/glyphs.ts`. */
   icon?: string;

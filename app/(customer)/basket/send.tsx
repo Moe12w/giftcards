@@ -50,7 +50,7 @@ export default function SendBasketScreen() {
     setMessage((prev) => prev || basket.note || '');
   }, [basket]);
 
-  function send() {
+  async function send() {
     if (!basket || sending) return;
     const nextErrors: Record<string, string> = {};
     if (!name.trim()) nextErrors.name = t('common.required');
@@ -65,16 +65,23 @@ export default function SendBasketScreen() {
     if (Object.keys(nextErrors).length > 0) return;
 
     // WhatsApp is handed off to the customer, who sends the message from
-    // their own conversation.
+    // their own conversation. Wait for the hand-off before leaving the screen
+    // so the link is not lost while the route changes.
     if (method === 'whatsapp') {
-      sendBasket(basket.id, { recipientName: name.trim(), message: message.trim() });
-      shareOnWhatsapp(
+      setSending(true);
+      const opened = await shareOnWhatsapp(
         phone,
         t('basket.whatsappMessage', {
           name: name.trim(),
           link: Linking.createURL(`/invite/${basket.code}`),
         }),
       );
+      setSending(false);
+      if (!opened) {
+        setErrors({ whatsapp: t('basket.whatsappError') });
+        return;
+      }
+      sendBasket(basket.id, { recipientName: name.trim(), message: message.trim() });
       if (router.canDismiss()) {
         router.dismissAll();
         router.push(`/(customer)/basket/${basket.id}?sent=1`);
@@ -215,7 +222,9 @@ export default function SendBasketScreen() {
                   ? t('send.deliveryEmail')
                   : entry === 'sms'
                     ? t('send.deliverySms')
-                    : t('send.deliveryLink')
+                    : entry === 'whatsapp'
+                      ? t('send.deliveryWhatsapp')
+                      : t('send.deliveryLink')
               }
               active={method === entry}
               onPress={() => setMethod(entry)}
@@ -250,6 +259,7 @@ export default function SendBasketScreen() {
             hint={method === 'whatsapp' ? t('basket.sendWhatsappBody') : undefined}
           />
         ) : null}
+        {errors.whatsapp ? <Text style={styles.whatsappError}>{errors.whatsapp}</Text> : null}
         <TextField
           label={t('basket.sendMessage')}
           value={message}
@@ -274,7 +284,7 @@ export default function SendBasketScreen() {
       </Card>
 
       <Button
-        label={t('basket.sendConfirm')}
+        label={method === 'whatsapp' ? t('basket.sendWhatsapp') : t('basket.sendConfirm')}
         onPress={send}
         loading={sending}
       />
@@ -310,6 +320,11 @@ const styles = StyleSheet.create({
   form: { gap: spacing.sm },
   sectionTitle: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
   methods: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  whatsappError: {
+    fontFamily: fonts.semibold,
+    fontSize: fontSizes.xs,
+    color: colors.danger,
+  },
   messageInput: { minHeight: 96, textAlignVertical: 'top' },
   summary: {},
   summaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },

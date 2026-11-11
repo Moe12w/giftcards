@@ -23,7 +23,6 @@ import type { AccentTone, BasketItem, GiftBasket } from '../lib/types';
 import { basketTotal } from '../lib/baskets';
 import { colors, edges, fonts, fontSizes, radii, spacing } from '../theme';
 import { Glyph } from './Glyph';
-import { IconTile } from './IconTile';
 import { Money } from './Money';
 
 interface GiftBox3DProps {
@@ -46,6 +45,36 @@ const PALETTE: Record<AccentTone, { face: string; edge: string; ribbon: string }
 
 function newestItem(basket: GiftBasket): BasketItem | null {
   return basket.items[basket.items.length - 1] ?? null;
+}
+
+/**
+ * A playful mini gift card for the box and the flying animation. It is
+ * deliberately vendor-neutral — colour, ribbon and a glyph, never a logo.
+ */
+function MiniGiftCard({
+  tone = 'lavender',
+  icon = 'gift',
+  size = 30,
+}: {
+  tone?: AccentTone;
+  icon?: string | null;
+  size?: number;
+}) {
+  const palette = PALETTE[tone];
+  return (
+    <View
+      style={[
+        styles.miniCard,
+        { width: size * 1.25, height: size, backgroundColor: palette.face },
+      ]}
+    >
+      <View style={[styles.miniCardBand, { backgroundColor: palette.ribbon }]} />
+      <View style={styles.miniCardGlyph}>
+        <Glyph name={icon} size={size * 0.38} />
+      </View>
+      <View style={styles.miniCardDot} />
+    </View>
+  );
 }
 
 export function GiftBox3D({
@@ -258,17 +287,16 @@ export function GiftBox3D({
                     style={[
                       styles.voucher,
                       {
-                        backgroundColor: item.tone ? PALETTE[item.tone].face : colors.surface,
                         transform: [{ rotate: `${(index - 1.5) * 4}deg` }],
                         zIndex: index,
                       },
                     ]}
                   >
-                    {item.logo_url ? (
-                      <IconTile imageUrl={item.logo_url} size={26} tone="surface" />
-                    ) : (
-                      <Glyph name={item.icon ?? 'gift'} size={16} />
-                    )}
+                    <MiniGiftCard
+                      tone={(item.tone ?? 'lavender') as AccentTone}
+                      icon={item.icon}
+                      size={28}
+                    />
                   </View>
                 ))}
                 {basket.items.length > 4 ? (
@@ -333,14 +361,14 @@ export function GiftBox3D({
             ]}
           >
             <View style={styles.flyingVoucherInner}>
-              {latest?.logo_url ? (
-                <IconTile imageUrl={latest.logo_url} size={30} tone="surface" />
-              ) : (
-                <Glyph name={latest?.icon ?? 'gift'} size={20} />
-              )}
+              <MiniGiftCard
+                tone={(latest?.tone ?? 'lavender') as AccentTone}
+                icon={latest?.icon}
+                size={34}
+              />
               <View style={styles.flyingCopy}>
                 <Text style={styles.flyingTitle} numberOfLines={1}>
-                  {latest?.vendor_name ?? 'Gift card'}
+                  {latest?.title ?? 'Gift card'}
                 </Text>
                 <Money minor={latest?.amount_minor ?? 0} style={styles.flyingAmount} />
               </View>
@@ -536,14 +564,38 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   voucher: {
-    width: 38,
-    height: 30,
-    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: -3,
+  },
+  miniCard: {
+    borderRadius: 7,
     borderWidth: 2,
     borderColor: colors.ink,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: -3,
+    overflow: 'hidden',
+  },
+  miniCardBand: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 7,
+    borderBottomWidth: 2,
+    borderColor: colors.ink,
+  },
+  miniCardGlyph: { marginTop: 4 },
+  miniCardDot: {
+    position: 'absolute',
+    right: 4,
+    bottom: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: colors.ink,
+    backgroundColor: colors.surface,
   },
   moreVouchers: {
     marginLeft: 4,

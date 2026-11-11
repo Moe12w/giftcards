@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, ArrowRight, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { offerIcon, offerTitle, offerTone } from '../lib/catalog';
+import { offerIcon, offerStartingPriceMinor, offerTitle, offerTone } from '../lib/catalog';
 import type { AccentTone, Offer } from '../lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '../theme';
 import { Card, type CardTone } from './Card';
@@ -76,7 +76,7 @@ export function OfferCard({ offer, index = 0, onPress, vendorLink = true }: Offe
           </View>
           <View style={styles.right}>
             <Text style={styles.from}>{t('common.from')}</Text>
-            <Money minor={offer.min_amount_minor} style={styles.amount} />
+            <Money minor={offerStartingPriceMinor(offer)} style={styles.amount} />
             <View style={styles.chevron}>
               {rtl ? (
                 <ArrowLeft size={16} color={colors.ink} />
@@ -118,7 +118,7 @@ export function OfferTile({ offer, index = 0, onPress }: OfferCardProps) {
         </Text>
         <View style={styles.tileAmountRow}>
           <Text style={styles.from}>{t('common.from')}</Text>
-          <Money minor={offer.min_amount_minor} style={styles.tileAmount} />
+          <Money minor={offerStartingPriceMinor(offer)} style={styles.tileAmount} />
         </View>
       </Card>
     </Pressable>

@@ -21,7 +21,7 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
-import { CATEGORIES, offerTitle, offerTone } from '@/src/lib/catalog';
+import { CATEGORIES, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
 import { listActiveOffers } from '@/src/lib/data';
 import { formatMoney } from '@/src/lib/money';
 import type { AccentTone, CategoryId, OccasionId, Offer } from '@/src/lib/types';
@@ -70,7 +70,7 @@ export default function PickGiftsScreen() {
     if (!preset) return;
     presetApplied.current = true;
     setSelection({
-      [preset.id]: preset.preset_amounts_minor[0] ?? preset.min_amount_minor,
+      [preset.id]: offerStartingPriceMinor(preset),
     });
   }, [offers, params.preset]);
 
@@ -105,7 +105,7 @@ export default function PickGiftsScreen() {
       }
       return {
         ...prev,
-        [offer.id]: offer.preset_amounts_minor[0] ?? offer.min_amount_minor,
+        [offer.id]: offerStartingPriceMinor(offer),
       };
     });
   }
@@ -316,20 +316,32 @@ export default function PickGiftsScreen() {
                       showsHorizontalScrollIndicator={false}
                       contentContainerStyle={styles.amountChips}
                     >
-                      {offer.preset_amounts_minor.map((amount) => (
-                        <Chip
-                          key={amount}
-                          label={formatMoney(amount, i18n.language === 'ar' ? 'ar' : 'en')}
-                          active={selection[offer.id] === amount}
-                          onPress={() => setAmount(offer, amount)}
-                        />
-                      ))}
+                      {offer.fulfilment_type === 'experience'
+                        ? offerPackages(offer).map((variant) => (
+                            <Chip
+                              key={variant.id}
+                              label={`${variant.label} · ${formatMoney(
+                                variant.price_minor,
+                                i18n.language === 'ar' ? 'ar' : 'en',
+                              )}`}
+                              active={selection[offer.id] === variant.price_minor}
+                              onPress={() => setAmount(offer, variant.price_minor)}
+                            />
+                          ))
+                        : offer.preset_amounts_minor.map((amount) => (
+                            <Chip
+                              key={amount}
+                              label={formatMoney(amount, i18n.language === 'ar' ? 'ar' : 'en')}
+                              active={selection[offer.id] === amount}
+                              onPress={() => setAmount(offer, amount)}
+                            />
+                          ))}
                     </ScrollView>
                   </View>
                 ) : (
                   <View style={styles.offerFooter}>
                     <Text style={styles.offerFrom}>{t('common.from')}</Text>
-                    <Money minor={offer.min_amount_minor} style={styles.offerAmount} />
+                    <Money minor={offerStartingPriceMinor(offer)} style={styles.offerAmount} />
                   </View>
                 )}
               </Card>

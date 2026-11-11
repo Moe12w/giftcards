@@ -85,7 +85,17 @@ export default function SendConfirmScreen() {
         <Row label={t('send.recipientEmail')} value={draft.recipient?.email ?? '—'} />
         <Row
           label={t('send.deliveryTitle')}
-          value={t(`send.delivery${draft.deliveryMethod === 'email' ? 'Email' : draft.deliveryMethod === 'sms' ? 'Sms' : 'Link'}`)}
+          value={t(
+            `send.delivery${
+              draft.deliveryMethod === 'email'
+                ? 'Email'
+                : draft.deliveryMethod === 'sms'
+                  ? 'Sms'
+                  : draft.deliveryMethod === 'whatsapp'
+                    ? 'Whatsapp'
+                    : 'Link'
+            }`,
+          )}
         />
         <Row
           label={t('send.deliveryDate')}

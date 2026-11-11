@@ -291,16 +291,22 @@ for (const offer of MOCK_OFFERS) {
   const categoryId = offer.category ? uuidFor(`category:${offer.category}`) : 'null';
   const fulfilment = isSession ? 'experience' : 'monetary';
   const sessionCount = isSession ? offer.session_count : 'null';
+  const packages = isSession
+    ? [...new Set([1, 3, offer.session_count, 5])]
+        .filter((n) => n >= 1 && n <= 10)
+        .sort((a, b) => a - b)
+    : [];
+  const packagePrices = packages.map((sessions) => offer.min_amount_minor * sessions);
+  const presetAmounts = isSession ? [] : offer.preset_amounts_minor;
+  const minAmount = packagePrices.length ? Math.min(...packagePrices) : offer.min_amount_minor;
+  const maxAmount = packagePrices.length ? Math.max(...packagePrices) : offer.max_amount_minor;
   const slug = `${slugFor(offer.title)}-${offer.id.replace(/\D/g, '')}`;
   productValues.push(
-    `  (${q(productId)}, ${q(uuidFor(offer.vendor_id))}, ${q(categoryId)}, '${fulfilment}', ${q(offer.title)}, ${q(offer.title_ar)}, ${q(slug)}, ${q(offer.description)}, ${q(`Valid for ${Math.round((new Date(offer.valid_until) - new Date()) / 86400000)} days from issue. Redeem at any ${offer.vendor.name} location.`)}, ${q(`Show the QR code at the counter. One ${offer.vendor.name} visit per redemption.`)}, ${isSession ? 'true' : 'false'}, true, true, ${sessionCount}, ${offer.min_amount_minor}, ${offer.max_amount_minor}, '{${offer.preset_amounts_minor.join(',')}}', 'QAR', 365, ${q(offer.valid_until)}, true, 'published', ${q(offer.icon)}, ${q(offer.tone)}, ${offer.rating ?? 4.8}, ${q(offer.location)}, '{${(offer.occasions ?? []).join(',')}}', ${q(offer.created_at)})`,
+    `  (${q(productId)}, ${q(uuidFor(offer.vendor_id))}, ${q(categoryId)}, '${fulfilment}', ${q(offer.title)}, ${q(offer.title_ar)}, ${q(slug)}, ${q(offer.description)}, ${q(`Valid for ${Math.round((new Date(offer.valid_until) - new Date()) / 86400000)} days from issue. Redeem at any ${offer.vendor.name} location.`)}, ${q(`Show the QR code at the counter. One ${offer.vendor.name} visit per redemption.`)}, ${isSession ? 'true' : 'false'}, true, true, ${sessionCount}, ${minAmount}, ${maxAmount}, '{${presetAmounts.join(',')}}', 'QAR', 365, ${q(offer.valid_until)}, true, 'published', ${q(offer.icon)}, ${q(offer.tone)}, ${offer.rating ?? 4.8}, ${q(offer.location)}, '{${(offer.occasions ?? []).join(',')}}', ${q(offer.created_at)})`,
   );
 
   // Denominations for money cards, session packages for experience cards.
   if (isSession) {
-    const packages = [...new Set([1, 3, offer.session_count, 5])]
-      .filter((n) => n >= 1 && n <= 10)
-      .sort((a, b) => a - b);
     packages.forEach((sessions, index) => {
       const variantId = uuidFor(offer.id + ':pkg:' + sessions);
       if (index === 0) firstVariantByOffer.set(offer.id, variantId);

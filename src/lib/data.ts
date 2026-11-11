@@ -28,6 +28,7 @@ import type {
   Offer,
   Order,
   PaymentMethod,
+  ProductVariant,
   Recipient,
   RedemptionEntry,
 } from './types';
@@ -309,10 +310,21 @@ export async function listFavourites(): Promise<Offer[]> {
     .filter((offer): offer is Offer => Boolean(offer));
 }
 
-/** The database stores a category id; the app filters by its slug. */
-function withCategorySlug(offer: Offer & { category?: { slug?: string } | null }): Offer {
-  const slug = offer.category?.slug;
-  return { ...offer, category: slug } as Offer;
+type OfferRow = Offer & {
+  category?: { slug?: string } | { slug?: string }[] | null;
+  variants?: ProductVariant[] | null;
+};
+
+/**
+ * Normalises a product row: flattens the embedded category and keeps only the
+ * vendor's active variants, in the order they chose.
+ */
+function mapOffer(row: OfferRow): Offer {
+  const category = Array.isArray(row.category) ? row.category[0] : row.category;
+  const variants = [...(row.variants ?? [])]
+    .filter((variant) => variant.active)
+    .sort((a, b) => a.sort_order - b.sort_order || a.price_minor - b.price_minor);
+  return { ...row, category: category?.slug, variants } as Offer;
 }
 
 export async function listActiveOffers(): Promise<Offer[]> {
@@ -321,12 +333,14 @@ export async function listActiveOffers(): Promise<Offer[]> {
   }
   const { data, error } = await getSupabase()
     .from('products')
-    .select('*, vendor:vendors(id, name, name_ar, logo_url, banner_url), category:categories(slug)')
+    .select(
+      '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
+    )
     .eq('is_active', true)
     .eq('status', 'published')
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return ((data ?? []) as Offer[]).map(withCategorySlug);
+  return ((data ?? []) as OfferRow[]).map(mapOffer);
 }
 
 export async function getOffer(id: string): Promise<Offer | null> {
@@ -335,12 +349,13 @@ export async function getOffer(id: string): Promise<Offer | null> {
   }
   const { data, error } = await getSupabase()
     .from('products')
-    .select('*, vendor:vendors(id, name, name_ar, logo_url, banner_url), category:categories(slug)')
+    .select(
+      '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
+    )
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
-  const offer = data as (Offer & { category?: { slug?: string } | null }) | null;
-  return offer ? withCategorySlug(offer) : null;
+  return data ? mapOffer(data as OfferRow) : null;
 }
 
 export async function listMyCards(): Promise<GiftCard[]> {

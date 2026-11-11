@@ -28,7 +28,7 @@ import {
   RecommendationRow,
   TrendingGiftCard,
 } from '@/src/components/DiscoveryCards';
-import { CATEGORIES, CURATED_COLLECTIONS, groupOffersByVendor, offerTitle, offersForCollection } from '@/src/lib/catalog';
+import { CATEGORIES, CURATED_COLLECTIONS, groupOffersByVendor, offerStartingPriceMinor, offerTitle, offersForCollection } from '@/src/lib/catalog';
 import { countUnreadNotifications, listActiveOffers } from '@/src/lib/data';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
 import { useAuth } from '@/src/lib/auth';
@@ -98,7 +98,7 @@ export default function ExploreHomeScreen() {
   function contributeTo(basketId: string) {
     const offer = pickerOffer;
     if (!offer) return;
-    const amountMinor = offer.preset_amounts_minor[0] ?? offer.min_amount_minor;
+    const amountMinor = offerStartingPriceMinor(offer);
     setPickerOffer(null);
     router.push({
       pathname: '/(customer)/basket/contribute',

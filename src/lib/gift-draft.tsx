@@ -9,6 +9,8 @@ export type DeliveryMethod = 'email' | 'sms' | 'link' | 'whatsapp';
 
 export interface GiftDraft {
   offerId: string | null;
+  /** Vendor package chosen for an experience gift. Null for money cards. */
+  variantId: string | null;
   amountMinor: number;
   design: string;
   recipient: Recipient | null;
@@ -25,6 +27,7 @@ const STORAGE_KEY = 'giftly.gift-draft';
 
 export const EMPTY_DRAFT: GiftDraft = {
   offerId: null,
+  variantId: null,
   amountMinor: 0,
   design: 'classic',
   recipient: null,

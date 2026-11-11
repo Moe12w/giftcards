@@ -10,15 +10,16 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Glyph } from '@/src/components/Glyph';
 import { GiftCardVisual } from '@/src/components/GiftCardVisual';
+import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
-import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerIcon, offerPackages, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft, type DeliveryMethod } from '@/src/lib/gift-draft';
-import { isUsablePhone, shareOnWhatsapp } from '@/src/lib/whatsapp';
+import { isUsablePhone } from '@/src/lib/whatsapp';
 import { formatMoney, toMinorUnits } from '@/src/lib/money';
 import { useRecipients } from '@/src/lib/recipients';
-import type { Offer } from '@/src/lib/types';
+import type { Offer, ProductVariant } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 
 const DESIGNS = [
@@ -70,15 +71,38 @@ export default function GiftComposeScreen() {
 
   // Starting from a different gift card resets the amount to that card's
   // suggested value while keeping the rest of the draft (recipient, message).
+  // Experience gifts always start on the vendor's first package.
   useEffect(() => {
-    if (offer && (draft.offerId !== offer.id || draft.amountMinor <= 0)) {
+    if (!offer) return;
+    if (offer.fulfilment_type === 'experience') {
+      const packages = offerPackages(offer);
+      const first = packages[0];
+      if (!first) {
+        if (draft.offerId !== offer.id || draft.variantId !== null || draft.amountMinor !== 0) {
+          update({ offerId: offer.id, variantId: null, amountMinor: 0 });
+        }
+        return;
+      }
+      const current = packages.find((variant) => variant.id === draft.variantId);
+      if (draft.offerId !== offer.id || !current) {
+        update({
+          offerId: offer.id,
+          variantId: first.id,
+          amountMinor: first.price_minor,
+        });
+        setCustom('');
+      }
+      return;
+    }
+    if (draft.offerId !== offer.id || draft.amountMinor <= 0 || draft.variantId) {
       update({
         offerId: offer.id,
+        variantId: null,
         amountMinor: offer.preset_amounts_minor[1] ?? offer.min_amount_minor,
       });
       setCustom('');
     }
-  }, [draft.amountMinor, draft.offerId, offer, update]);
+  }, [draft.amountMinor, draft.offerId, draft.variantId, offer, update]);
 
   // The draft hydrates from AsyncStorage. If it lands after this screen mounts,
   // pull the saved recipient/message/date in once without clobbering edits.
@@ -119,13 +143,21 @@ export default function GiftComposeScreen() {
     );
   }
 
+  const packages = offerPackages(offer);
+  const isExperience = offer.fulfilment_type === 'experience';
+  const selectedPackage = packages.find((variant) => variant.id === draft.variantId) ?? packages[0] ?? null;
   const min = offer.min_amount_minor;
   const max = offer.max_amount_minor;
   const amount = draft.amountMinor;
 
   function chooseAmount(minor: number) {
-    update({ amountMinor: minor });
+    update({ amountMinor: minor, variantId: null });
     setCustom('');
+    setErrors((prev) => ({ ...prev, amount: '' }));
+  }
+
+  function choosePackage(variant: ProductVariant) {
+    update({ variantId: variant.id, amountMinor: variant.price_minor });
     setErrors((prev) => ({ ...prev, amount: '' }));
   }
 
@@ -161,15 +193,19 @@ export default function GiftComposeScreen() {
 
   function next() {
     const nextErrors: Record<string, string> = {};
-    if (custom.trim()) {
-      try {
-        const parsed = toMinorUnits(custom);
-        if (parsed < min || parsed > max) nextErrors.amount = t('offer.invalidAmount');
-      } catch {
-        nextErrors.amount = t('offer.invalidAmount');
+    if (isExperience) {
+      if (!selectedPackage) nextErrors.amount = t('gift.choosePackage');
+    } else {
+      if (custom.trim()) {
+        try {
+          const parsed = toMinorUnits(custom);
+          if (parsed < min || parsed > max) nextErrors.amount = t('offer.invalidAmount');
+        } catch {
+          nextErrors.amount = t('offer.invalidAmount');
+        }
       }
+      if (amount < min || amount > max) nextErrors.amount = t('offer.invalidAmount');
     }
-    if (amount < min || amount > max) nextErrors.amount = t('offer.invalidAmount');
     if (!recipientName.trim()) nextErrors.recipientName = t('common.required');
     if (draft.deliveryMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail.trim())) {
       nextErrors.recipientEmail = t('auth.invalidEmail');
@@ -194,7 +230,8 @@ export default function GiftComposeScreen() {
 
     update({
       offerId: offer!.id,
-      amountMinor: amount,
+      variantId: isExperience ? selectedPackage?.id ?? null : null,
+      amountMinor: isExperience ? selectedPackage?.price_minor ?? 0 : amount,
       recipient: {
         id: draft.recipient?.id ?? `recipient-${Date.now()}`,
         name: recipientName.trim(),
@@ -223,34 +260,89 @@ export default function GiftComposeScreen() {
         icon={offerIcon(offer)}
         logoUrl={offer.vendor?.logo_url}
         tone={previewTone}
-        amountMinor={amount}
+        amountMinor={isExperience ? undefined : amount}
+        sessionsTotal={
+          isExperience ? selectedPackage?.session_count ?? packages[0]?.session_count ?? undefined : undefined
+        }
+        sessionsRemaining={
+          isExperience ? selectedPackage?.session_count ?? packages[0]?.session_count ?? undefined : undefined
+        }
         message={message || undefined}
         meta={recipientName.trim() ? `${t('send.recipientTitle')}: ${recipientName.trim()}` : undefined}
       />
 
-      {/* Amount */}
-      <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('gift.amountTitle')}</Text>
-        <View style={styles.presets}>
-          {offer.preset_amounts_minor.map((preset) => (
-            <Chip
-              key={preset}
-              label={formatMoney(preset, lang)}
-              active={!custom && amount === preset}
-              onPress={() => chooseAmount(preset)}
-            />
-          ))}
-        </View>
-        <TextField
-          label={t('gift.customAmount')}
-          value={custom}
-          onChangeText={onChangeCustom}
-          placeholder={t('gift.customAmountPlaceholder')}
-          keyboardType="decimal-pad"
-          error={errors.amount || undefined}
-          hint={t('offer.minAmount', { amount: formatMoney(min, lang) })}
-        />
-      </Card>
+      {/* Price: vendor packages for experiences, presets/custom for money cards */}
+      {isExperience ? (
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('gift.packageTitle')}</Text>
+          <Text style={styles.sectionHint}>{t('gift.packageSubtitle')}</Text>
+          {packages.length === 0 ? (
+            <Text style={styles.emptyPackages}>{t('gift.noPackages')}</Text>
+          ) : (
+            <View style={styles.packageList}>
+              {packages.map((variant) => {
+                const active = selectedPackage?.id === variant.id;
+                return (
+                  <Pressable
+                    key={variant.id}
+                    onPress={() => choosePackage(variant)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={`${variant.label} ${formatMoney(variant.price_minor, lang)}`}
+                    style={({ pressed }) => [
+                      styles.packageCard,
+                      active && styles.packageCardActive,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <View style={styles.packageIcon}>
+                      <Glyph name="ticket" size={20} />
+                    </View>
+                    <View style={styles.packageCopy}>
+                      <Text style={styles.packageLabel} numberOfLines={1}>
+                        {variant.label}
+                      </Text>
+                      <Text style={styles.packageMeta}>
+                        {variant.session_count
+                          ? t('sessions.sessionCount', { count: variant.session_count })
+                          : t('gift.priceSetByVendor')}
+                      </Text>
+                    </View>
+                    <Money minor={variant.price_minor} style={styles.packagePrice} />
+                    <View style={[styles.radio, active && styles.radioActive]}>
+                      {active ? <View style={styles.radioDot} /> : null}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+          {errors.amount ? <Text style={styles.errorText}>{errors.amount}</Text> : null}
+        </Card>
+      ) : (
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('gift.amountTitle')}</Text>
+          <View style={styles.presets}>
+            {offer.preset_amounts_minor.map((preset) => (
+              <Chip
+                key={preset}
+                label={formatMoney(preset, lang)}
+                active={!custom && amount === preset}
+                onPress={() => chooseAmount(preset)}
+              />
+            ))}
+          </View>
+          <TextField
+            label={t('gift.customAmount')}
+            value={custom}
+            onChangeText={onChangeCustom}
+            placeholder={t('gift.customAmountPlaceholder')}
+            keyboardType="decimal-pad"
+            error={errors.amount || undefined}
+            hint={t('offer.minAmount', { amount: formatMoney(min, lang) })}
+          />
+        </Card>
+      )}
 
       {/* Design */}
       <Card style={styles.section}>
@@ -358,13 +450,18 @@ export default function GiftComposeScreen() {
                   ? t('send.deliveryEmail')
                   : method === 'sms'
                     ? t('send.deliverySms')
-                    : t('send.deliveryLink')
+                    : method === 'whatsapp'
+                      ? t('send.deliveryWhatsapp')
+                      : t('send.deliveryLink')
               }
               active={draft.deliveryMethod === method}
               onPress={() => update({ deliveryMethod: method })}
             />
           ))}
         </View>
+        {draft.deliveryMethod === 'whatsapp' ? (
+          <Text style={styles.deliveryHint}>{t('send.deliveryWhatsappBody')}</Text>
+        ) : null}
         <View style={styles.chipRow}>
           <Chip
             label={t('send.deliveryNow')}
@@ -417,7 +514,11 @@ export default function GiftComposeScreen() {
         </View>
       </Card>
 
-      <Button label={t('gift.continueToPayment')} onPress={next} />
+      <Button
+        label={t('gift.continueToPayment')}
+        onPress={next}
+        disabled={isExperience && packages.length === 0}
+      />
     </Screen>
   );
 }
@@ -426,6 +527,58 @@ const styles = StyleSheet.create({
   loader: { marginTop: spacing.xxl },
   section: { gap: spacing.sm },
   sectionTitle: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
+  sectionHint: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+    lineHeight: 19,
+  },
+  packageList: { gap: spacing.xs },
+  packageCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderBottomWidth: 5,
+    borderColor: colors.ink,
+    backgroundColor: colors.surface,
+    padding: spacing.sm,
+  },
+  packageCardActive: { backgroundColor: colors.tealTint },
+  packageIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.pill,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  packageCopy: { flex: 1, gap: 1 },
+  packageLabel: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.text },
+  packageMeta: { fontFamily: fonts.regular, fontSize: fontSizes.xs, color: colors.textMuted },
+  packagePrice: { fontSize: fontSizes.md, color: colors.text },
+  radio: {
+    width: 22,
+    height: 22,
+    borderRadius: radii.pill,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioActive: { backgroundColor: colors.teal },
+  radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.ink },
+  emptyPackages: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+    lineHeight: 19,
+  },
+  errorText: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.danger },
   presets: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   designRow: { flexDirection: 'row', gap: spacing.xs },
   designItem: { flex: 1, alignItems: 'center', gap: 4 },
@@ -448,6 +601,12 @@ const styles = StyleSheet.create({
   designLabelActive: { color: colors.text },
   recipientRow: { gap: spacing.xs, paddingRight: spacing.md },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  deliveryHint: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+    lineHeight: 17,
+  },
   messageInput: { minHeight: 96, textAlignVertical: 'top' },
   pressed: { opacity: 0.9 },
 });

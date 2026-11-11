@@ -5,7 +5,7 @@
 // Artwork is referenced by semantic glyph key (see `src/lib/glyphs.ts`), never
 // by emoji character, so every card uses the same outlined icon style.
 
-import type { AccentTone, CategoryId, OccasionId, Offer } from './types';
+import type { AccentTone, CategoryId, OccasionId, Offer, ProductVariant } from './types';
 
 export interface CatalogEntry {
   slug: string;
@@ -138,6 +138,21 @@ export function offerIcon(offer: Offer, index = 0): string {
 
 export function offerTone(offer: Offer, index = 0): AccentTone {
   return offer.tone ?? TONE_CYCLE[index % TONE_CYCLE.length];
+}
+
+/** Vendor-defined packages for an experience gift, in the vendor's order. */
+export function offerPackages(offer: Offer): ProductVariant[] {
+  return (offer.variants ?? []).filter((variant) => variant.kind === 'package');
+}
+
+/**
+ * The lowest price a customer can pay today. Experience gifts price from the
+ * vendor's packages; money cards fall back to their presets.
+ */
+export function offerStartingPriceMinor(offer: Offer): number {
+  const prices = (offer.variants ?? []).map((variant) => variant.price_minor);
+  if (prices.length > 0) return Math.min(...prices);
+  return offer.preset_amounts_minor[0] ?? offer.min_amount_minor;
 }
 
 export function offersForCategory(offers: Offer[], category: CategoryId): Offer[] {
