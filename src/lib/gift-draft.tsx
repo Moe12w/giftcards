@@ -5,7 +5,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Recipient } from './types';
 
-export type DeliveryMethod = 'email' | 'sms' | 'link';
+export type DeliveryMethod = 'email' | 'sms' | 'link' | 'whatsapp';
 
 export interface GiftDraft {
   offerId: string | null;

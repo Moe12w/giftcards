@@ -353,7 +353,9 @@
       "thankYou": "شكراً",
       "congrats": "تهانينا",
       "justBecause": "بدون مناسبة"
-    }
+    },
+    "deliveryWhatsapp": "واتساب",
+    "deliveryWhatsappBody": "أرسل بطاقة الهداية إلى رقم واتساب."
   },
   "offer": {
     "title": "العرض",
@@ -480,7 +482,21 @@
     "transactionIssue": "إصدار بطاقة هدايا",
     "transactionRedeem": "استُبدلت لدى {{vendor}}",
     "transactionRefund": "تم الاسترجاع",
-    "transactionVoid": "أُلغيت البطاقة"
+    "transactionVoid": "أُلغيت البطاقة",
+    "giftCardsCount": "بطاقات الهدايا",
+    "toUse": "قابلة للاستخدام",
+    "used": "مستهلكة",
+    "yourCards": "بطاقات هديتك",
+    "pastCards": "بطاقات مستهلكة",
+    "transactionsTitle": "المعاملات",
+    "transactionsSubtitle": "كل ما تم استرداده",
+    "transactionsCount_one": "معاملة واحدة",
+    "transactionsCount_other": "{{count}} معاملة",
+    "viewTransactions": "عرض المعاملات",
+    "noTransactionsTitle": "لا توجد معاملات بعد",
+    "noTransactionsBody": "عند استخدام بطاقة هدية، تظهر عملية الاسترداد هنا.",
+    "transactionSession": "تم استخدام {{count}} جلسة لـ {{name}}",
+    "transactionValue": "تم استخدام {{amount}} لـ {{name}}"
   },
   "orders": {
     "title": "طلباتي",
@@ -979,7 +995,12 @@
     "sendSummaryValue": "{{count}} بطاقات هدايا · {{amount}}",
     "sendEmptyHint": "أضف بطاقة هدايا واحدة على الأقل قبل الإرسال.",
     "onlyOwnerTitle": "المنشئ فقط يمكنه الإرسال",
-    "onlyOwnerBody": "منشئ السلة يرسل الصندوق الكامل إلى المستلم."
+    "onlyOwnerBody": "منشئ السلة يرسل الصندوق الكامل إلى المستلم.",
+    "sendWhatsapp": "أرسل عبر واتساب",
+    "sendWhatsappBody": "سنرسل صندوق الهدية إلى هذا الرقم عبر واتساب.",
+    "whatsappNumber": "أدخل رقم واتساب مع رمز الدولة.",
+    "whatsappNumberLabel": "رقم واتساب",
+    "whatsappMessage": "مرحباً {{name}}، هذه هدية صندوق الهدايا: {{link}}"
   },
   "sessions": {
     "remaining": "الجلسات المتبقية",

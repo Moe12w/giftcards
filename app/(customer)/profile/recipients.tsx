@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -9,12 +9,34 @@ import { Card } from '@/src/components/Card';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
-import { MOCK_RECIPIENTS } from '@/src/lib/mock-data';
+import { addRecipient, listRecipients, removeRecipient } from '@/src/lib/data';
+import type { Recipient } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 export default function RecipientsScreen() {
   const { t } = useTranslation();
-  const [recipients, setRecipients] = useState(MOCK_RECIPIENTS);
+  const [recipients, setRecipients] = useState<Recipient[]>([]);
+
+  const load = useCallback(async () => {
+    try {
+      setRecipients(await listRecipients());
+    } catch {
+      setRecipients([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function remove(id: string) {
+    setRecipients((current) => current.filter((item) => item.id !== id));
+    try {
+      await removeRecipient(id);
+    } finally {
+      load();
+    }
+  }
 
   return (
     <Screen>
@@ -48,9 +70,7 @@ export default function RecipientsScreen() {
                   <Text style={styles.meta}>{recipient.email}</Text>
                 </View>
                 <Text
-                  onPress={() =>
-                    setRecipients((current) => current.filter((item) => item.id !== recipient.id))
-                  }
+                  onPress={() => remove(recipient.id)}
                   style={styles.remove}
                 >
                   {t('common.remove')}

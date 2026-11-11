@@ -61,14 +61,12 @@ export default function BasketDetailScreen() {
     paid?: string;
     sent?: string;
   }>();
-  const { user, isDemo } = useAuth();
-  const { getBasket, simulateContribution, ready } = useBaskets();
+  const { user } = useAuth();
+  const { getBasket, ready } = useBaskets();
   const basket = params.id ? getBasket(params.id) : null;
 
   const [selectedItem, setSelectedItem] = useState<BasketItem | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const simulated = useRef(false);
-  const simulateRef = useRef(simulateContribution);
 
   const lang: 'en' | 'ar' = i18n.language === 'ar' ? 'ar' : 'en';
   const rtl = i18n.language === 'ar';
@@ -92,32 +90,22 @@ export default function BasketDetailScreen() {
     router.replace('/(customer)/(tabs)');
   }
 
+  // Live collaboration: when somebody else adds a card, the store picks it up
+  // over Supabase Realtime and the basket shows the new contribution.
+  const itemCount = basket?.items.length ?? 0;
   useEffect(() => {
-    simulateRef.current = simulateContribution;
-  }, [simulateContribution]);
-
-  // Demonstrate real-time collaboration: a friend contributes while the basket
-  // is open. Real deployments receive the same event over Supabase Realtime.
-  useEffect(() => {
-    if (!isDemo) return;
-    if (!basket || basket.status !== 'open' || simulated.current) return;
-    if (params.created === '1') return;
-    const timer = setTimeout(() => {
-      if (!basket) return;
-      simulated.current = true;
-      const item = simulateRef.current(basket.id);
-      if (item) {
-        setNotice(
-          t('basket.justAdded', {
-            name: item.added_by_name,
-            amount: formatMoney(item.amount_minor, lang),
-            vendor: item.vendor_name,
-          }),
-        );
-      }
-    }, 9000);
-    return () => clearTimeout(timer);
-  }, [basket?.id, basket?.status, isDemo, lang, params.created, t]);
+    if (!basket || basket.items.length === 0) return;
+    const newest = basket.items[basket.items.length - 1];
+    if (newest.added_by_id === (user?.id ?? 'demo-user')) return;
+    setNotice(
+      t('basket.justAdded', {
+        name: newest.added_by_name,
+        amount: formatMoney(newest.amount_minor, lang),
+        vendor: newest.vendor_name,
+      }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemCount]);
 
   useEffect(() => {
     if (!notice) return;

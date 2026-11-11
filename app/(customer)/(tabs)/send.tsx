@@ -14,12 +14,13 @@ import { SectionHeader } from '@/src/components/SectionHeader';
 import { OCCASIONS, offerTitle } from '@/src/lib/catalog';
 import { listActiveOffers } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
-import { MOCK_RECIPIENTS } from '@/src/lib/mock-data';
-import type { Offer } from '@/src/lib/types';
+import { useRecipients } from '@/src/lib/recipients';
+import type { Offer, Recipient } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
 export default function SendScreen() {
+  const { recipients } = useRecipients();
   const { t, i18n } = useTranslation();
   const { draft, update } = useGiftDraft();
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -38,7 +39,7 @@ export default function SendScreen() {
 
   const draftOffer = offers.find((offer) => offer.id === draft.offerId) ?? null;
 
-  function chooseRecipient(recipient: (typeof MOCK_RECIPIENTS)[number]) {
+  function chooseRecipient(recipient: Recipient) {
     update({ recipient });
     router.push('/(customer)/collection/trending');
   }
@@ -100,7 +101,7 @@ export default function SendScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.recipientScroll}
       >
-        {MOCK_RECIPIENTS.map((recipient) => (
+        {recipients.map((recipient) => (
           <Pressable
             key={recipient.id}
             onPress={() => chooseRecipient(recipient)}

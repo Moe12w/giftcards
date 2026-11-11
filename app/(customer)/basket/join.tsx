@@ -21,7 +21,7 @@ export default function JoinBasketScreen() {
   const [error, setError] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
 
-  function submit() {
+  async function submit() {
     const next = value.trim().toUpperCase();
     if (!/^GIFT-[A-Z0-9]{5}$/.test(next)) {
       setError(t('basket.joinInvalid'));
@@ -29,16 +29,14 @@ export default function JoinBasketScreen() {
     }
     setError(null);
     setJoining(true);
-    const joined = joinBasket(next);
-    setTimeout(() => {
-      setJoining(false);
-      if (joined) {
-        setValue('');
-        router.replace(`/(customer)/basket/${joined.id}?invite=1`);
-      } else {
-        setError(t('basket.joinNotFound'));
-      }
-    }, 400);
+    const joined = await joinBasket(next);
+    setJoining(false);
+    if (joined) {
+      setValue('');
+      router.replace(`/(customer)/basket/${joined.id}?invite=1`);
+    } else {
+      setError(t('basket.joinNotFound'));
+    }
   }
 
   return (

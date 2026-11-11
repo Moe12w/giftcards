@@ -7,7 +7,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
-import { listActiveOffers } from '@/src/lib/data';
+import { listFavourites } from '@/src/lib/data';
 import type { Offer } from '@/src/lib/types';
 import { colors, spacing } from '@/src/theme';
 
@@ -18,8 +18,8 @@ export default function FavouritesScreen() {
 
   useEffect(() => {
     let active = true;
-    listActiveOffers()
-      .then((data) => active && setOffers(data.slice(0, 3)))
+    listFavourites()
+      .then((data) => active && setOffers(data))
       .catch(() => undefined)
       .finally(() => active && setLoading(false));
     return () => {

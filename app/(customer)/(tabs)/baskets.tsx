@@ -36,7 +36,7 @@ export default function GiftBasketHubScreen() {
     [activeBasket?.id, baskets],
   );
 
-  function onJoin() {
+  async function onJoin() {
     const next = code.trim().toUpperCase();
     if (!/^GIFT-[A-Z0-9]{5}$/.test(next)) {
       setError(t('basket.joinInvalid'));
@@ -44,16 +44,14 @@ export default function GiftBasketHubScreen() {
     }
     setError(null);
     setJoining(true);
-    const joined = joinBasket(next);
-    setTimeout(() => {
-      setJoining(false);
-      if (joined) {
-        setCode('');
-        router.push(`/(customer)/basket/${joined.id}?invite=1`);
-      } else {
-        setError(t('basket.joinNotFound'));
-      }
-    }, 450);
+    const joined = await joinBasket(next);
+    setJoining(false);
+    if (joined) {
+      setCode('');
+      router.push(`/(customer)/basket/${joined.id}?invite=1`);
+    } else {
+      setError(t('basket.joinNotFound'));
+    }
   }
 
   if (!ready) {

@@ -98,26 +98,30 @@ export default function ContributeScreen() {
     router.replace(`/(customer)/basket/${id}?${query}`);
   }
 
-  function pay() {
+  async function pay() {
     if (paying || items.length === 0) return;
     setPaying(true);
     // In production this waits for the MyFatoorah webhook before the cards are
-    // written. Demo mode resolves after a short simulated charge.
-    setTimeout(() => {
-      if (basket) {
-        items.forEach((item) => addItem(basket.id, item));
-        openBasket(basket.id, 'paid=1');
-        return;
+    // written. Until then the basket is filled straight away.
+    if (basket) {
+      for (const item of items) {
+        await addItem(basket.id, item);
       }
-      const created = createBasket({
-        name: params.name ?? t('basket.defaultName'),
-        recipientName: params.recipient ?? t('basket.yourRecipient'),
-        occasion: (params.occasion as OccasionId | undefined) ?? 'birthday',
-        targetMinor: Number(params.target ?? 0) || 0,
-        items,
-      });
-      openBasket(created.id, 'paid=1&created=1');
-    }, 900);
+      openBasket(basket.id, 'paid=1');
+      return;
+    }
+    const created = await createBasket({
+      name: params.name ?? t('basket.defaultName'),
+      recipientName: params.recipient ?? t('basket.yourRecipient'),
+      occasion: (params.occasion as OccasionId | undefined) ?? 'birthday',
+      targetMinor: Number(params.target ?? 0) || 0,
+      items,
+    });
+    if (!created) {
+      setPaying(false);
+      return;
+    }
+    openBasket(created.id, 'paid=1&created=1');
   }
 
   if (!ready || loading) {

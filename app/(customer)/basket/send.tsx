@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as Linking from 'expo-linking';
 import { useTranslation } from 'react-i18next';
 import { PartyPopper } from 'lucide-react-native';
 
@@ -18,9 +19,10 @@ import { useAuth } from '@/src/lib/auth';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
 import { formatMoney } from '@/src/lib/money';
 import type { DeliveryMethod } from '@/src/lib/gift-draft';
+import { isUsablePhone, shareOnWhatsapp } from '@/src/lib/whatsapp';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
-const METHODS: DeliveryMethod[] = ['email', 'sms', 'link'];
+const METHODS: DeliveryMethod[] = ['email', 'sms', 'whatsapp', 'link'];
 
 export default function SendBasketScreen() {
   const { t, i18n } = useTranslation();
@@ -56,8 +58,31 @@ export default function SendBasketScreen() {
       nextErrors.email = t('auth.invalidEmail');
     }
     if (method === 'sms' && phone.trim().length < 6) nextErrors.phone = t('common.required');
+    if (method === 'whatsapp' && !isUsablePhone(phone)) {
+      nextErrors.phone = t('basket.whatsappNumber');
+    }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
+
+    // WhatsApp is handed off to the customer, who sends the message from
+    // their own conversation.
+    if (method === 'whatsapp') {
+      sendBasket(basket.id, { recipientName: name.trim(), message: message.trim() });
+      shareOnWhatsapp(
+        phone,
+        t('basket.whatsappMessage', {
+          name: name.trim(),
+          link: Linking.createURL(`/invite/${basket.code}`),
+        }),
+      );
+      if (router.canDismiss()) {
+        router.dismissAll();
+        router.push(`/(customer)/basket/${basket.id}?sent=1`);
+        return;
+      }
+      router.replace(`/(customer)/basket/${basket.id}?sent=1`);
+      return;
+    }
 
     setSending(true);
     // Delivery is queued by the backend after the payment provider settles in
@@ -210,9 +235,11 @@ export default function SendBasketScreen() {
             error={errors.email}
           />
         ) : null}
-        {method === 'sms' ? (
+        {method === 'sms' || method === 'whatsapp' ? (
           <TextField
-            label={t('send.recipientPhone')}
+            label={
+              method === 'whatsapp' ? t('basket.whatsappNumberLabel') : t('send.recipientPhone')
+            }
             value={phone}
             onChangeText={(value) => {
               setPhone(value);
@@ -220,6 +247,7 @@ export default function SendBasketScreen() {
             }}
             keyboardType="phone-pad"
             error={errors.phone}
+            hint={method === 'whatsapp' ? t('basket.sendWhatsappBody') : undefined}
           />
         ) : null}
         <TextField

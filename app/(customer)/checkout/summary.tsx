@@ -12,7 +12,7 @@ import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
-import { getOffer } from '@/src/lib/data';
+import { getOffer, validatePromoCode } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import type { AccentTone, Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
@@ -67,8 +67,17 @@ export default function CheckoutSummaryScreen() {
   const tone = offerTone(offer) as AccentTone;
   const total = draft.amountMinor + SERVICE_FEE_MINOR;
 
-  function applyPromo() {
-    setPromoState(promo.trim().toUpperCase() === 'GIFT10' ? 'applied' : 'invalid');
+  async function applyPromo() {
+    if (!promo.trim()) {
+      setPromoState('invalid');
+      return;
+    }
+    try {
+      const result = await validatePromoCode(promo, draft.amountMinor);
+      setPromoState(result.discountMinor > 0 ? 'applied' : 'invalid');
+    } catch {
+      setPromoState('invalid');
+    }
   }
 
   return (

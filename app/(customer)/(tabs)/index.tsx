@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Bell, Gift, Heart } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -29,9 +29,8 @@ import {
   TrendingGiftCard,
 } from '@/src/components/DiscoveryCards';
 import { CATEGORIES, CURATED_COLLECTIONS, groupOffersByVendor, offerTitle, offersForCollection } from '@/src/lib/catalog';
-import { listActiveOffers } from '@/src/lib/data';
+import { countUnreadNotifications, listActiveOffers } from '@/src/lib/data';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
-import { MOCK_NOTIFICATIONS } from '@/src/lib/mock-data';
 import { useAuth } from '@/src/lib/auth';
 import type { Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
@@ -58,7 +57,17 @@ export default function ExploreHomeScreen() {
   }, []);
 
   const name = (user?.user_metadata?.full_name as string | undefined)?.split(' ')[0];
-  const unread = useMemo(() => MOCK_NOTIFICATIONS.filter((n) => !n.read).length, []);
+  const [unread, setUnread] = useState(0);
+
+  // The badge follows the real notification count, so it stays in step with
+  // anything marked as read in the notification centre.
+  useFocusEffect(
+    useCallback(() => {
+      countUnreadNotifications()
+        .then(setUnread)
+        .catch(() => setUnread(0));
+    }, []),
+  );
 
   const businesses = useMemo(() => groupOffersByVendor(offers).slice(0, 6), [offers]);
   const trending = useMemo(() => offersForCollection(offers, 'trending').slice(0, 8), [offers]);

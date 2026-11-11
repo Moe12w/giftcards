@@ -15,8 +15,9 @@ import { TextField } from '@/src/components/TextField';
 import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft, type DeliveryMethod } from '@/src/lib/gift-draft';
+import { isUsablePhone, shareOnWhatsapp } from '@/src/lib/whatsapp';
 import { formatMoney, toMinorUnits } from '@/src/lib/money';
-import { MOCK_RECIPIENTS } from '@/src/lib/mock-data';
+import { useRecipients } from '@/src/lib/recipients';
 import type { Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 
@@ -27,10 +28,11 @@ const DESIGNS = [
   { id: 'midnight', background: colors.plum, edge: colors.ink, text: colors.surface, icon: 'moon' },
 ] as const;
 
-const DELIVERY_METHODS: DeliveryMethod[] = ['email', 'sms', 'link'];
+const DELIVERY_METHODS: DeliveryMethod[] = ['email', 'sms', 'whatsapp', 'link'];
 const SUGGESTIONS = ['birthday', 'thankYou', 'congrats', 'justBecause'] as const;
 
 export default function GiftComposeScreen() {
+  const { recipients } = useRecipients();
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { draft, update, ready } = useGiftDraft();
@@ -175,6 +177,9 @@ export default function GiftComposeScreen() {
     if (draft.deliveryMethod === 'sms' && recipientPhone.trim().length < 6) {
       nextErrors.recipientPhone = t('common.required');
     }
+    if (draft.deliveryMethod === 'whatsapp' && !isUsablePhone(recipientPhone)) {
+      nextErrors.recipientPhone = t('basket.whatsappNumber');
+    }
     let deliveryDate: string | null = null;
     if (mode === 'schedule') {
       const parsed = new Date(dateText);
@@ -292,7 +297,7 @@ export default function GiftComposeScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.recipientRow}
         >
-          {MOCK_RECIPIENTS.slice(0, 5).map((recipient) => {
+          {recipients.slice(0, 5).map((recipient) => {
             const active = recipientEmail.trim().toLowerCase() === recipient.email.toLowerCase();
             return (
               <Chip
@@ -327,7 +332,7 @@ export default function GiftComposeScreen() {
             error={errors.recipientEmail}
           />
         ) : null}
-        {draft.deliveryMethod === 'sms' ? (
+        {draft.deliveryMethod === 'sms' || draft.deliveryMethod === 'whatsapp' ? (
           <TextField
             label={t('send.recipientPhone')}
             value={recipientPhone}

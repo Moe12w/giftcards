@@ -8,19 +8,16 @@ import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { useGiftDraft } from '@/src/lib/gift-draft';
-import { MOCK_RECIPIENTS } from '@/src/lib/mock-data';
+import { useRecipients } from '@/src/lib/recipients';
 import type { Recipient } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
-const CONTACTS: Recipient[] = [
-  ...MOCK_RECIPIENTS,
-  { id: 'contact-5', name: 'Mariam Saleh', email: 'mariam@example.com', phone: '+974 5555 0505' },
-  { id: 'contact-6', name: 'Yousef Nasser', email: 'yousef@example.com', phone: '+974 5555 0606' },
-];
-
 export default function ContactsScreen() {
+  const { recipients } = useRecipients();
   const { t } = useTranslation();
   const { update } = useGiftDraft();
+
+  const contacts: Recipient[] = recipients;
 
   function choose(recipient: Recipient) {
     update({ recipient });
@@ -32,7 +29,7 @@ export default function ContactsScreen() {
       <FlowHeader title={t('send.contacts')} onBack={() => router.back()} />
 
       <View style={styles.list}>
-        {CONTACTS.map((contact) => (
+        {contacts.map((contact) => (
           <Pressable
             key={contact.id}
             onPress={() => choose(contact)}

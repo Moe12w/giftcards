@@ -1,8 +1,9 @@
 // src/lib/baskets.tsx
-// Collaborative gift baskets. In demo mode the store persists to AsyncStorage
-// and simulates live contributions so the experience can be explored in Expo Go.
-// The same actions map cleanly onto the Supabase tables in
-// supabase/migrations/0008_gift_baskets.sql when credentials are configured.
+// Collaborative gift baskets.
+//
+// A basket, the cards inside it, who contributed and the activity feed all
+// live in the database, so every participant sees the same box. Changes arrive
+// over Supabase Realtime, which is why the feed updates live without a refresh.
 import React, {
   createContext,
   useCallback,
@@ -11,12 +12,11 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useAuth } from './auth';
-import { MOCK_BASKETS, MOCK_OFFERS } from './mock-data';
+import { getSupabase } from './supabase';
+import { hasSupabaseConfig } from './env';
 import type {
-  AccentTone,
   BasketActivity,
   BasketItem,
   BasketParticipant,
@@ -24,33 +24,6 @@ import type {
   OccasionId,
   Offer,
 } from './types';
-
-const STORAGE_KEY = 'giftly.baskets.v1';
-
-const PARTICIPANT_TONES: BasketParticipant['tone'][] = ['teal', 'pink', 'lavender', 'gold'];
-const FRIEND_NAMES = ['Sara', 'Ahmed', 'Layla', 'Noor', 'Omar', 'Mariam', 'Faris', 'Hind'];
-const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
-let idCounter = 0;
-function makeId(prefix: string): string {
-  idCounter += 1;
-  return `${prefix}-${Date.now().toString(36)}-${idCounter}`;
-}
-
-function makeCode(): string {
-  let body = '';
-  for (let i = 0; i < 5; i += 1) {
-    body += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
-  }
-  return `GIFT-${body}`;
-}
-
-function displayName(user: ReturnType<typeof useAuth>['user']): string {
-  const full = (user?.user_metadata?.full_name as string | undefined)?.trim();
-  if (full) return full;
-  if (user?.email) return user.email.split('@')[0];
-  return 'Demo User';
-}
 
 export interface BasketItemInput {
   offer: Offer;
@@ -73,21 +46,137 @@ interface BasketContextValue {
   completedBaskets: GiftBasket[];
   getBasket: (id: string) => GiftBasket | null;
   getBasketByCode: (code: string) => GiftBasket | null;
-  createBasket: (input: CreateBasketInput) => GiftBasket;
-  addItem: (basketId: string, input: BasketItemInput) => BasketItem | null;
-  removeItem: (basketId: string, itemId: string) => void;
-  joinBasket: (code: string) => GiftBasket | null;
-  markReady: (basketId: string) => void;
-  markCompleted: (basketId: string) => void;
+  createBasket: (input: CreateBasketInput) => Promise<GiftBasket | null>;
+  addItem: (basketId: string, input: BasketItemInput) => Promise<BasketItem | null>;
+  removeItem: (basketId: string, itemId: string) => Promise<void>;
+  joinBasket: (code: string) => Promise<GiftBasket | null>;
+  markReady: (basketId: string) => Promise<void>;
+  markCompleted: (basketId: string) => Promise<void>;
   sendBasket: (
     basketId: string,
     details: { recipientName?: string; message?: string },
-  ) => void;
-  simulateContribution: (basketId: string) => BasketItem | null;
-  resetDemo: () => void;
+  ) => Promise<void>;
+  /** Re-reads the baskets from the database. */
+  reload: () => Promise<void>;
 }
 
 const BasketContext = createContext<BasketContextValue | null>(null);
+
+/** The basket row as it is stored, with its children. */
+interface BasketRow {
+  id: string;
+  code: string;
+  name: string;
+  recipient_name: string;
+  occasion: string;
+  creator_id: string;
+  creator_name: string;
+  target_minor: number;
+  status: 'open' | 'ready' | 'completed';
+  note: string | null;
+  created_at: string;
+  completed_at: string | null;
+  items?: BasketItemRow[] | null;
+  participants?: ParticipantRow[] | null;
+  activity?: ActivityRow[] | null;
+}
+
+interface BasketItemRow {
+  id: string;
+  offer_id: string;
+  vendor_id: string;
+  vendor_name: string;
+  title: string;
+  amount_minor: number;
+  emoji: string | null;
+  tone: string | null;
+  logo_url: string | null;
+  banner_url: string | null;
+  added_by: string;
+  added_by_name: string;
+  added_at: string;
+}
+
+interface ParticipantRow {
+  user_id: string;
+  name: string;
+  is_owner: boolean;
+  tone: string;
+  joined_at: string;
+}
+
+interface ActivityRow {
+  id: string;
+  kind: 'created' | 'joined' | 'item_added' | 'ready' | 'completed';
+  actor_name: string;
+  item_title: string | null;
+  amount_minor: number | null;
+  created_at: string;
+}
+
+function mapBasket(row: BasketRow): GiftBasket {
+  return {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    recipient_name: row.recipient_name,
+    occasion: row.occasion as OccasionId,
+    creator_id: row.creator_id,
+    creator_name: row.creator_name,
+    target_minor: row.target_minor,
+    status: row.status,
+    items: (row.items ?? []).map(
+      (item): BasketItem => ({
+        id: item.id,
+        offer_id: item.offer_id,
+        vendor_id: item.vendor_id,
+        vendor_name: item.vendor_name,
+        title: item.title,
+        amount_minor: item.amount_minor,
+        icon: item.emoji ?? 'gift',
+        tone: (item.tone as BasketItem['tone']) ?? 'lavender',
+        logo_url: item.logo_url,
+        banner_url: item.banner_url,
+        added_by_id: item.added_by,
+        added_by_name: item.added_by_name,
+        added_at: item.added_at,
+      }),
+    ),
+    participants: (row.participants ?? []).map(
+      (participant): BasketParticipant => ({
+        id: participant.user_id,
+        name: participant.name,
+        is_owner: participant.is_owner,
+        joined_at: participant.joined_at,
+        tone: (participant.tone as BasketParticipant['tone']) ?? 'teal',
+      }),
+    ),
+    activity: (row.activity ?? []).map(
+      (entry): BasketActivity => ({
+        id: entry.id,
+        kind: entry.kind,
+        actor_name: entry.actor_name,
+        item_title: entry.item_title ?? undefined,
+        amount_minor: entry.amount_minor ?? undefined,
+        created_at: entry.created_at,
+      }),
+    ),
+    created_at: row.created_at,
+    completed_at: row.completed_at ?? undefined,
+    note: row.note ?? undefined,
+  };
+}
+
+const BASKET_SELECT = `
+  id, code, name, recipient_name, occasion, creator_id, creator_name, target_minor,
+  status, note, created_at, completed_at,
+  items:gift_basket_items(
+    id, offer_id, vendor_id, vendor_name, title, amount_minor, emoji, tone,
+    logo_url, banner_url, added_by, added_by_name, added_at
+  ),
+  participants:gift_basket_participants(user_id, name, is_owner, tone, joined_at),
+  activity:gift_basket_activity(id, kind, actor_name, item_title, amount_minor, created_at)
+`;
 
 export function basketTotal(basket: GiftBasket): number {
   return basket.items.reduce((sum, item) => sum + item.amount_minor, 0);
@@ -105,40 +194,10 @@ export function basketProgress(basket: GiftBasket): number {
   return Math.min(100, Math.round((basketTotal(basket) / basket.target_minor) * 100));
 }
 
-function toBasketItem(
-  offer: Offer,
-  amountMinor: number,
-  participant: { id: string; name: string },
-): BasketItem {
-  return {
-    id: makeId('bitem'),
-    offer_id: offer.id,
-    vendor_id: offer.vendor_id,
-    vendor_name: offer.vendor?.name ?? offer.title,
-    title: offer.title,
-    amount_minor: amountMinor,
-    icon: offer.icon,
-    tone: (offer.tone ?? 'lavender') as AccentTone,
-    logo_url: offer.vendor?.logo_url ?? null,
-    banner_url: offer.vendor?.banner_url ?? null,
-    added_by_id: participant.id,
-    added_by_name: participant.name,
-    added_at: new Date().toISOString(),
-  };
-}
-
-function activity(
-  kind: BasketActivity['kind'],
-  actorName: string,
-  extra: Partial<BasketActivity> = {},
-): BasketActivity {
-  return {
-    id: makeId('activity'),
-    kind,
-    actor_name: actorName,
-    created_at: new Date().toISOString(),
-    ...extra,
-  };
+/** A code that looks like GIFT-XXXXX. */
+function makeCode(): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 5 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
 }
 
 export function BasketProvider({ children }: { children: React.ReactNode }) {
@@ -146,35 +205,67 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
   const [baskets, setBaskets] = useState<GiftBasket[]>([]);
   const [ready, setReady] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((raw) => {
-        if (!active) return;
-        if (raw) {
-          try {
-            const parsed = JSON.parse(raw) as GiftBasket[];
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setBaskets(parsed);
-              return;
-            }
-          } catch {
-            // Fall through to the seeded demo baskets.
-          }
-        }
-        setBaskets(MOCK_BASKETS);
-      })
-      .catch(() => active && setBaskets(MOCK_BASKETS))
-      .finally(() => active && setReady(true));
-    return () => {
-      active = false;
-    };
+  const displayName = useCallback(
+    () =>
+      (user?.user_metadata?.full_name as string | undefined) ??
+      user?.email?.split('@')[0] ??
+      'You',
+    [user],
+  );
+
+  const load = useCallback(async () => {
+    if (!hasSupabaseConfig) {
+      setReady(true);
+      return;
+    }
+    try {
+      const { data, error } = await getSupabase()
+        .from('gift_baskets')
+        .select(BASKET_SELECT)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setBaskets(((data ?? []) as unknown as BasketRow[]).map(mapBasket));
+    } catch {
+      setBaskets([]);
+    } finally {
+      setReady(true);
+    }
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(baskets)).catch(() => undefined);
-  }, [baskets, ready]);
+    load();
+  }, [load]);
+
+  // Live updates: every participant sees the same box.
+  useEffect(() => {
+    if (!hasSupabaseConfig) return;
+    const channel = getSupabase()
+      .channel('gift-baskets')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gift_basket_items' },
+        () => load(),
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gift_basket_participants' },
+        () => load(),
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gift_basket_activity' },
+        () => load(),
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gift_baskets' },
+        () => load(),
+      )
+      .subscribe();
+    return () => {
+      getSupabase().removeChannel(channel);
+    };
+  }, [load]);
 
   const getBasket = useCallback(
     (id: string) => baskets.find((basket) => basket.id === id) ?? null,
@@ -187,242 +278,217 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     [baskets],
   );
 
+  const fetchBasket = useCallback(async (id: string): Promise<GiftBasket | null> => {
+    const { data } = await getSupabase()
+      .from('gift_baskets')
+      .select(BASKET_SELECT)
+      .eq('id', id)
+      .maybeSingle();
+    return data ? mapBasket(data as unknown as BasketRow) : null;
+  }, []);
+
   const createBasket = useCallback(
-    (input: CreateBasketInput) => {
-      const now = new Date().toISOString();
-      const ownerId = user?.id ?? 'demo-user';
-      const ownerName = displayName(user);
-      const owner: BasketParticipant = {
-        id: ownerId,
-        name: ownerName,
-        is_owner: true,
-        joined_at: now,
-        tone: 'teal',
-      };
-      const items = input.items.map(({ offer, amountMinor }) => toBasketItem(offer, amountMinor, owner));
-      const basket: GiftBasket = {
-        id: makeId('basket'),
-        code: makeCode(),
-        name: input.name.trim() || input.recipientName.trim() || 'Group gift',
-        recipient_name: input.recipientName.trim(),
-        occasion: input.occasion,
-        creator_id: ownerId,
-        creator_name: ownerName,
-        target_minor: input.targetMinor ?? 0,
-        status: 'open',
-        items,
-        participants: [owner],
-        activity: [
-          activity('created', ownerName),
-          ...items.map((item) =>
-            activity('item_added', ownerName, {
-              item_title: item.title,
-              amount_minor: item.amount_minor,
-            }),
-          ),
-        ],
-        created_at: now,
-        completed_at: null,
-        note: input.note,
-      };
-      setBaskets((prev) => [basket, ...prev]);
-      return basket;
+    async (input: CreateBasketInput): Promise<GiftBasket | null> => {
+      if (!hasSupabaseConfig || !user) return null;
+      const ownerId = user.id;
+      const ownerName = displayName();
+
+      let code = makeCode();
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const { data: clash } = await getSupabase()
+          .from('gift_baskets')
+          .select('id')
+          .eq('code', `GIFT-${code}`)
+          .maybeSingle();
+        if (!clash) break;
+        code = makeCode();
+      }
+
+      const { data: basket, error } = await getSupabase()
+        .from('gift_baskets')
+        .insert({
+          code: `GIFT-${code}`,
+          name: input.name.trim() || input.recipientName.trim() || 'Group gift',
+          recipient_name: input.recipientName.trim(),
+          occasion: input.occasion,
+          creator_id: ownerId,
+          creator_name: ownerName,
+          target_minor: input.targetMinor ?? 0,
+          note: input.note ?? null,
+        })
+        .select('id')
+        .single();
+      if (error || !basket) return null;
+
+      for (const item of input.items) {
+        await getSupabase().from('gift_basket_items').insert({
+          basket_id: basket.id,
+          offer_id: item.offer.id,
+          vendor_id: item.offer.vendor_id,
+          vendor_name: item.offer.vendor?.name ?? item.offer.title,
+          title: item.offer.title,
+          amount_minor: item.amountMinor,
+          emoji: item.offer.icon ?? 'gift',
+          tone: item.offer.tone ?? 'lavender',
+          logo_url: item.offer.vendor?.logo_url ?? null,
+          banner_url: item.offer.vendor?.banner_url ?? null,
+          added_by: ownerId,
+          added_by_name: ownerName,
+        });
+      }
+
+      await getSupabase().from('gift_basket_activity').insert({
+        basket_id: basket.id,
+        kind: 'created',
+        actor_id: ownerId,
+        actor_name: ownerName,
+      });
+
+      await load();
+      return fetchBasket(basket.id);
     },
-    [user],
+    [displayName, fetchBasket, load, user],
   );
 
   const addItem = useCallback(
-    (basketId: string, input: BasketItemInput) => {
-      const basket = baskets.find((candidate) => candidate.id === basketId);
-      if (!basket || basket.status === 'completed') return null;
+    async (basketId: string, input: BasketItemInput): Promise<BasketItem | null> => {
+      if (!hasSupabaseConfig || !user) return null;
+      const ownerName = displayName();
 
-      const ownerId = user?.id ?? 'demo-user';
-      const ownerName = displayName(user);
-      const participant =
-        basket.participants.find((p) => p.id === ownerId) ??
-        ({
-          id: ownerId,
-          name: ownerName,
-          is_owner: basket.creator_id === ownerId,
-          joined_at: new Date().toISOString(),
-          tone: 'teal',
-        } satisfies BasketParticipant);
-      const item = toBasketItem(input.offer, input.amountMinor, participant);
+      const { data, error } = await getSupabase()
+        .from('gift_basket_items')
+        .insert({
+          basket_id: basketId,
+          offer_id: input.offer.id,
+          vendor_id: input.offer.vendor_id,
+          vendor_name: input.offer.vendor?.name ?? input.offer.title,
+          title: input.offer.title,
+          amount_minor: input.amountMinor,
+          emoji: input.offer.icon ?? 'gift',
+          tone: input.offer.tone ?? 'lavender',
+          logo_url: input.offer.vendor?.logo_url ?? null,
+          banner_url: input.offer.vendor?.banner_url ?? null,
+          added_by: user.id,
+          added_by_name: ownerName,
+        })
+        .select('id')
+        .single();
+      if (error || !data) return null;
 
-      setBaskets((prev) =>
-        prev.map((candidate) => {
-          if (candidate.id !== basketId) return candidate;
-          const participants = candidate.participants.some((p) => p.id === participant.id)
-            ? candidate.participants
-            : [...candidate.participants, participant];
-          return {
-            ...candidate,
-            status: candidate.status === 'ready' ? 'open' : candidate.status,
-            items: [...candidate.items, item],
-            participants,
-            activity: [
-              activity('item_added', participant.name, {
-                item_title: item.title,
-                amount_minor: item.amount_minor,
-              }),
-              ...candidate.activity,
-            ],
-          };
-        }),
-      );
-      return item;
+      await getSupabase().from('gift_basket_activity').insert({
+        basket_id: basketId,
+        kind: 'item_added',
+        actor_id: user.id,
+        actor_name: ownerName,
+        item_title: input.offer.title,
+        amount_minor: input.amountMinor,
+      });
+
+      await load();
+
+      return {
+        id: data.id,
+        offer_id: input.offer.id,
+        vendor_id: input.offer.vendor_id,
+        vendor_name: input.offer.vendor?.name ?? input.offer.title,
+        title: input.offer.title,
+        amount_minor: input.amountMinor,
+        icon: input.offer.icon ?? 'gift',
+        tone: input.offer.tone ?? 'lavender',
+        added_by_id: user.id,
+        added_by_name: ownerName,
+        added_at: new Date().toISOString(),
+      };
     },
-    [baskets, user],
+    [displayName, load, user],
   );
 
-  const removeItem = useCallback((basketId: string, itemId: string) => {
-    setBaskets((prev) =>
-      prev.map((basket) =>
-        basket.id === basketId
-          ? { ...basket, items: basket.items.filter((item) => item.id !== itemId) }
-          : basket,
-      ),
-    );
-  }, []);
+  const removeItem = useCallback(
+    async (basketId: string, itemId: string) => {
+      if (!hasSupabaseConfig) return;
+      await getSupabase()
+        .from('gift_basket_items')
+        .delete()
+        .eq('basket_id', basketId)
+        .eq('id', itemId);
+      await load();
+    },
+    [load],
+  );
 
   const joinBasket = useCallback(
-    (code: string) => {
-      const match = baskets.find(
+    async (code: string): Promise<GiftBasket | null> => {
+      if (!hasSupabaseConfig || !user) return null;
+      const existing = baskets.find(
         (basket) => basket.code.toUpperCase() === code.trim().toUpperCase(),
       );
-      if (!match) return null;
+      if (existing) return existing;
 
-      const userId = user?.id ?? 'demo-user';
-      const name = displayName(user);
-      if (match.participants.some((participant) => participant.id === userId)) {
-        return match;
-      }
+      const { data, error } = await getSupabase().rpc('get_basket_by_code', {
+        p_code: code.trim().toUpperCase(),
+      });
+      if (error || !data) return null;
 
-      const participant: BasketParticipant = {
-        id: userId,
-        name,
+      const row = (Array.isArray(data) ? data[0] : data) as { id?: string } | null;
+      if (!row?.id) return null;
+
+      await getSupabase().from('gift_basket_participants').insert({
+        basket_id: row.id,
+        user_id: user.id,
+        name: displayName(),
         is_owner: false,
-        joined_at: new Date().toISOString(),
-        tone: PARTICIPANT_TONES[match.participants.length % PARTICIPANT_TONES.length],
-      };
-      const joined: GiftBasket = {
-        ...match,
-        participants: [...match.participants, participant],
-        activity: [activity('joined', name), ...match.activity],
-      };
-      setBaskets((prev) => prev.map((basket) => (basket.id === match.id ? joined : basket)));
-      return joined;
+      });
+
+      await getSupabase().from('gift_basket_activity').insert({
+        basket_id: row.id,
+        kind: 'joined',
+        actor_id: user.id,
+        actor_name: displayName(),
+      });
+
+      await load();
+      return fetchBasket(row.id);
     },
-    [baskets, user],
+    [baskets, displayName, fetchBasket, load, user],
   );
 
-  const markReady = useCallback((basketId: string) => {
-    setBaskets((prev) =>
-      prev.map((basket) =>
-        basket.id === basketId && basket.status !== 'completed'
-          ? {
-              ...basket,
-              status: 'ready',
-              activity: [activity('ready', basket.creator_name), ...basket.activity],
-            }
-          : basket,
-      ),
-    );
-  }, []);
+  const markReady = useCallback(
+    async (basketId: string) => {
+      if (!hasSupabaseConfig) return;
+      await getSupabase().from('gift_baskets').update({ status: 'ready' }).eq('id', basketId);
+      await load();
+    },
+    [load],
+  );
 
-  const markCompleted = useCallback((basketId: string) => {
-    setBaskets((prev) =>
-      prev.map((basket) =>
-        basket.id === basketId
-          ? {
-              ...basket,
-              status: 'completed',
-              completed_at: new Date().toISOString(),
-              activity: [activity('completed', basket.creator_name), ...basket.activity],
-            }
-          : basket,
-      ),
-    );
-  }, []);
+  const markCompleted = useCallback(
+    async (basketId: string) => {
+      if (!hasSupabaseConfig) return;
+      await getSupabase()
+        .from('gift_baskets')
+        .update({ status: 'completed', completed_at: new Date().toISOString() })
+        .eq('id', basketId);
+      await load();
+    },
+    [load],
+  );
 
   const sendBasket = useCallback(
-    (basketId: string, details: { recipientName?: string; message?: string }) => {
-      setBaskets((prev) =>
-        prev.map((basket) => {
-          if (basket.id !== basketId || basket.status === 'completed') return basket;
-          return {
-            ...basket,
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-            recipient_name: details.recipientName?.trim() || basket.recipient_name,
-            note: details.message?.trim() || basket.note,
-            activity: [activity('completed', basket.creator_name), ...basket.activity],
-          };
-        }),
-      );
+    async (basketId: string, details: { recipientName?: string; message?: string }) => {
+      if (!hasSupabaseConfig) return;
+      await getSupabase()
+        .from('gift_baskets')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          recipient_name: details.recipientName?.trim() || undefined,
+          note: details.message?.trim() || undefined,
+        })
+        .eq('id', basketId);
+      await load();
     },
-    [],
+    [load],
   );
-
-  const simulateContribution = useCallback(
-    (basketId: string) => {
-      const basket = baskets.find((candidate) => candidate.id === basketId);
-      if (!basket || basket.status !== 'open') return null;
-
-      const usedNames = new Set(basket.participants.map((p) => p.name));
-      const friendName =
-        FRIEND_NAMES.find((name) => !usedNames.has(name)) ??
-        FRIEND_NAMES[Math.floor(Math.random() * FRIEND_NAMES.length)];
-
-      const usedOffers = new Set(basket.items.map((item) => item.offer_id));
-      const pool = MOCK_OFFERS.filter((offer) => !usedOffers.has(offer.id));
-      const source = pool.length > 0 ? pool : MOCK_OFFERS;
-      const offer = source[Math.floor(Math.random() * source.length)];
-      const amountMinor = offer.preset_amounts_minor[0] ?? offer.min_amount_minor;
-
-      const existing = basket.participants.find((p) => p.name === friendName);
-      const participant: BasketParticipant =
-        existing ??
-        ({
-          id: makeId('participant'),
-          name: friendName,
-          is_owner: false,
-          joined_at: new Date().toISOString(),
-          tone: PARTICIPANT_TONES[basket.participants.length % PARTICIPANT_TONES.length],
-        } satisfies BasketParticipant);
-
-      const item = toBasketItem(offer, amountMinor, participant);
-
-      setBaskets((prev) =>
-        prev.map((candidate) => {
-          if (candidate.id !== basketId) return candidate;
-          const participants = existing
-            ? candidate.participants
-            : [...candidate.participants, participant];
-          return {
-            ...candidate,
-            items: [...candidate.items, item],
-            participants,
-            activity: [
-              activity('item_added', friendName, {
-                item_title: item.title,
-                amount_minor: item.amount_minor,
-              }),
-              ...(existing ? [] : [activity('joined', friendName)]),
-              ...candidate.activity,
-            ],
-          };
-        }),
-      );
-      return item;
-    },
-    [baskets],
-  );
-
-  const resetDemo = useCallback(() => {
-    setBaskets(MOCK_BASKETS);
-    AsyncStorage.removeItem(STORAGE_KEY).catch(() => undefined);
-  }, []);
 
   const activeBasket = useMemo(() => {
     const open = baskets.find((basket) => basket.status === 'open');
@@ -450,8 +516,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       markReady,
       markCompleted,
       sendBasket,
-      simulateContribution,
-      resetDemo,
+      reload: load,
     }),
     [
       baskets,
@@ -467,8 +532,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       markReady,
       markCompleted,
       sendBasket,
-      simulateContribution,
-      resetDemo,
+      load,
     ],
   );
 

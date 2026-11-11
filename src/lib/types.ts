@@ -201,6 +201,41 @@ export interface PaymentMethod {
   isDefault: boolean;
 }
 
+/** A saved delivery address. */
+export interface CustomerAddress {
+  id: string;
+  label: string;
+  line1: string;
+  city: string;
+  postcode?: string | null;
+  isDefault: boolean;
+}
+
+/** The customer's settings. */
+export interface CustomerPreferences {
+  dark_mode: boolean;
+  biometrics: boolean;
+  privacy_analytics: boolean;
+  privacy_personalised: boolean;
+  gift_updates: boolean;
+  promotions: boolean;
+  expiry_reminders: boolean;
+  email: boolean;
+  push: boolean;
+  sms: boolean;
+}
+
+/** A request the customer sent to support. */
+export interface SupportRequest {
+  id: string;
+  kind: 'contact' | 'report' | 'report_gift' | 'refund' | 'chat';
+  subject?: string | null;
+  body: string;
+  reference?: string | null;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  created_at: string;
+}
+
 export interface BusinessLocation {
   id: string;
   vendorId: string;

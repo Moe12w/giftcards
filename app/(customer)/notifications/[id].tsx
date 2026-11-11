@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -9,9 +9,9 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
-import { MOCK_NOTIFICATIONS } from '@/src/lib/mock-data';
+import { listNotifications, markNotificationRead } from '@/src/lib/data';
 import { formatDate } from '@/src/lib/time';
-import type { NotificationKind } from '@/src/lib/types';
+import type { AppNotification, NotificationKind } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 const KIND_ICON: Record<NotificationKind, string> = {
@@ -35,7 +35,40 @@ const KIND_TONE: Record<NotificationKind, IconTileTone> = {
 export default function NotificationDetailScreen() {
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const item = MOCK_NOTIFICATIONS.find((notification) => notification.id === id);
+  const [item, setItem] = useState<AppNotification | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const rows = await listNotifications();
+      const found = rows.find((row) => row.id === id) ?? null;
+      setItem(found);
+      if (found && !found.read) {
+        await markNotificationRead(found.id);
+        setItem({ ...found, read: true });
+      }
+    } catch {
+      setItem(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (loading) {
+    return (
+      <Screen>
+        <FlowHeader title={t('notifications.detailTitle')} onBack={() => router.back()} />
+      </Screen>
+    );
+  }
 
   if (!item) {
     return (
@@ -56,7 +89,11 @@ export default function NotificationDetailScreen() {
       <FlowHeader title={t('notifications.detailTitle')} onBack={() => router.back()} />
 
       <Card tone="teal" style={styles.card}>
-        <IconTile icon={KIND_ICON[item.kind]} size={64} tone={KIND_TONE[item.kind]} />
+        <IconTile
+          icon={KIND_ICON[item.kind] ?? 'bell'}
+          size={64}
+          tone={KIND_TONE[item.kind] ?? 'lavender'}
+        />
         <Text style={styles.title}>{t(item.titleKey)}</Text>
         <Text style={styles.date}>{formatDate(item.created_at, i18n.language)}</Text>
         <Text style={styles.body}>{t(item.bodyKey)}</Text>

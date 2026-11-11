@@ -12,7 +12,7 @@ import { TextField } from '@/src/components/TextField';
 import { useGiftDraft, type DeliveryMethod } from '@/src/lib/gift-draft';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 
-const METHODS: DeliveryMethod[] = ['email', 'sms', 'link'];
+const METHODS: DeliveryMethod[] = ['email', 'sms', 'whatsapp', 'link'];
 
 export default function DeliveryScreen() {
   const { t } = useTranslation();

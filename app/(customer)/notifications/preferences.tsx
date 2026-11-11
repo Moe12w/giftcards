@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Switch, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
+import { getPreferences, savePreferences } from '@/src/lib/data';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 interface ToggleRowProps {
@@ -38,6 +39,19 @@ export default function NotificationPreferencesScreen() {
   const [push, setPush] = useState(true);
   const [sms, setSms] = useState(false);
 
+  useEffect(() => {
+    getPreferences()
+      .then((rows) => {
+        setGiftUpdates(rows.gift_updates);
+        setPromotions(rows.promotions);
+        setExpiry(rows.expiry_reminders);
+        setEmail(rows.email);
+        setPush(rows.push);
+        setSms(rows.sms);
+      })
+      .catch(() => undefined);
+  }, []);
+
   return (
     <Screen>
       <FlowHeader
@@ -50,24 +64,54 @@ export default function NotificationPreferencesScreen() {
         <ToggleRow
           label={t('notifications.giftUpdates')}
           value={giftUpdates}
-          onValueChange={setGiftUpdates}
+          onValueChange={(value) => {
+            setGiftUpdates(value);
+            savePreferences({ gift_updates: value }).catch(() => undefined);
+          }}
         />
         <ToggleRow
           label={t('notifications.promotions')}
           value={promotions}
-          onValueChange={setPromotions}
+          onValueChange={(value) => {
+            setPromotions(value);
+            savePreferences({ promotions: value }).catch(() => undefined);
+          }}
         />
         <ToggleRow
           label={t('notifications.expiryReminders')}
           value={expiry}
-          onValueChange={setExpiry}
+          onValueChange={(value) => {
+            setExpiry(value);
+            savePreferences({ expiry_reminders: value }).catch(() => undefined);
+          }}
         />
       </Card>
 
       <Card>
-        <ToggleRow label={t('notifications.email')} value={email} onValueChange={setEmail} />
-        <ToggleRow label={t('notifications.push')} value={push} onValueChange={setPush} />
-        <ToggleRow label={t('notifications.sms')} value={sms} onValueChange={setSms} />
+        <ToggleRow
+          label={t('notifications.email')}
+          value={email}
+          onValueChange={(value) => {
+            setEmail(value);
+            savePreferences({ email: value }).catch(() => undefined);
+          }}
+        />
+        <ToggleRow
+          label={t('notifications.push')}
+          value={push}
+          onValueChange={(value) => {
+            setPush(value);
+            savePreferences({ push: value }).catch(() => undefined);
+          }}
+        />
+        <ToggleRow
+          label={t('notifications.sms')}
+          value={sms}
+          onValueChange={(value) => {
+            setSms(value);
+            savePreferences({ sms: value }).catch(() => undefined);
+          }}
+        />
       </Card>
     </Screen>
   );

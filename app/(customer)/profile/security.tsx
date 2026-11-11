@@ -7,10 +7,12 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
+import { useAuth } from '@/src/lib/auth';
 import { TextField } from '@/src/components/TextField';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 export default function SecurityScreen() {
+  const { updatePassword } = useAuth();
   const { t } = useTranslation();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -19,17 +21,23 @@ export default function SecurityScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
 
-  function save() {
+  async function save() {
     const nextErrors: Record<string, string> = {};
     if (!current) nextErrors.current = t('common.required');
     if (next.length < 8) nextErrors.next = t('auth.passwordTooShort');
     if (next !== confirm) nextErrors.confirm = t('authExtra.passwordsDontMatch');
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
-    setSaved(true);
-    setCurrent('');
-    setNext('');
-    setConfirm('');
+
+    try {
+      await updatePassword(next);
+      setSaved(true);
+      setCurrent('');
+      setNext('');
+      setConfirm('');
+    } catch {
+      setErrors({ next: t('authExtra.resetFailed') });
+    }
   }
 
   return (

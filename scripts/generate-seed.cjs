@@ -26,9 +26,21 @@ function loadModule(file, imports = {}) {
 const time = loadModule('src/lib/time.ts');
 const mock = loadModule('src/lib/mock-data.ts', { './time': time });
 
-const { MOCK_OFFERS, MOCK_CARDS, MOCK_ORDERS, MOCK_VENDOR_CARDS, MOCK_REDEMPTIONS, MOCK_LOCATIONS, MOCK_RECIPIENTS } = mock;
+const {
+  MOCK_OFFERS,
+  MOCK_CARDS,
+  MOCK_ORDERS,
+  MOCK_VENDOR_CARDS,
+  MOCK_REDEMPTIONS,
+  MOCK_LOCATIONS,
+  MOCK_RECIPIENTS,
+  MOCK_BASKETS,
+} = mock;
 
 const q = (value) => (value === null || value === undefined ? 'null' : `'${String(value).replace(/'/g, "''")}'`);
+
+/** ISO timestamp a number of days from now. */
+const daysFromNow = (days) => new Date(Date.now() + days * 86_400_000).toISOString();
 
 // Deterministic UUIDs so the seed is repeatable and cross-references work.
 function uuidFor(key) {
@@ -64,6 +76,7 @@ push('-- Clear the demo rows before inserting them again.');
 const RESET = [
   'redemption_items',
   'redemptions',
+  'notifications',
   'vouchers',
   'order_items',
   'orders',
@@ -115,7 +128,16 @@ const USERS = [
 ];
 
 // The people who bought the vouchers the vendors still have to serve.
-const BUYERS = [...new Set(MOCK_VENDOR_CARDS.map((card) => card.recipient_name))].map((name) => [
+// Everybody who appears in the demo data needs an account, because the
+// database keeps a real owner for every basket and voucher.
+const BUYER_NAMES = [
+  ...new Set([
+    ...MOCK_VENDOR_CARDS.map((card) => card.recipient_name),
+    ...MOCK_BASKETS.flatMap((basket) => basket.participants.map((p) => p.name)),
+    ...MOCK_BASKETS.flatMap((basket) => basket.items.map((item) => item.added_by_name)),
+  ]),
+].filter((name) => name && name !== 'Demo User');
+const BUYERS = BUYER_NAMES.map((name) => [
   uuidFor(`buyer:${name}`),
   `${name.toLowerCase().replace(/[^a-z]+/g, '.')}@giftly.test`,
   name,
@@ -347,6 +369,22 @@ const ledgerValues = [];
 const redemptionValues = [];
 const redemptionItemValues = [];
 
+// Who bought the gift and who claimed it. The demo customer receives most of
+  // the demo gifts, and sends one of them, so the wallet shows a real mix.
+  const GIFT_SENDER = {
+    'card-1': 'Layla',
+    'card-3': 'Sara',
+    'card-4': 'Noor',
+    'card-7': 'Mariam',
+    'card-8': 'Faris',
+    'card-9': 'Hind',
+  };
+  const buyerId = (cardId) => {
+    const sender = GIFT_SENDER[cardId];
+    return sender ? uuidFor('buyer:' + sender) : CUSTOMER_ID;
+  };
+  const isSentByCustomer = (cardId) => !GIFT_SENDER[cardId];
+
 MOCK_ORDERS.forEach((order, index) => {
   const orderId = uuidFor(order.id);
   const offer = MOCK_OFFERS.find((o) => o.id === order.offer_id);
@@ -358,7 +396,7 @@ MOCK_ORDERS.forEach((order, index) => {
   const card = MOCK_CARDS.find((c) => c.id === order.gift_card_id);
 
   orderValues.push(
-    `  (${q(orderId)}, ${q(`ORD-${1000 + index}`)}, '${CUSTOMER_ID}', 'paid', 'QAR', ${order.amount_minor}, 0, 0, ${order.amount_minor}, ${q('Demo Customer')}, ${q(card?.message ?? null)}, 'email', 'paid', 'demo', ${q(order.payment_reference)}, ${q(order.created_at)}, ${q(order.created_at)})`,
+    `  (${q(orderId)}, ${q(`ORD-${1000 + index}`)}, ${q(buyerId(order.gift_card_id))}, 'paid', 'QAR', ${order.amount_minor}, 0, 0, ${order.amount_minor}, ${q('Demo Customer')}, ${q(card?.message ?? null)}, 'email', 'paid', 'demo', ${q(order.payment_reference)}, ${q(order.created_at)}, ${q(order.created_at)})`,
   );
   itemValues.push(
     `  (${q(itemId)}, ${q(orderId)}, ${q(productId)}, ${q(variantId)}, ${q(uuidFor(offer.vendor_id))}, 1, ${order.amount_minor}, ${order.amount_minor}, ${order.commission_minor}, ${order.vendor_share_minor}, 'QAR', ${q(card?.message ?? null)}, ${q(card?.recipient_name ?? null)}, ${q(card?.recipient_email ?? null)}, null, 'email', null, ${q(order.created_at)})`,
@@ -367,8 +405,17 @@ MOCK_ORDERS.forEach((order, index) => {
   const isSession = offer.fulfilment_type === 'experience';
   const totalSessions = isSession ? offer.session_count : null;
   const remaining = card ? (card.remaining_sessions ?? totalSessions ?? null) : null;
+  // A gift the demo customer sent is still waiting to be claimed, and a gift
+  // with nothing left on it is used up.
+  const claimedBy = isSentByCustomer(order.gift_card_id) ? 'null' : q(CUSTOMER_ID);
+  const usedUp = !isSession && (card?.balance_minor ?? order.amount_minor) <= 0;
+  const voucherStatus = isSentByCustomer(order.gift_card_id)
+    ? "'issued'"
+    : usedUp
+      ? "'redeemed'"
+      : "'claimed'";
   voucherValues.push(
-    `  (${q(voucherId)}, ${q(`GFT-${voucherId.slice(0, 6).toUpperCase()}`)}, ${q(`giftly:redeem:GFT-${voucherId.slice(0, 6).toUpperCase()}`)}, ${q(productId)}, ${q(variantId)}, ${q(uuidFor(offer.vendor_id))}, ${q(itemId)}, '${CUSTOMER_ID}', ${q(card?.recipient_name ?? 'Demo Customer')}, ${q(card?.recipient_email ?? null)}, ${q(card?.recipient_email ?? null)}, '${isSession ? 'experience' : 'monetary'}', 'claimed', ${order.amount_minor}, ${isSession ? 'null' : (card?.balance_minor ?? order.amount_minor)}, ${totalSessions}, ${remaining}, ${isSession ? (totalSessions - (remaining ?? 0)) : 0}, 'QAR', ${q(card?.expires_at ?? null)}, '${CUSTOMER_ID}', ${q(card?.claimed_at ?? order.created_at)}, ${q(card?.delivery_status ?? 'delivered')}, null, ${q(card?.message ?? null)}, ${q(order.created_at)}, ${q(order.created_at)})`,
+    `  (${q(voucherId)}, ${q(`GFT-${voucherId.slice(0, 6).toUpperCase()}`)}, ${q(`giftly:redeem:GFT-${voucherId.slice(0, 6).toUpperCase()}`)}, ${q(productId)}, ${q(variantId)}, ${q(uuidFor(offer.vendor_id))}, ${q(itemId)}, ${q(buyerId(order.gift_card_id))}, ${q(card?.recipient_name ?? 'Demo Customer')}, ${q(card?.recipient_email ?? null)}, ${q(card?.recipient_email ?? null)}, '${isSession ? 'experience' : 'monetary'}', ${voucherStatus}, ${order.amount_minor}, ${isSession ? 'null' : (card?.balance_minor ?? order.amount_minor)}, ${totalSessions}, ${remaining}, ${isSession ? (totalSessions - (remaining ?? 0)) : 0}, 'QAR', ${q(card?.expires_at ?? null)}, ${claimedBy}, ${q(card?.claimed_at ?? order.created_at)}, ${q(card?.delivery_status ?? 'delivered')}, null, ${q(card?.message ?? null)}, ${q(order.created_at)}, ${q(order.created_at)})`,
   );
 
   ledgerValues.push(
@@ -380,6 +427,84 @@ MOCK_ORDERS.forEach((order, index) => {
     );
   }
 });
+
+// Gift cards that were claimed without an order in the demo catalogue still
+// belong to somebody, so they are issued to the demo customer as well.
+MOCK_CARDS.filter((card) => !MOCK_ORDERS.some((order) => order.gift_card_id === card.id)).forEach(
+  (card) => {
+    const offer = MOCK_OFFERS.find((o) => o.id === card.offer_id);
+    if (!offer) return;
+    const voucherId = uuidFor(card.id);
+    const productId = uuidFor(offer.id);
+    const variantId = firstVariantByOffer.get(offer.id) ?? null;
+    const isSession = offer.fulfilment_type === 'experience';
+    const totalSessions = isSession ? offer.session_count : null;
+    const remaining = card.remaining_sessions ?? totalSessions ?? null;
+    const sender = GIFT_SENDER[card.id] ?? 'Mariam';
+
+    voucherValues.push(
+      '  (' +
+        q(voucherId) +
+        ', ' +
+        q('GFT-' + voucherId.slice(0, 6).toUpperCase()) +
+        ', ' +
+        q('giftly:redeem:GFT-' + voucherId.slice(0, 6).toUpperCase()) +
+        ', ' +
+        q(productId) +
+        ', ' +
+        q(variantId) +
+        ', ' +
+        q(uuidFor(offer.vendor_id)) +
+        ', null, ' +
+        q(uuidFor('buyer:' + sender)) +
+        ', ' +
+        q(card.recipient_name ?? 'Demo Customer') +
+        ', ' +
+        q(card.recipient_email ?? null) +
+        ', ' +
+        q(card.recipient_email ?? null) +
+        ", '" +
+        (isSession ? 'experience' : 'monetary') +
+        "', 'claimed', " +
+        card.original_value_minor +
+        ', ' +
+        (isSession ? 'null' : (card.balance_minor ?? card.original_value_minor)) +
+        ', ' +
+        totalSessions +
+        ', ' +
+        remaining +
+        ', ' +
+        (isSession ? (totalSessions ?? 0) - (remaining ?? 0) : 0) +
+        ", 'QAR', " +
+        q(card.expires_at ?? null) +
+        ', ' +
+        q(CUSTOMER_ID) +
+        ', ' +
+        q(card.created_at) +
+        ", 'opened', null, " +
+        q(card.message ?? null) +
+        ', ' +
+        q(card.created_at) +
+        ', ' +
+        q(card.created_at) +
+        ')',
+    );
+
+    ledgerValues.push(
+      '  (' +
+        q(uuidFor(card.id + ':issue')) +
+        ', ' +
+        q(voucherId) +
+        ", null, 'issue', " +
+        card.original_value_minor +
+        ', ' +
+        (isSession ? totalSessions : 0) +
+        ', ' +
+        q(card.created_at) +
+        ')',
+    );
+  },
+);
 
 push(orderValues.join(',\n') + ';');
 push('');
@@ -585,8 +710,95 @@ push('on conflict do nothing;');
 push('');
 
 // ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+push('-- ---------------------------------------------------------------------');
+push('-- Notifications for the demo customer');
+push('-- ---------------------------------------------------------------------');
+const NOTIFICATION_KINDS = [
+  ['received', 'notifications.received', 'notifications.receivedBody'],
+  ['delivered', 'notifications.delivered', 'notifications.deliveredBody'],
+  ['opened', 'notifications.opened', 'notifications.openedBody'],
+  ['redeemed', 'notifications.redeemed', 'notifications.redeemedBody'],
+  ['expiry', 'notifications.expiry', 'notifications.expiryBody'],
+  ['promo', 'notifications.promo', 'notifications.promoBody'],
+];
+push('insert into public.notifications (id, user_id, kind, title_key, body_key, payload, read_at, created_at) values');
+const notificationRows = NOTIFICATION_KINDS.map(
+  ([kind, titleKey, bodyKey], index) => {
+    const id = uuidFor('notification:' + kind);
+    const readAt = index < 2 ? q(daysFromNow(-1)) : 'null';
+    const payload = q(JSON.stringify({ gift_id: 'card-1' }));
+    return (
+      '  (' +
+      q(id) +
+      ", '" +
+      CUSTOMER_ID +
+      "', '" +
+      kind +
+      "', " +
+      q(titleKey) +
+      ', ' +
+      q(bodyKey) +
+      ', ' +
+      payload +
+      '::jsonb, ' +
+      readAt +
+      ', ' +
+      q(daysFromNow(-(index + 1))) +
+      ')'
+    );
+  },
+);
+push(notificationRows.join(',\n') + ';');
+push('');
+
+// ---------------------------------------------------------------------------
 // Campaigns
 // ---------------------------------------------------------------------------
+// A gift that can be claimed with a link, so the claim flow can be tested.
+push('-- ---------------------------------------------------------------------');
+push('-- A claimable gift for the public claim link');
+push('-- ---------------------------------------------------------------------');
+const CLAIM_TOKEN = 'giftly-demo-claim-token-0000000000000001';
+const claimVoucherId = uuidFor('voucher:claimable');
+const claimProduct = MOCK_OFFERS.find((offer) => offer.id === 'offer-1');
+push('insert into public.vouchers (');
+push('  id, voucher_code, qr_payload, claim_token_hash, product_id, vendor_id, buyer_id,');
+push('  recipient_name, recipient_email, fulfilment_type, status, initial_value_minor,');
+push('  remaining_value_minor, currency, expires_at, gift_message, created_at, updated_at');
+push(') values');
+push(
+  '  (' +
+    q(claimVoucherId) +
+    ', ' +
+    q('GFT-CLAIM01') +
+    ', ' +
+    q('giftly:redeem:GFT-CLAIM01') +
+    ', ' +
+    q(require('crypto').createHash('sha256').update(CLAIM_TOKEN).digest('hex')) +
+    ', ' +
+    q(uuidFor('offer-1')) +
+    ', ' +
+    q(uuidFor('vendor-1')) +
+    ', ' +
+    q(CUSTOMER_ID) +
+    ', ' +
+    q('Layla') +
+    ', ' +
+    q('layla@example.com') +
+    ", 'monetary', 'issued', 10000, 10000, 'QAR', " +
+    q(daysFromNow(365)) +
+    ', ' +
+    q('Enjoy a coffee on me') +
+    ', ' +
+    q(daysFromNow(-1)) +
+    ', ' +
+    q(daysFromNow(-1)) +
+    ');',
+);
+push('');
+
 push('-- ---------------------------------------------------------------------');
 push('-- Campaigns and featured placements');
 push('-- ---------------------------------------------------------------------');
@@ -606,7 +818,218 @@ push(
 push('on conflict (id) do nothing;');
 push('');
 
-push('commit;');
+
+// ---------------------------------------------------------------------------
+// Customer settings, saved cards, promo codes and gift baskets
+// ---------------------------------------------------------------------------
+push('-- ---------------------------------------------------------------------');
+push('-- Customer settings, saved cards and promo codes');
+push('-- ---------------------------------------------------------------------');
+push('insert into public.customer_addresses (id, customer_id, label, line1, city, postcode, is_default) values');
+push(
+  "  ('" +
+    uuidFor('address:home') +
+    "', '" +
+    CUSTOMER_ID +
+    "', 'Home', 'Al Corniche Street, Tower 2, Apt 804', 'Doha', '85000', true),",
+);
+push(
+  "  ('" +
+    uuidFor('address:work') +
+    "', '" +
+    CUSTOMER_ID +
+    "', 'Office', 'Al Shaab Street, Level 9', 'Doha', '98099', false)",
+);
+push('on conflict (id) do nothing;');
+push('');
+
+push('insert into public.customer_preferences (user_id, dark_mode, biometrics, privacy_analytics, privacy_personalised) values');
+push(
+  "  ('" +
+    CUSTOMER_ID +
+    "', false, true, true, true)",
+);
+push('on conflict (user_id) do nothing;');
+push('');
+
+push('insert into public.notification_preferences (user_id, gift_updates, promotions, expiry_reminders, email, push, sms) values');
+push(
+  "  ('" +
+    CUSTOMER_ID +
+    "', true, false, true, true, true, false)",
+);
+push('on conflict (user_id) do nothing;');
+push('');
+
+push('insert into public.payment_methods (id, customer_id, provider, brand, last4, expiry, is_default) values');
+push(
+  "  ('" +
+    uuidFor('pm:visa') +
+    "', '" +
+    CUSTOMER_ID +
+    "', 'card', 'Visa', '4242', '08/28', true),",
+);
+push(
+  "  ('" +
+    uuidFor('pm:mastercard') +
+    "', '" +
+    CUSTOMER_ID +
+    "', 'card', 'Mastercard', '8888', '11/27', false)",
+);
+push('on conflict (id) do nothing;');
+push('');
+
+push('insert into public.promo_codes (id, code, kind, value, min_subtotal_minor, max_redemptions, active) values');
+push(
+  "  ('" +
+    uuidFor('promo:gift10') +
+    "', 'GIFT10', 'percent', 10, 0, null, true),",
+);
+push(
+  "  ('" +
+    uuidFor('promo:welcome25') +
+    "', 'WELCOME25', 'percent', 25, 20000, 100, true),",
+);
+push(
+  "  ('" +
+    uuidFor('promo:expired') +
+    "', 'LASTYEAR', 'percent', 50, 0, null, false)",
+);
+push('on conflict (id) do nothing;');
+push('');
+
+// Gift baskets, with the cards inside and who contributed them.
+push('-- ---------------------------------------------------------------------');
+push('-- Gift baskets');
+push('-- ---------------------------------------------------------------------');
+const basketRows = [];
+const basketParticipantRows = [];
+const basketItemRows = [];
+const basketActivityRows = [];
+
+MOCK_BASKETS.forEach((basket) => {
+  const basketId = uuidFor(basket.id);
+  basketRows.push(
+    '  (' +
+      q(basketId) +
+      ', ' +
+      q(basket.code) +
+      ', ' +
+      q(basket.name) +
+      ', ' +
+      q(basket.recipient_name) +
+      ', ' +
+      q(basket.occasion) +
+      ", '" +
+      CUSTOMER_ID +
+      "', 'Demo Customer', " +
+      basket.target_minor +
+      ", '" +
+      basket.status +
+      "', " +
+      q(basket.note ?? null) +
+      ', ' +
+      q(basket.created_at) +
+      ', ' +
+      q(basket.completed_at) +
+      ')',
+  );
+
+  basket.participants.forEach((participant) => {
+    const userId =
+      participant.id === 'demo-user' ? CUSTOMER_ID : uuidFor('buyer:' + participant.name);
+    basketParticipantRows.push(
+      '  (' +
+        q(basketId) +
+        ', ' +
+        q(userId) +
+        ', ' +
+        q(participant.name) +
+        ', ' +
+        participant.is_owner +
+        ", '" +
+        participant.tone +
+        "', " +
+        q(participant.joined_at) +
+        ')',
+    );
+  });
+
+  basket.items.forEach((item) => {
+    const offer = MOCK_OFFERS.find((candidate) => candidate.id === item.offer_id);
+    const productId = uuidFor(item.offer_id);
+    basketItemRows.push(
+      '  (' +
+        q(uuidFor(item.id)) +
+        ', ' +
+        q(basketId) +
+        ', ' +
+        q(productId) +
+        ', ' +
+        q(uuidFor(offer?.vendor_id ?? 'vendor-1')) +
+        ', ' +
+        q(item.vendor_name) +
+        ', ' +
+        q(item.title) +
+        ', ' +
+        item.amount_minor +
+        ', ' +
+        q(item.icon ?? 'gift') +
+        ', ' +
+        q(item.tone ?? 'lavender') +
+        ', ' +
+        q(item.logo_url ?? null) +
+        ', ' +
+        q(item.banner_url ?? null) +
+        ', ' +
+        q(item.added_by_id === 'demo-user' ? CUSTOMER_ID : uuidFor('buyer:' + item.added_by_name)) +
+        ', ' +
+        q(item.added_by_name) +
+        ', ' +
+        q(item.added_at) +
+        ')',
+    );
+  });
+
+  basket.activity.forEach((entry) => {
+    basketActivityRows.push(
+      '  (' +
+        q(uuidFor(entry.id)) +
+        ', ' +
+        q(basketId) +
+        ", '" +
+        entry.kind +
+        "', " +
+        q(CUSTOMER_ID) +
+        ', ' +
+        q(entry.actor_name) +
+        ', ' +
+        q(entry.item_title ?? null) +
+        ', ' +
+        (entry.amount_minor ?? 'null') +
+        ', ' +
+        q(entry.created_at) +
+        ')',
+    );
+  });
+});
+
+push('insert into public.gift_baskets (id, code, name, recipient_name, occasion, creator_id, creator_name, target_minor, status, note, created_at, completed_at) values');
+push(basketRows.join(',\n'));
+push('on conflict (id) do nothing;');
+push('');
+push('insert into public.gift_basket_participants (basket_id, user_id, name, is_owner, tone, joined_at) values');
+push(basketParticipantRows.join(',\n'));
+push('on conflict (basket_id, user_id) do nothing;');
+push('');
+push('insert into public.gift_basket_items (id, basket_id, offer_id, vendor_id, vendor_name, title, amount_minor, emoji, tone, logo_url, banner_url, added_by, added_by_name, added_at) values');
+push(basketItemRows.join(',\n'));
+push('on conflict (id) do nothing;');
+push('');
+push('insert into public.gift_basket_activity (id, basket_id, kind, actor_id, actor_name, item_title, amount_minor, created_at) values');
+push(basketActivityRows.join(',\n'));
+push('on conflict (id) do nothing;');
+push('');
 push('');
 
 fs.writeFileSync(path.join(root, 'supabase/seed.sql'), lines.join('\n'));

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -6,17 +6,35 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/src/components/Button';
 import { QRCode } from '@/src/components/QRCode';
 import { Screen } from '@/src/components/Screen';
-import { DEMO_CLAIM } from '@/src/lib/claim';
+import { fetchClaimGift, type ClaimGift } from '@/src/lib/claim';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 export default function ClaimQrScreen() {
   const { t } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
+  const [gift, setGift] = useState<ClaimGift | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    fetchClaimGift(token)
+      .then((row) => active && setGift(row))
+      .catch(() => active && setGift(null))
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [token]);
+
 
   return (
     <Screen>
       <Text style={styles.title}>{t('claimExtra.qrTitle')}</Text>
-      <QRCode value={DEMO_CLAIM.code} />
+      <QRCode value={gift?.voucherCode ?? `giftly:redeem:${gift?.voucherId ?? ''}`} />
       <Text style={styles.hint}>{t('cards.scanHint')}</Text>
       <Text style={styles.privacy}>{t('cards.codeOnce')}</Text>
       <Button

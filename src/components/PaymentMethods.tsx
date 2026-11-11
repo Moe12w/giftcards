@@ -2,12 +2,13 @@
 // Shared card/wallet picker used by single-gift checkout and group-basket
 // contributions. The parent screen owns the actual "payment" action so both
 // flows can decide what to do once the charge succeeds.
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { formatMoney } from '../lib/money';
-import { MOCK_PAYMENT_METHODS } from '../lib/mock-data';
+import { addPaymentMethod, listPaymentMethods } from '../lib/data';
+import type { PaymentMethod } from '../lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '../theme';
 import { Button } from './Button';
 import { Card } from './Card';
@@ -22,8 +23,9 @@ interface PaymentMethodsProps {
 
 export function PaymentMethods({ amountMinor, onPay, payLabel, paying = false }: PaymentMethodsProps) {
   const { t, i18n } = useTranslation();
-  const [selected, setSelected] = useState(MOCK_PAYMENT_METHODS[0]?.id ?? 'new');
-  const [adding, setAdding] = useState(MOCK_PAYMENT_METHODS.length === 0);
+  const [methods, setMethods] = useState<PaymentMethod[]>([]);
+  const [selected, setSelected] = useState('new');
+  const [adding, setAdding] = useState(false);
   const [cardNumber, setCardNumber] = useState('');
   const [cardName, setCardName] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -32,6 +34,27 @@ export function PaymentMethods({ amountMinor, onPay, payLabel, paying = false }:
 
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
   const amountLabel = formatMoney(amountMinor, lang);
+
+  // The saved cards come from the database.
+  useEffect(() => {
+    let active = true;
+    listPaymentMethods()
+      .then((rows) => {
+        if (!active) return;
+        setMethods(rows);
+        setSelected(rows[0]?.id ?? 'new');
+        setAdding(rows.length === 0);
+      })
+      .catch(() => {
+        if (!active) return;
+        setMethods([]);
+        setSelected('new');
+        setAdding(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function pay() {
     if (adding) {
@@ -49,7 +72,7 @@ export function PaymentMethods({ amountMinor, onPay, payLabel, paying = false }:
   return (
     <View style={styles.wrapper}>
       <View style={styles.methods}>
-        {MOCK_PAYMENT_METHODS.map((method) => {
+        {methods.map((method) => {
           const active = selected === method.id && !adding;
           return (
             <Pressable

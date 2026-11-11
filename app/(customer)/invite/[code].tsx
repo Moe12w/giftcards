@@ -45,18 +45,16 @@ export default function InviteScreen() {
     if (ready && code && !basket) setError(true);
   }, [basket, code, ready]);
 
-  function join() {
+  async function join() {
     if (!basket) return;
     setJoining(true);
-    const joined = joinBasket(basket.code);
-    setTimeout(() => {
-      setJoining(false);
-      if (joined) {
-        router.replace(`/(customer)/basket/${joined.id}?invite=1`);
-      } else {
-        setError(true);
-      }
-    }, 350);
+    const joined = await joinBasket(basket.code);
+    setJoining(false);
+    if (joined) {
+      router.replace(`/(customer)/basket/${joined.id}?invite=1`);
+    } else {
+      setError(true);
+    }
   }
 
   if (!ready) {

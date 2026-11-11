@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -9,20 +9,35 @@ import { Card } from '@/src/components/Card';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
-import { MOCK_PAYMENT_METHODS } from '@/src/lib/mock-data';
+import { addPaymentMethod, listPaymentMethods, removePaymentMethod } from '@/src/lib/data';
+import type { PaymentMethod } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 
 export default function PaymentMethodsScreen() {
   const { t } = useTranslation();
-  const [methods, setMethods] = useState(MOCK_PAYMENT_METHODS);
+  const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [added, setAdded] = useState(false);
 
-  function add() {
-    setMethods((current) => [
-      ...current,
-      { id: `pm-${Date.now()}`, brand: 'Visa', last4: '0000', expiry: '12/30', isDefault: false },
-    ]);
-    setAdded(true);
+  const load = useCallback(async () => {
+    try {
+      setMethods(await listPaymentMethods());
+    } catch {
+      setMethods([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function add() {
+    try {
+      await addPaymentMethod({ brand: 'Visa', last4: '0000', expiry: '12/30' });
+      setAdded(true);
+      await load();
+    } catch {
+      setAdded(false);
+    }
   }
 
   return (

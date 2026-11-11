@@ -11,11 +11,12 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { ListRow } from '@/src/components/ListRow';
 import { Screen } from '@/src/components/Screen';
 import { useGiftDraft } from '@/src/lib/gift-draft';
-import { MOCK_RECIPIENTS } from '@/src/lib/mock-data';
+import { useRecipients } from '@/src/lib/recipients';
 import type { Recipient } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 export default function SendRecipientScreen() {
+  const { recipients } = useRecipients();
   const { t } = useTranslation();
   const { draft, update } = useGiftDraft();
 
@@ -42,7 +43,7 @@ export default function SendRecipientScreen() {
         </Card>
       ) : null}
 
-      {MOCK_RECIPIENTS.length === 0 ? (
+      {recipients.length === 0 ? (
         <EmptyState
           title={t('profile.noRecipients')}
           body={t('send.recipientSubtitle')}
@@ -51,7 +52,7 @@ export default function SendRecipientScreen() {
         />
       ) : (
         <View style={styles.list}>
-          {MOCK_RECIPIENTS.map((recipient) => (
+          {recipients.map((recipient) => (
             <Pressable
               key={recipient.id}
               onPress={() => choose(recipient)}

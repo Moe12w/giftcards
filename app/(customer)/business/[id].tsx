@@ -15,14 +15,15 @@ import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
 import { listActiveOffers } from '@/src/lib/data';
-import { MOCK_LOCATIONS } from '@/src/lib/mock-data';
-import type { AccentTone, Offer } from '@/src/lib/types';
+import { listVendorLocations } from '@/src/lib/data';
+import type { AccentTone, BusinessLocation, Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 
 export default function BusinessScreen() {
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [locations, setLocations] = useState<BusinessLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,9 +37,19 @@ export default function BusinessScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    if (!id) return;
+    listVendorLocations(id)
+      .then((rows) => active && setLocations(rows))
+      .catch(() => active && setLocations([]));
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
   const businessOffers = offers.filter((offer) => offer.vendor_id === id);
   const primary = businessOffers[0];
-  const locations = MOCK_LOCATIONS.filter((location) => location.vendorId === id);
   const tone = primary ? (offerTone(primary) as AccentTone) : 'lavender';
 
   return (

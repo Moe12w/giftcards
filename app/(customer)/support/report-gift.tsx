@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/src/components/Button';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
+import { createSupportRequest } from '@/src/lib/data';
 import { TextField } from '@/src/components/TextField';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
@@ -34,7 +35,14 @@ export default function ReportGiftScreen() {
           />
           <Button
             label={t('support.send')}
-            onPress={() => setSubmitted(true)}
+            onPress={async () => {
+              await createSupportRequest({
+                kind: 'report_gift',
+                body: message.trim(),
+                reference: giftId.trim() || null,
+              }).catch(() => undefined);
+              setSubmitted(true);
+            }}
             disabled={!message.trim()}
           />
         </>

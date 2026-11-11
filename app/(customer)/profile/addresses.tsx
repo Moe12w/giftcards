@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -9,36 +9,50 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
+import { addAddress, listAddresses, removeAddress } from '@/src/lib/data';
+import type { CustomerAddress } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
-
-interface Address {
-  id: string;
-  label: string;
-  line: string;
-  city: string;
-  zip: string;
-}
 
 export default function AddressesScreen() {
   const { t } = useTranslation();
-  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
   const [adding, setAdding] = useState(false);
   const [label, setLabel] = useState('');
   const [line, setLine] = useState('');
   const [city, setCity] = useState('');
   const [zip, setZip] = useState('');
 
-  function save() {
-    if (!line.trim()) return;
-    setAddresses((current) => [
-      ...current,
-      { id: `address-${Date.now()}`, label: label || t('profile.addresses'), line, city, zip },
-    ]);
+  const load = useCallback(async () => {
+    try {
+      setAddresses(await listAddresses());
+    } catch {
+      setAddresses([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function save() {
+    if (!line.trim() || !city.trim()) return;
+    try {
+      await addAddress({
+        label: label.trim() || t('profile.addresses'),
+        line1: line.trim(),
+        city: city.trim(),
+        postcode: zip.trim() || null,
+        isDefault: addresses.length === 0,
+      });
+    } catch {
+      // The list is reloaded below either way.
+    }
     setAdding(false);
     setLabel('');
     setLine('');
     setCity('');
     setZip('');
+    await load();
   }
 
   return (
@@ -57,9 +71,9 @@ export default function AddressesScreen() {
           {addresses.map((address) => (
             <Card key={address.id} style={styles.card}>
               <Text style={styles.label}>{address.label}</Text>
-              <Text style={styles.line}>{address.line}</Text>
+              <Text style={styles.line}>{address.line1}</Text>
               <Text style={styles.meta}>
-                {address.city} {address.zip}
+                {address.city} {address.postcode ?? ''}
               </Text>
             </Card>
           ))}

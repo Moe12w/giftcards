@@ -353,7 +353,9 @@
       "thankYou": "Thank you",
       "congrats": "Congrats",
       "justBecause": "Just because"
-    }
+    },
+    "deliveryWhatsapp": "WhatsApp",
+    "deliveryWhatsappBody": "Send the gift card to a WhatsApp number."
   },
   "offer": {
     "title": "Offer",
@@ -480,7 +482,21 @@
     "transactionIssue": "Gift card issued",
     "transactionRedeem": "Redeemed at {{vendor}}",
     "transactionRefund": "Refunded",
-    "transactionVoid": "Card voided"
+    "transactionVoid": "Card voided",
+    "giftCardsCount": "Gift cards",
+    "toUse": "To use",
+    "used": "Used up",
+    "yourCards": "Your gift cards",
+    "pastCards": "Past gift cards",
+    "transactionsTitle": "Transactions",
+    "transactionsSubtitle": "Everything that was redeemed",
+    "transactionsCount_one": "{{count}} transaction",
+    "transactionsCount_other": "{{count}} transactions",
+    "viewTransactions": "View transactions",
+    "noTransactionsTitle": "No transactions yet",
+    "noTransactionsBody": "When a gift card is used, the redemption shows up here.",
+    "transactionSession": "{{count}} session used for {{name}}",
+    "transactionValue": "{{amount}} used for {{name}}"
   },
   "orders": {
     "title": "Orders",
@@ -979,7 +995,12 @@
     "sendSummaryValue": "{{count}} gift cards · {{amount}}",
     "sendEmptyHint": "Add at least one gift card before sending.",
     "onlyOwnerTitle": "Only the creator can send",
-    "onlyOwnerBody": "The basket creator sends the finished box to the recipient."
+    "onlyOwnerBody": "The basket creator sends the finished box to the recipient.",
+    "sendWhatsapp": "Send on WhatsApp",
+    "sendWhatsappBody": "We will send the gift box to this number on WhatsApp.",
+    "whatsappNumber": "Enter a WhatsApp number with the country code.",
+    "whatsappNumberLabel": "WhatsApp number",
+    "whatsappMessage": "Hi {{name}}, here is your gift box: {{link}}"
   },
   "sessions": {
     "remaining": "Sessions left",
