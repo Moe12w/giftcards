@@ -198,35 +198,35 @@ export const VENDOR_SCRIPT: TutorialScript = {
 export const ENTERPRISE_SCRIPT: TutorialScript = {
   id: 'enterprise',
   title: 'How Giftly works for a partner',
-  titleAr: 'كيف تعمل جيفتلي للشريك المؤسسي',
+  titleAr: 'كيف تعمل جيفتلي للشريك',
   intro:
-    'You sell pre-paid codes to your own people. This guide covers the whole path: from defining your reward, to importing the codes, to seeing which ones were redeemed.',
+    'You bring the codes you already generated. We put them in the app, sell them like any other gift, and keep track of what is still out there and what has been used.',
   introAr:
-    'تبيع رموزاً مدفوعة مسبقاً لفريقك. يشرح هذا الدليل المسار كاملاً: من تعريف المكافأة، إلى استيراد الرموز، إلى معرفة أيها استُبدل.',
+    'أنت تجلب الأكواد التي أنشأتها بالفعل. نعرضها في التطبيق ونبيعها كأي هدية، ونتابع ما تبقى منها وما استُخدم.',
   steps: [
     {
       id: 'lifecycle',
       art: 'lifecycle',
-      title: 'The journey of one code',
-      titleAr: 'رحلة رمز واحد',
+      title: 'You are a marketplace for your own codes',
+      titleAr: 'أنت سوق لأكوادك أنت',
       body:
-        'You define a reward, import the codes your vendor issued, and each time somebody buys one the code leaves your inventory. When the vendor confirms a redemption, the code is closed.',
+        'Your codes come from your system, not ours. We list them in the app, a customer buys one like any gift, they use it in your app, and we close it. That is the whole job.',
       bodyAr:
-        'تعرّف مكافأة، وتستورد الرموز التي أصدرها شريكك، ومع كل عملية شراء يخرج رمز من مخزونك. وعندما يؤكد الشريك الاستبدال يُغلق الرمز.',
+        'أكوادك تأتي من نظامك، لا من عندنا. نعرضها في التطبيق، ويشتريها العميل كأي هدية، يستخدمها في تطبيقك، ونغلقها. هذه هي المهمة كلها.',
       href: '/enterprise',
     },
     {
       id: 'types',
       art: 'types',
-      title: 'Why codes, not gift cards',
-      titleAr: 'لماذا الرموز لا بطاقات الهدايا',
+      title: 'How your codes are different',
+      titleAr: 'كيف تختلف أكوادك',
       body:
-        'A corporate code is a pre-paid balance you bought in bulk. It is worth a fixed amount, it is encrypted in our database, and it is revealed to the person who receives it. Customers never choose the amount.',
+        'A partner code is one time and one value. We never validate it and we never measure it: when it is used, the whole value is spent. There is no partial spending and no session count.',
       bodyAr:
-        'الرمز المؤسسي هو رصيد مدفوع مسبقاً اشتريته بالجملة. له قيمة محددة، ومشفّر في قاعدة بياناتنا، ويُكشف لمن يستلمه. ولا يختار العميل المبلغ أبداً.',
-      tip: 'Only the last four digits are visible in your dashboard, to everyone, including your team.',
-      tipAr: 'لا يظهر في لوحتك سوى آخر أربعة أرقام، للجميع بما فيهم فريقك.',
-      href: '/enterprise/products/new',
+        'الرمز المؤسسي يُستخدم مرة واحدة وبقيمة واحدة. نحن لا نتحقق منه ولا نقيسه: عند استخدامه تُنفق القيمة كاملة. لا إنفاق جزئي ولا عد جلسات.',
+      tip: 'You do not need to send us a report for every gift. A single list at the end of the day is enough.',
+      tipAr: 'لا تحتاج إلى إرسال تقرير لكل هدية. قائمة واحدة في نهاية اليوم تكفي.',
+      href: '/enterprise/inventory',
     },
     {
       id: 'setup',
@@ -234,79 +234,81 @@ export const ENTERPRISE_SCRIPT: TutorialScript = {
       title: 'Set up the company',
       titleAr: 'جهّز بيانات الشركة',
       body:
-        'Fill in the company profile so delivery messages and paperwork use the right name and contact. Your team members get their own login and role, so you can keep an eye on who imports codes.',
+        'Fill in the company profile so delivery messages and paperwork use the right name and contact. Your team gets its own logins and roles.',
       bodyAr:
-        'أكمل ملف الشركة حتى تستخدم رسائل التسليم والأوراق الاسم وجهات التواصل الصحيحة. ويحصل أعضاء فريقك على دخولهم ودورهم الخاص لمتابعة من يستورد الرموز.',
+        'أكمل ملف الشركة حتى تستخدم رسائل التسليم والأوراق الاسم وجهات التواصل الصحيحة. ويحصل فريقك على دخوله وأدواره.',
       href: '/enterprise/settings',
     },
     {
       id: 'product',
       art: 'create',
-      title: 'Define the reward',
-      titleAr: 'عرّف المكافأة',
+      title: 'Define the reward and the price',
+      titleAr: 'عرّف المكافأة والسعر',
       body:
-        'A reward product holds the face value, your selling price and the commission for one code. The denomination here is the value every imported code will carry.',
+        'A product holds the face value of one of your codes and the price the customer pays. You set the price, Giftly takes its cut, and the rest is yours. Saving it publishes the gift in the app straight away.',
       bodyAr:
-        'منتج المكافأة يحمل قيمة الرمز وسعر البيع والعمولة. القيمة هنا هي ما سيحمله كل رمز مستورد.',
+        'يحدد المنتج قيمة الرمز الواحد والسعر الذي يدفعه العميل. أنت تحدد السعر، وتأخذ جيفتلي حصتها، والباقي لك. وبالحفظ يظهر المنتج في التطبيق مباشرة.',
+      tip: 'The gift in the app always follows this price, so your two screens can never drift apart.',
+      tipAr: 'الهدية في التطبيق تتبع هذا السعر دائماً، فلا يتعارض سجلاك أبداً.',
       href: '/enterprise/products',
     },
     {
       id: 'import',
       art: 'import',
-      title: 'Import the codes',
-      titleAr: 'استورد الرموز',
+      title: 'Bring your codes',
+      titleAr: 'استورد أكوادك',
       body:
-        'Paste your codes, one per line, against the right product. We check for duplicates, reject invalid rows, encrypt each code and keep only the last four digits readable.',
+        'Paste the codes you generated, one per line. We encrypt each one, check for duplicates, and keep only the last four digits readable in the dashboard.',
       bodyAr:
-        'الصق رموزك، رمزاً في كل سطر، أمام المنتج الصحيح. نتحقق من التكرار، ونرفض الصفوف غير الصالحة، ونشفّر كل رمز ولا يبقى منه إلا آخر أربعة أرقام.',
+        'الصق الأكواد التي أنشأتها، رمزاً في كل سطر. نشفّر كل رمز، ونتحقق من التكرار، ولا يبقى منه إلا آخر أربعة أرقام في اللوحة.',
       tip: 'Import in batches of a few thousand. Each batch is reported so you can see what was accepted.',
       tipAr: 'استورد على دفعات بضعة آلاف. يُبلَّغ عن كل دفعة لتعرف ما قُبل منها.',
       href: '/enterprise/import',
     },
     {
-      id: 'allocate',
+      id: 'sell',
       art: 'sell',
-      title: 'A code is allocated',
-      titleAr: 'تم تخصيص رمز',
+      title: 'It sells like any other gift',
+      titleAr: 'تُباع كأي هدية',
       body:
-        'When an order is paid, the system reserves one available code for it and hides the full code until the recipient receives it. Your inventory count drops by one and the order appears in reports.',
+        'When a customer pays for one of your gifts, we reserve one of your codes and hand it to them. It is not ours and it never was: it is your code, and we keep the record of it.',
       bodyAr:
-        'عند دفع الطلب يحجز النظام رمزاً متاحاً له، ويُخفى الرمز الكامل حتى يصل إلى المستلم. ينقص عدد مخزونك واحداً، ويظهر الطلب في التقارير.',
+        ' عندما يدفع العميل ثمن إحدى هداياك، نحجز أحد أكوادك ونسلّمه له. الرمز ليس لنا ولن يكون: هو رمزك، ونحن نتابعه فقط.',
       href: '/enterprise/reports',
     },
     {
-      id: 'redeem',
+      id: 'use',
       art: 'redeem',
-      title: 'Your vendor redeems it',
-      titleAr: 'يستبدله شريكك',
+      title: 'The customer uses it in your app',
+      titleAr: 'العميل يستخدمه في تطبيقك',
       body:
-        'The vendor scans the code at their counter and the spend is recorded against the code. Until your partner confirms the redemption in a report, the code is only marked as delivered.',
+        'They type your code into your app and your system spends it. On our side the gift simply closes, in full, either because they tapped "I have used this" or because you told us later.',
       bodyAr:
-        'يمسح شريكك الرمز عند كاونتره ويُسجَّل الإنفاق على الرمز. وحتى يؤكد شريكك الاستبدال في تقرير، لا يُعتبر الرمز سوى مسلَّم.',
+        'يكتب العميل رمزك في تطبيقك وينفذه نظامك. وعندنا تُغلق الهدية ببساطة وبالكامل، إما لأن العميل ضغط «استخدمت هذا» أو لأن أخبرتنا لاحقاً.',
+      tip: 'Nothing is measured, so there is no percentage to argue about.',
+      tipAr: 'لا نقيس شيئاً، فلا يوجد نسبة يمكن الخلاف عليها.',
       href: '/enterprise/inventory',
     },
     {
-      id: 'reconcile',
+      id: 'report',
       art: 'reconcile',
-      title: 'Reconcile the month',
-      titleAr: 'طابق بيانات الشهر',
+      title: 'Report the codes your app used',
+      titleAr: 'أبلغ عن الأكواد التي استخدمها تطبيقك',
       body:
-        'Paste the inventory references from your vendor or their report and every matching code is closed as redeemed. Rows that do not match are skipped and listed, so nothing is closed by mistake.',
+        'Paste the references of the codes your app consumed. Every one of them closes, and the gift the customer bought closes with it.',
       bodyAr:
-        'الصق مراجع المخزون من شريكك أو من تقريره، فيُغلق كل رمز مطابق كمستبدل. وتُتخطى الصفوف غير المطابقة وتُدرج لك، فلا يُغلق شيء بالخطأ.',
-      tip: 'Reconciliation is permanent. Only import a report you trust.',
-      tipAr: 'المطابقة دائمة، فاستورد فقط تقريراً تثق به.',
+        'الصق مراجع الأكواد التي استهلكها تطبيقك. كل رمز يُغلق، وتُغلق معه الهدية التي اشتراها العميل.',
       href: '/enterprise/import',
     },
     {
-      id: 'report',
+      id: 'money',
       art: 'report',
-      title: 'Report to finance',
-      titleAr: 'ارفع التقرير للمحاسبة',
+      title: 'The money',
+      titleAr: 'المال',
       body:
-        'Reports show what is still available, what is allocated and what has been redeemed, and you can export the detail as a CSV for finance at any time.',
+        'You set the price, Giftly takes a cut of every code that sells, and the rest is yours. The codes still sitting in your inventory are stock, not a debt: they turn into money when someone buys one.',
       bodyAr:
-        'تعرض التقارير ما هو متاح وما تم تخصيصه وما استُبدل، ويمكنك تصدير التفاصيل بصيغة CSV للمحاسبة في أي وقت.',
+        'أنت تحدد السعر، وتأخذ جيفتلي حصتها من كل رمز يُباع، والباقي لك. والأكواد المتبقية في مخزونك بضاعة لا دين: تتحول إلى مال عند بيع أحدها.',
       href: '/enterprise/reports',
     },
   ],

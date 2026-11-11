@@ -453,7 +453,13 @@
     "scanHint": "Show this code at the vendor counter",
     "codeOnce": "Keep this code private. Anyone with it can spend the card.",
     "walletNotConfigured": "Wallet passes become available once the backend is connected.",
-    "details": "Card details"
+    "details": "Card details",
+    "partnerCodeTitle": "Your code",
+    "partnerCodeShow": "Show the code",
+    "partnerCodeHint": "Type this code in the {{partner}} app to spend the credit.",
+    "partnerCodeUsed": "I have used this",
+    "partnerCodeClosed": "Used. This code is closed.",
+    "partnerCodeMissing": "We could not read the code. Try again."
   },
   "gifts": {
     "title": "My gifts",

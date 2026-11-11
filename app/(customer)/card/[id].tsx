@@ -29,13 +29,42 @@ const statusTone: Record<CardStatus, BadgeTone> = {
 export default function CardDetailScreen() {
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { ready, getCard, sessionsLeft, valueLeft, canRedeem } = useCards();
+  const { ready, getCard, sessionsLeft, valueLeft, canRedeem, revealPartnerCode, markPartnerCodeUsed } =
+    useCards();
   const [card, setCard] = useState<GiftCard | null>(null);
+  const [partnerCode, setPartnerCode] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     setCard(getCard(id));
   }, [getCard, id]);
+
+  const isPartnerCode = card?.fulfilment_type === 'enterprise_code';
+
+  async function showPartnerCode() {
+    if (!card) return;
+    setCodeError(false);
+    const code = await revealPartnerCode(card.id);
+    if (code) {
+      setPartnerCode(code);
+      return;
+    }
+    setCodeError(true);
+  }
+
+  async function markUsed() {
+    if (!card) return;
+    setBusy(true);
+    const done = await markPartnerCodeUsed(card.id);
+    setBusy(false);
+    if (done) {
+      setCard(getCard(card.id));
+    } else {
+      Alert.alert(t('common.errorGeneric'));
+    }
+  }
 
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
 
@@ -104,7 +133,37 @@ export default function CardDetailScreen() {
         </Text>
       </Card>
 
-      {redeemable ? (
+      {isPartnerCode ? (
+        <Card style={styles.qrCard}>
+          <Text style={styles.qrTitle}>{t('cards.partnerCodeTitle')}</Text>
+          {partnerCode ? (
+            <Text style={styles.partnerCode} selectable>
+              {partnerCode}
+            </Text>
+          ) : (
+            <Text style={styles.qrHint}>
+              {t('cards.partnerCodeHint', { partner: card?.partner_name ?? 'the partner' })}
+            </Text>
+          )}
+          {card?.status === 'redeemed' ? (
+            <Text style={styles.qrHint}>{t('cards.partnerCodeClosed')}</Text>
+          ) : null}
+          {codeError ? <Text style={styles.qrHint}>{t('cards.partnerCodeMissing')}</Text> : null}
+          {card?.status !== 'redeemed' ? (
+            <View style={styles.partnerActions}>
+              {!partnerCode ? (
+                <Button label={t('cards.partnerCodeShow')} onPress={showPartnerCode} />
+              ) : null}
+              <Button
+                label={t('cards.partnerCodeUsed')}
+                variant="secondary"
+                onPress={markUsed}
+                disabled={busy}
+              />
+            </View>
+          ) : null}
+        </Card>
+      ) : redeemable ? (
         <Card style={styles.qrCard}>
           <Text style={styles.qrTitle}>{t('cards.showCode')}</Text>
           <QRCode value={redeemValue} />
@@ -177,4 +236,18 @@ const styles = StyleSheet.create({
   howCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   howText: { flex: 1, fontSize: fontSizes.sm, color: colors.text, lineHeight: 19 },
   privacy: { fontSize: fontSizes.xs, color: colors.textMuted, textAlign: 'center', lineHeight: 18 },
+  partnerCode: {
+    fontSize: fontSizes.xl,
+    fontWeight: '800',
+    color: colors.text,
+    letterSpacing: 2,
+    textAlign: 'center',
+    marginVertical: spacing.sm,
+  },
+  partnerActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    justifyContent: 'center',
+    marginTop: spacing.sm,
+  },
 });

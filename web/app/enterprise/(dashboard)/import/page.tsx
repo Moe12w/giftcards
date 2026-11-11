@@ -183,13 +183,13 @@ export default async function EnterpriseImportPage({
 
           <section className="panel">
             <div className="panel-head">
-              <h3>Reconcile redemptions</h3>
+              <h3>Report the codes your app used</h3>
               <FileSpreadsheet size={16} />
             </div>
             <div className="panel-body">
               <p className="small muted" style={{ marginBottom: 12 }}>
-                Paste the inventory references your vendor or redemption report confirms. Each matching
-                code is marked redeemed.
+                Paste the references of the codes your app has used. Each one closes, and the gift the
+                customer bought is marked used as well.
               </p>
               <form action={importEnterpriseRedemptions} style={{ display: 'grid', gap: 12 }}>
                 <div className="field">
@@ -203,12 +203,13 @@ export default async function EnterpriseImportPage({
                   />
                 </div>
                 <button className="btn" type="submit" disabled={!canManage}>
-                  Reconcile redemptions
+                  Report used codes
                 </button>
               </form>
               <div className="callout warn" style={{ marginTop: 12 }}>
-                <Info size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> This changes the
-                code status permanently. Only use a report you trust.
+                <Info size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> This closes the
+                codes permanently, and the customer&apos;s gift with them. Only report what your app
+                really used.
               </div>
             </div>
           </section>

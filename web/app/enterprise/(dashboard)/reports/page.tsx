@@ -67,6 +67,19 @@ export default async function EnterpriseReportsPage({
   const redeemedValue = redeemedInRange.reduce((sum, item) => sum + Number(item.denomination_minor ?? 0), 0);
   const soldValue = items.reduce((sum, item) => sum + Number(item.total_minor ?? 0), 0);
 
+  // The partner sets the price, Giftly takes its cut, the rest is theirs.
+  const commissionBps = products.length
+    ? Math.round(
+        products.reduce((sum, product) => sum + Number(product.commission_bps ?? 0), 0) /
+          products.length,
+      )
+    : 0;
+  const giftlyCut = Math.round((soldValue * commissionBps) / 10000);
+  const partnerNet = soldValue - giftlyCut;
+  const outstandingValue = inventory
+    .filter((item) => item.status === 'available')
+    .reduce((sum, item) => sum + Number(item.denomination_minor ?? 0), 0);
+
   const byProduct = new Map<
     string,
     { name: string; available: number; allocated: number; redeemed: number; availableValue: number }
@@ -135,16 +148,16 @@ export default async function EnterpriseReportsPage({
 
       <div className="kpi-grid">
         <Kpi
-          label="Allocated in period"
+          label="Sold to customers"
           value={String(allocatedInRange.length)}
-          hint={`${formatMoney(items.reduce((sum, item) => sum + Number(item.total_minor ?? 0), 0))} in paid orders`}
+          hint={`${formatMoney(soldValue)} in paid orders`}
           icon={<Wallet size={17} />}
           tone="lavender"
         />
         <Kpi
-          label="Confirmed redeemed"
+          label="Used by customers"
           value={String(redeemedInRange.length)}
-          hint={`${formatMoney(redeemedValue)} face value`}
+          hint={`${formatMoney(redeemedValue)} of credit spent`}
           icon={<ScanLine size={17} />}
           tone="mint"
         />
@@ -158,11 +171,50 @@ export default async function EnterpriseReportsPage({
         <Kpi
           label="Still available"
           value={String(inventory.filter((item) => item.status === 'available').length)}
-          hint="Across all products"
+          hint={`${formatMoney(outstandingValue)} of codes left to sell`}
           icon={<Wallet size={17} />}
           tone="coral"
         />
       </div>
+
+      <section className="panel" style={{ marginBottom: 20 }}>
+        <div className="panel-head">
+          <h3>Money</h3>
+          <span className="small muted">You set the price, Giftly takes a cut</span>
+        </div>
+        <div className="panel-body">
+          <div className="grid-3">
+            <div className="card mint">
+              <span className="small muted">Sold to customers</span>
+              <div className="strong" style={{ fontSize: '1.6rem', marginTop: 6 }}>
+                {formatMoney(soldValue)}
+              </div>
+              <span className="small muted">The price you set, times {items.length} codes sold</span>
+            </div>
+            <div className="card gold">
+              <span className="small muted">Giftly&apos;s cut</span>
+              <div className="strong" style={{ fontSize: '1.6rem', marginTop: 6 }}>
+                {formatMoney(giftlyCut)}
+              </div>
+              <span className="small muted">
+                {(commissionBps / 100).toFixed(2)}% of every code sold
+              </span>
+            </div>
+            <div className="card lavender">
+              <span className="small muted">Your share</span>
+              <div className="strong" style={{ fontSize: '1.6rem', marginTop: 6 }}>
+                {formatMoney(partnerNet)}
+              </div>
+              <span className="small muted">What is left for you, after our cut</span>
+            </div>
+          </div>
+          <div className="callout info" style={{ marginTop: 16 }}>
+            <Wallet size={15} style={{ display: 'inline', verticalAlign: '-2px' }} /> {formatMoney(outstandingValue)}{' '}
+            of codes are still unsold. That is your stock, not a debt: it becomes money when
+            someone buys it.
+          </div>
+        </div>
+      </section>
 
       <div className="dash-grid">
         <section className="panel">

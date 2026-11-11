@@ -23,7 +23,7 @@ export function EnterpriseProductForm({
           <input id="external_ref" name="external_ref" defaultValue={product?.external_ref ?? ''} placeholder="HR-2026-Q1" />
         </div>
         <div className="field">
-          <label htmlFor="denomination">Face value (QAR)</label>
+          <label htmlFor="denomination">Face value of one code (QAR)</label>
           <input
             id="denomination"
             name="denomination"
@@ -32,10 +32,10 @@ export function EnterpriseProductForm({
             defaultValue={product ? minorToInput(product.denomination_minor) : '250.00'}
             placeholder="250.00"
           />
-          <span className="hint">The value each code is worth.</span>
+          <span className="hint">What one of your codes is worth in your own app.</span>
         </div>
         <div className="field">
-          <label htmlFor="selling_price">Your selling price (QAR)</label>
+          <label htmlFor="selling_price">Price the customer pays (QAR)</label>
           <input
             id="selling_price"
             name="selling_price"
@@ -44,20 +44,10 @@ export function EnterpriseProductForm({
             defaultValue={product ? minorToInput(product.selling_price_minor) : '250.00'}
             placeholder="250.00"
           />
-          <span className="hint">What the code is sold for in your programme.</span>
+          <span className="hint">You set this. It is what the gift costs in the app.</span>
         </div>
         <div className="field">
-          <label htmlFor="wholesale_cost">Wholesale cost (QAR)</label>
-          <input
-            id="wholesale_cost"
-            name="wholesale_cost"
-            inputMode="decimal"
-            defaultValue={product?.wholesale_cost_minor != null ? minorToInput(product.wholesale_cost_minor) : ''}
-            placeholder="Optional"
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="commission_percent">Commission (%)</label>
+          <label htmlFor="commission_percent">Giftly&apos;s cut (%)</label>
           <input
             id="commission_percent"
             name="commission_percent"
@@ -65,7 +55,7 @@ export function EnterpriseProductForm({
             defaultValue={product ? (product.commission_bps / 100).toString() : '10'}
             placeholder="10"
           />
-          <span className="hint">Agreed corporate commission on this product.</span>
+          <span className="hint">Our share of every code that sells. You keep the rest.</span>
         </div>
         <div className="field">
           <label htmlFor="expiry_days">Code validity (days)</label>

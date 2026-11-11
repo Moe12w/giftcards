@@ -126,6 +126,8 @@ export interface GiftCard {
   /** Derived from ledger_entries, never stored on the row. */
   balance_minor?: number;
   vendor_name?: string;
+  /** Partner that issued a partner code (enterprise gifts only). */
+  partner_name?: string;
   offer_title?: string;
   /** Semantic glyph key from `src/lib/glyphs.ts`. */
   icon?: string;

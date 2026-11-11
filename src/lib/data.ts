@@ -81,7 +81,10 @@ export interface VoucherRow {
   gift_message: string | null;
   expires_at: string | null;
   created_at: string;
-  product?: { title: string | null; icon: string | null; tone: string | null } | { title: string | null; icon: string | null; tone: string | null }[] | null;
+  product?:
+    | { title: string | null; icon: string | null; tone: string | null; enterprise_products?: { name: string | null; enterprise_partners?: { name: string | null } | { name: string | null }[] | null } | null }
+    | { title: string | null; icon: string | null; tone: string | null; enterprise_products?: { name: string | null; enterprise_partners?: { name: string | null } | { name: string | null }[] | null } | null }[]
+    | null;
   vendor?: { name: string | null; logo_url: string | null } | { name: string | null; logo_url: string | null }[] | null;
 }
 
@@ -95,6 +98,8 @@ function firstRelation<T>(value: T | T[] | null | undefined): T | null {
 export function mapVoucher(row: VoucherRow): GiftCard {
   const product = firstRelation(row.product);
   const vendor = firstRelation(row.vendor);
+  const enterpriseProduct = firstRelation(product?.enterprise_products);
+  const partner = firstRelation(enterpriseProduct?.enterprise_partners);
   const status = ((): CardStatus => {
     switch (row.status) {
       case 'issued':
@@ -128,6 +133,7 @@ export function mapVoucher(row: VoucherRow): GiftCard {
     created_at: row.created_at,
     vendor_id: row.vendor_id ?? undefined,
     vendor_name: vendor?.name ?? undefined,
+    partner_name: partner?.name ?? undefined,
     offer_title: product?.title ?? undefined,
     icon: product?.icon ?? 'gift',
     tone: resolveTone(product?.tone),
@@ -148,7 +154,7 @@ export async function listMyVouchers(): Promise<GiftCard[]> {
   const { data, error } = await getSupabase()
     .from('vouchers')
     .select(
-      'id, voucher_code, qr_payload, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone), vendor:vendors(name, logo_url)',
+      'id, voucher_code, qr_payload, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, enterprise_products(name, enterprise_partners(name))), vendor:vendors(name, logo_url)',
     )
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -661,4 +667,35 @@ export async function removePaymentMethod(id: string): Promise<void> {
   if (!hasSupabaseConfig) return;
   const { error } = await getSupabase().from('payment_methods').delete().eq('id', id);
   if (error) throw error;
+}
+
+/* -------------------------------------------------------------------------
+ * Partner codes
+ *
+ * A partner (Snoonu, Talabat, Rafeeq) brings its own codes. We sell them like
+ * any other gift and the customer types the partner's code into the partner's
+ * app. We do not measure usage: using the code closes the whole value.
+ * ---------------------------------------------------------------------- */
+
+/** Reads the partner's own code so the customer can type it in. */
+export async function revealEnterpriseCode(voucherId: string): Promise<string | null> {
+  if (!hasSupabaseConfig) return null;
+  const { data, error } = await getSupabase().rpc('reveal_enterprise_code', {
+    p_voucher_id: voucherId,
+  });
+  if (error) throw error;
+  return typeof data === 'string' && data.length > 0 ? data : null;
+}
+
+/** Marks a partner gift as used. The whole value is spent. */
+export async function closeEnterpriseCode(
+  voucherId: string,
+): Promise<{ ok: boolean; reference?: string }> {
+  if (!hasSupabaseConfig) return { ok: false };
+  const { data, error } = await getSupabase().rpc('close_enterprise_code', {
+    p_voucher_id: voucherId,
+  });
+  if (error) throw error;
+  const result = (data ?? {}) as { status?: string; reference?: string };
+  return { ok: result.status === 'redeemed', reference: result.reference };
 }

@@ -453,7 +453,13 @@
     "scanHint": "أظهر هذا الرمز عند كاونتر المتجر",
     "codeOnce": "احتفظ بهذا الرمز سراً. أي شخص يملكه يمكنه إنفاق البطاقة.",
     "walletNotConfigured": "تتوفر بطاقات المحفظة بعد ربط الخادم.",
-    "details": "تفاصيل البطاقة"
+    "details": "تفاصيل البطاقة",
+    "partnerCodeTitle": "رمزك",
+    "partnerCodeShow": "أظهر الرمز",
+    "partnerCodeHint": "اكتب هذا الرمز في تطبيق {{partner}} لاستخدام الرصيد.",
+    "partnerCodeUsed": "استخدمت هذا الرمز",
+    "partnerCodeClosed": "تم الاستخدام. هذا الرمز مغلق.",
+    "partnerCodeMissing": "تعذر قراءة الرمز. حاول مرة أخرى."
   },
   "gifts": {
     "title": "هداياي",

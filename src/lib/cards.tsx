@@ -17,10 +17,12 @@ import React, {
 import { hasSupabaseConfig } from './env';
 import { useAuth } from './auth';
 import {
+  closeEnterpriseCode,
   listMyVouchers,
   listRedemptionsFor,
   redeemSessionOnServer,
   redeemValueOnServer,
+  revealEnterpriseCode,
 } from './data';
 import {
   canRedeemSession,
@@ -52,6 +54,10 @@ export interface CardsContextValue {
   redeemSession: (cardId: string, actor: string, note?: string) => Promise<boolean>;
   /** Spends an amount on a monetary voucher. */
   redeemValue: (cardId: string, amountMinor: number, actor: string) => Promise<boolean>;
+  /** Reads the partner's own code for a partner gift. */
+  revealPartnerCode: (cardId: string) => Promise<string | null>;
+  /** Marks a partner gift as used in the partner's app. */
+  markPartnerCodeUsed: (cardId: string) => Promise<boolean>;
   /** Re-reads the wallet from the database. */
   reload: () => Promise<void>;
 }
@@ -150,6 +156,28 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
     [load],
   );
 
+  const revealPartnerCode = useCallback(async (cardId: string) => {
+    try {
+      return await revealEnterpriseCode(cardId);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const markPartnerCodeUsed = useCallback(
+    async (cardId: string) => {
+      try {
+        const result = await closeEnterpriseCode(cardId);
+        if (!result.ok) return false;
+      } catch {
+        return false;
+      }
+      await load();
+      return true;
+    },
+    [load],
+  );
+
   // A voucher the customer received was claimed by them. A voucher they sent
   // was bought by them for somebody else.
   const receivedCards = useMemo(
@@ -192,6 +220,8 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       canRedeem,
       redeemSession,
       redeemValue,
+      revealPartnerCode,
+      markPartnerCodeUsed,
       reload: load,
     }),
     [
@@ -209,6 +239,8 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       canRedeem,
       redeemSession,
       redeemValue,
+      revealPartnerCode,
+      markPartnerCodeUsed,
       load,
     ],
   );

@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireEnterprise } from '@/lib/auth';
 import { parseMoneyToMinor } from '@/lib/money';
+import { slugify } from '@/lib/format';
+import { normalizeTone } from '@/lib/catalog';
 
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
@@ -39,6 +41,62 @@ function checkbox(formData: FormData, key: string): boolean {
   return formData.get(key) === 'on' || formData.get(key) === 'true';
 }
 
+/**
+ * Keeps the gift that customers see in the app in step with the partner's
+ * product: same name, the price the partner set, live or hidden.
+ */
+async function syncCatalogueProduct(
+  ctx: Awaited<ReturnType<typeof requireEnterprise>>,
+  enterpriseProductId: string,
+  values: {
+    name: string;
+    sellingPrice: number;
+    active: boolean;
+    terms: string | null;
+    instructions: string | null;
+  },
+) {
+  const slug = slugify(`${values.name}-${enterpriseProductId.slice(0, 6)}`);
+  const row = {
+    title: values.name,
+    slug,
+    description: values.instructions ?? values.terms,
+    fulfilment_type: 'enterprise_code',
+    vendor_id: null,
+    enterprise_product_id: enterpriseProductId,
+    min_amount_minor: values.sellingPrice,
+    max_amount_minor: values.sellingPrice,
+    preset_amounts_minor: [] as number[],
+    session_count: null,
+    currency: 'QAR',
+    expiry_days: null,
+    status: values.active ? 'published' : 'draft',
+    is_active: values.active,
+    icon: 'gift',
+    tone: 'teal',
+    occasions: [] as string[],
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data: existing } = await ctx.supabase
+    .from('products')
+    .select('id')
+    .eq('enterprise_product_id', enterpriseProductId)
+    .maybeSingle();
+
+  if (existing) {
+    await ctx.supabase.from('products').update(row).eq('id', existing.id);
+    return existing.id;
+  }
+
+  const { data: inserted } = await ctx.supabase
+    .from('products')
+    .insert(row)
+    .select('id')
+    .single();
+  return inserted?.id ?? null;
+}
+
 export async function saveEnterpriseProduct(formData: FormData) {
   const ctx = await requireEnterprise();
   if (ctx.role === 'analyst') {
@@ -49,20 +107,22 @@ export async function saveEnterpriseProduct(formData: FormData) {
   const name = str(formData, 'name');
   const denomination = moneyField(formData, 'denomination');
   const sellingPrice = moneyField(formData, 'selling_price');
-  const wholesale = moneyField(formData, 'wholesale_cost');
   const commissionPercent = Number(str(formData, 'commission_percent') || '0');
   const commissionBps = Math.round(commissionPercent * 100);
 
   if (!name) back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Give the product a name.');
   if (denomination === null || denomination <= 0) {
-    back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Enter a valid denomination.');
+    back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Enter a valid face value.');
   }
   if (sellingPrice === null || sellingPrice <= 0) {
-    back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Enter a valid selling price.');
+    back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Enter a valid price.');
   }
   if (!Number.isFinite(commissionPercent) || commissionPercent < 0 || commissionPercent > 100) {
-    back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Commission must be between 0 and 100%.');
+    back(id ? `/enterprise/products/${id}` : '/enterprise/products', "Giftly's cut must be between 0 and 100%.");
   }
+
+  // The partner sets the price, Giftly takes its cut, the rest is theirs.
+  const partnerNet = Math.round(sellingPrice * (1 - commissionBps / 10000));
 
   const patch = {
     name,
@@ -70,7 +130,7 @@ export async function saveEnterpriseProduct(formData: FormData) {
     denomination_minor: denomination,
     currency: 'QAR',
     selling_price_minor: sellingPrice,
-    wholesale_cost_minor: wholesale,
+    wholesale_cost_minor: partnerNet,
     commission_bps: commissionBps,
     terms_and_conditions: optional(formData, 'terms_and_conditions'),
     redemption_instructions: optional(formData, 'redemption_instructions'),
@@ -90,8 +150,16 @@ export async function saveEnterpriseProduct(formData: FormData) {
     }
     const { error } = await ctx.supabase.from('enterprise_products').update(patch).eq('id', id);
     if (error) back(`/enterprise/products/${id}`, error.message);
+    await syncCatalogueProduct(ctx, id, {
+      name,
+      sellingPrice,
+      active: checkbox(formData, 'is_active'),
+      terms: patch.terms_and_conditions,
+      instructions: patch.redemption_instructions,
+    });
     revalidatePath('/enterprise/products');
     revalidatePath(`/enterprise/products/${id}`);
+    revalidatePath('/admin/products');
     redirect(`/enterprise/products/${id}?saved=1`);
   }
 
@@ -103,7 +171,15 @@ export async function saveEnterpriseProduct(formData: FormData) {
   if (error || !inserted) {
     back('/enterprise/products', error?.message ?? 'Could not create the product.');
   }
+  await syncCatalogueProduct(ctx, inserted.id, {
+    name,
+    sellingPrice,
+    active: checkbox(formData, 'is_active'),
+    terms: patch.terms_and_conditions,
+    instructions: patch.redemption_instructions,
+  });
   revalidatePath('/enterprise/products');
+  revalidatePath('/admin/products');
   redirect(`/enterprise/products/${inserted.id}?saved=1`);
 }
 
@@ -121,7 +197,22 @@ export async function toggleEnterpriseProduct(formData: FormData) {
     .eq('id', id)
     .eq('partner_id', ctx.partner.id);
   if (error) back('/enterprise/products', error.message);
+
+  // The catalogue gift follows the same on/off switch.
+  const { data: linked } = await ctx.supabase
+    .from('products')
+    .select('id')
+    .eq('enterprise_product_id', id)
+    .maybeSingle();
+  if (linked) {
+    await ctx.supabase
+      .from('products')
+      .update({ is_active: active, status: active ? 'published' : 'draft', updated_at: new Date().toISOString() })
+      .eq('id', linked.id);
+  }
+
   revalidatePath('/enterprise/products');
+  revalidatePath('/admin/products');
   redirect('/enterprise/products?saved=1');
 }
 
