@@ -3689,3 +3689,15 @@ table.data .sub {
   background: #fff;
   object-fit: cover;
 }
+/* ------------------------------------------------------------------ */
+/* Pale chips keep the ink colour, even on a dark band                 */
+/* ------------------------------------------------------------------ */
+
+.cta-band .eyebrow,
+.card.ink .eyebrow,
+.cta-band .tag:not(.dark),
+.card.ink .tag:not(.dark),
+.auth-side .eyebrow,
+.auth-side .tag:not(.dark) {
+  color: var(--ink);
+}

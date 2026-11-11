@@ -166,6 +166,48 @@ export default function ExploreHomeScreen() {
           style={styles.search}
         />
 
+        {/* Featured businesses */}
+        <SectionHeader
+          title={t('discovery.featuredBusinesses')}
+          actionLabel={t('common.seeAll')}
+          onAction={() => router.push('/(customer)/collection/featured-businesses')}
+        />
+        {loading ? (
+          <ActivityIndicator color={colors.teal} style={styles.loader} />
+        ) : error ? (
+          <Card tone="pink" style={styles.errorCard}>
+            <EmptyState
+              title={t('states.error.title')}
+              body={t('states.error.body')}
+              icon="warning"
+              tone="pink"
+            />
+            <Button label={t('common.retry')} onPress={() => router.replace('/(customer)/(tabs)')} />
+          </Card>
+        ) : businesses.length === 0 ? (
+          <EmptyState
+            title={t('home.noOffers')}
+            body={t('home.noOffersBody')}
+            icon="warning"
+            tone="lavender"
+          />
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.hScrollOuter}
+            contentContainerStyle={styles.hScrollFeatured}
+          >
+            {businesses.map((offer) => (
+              <FeaturedBusinessCard
+                key={offer.vendor_id}
+                offer={offer}
+                onPress={() => router.push(`/(customer)/business/${offer.vendor_id}`)}
+              />
+            ))}
+          </ScrollView>
+        )}
+
         {/* Active basket strip */}
         {activeBasket ? (
           <Pressable
@@ -273,48 +315,6 @@ export default function ExploreHomeScreen() {
             />
           ))}
         </ScrollView>
-
-        {/* Featured businesses */}
-        <SectionHeader
-          title={t('discovery.featuredBusinesses')}
-          actionLabel={t('common.seeAll')}
-          onAction={() => router.push('/(customer)/collection/featured-businesses')}
-        />
-        {loading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
-        ) : error ? (
-          <Card tone="pink" style={styles.errorCard}>
-            <EmptyState
-              title={t('states.error.title')}
-              body={t('states.error.body')}
-              icon="warning"
-              tone="pink"
-            />
-            <Button label={t('common.retry')} onPress={() => router.replace('/(customer)/(tabs)')} />
-          </Card>
-        ) : businesses.length === 0 ? (
-          <EmptyState
-            title={t('home.noOffers')}
-            body={t('home.noOffersBody')}
-            icon="warning"
-            tone="lavender"
-          />
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.hScrollOuter}
-            contentContainerStyle={styles.hScroll}
-          >
-            {businesses.map((offer) => (
-              <FeaturedBusinessCard
-                key={offer.vendor_id}
-                offer={offer}
-                onPress={() => router.push(`/(customer)/business/${offer.vendor_id}`)}
-              />
-            ))}
-          </ScrollView>
-        )}
 
         {/* Trending */}
         <SectionHeader
@@ -515,6 +515,11 @@ const styles = StyleSheet.create({
   // and last card still line up with the page margin.
   hScrollOuter: { marginHorizontal: -spacing.gutter },
   hScroll: { gap: spacing.sm, paddingHorizontal: spacing.gutter },
+  hScrollFeatured: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.gutter,
+    justifyContent: 'flex-end',
+  },
   loader: { marginVertical: spacing.lg },
   list: { gap: spacing.sm },
   errorCard: { gap: spacing.sm },
