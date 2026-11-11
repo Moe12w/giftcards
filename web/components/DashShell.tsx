@@ -375,7 +375,12 @@ function DashShellInner({
           </button>
           <div className="title">
             <span>{portalLabel}</span>
-            <strong>{workspaceName}</strong>
+            <span className="dash-top-name">
+              {workspaceLogoUrl ? (
+                <img className="dash-top-logo" src={workspaceLogoUrl} alt="" />
+              ) : null}
+              <strong>{workspaceName}</strong>
+            </span>
           </div>
           <div className="btn-row">
             <button
