@@ -19,6 +19,7 @@ export async function StatusTag({ status }: { status: string | null | undefined 
       ? 'success'
       : value === 'pending' ||
           value === 'pending_review' ||
+          value === 'pending_approval' ||
           value === 'processing' ||
           value === 'reserved' ||
           value === 'claimed' ||

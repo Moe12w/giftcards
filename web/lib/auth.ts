@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import type {
+  BusinessAccount,
   EnterpriseMember,
   EnterprisePartner,
   Profile,
@@ -192,4 +193,53 @@ export async function requireAdmin(): Promise<AdminContext> {
     user,
     profile: (profile as Profile | null) ?? null,
   };
+}
+
+export interface BusinessBuyerContext {
+  supabase: SupabaseClient;
+  user: User;
+  profile: Profile | null;
+  account: BusinessAccount | null;
+}
+
+/**
+ * Loads the signed-in user's business/bulk-buyer account (if any).
+ * Used for registration status pages and the bulk buyer portal.
+ */
+export async function getBusinessBuyerContext(): Promise<BusinessBuyerContext | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const [{ data: profile }, { data: account }] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+    supabase.from('business_accounts').select('*').eq('user_id', user.id).maybeSingle(),
+  ]);
+
+  return {
+    supabase,
+    user,
+    profile: (profile as Profile | null) ?? null,
+    account: (account as BusinessAccount | null) ?? null,
+  };
+}
+
+/**
+ * Guards /business pages. Requires an approved business account to access
+ * restricted bulk offers, pricing and bulk purchasing.
+ */
+export async function requireApprovedBusinessBuyer(): Promise<
+  Omit<BusinessBuyerContext, 'account'> & { account: BusinessAccount }
+> {
+  const ctx = await getBusinessBuyerContext();
+  if (!ctx) redirect('/business/login');
+
+  if (!ctx.account) redirect('/business/register');
+  if (ctx.account.status !== 'approved') {
+    redirect(`/business/status?status=${encodeURIComponent(ctx.account.status)}`);
+  }
+
+  return { ...ctx, account: ctx.account };
 }

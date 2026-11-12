@@ -953,3 +953,199 @@ export async function removeVendorImage(kind: 'logo' | 'banner'): Promise<ImageA
 
   return { ok: true };
 }
+/* -------------------------------------------------------------------------
+ * Bulk products (corporate/bulk buyer offers)
+ * ---------------------------------------------------------------------- */
+
+function parseBulkTiers(raw: string): Array<{ min: number; max: number | null; priceMinor: number }> {
+  return raw
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .flatMap((line) => {
+      // Formats: "10-49|90", "50+|85", "10|49|90"
+      const parts = line.split('|').map((p) => p.trim());
+      if (parts.length < 2) return [];
+      let min = 0;
+      let max: number | null = null;
+      let priceRaw = parts[parts.length - 1];
+      const range = parts[0];
+      if (parts.length === 3) {
+        min = Number.parseInt(parts[0], 10) || 0;
+        max = parts[1] ? Number.parseInt(parts[1], 10) || null : null;
+      } else if (range.includes('-')) {
+        const [a, b] = range.split('-').map((x) => x.trim());
+        min = Number.parseInt(a, 10) || 0;
+        max = b ? Number.parseInt(b, 10) || null : null;
+      } else if (range.endsWith('+')) {
+        min = Number.parseInt(range.slice(0, -1), 10) || 0;
+        max = null;
+      } else {
+        min = Number.parseInt(range, 10) || 0;
+      }
+      try {
+        const priceMinor = parseMoneyToMinor(priceRaw);
+        if (!priceMinor || priceMinor <= 0 || min <= 0) return [];
+        return [{ min, max, priceMinor }];
+      } catch {
+        return [];
+      }
+    })
+    .sort((a, b) => a.min - b.min);
+}
+
+export async function createBulkOffer(formData: FormData) {
+  const ctx = await requireVendor();
+  if (ctx.role === 'redemption_staff') {
+    back('/vendor/bulk-products', 'Only owners and managers can create bulk offers.');
+  }
+
+  const productId = str(formData, 'product_id');
+  const title = str(formData, 'title');
+  if (!productId) back('/vendor/bulk-products/new', 'Select an underlying gift card product.');
+  if (title.length < 2) back('/vendor/bulk-products/new', 'Offer title is required.');
+
+  const faceValue = moneyField(formData, 'face_value');
+  const basePrice = moneyField(formData, 'base_unit_price');
+  const minQty = intField(formData, 'min_quantity') ?? 1;
+  if (!faceValue || faceValue <= 0) back('/vendor/bulk-products/new', 'Face value must be greater than zero.');
+  if (!basePrice || basePrice < 0) back('/vendor/bulk-products/new', 'Bulk selling price is required.');
+
+  const { data: product } = await ctx.supabase
+    .from('products')
+    .select('id')
+    .eq('id', productId)
+    .eq('vendor_id', ctx.vendor.id)
+    .maybeSingle();
+  if (!product) back('/vendor/bulk-products/new', 'That product does not belong to this vendor.');
+
+  const payload = {
+    vendor_id: ctx.vendor.id,
+    product_id: productId,
+    title,
+    description: optional(formData, 'description'),
+    image_url: optional(formData, 'image_url'),
+    face_value_minor: faceValue,
+    base_unit_price_minor: basePrice,
+    currency: 'QAR',
+    min_quantity: Math.max(1, minQty),
+    max_quantity: intField(formData, 'max_quantity'),
+    available_quantity: intField(formData, 'available_quantity'),
+    min_order_value_minor: moneyField(formData, 'min_order_value'),
+    max_order_value_minor: moneyField(formData, 'max_order_value'),
+    starts_at: optional(formData, 'starts_at'),
+    ends_at: optional(formData, 'ends_at'),
+    expires_at: optional(formData, 'expires_at'),
+    delivered_digitally: checkbox(formData, 'delivered_digitally'),
+    additional_conditions: optional(formData, 'additional_conditions'),
+    status: checkbox(formData, 'publish') ? 'active' : 'draft',
+    enabled: checkbox(formData, 'publish'),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data: offer, error } = await ctx.supabase
+    .from('bulk_offers')
+    .insert(payload)
+    .select('id')
+    .single();
+
+  if (error || !offer) back('/vendor/bulk-products/new', error?.message ?? 'Could not create bulk offer.');
+
+  const tiers = parseBulkTiers(str(formData, 'tiers'));
+  if (tiers.length > 0) {
+    const rows = tiers.map((t, i) => ({
+      offer_id: offer.id,
+      min_quantity: t.min,
+      max_quantity: t.max,
+      unit_price_minor: t.priceMinor,
+      sort_order: i,
+    }));
+    const { error: tierError } = await ctx.supabase.from('bulk_offer_price_tiers').insert(rows);
+    if (tierError) back(`/vendor/bulk-products/${offer.id}`, tierError.message);
+  }
+
+  revalidatePath('/vendor/bulk-products');
+  redirect(`/vendor/bulk-products/${offer.id}?saved=1`);
+}
+
+export async function updateBulkOffer(formData: FormData) {
+  const ctx = await requireVendor();
+  if (ctx.role === 'redemption_staff') {
+    back('/vendor/bulk-products', 'Only owners and managers can edit bulk offers.');
+  }
+
+  const offerId = str(formData, 'offer_id');
+  const title = str(formData, 'title');
+  if (!offerId) back('/vendor/bulk-products', 'Missing offer.');
+  if (title.length < 2) back(`/vendor/bulk-products/${offerId}`, 'Offer title is required.');
+
+  const faceValue = moneyField(formData, 'face_value');
+  const basePrice = moneyField(formData, 'base_unit_price');
+  const minQty = intField(formData, 'min_quantity') ?? 1;
+  if (!faceValue || faceValue <= 0) back(`/vendor/bulk-products/${offerId}`, 'Face value must be greater than zero.');
+  if (!basePrice || basePrice < 0) back(`/vendor/bulk-products/${offerId}`, 'Bulk selling price is required.');
+
+  const payload = {
+    title,
+    description: optional(formData, 'description'),
+    image_url: optional(formData, 'image_url'),
+    face_value_minor: faceValue,
+    base_unit_price_minor: basePrice,
+    min_quantity: Math.max(1, minQty),
+    max_quantity: intField(formData, 'max_quantity'),
+    available_quantity: intField(formData, 'available_quantity'),
+    min_order_value_minor: moneyField(formData, 'min_order_value'),
+    max_order_value_minor: moneyField(formData, 'max_order_value'),
+    starts_at: optional(formData, 'starts_at'),
+    ends_at: optional(formData, 'ends_at'),
+    expires_at: optional(formData, 'expires_at'),
+    delivered_digitally: checkbox(formData, 'delivered_digitally'),
+    additional_conditions: optional(formData, 'additional_conditions'),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await ctx.supabase
+    .from('bulk_offers')
+    .update(payload)
+    .eq('id', offerId)
+    .eq('vendor_id', ctx.vendor.id);
+
+  if (error) back(`/vendor/bulk-products/${offerId}`, error.message);
+
+  // Replace tiers with submitted set
+  await ctx.supabase.from('bulk_offer_price_tiers').delete().eq('offer_id', offerId);
+  const tiers = parseBulkTiers(str(formData, 'tiers'));
+  if (tiers.length > 0) {
+    const rows = tiers.map((t, i) => ({
+      offer_id: offerId,
+      min_quantity: t.min,
+      max_quantity: t.max,
+      unit_price_minor: t.priceMinor,
+      sort_order: i,
+    }));
+    const { error: tierError } = await ctx.supabase.from('bulk_offer_price_tiers').insert(rows);
+    if (tierError) back(`/vendor/bulk-products/${offerId}`, tierError.message);
+  }
+
+  revalidatePath('/vendor/bulk-products');
+  revalidatePath(`/vendor/bulk-products/${offerId}`);
+  redirect(`/vendor/bulk-products/${offerId}?saved=1`);
+}
+
+export async function setBulkOfferStatus(formData: FormData) {
+  const ctx = await requireVendor();
+  if (ctx.role === 'redemption_staff') {
+    back('/vendor/bulk-products', 'Only owners and managers can change bulk offers.');
+  }
+  const offerId = str(formData, 'offer_id');
+  const status = str(formData, 'status') as 'draft' | 'active' | 'paused' | 'expired';
+  const enabled = status === 'active';
+  const { error } = await ctx.supabase
+    .from('bulk_offers')
+    .update({ status, enabled, updated_at: new Date().toISOString() })
+    .eq('id', offerId)
+    .eq('vendor_id', ctx.vendor.id);
+  if (error) back('/vendor/bulk-products', error.message);
+  revalidatePath('/vendor/bulk-products');
+  redirect('/vendor/bulk-products?saved=1');
+}

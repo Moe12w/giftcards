@@ -29,7 +29,10 @@ export default async function VendorDashboardLayout({ children }: { children: Re
     {
       step: 2,
       label: t.group2,
-      items: [{ href: '/vendor/products', label: t.gifts, icon: 'products', hint: t.giftsHint }],
+      items: [
+        { href: '/vendor/products', label: t.gifts, icon: 'products', hint: t.giftsHint },
+        { href: '/vendor/bulk-products', label: t.bulkProducts ?? 'Bulk products', icon: 'products', hint: t.bulkProductsHint ?? 'Exclusive bulk offers for business buyers.' },
+      ],
     },
     {
       step: 3,

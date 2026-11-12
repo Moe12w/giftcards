@@ -46,6 +46,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
       label: t.group4,
       items: [
         { href: '/admin/customers', label: t.customers, icon: 'customers', hint: t.customersHint },
+        { href: '/admin/business-accounts', label: t.businessAccounts ?? 'Business accounts', icon: 'customers', hint: t.businessAccountsHint ?? 'Bulk buyer registrations and approvals.' },
         { href: '/admin/enterprise', label: t.enterprise, icon: 'enterprise', hint: t.enterpriseHint },
       ],
     },

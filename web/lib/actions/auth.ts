@@ -200,3 +200,102 @@ export async function acceptVendorInvite(formData: FormData) {
   if (error) fail(`/vendor/join?token=${encodeURIComponent(token)}`, error.message);
   redirect('/vendor?joined=1');
 }
+
+export async function businessSignIn(formData: FormData) {
+  const email = String(formData.get('email') ?? '').trim();
+  const password = String(formData.get('password') ?? '');
+  const next = safeNext(formData.get('next'), '/business');
+  if (!email || !password) fail('/business/login', 'Enter your email and password.');
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error || !data.user) fail('/business/login', error?.message ?? 'Could not sign you in.');
+
+  const { data: account } = await supabase
+    .from('business_accounts')
+    .select('id, status')
+    .eq('user_id', data.user.id)
+    .maybeSingle();
+
+  if (!account) redirect('/business/register?notice=finish');
+  if (account.status === 'approved') redirect(next);
+  redirect(`/business/status?status=${encodeURIComponent(account.status)}`);
+}
+
+export async function registerBusinessAccount(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let currentUser = user;
+
+  if (!currentUser) {
+    const fullName = String(formData.get('contact_name') ?? '').trim() || String(formData.get('full_name') ?? '').trim();
+    const email = String(formData.get('business_email') ?? '').trim() || String(formData.get('email') ?? '').trim();
+    const password = String(formData.get('password') ?? '');
+    if (!fullName || !email || !password) {
+      fail('/business/register', 'Enter your contact name, business email and password.');
+    }
+    if (password.length < 8) {
+      fail('/business/register', 'Use at least 8 characters for your password.');
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName } },
+    });
+    if (error) fail('/business/register', error.message);
+    if (!data.session) {
+      redirect('/business/register?notice=confirm-email');
+    }
+    currentUser = data.user;
+  }
+
+  if (!currentUser) fail('/business/register', 'Could not create your account.');
+
+  const { data: existing } = await supabase
+    .from('business_accounts')
+    .select('id, status')
+    .eq('user_id', currentUser.id)
+    .maybeSingle();
+  if (existing) {
+    if (existing.status === 'approved') redirect('/business');
+    redirect(`/business/status?status=${encodeURIComponent(existing.status)}`);
+  }
+
+  const companyName = String(formData.get('company_name') ?? '').trim();
+  const contactName = String(formData.get('contact_name') ?? '').trim();
+  const businessEmail = String(formData.get('business_email') ?? '').trim() || currentUser.email || '';
+  const phone = String(formData.get('phone') ?? '').trim() || null;
+  const country = String(formData.get('country') ?? 'Qatar').trim() || 'Qatar';
+  const companyReg = String(formData.get('company_registration_number') ?? '').trim() || null;
+  const businessType = String(formData.get('business_type') ?? '').trim() || null;
+
+  if (companyName.length < 2) fail('/business/register', 'Enter your company name to continue.');
+  if (contactName.length < 2) fail('/business/register', 'Enter the contact person’s name.');
+  if (!businessEmail) fail('/business/register', 'Enter a business email.');
+
+  const { error } = await supabase.from('business_accounts').insert({
+    user_id: currentUser.id,
+    company_name: companyName,
+    contact_name: contactName,
+    business_email: businessEmail,
+    phone,
+    country,
+    company_registration_number: companyReg,
+    business_type: businessType,
+    status: 'pending_approval',
+  });
+
+  if (error) fail('/business/register', error.message);
+
+  await supabase.from('user_roles').upsert({
+    user_id: currentUser.id,
+    role: 'business_buyer',
+  });
+
+  redirect('/business/status?status=pending_approval&submitted=1');
+}
+

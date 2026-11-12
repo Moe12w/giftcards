@@ -396,3 +396,106 @@ export interface SystemSetting {
   is_public: boolean;
   updated_at: string;
 }
+
+export type BusinessAccountStatus = 'pending_approval' | 'approved' | 'rejected' | 'suspended';
+
+export interface BusinessAccount {
+  id: string;
+  user_id: string;
+  company_name: string;
+  contact_name: string;
+  business_email: string;
+  phone: string | null;
+  country: string;
+  company_registration_number: string | null;
+  business_type: string | null;
+  status: BusinessAccountStatus;
+  decided_at: string | null;
+  decided_by: string | null;
+  decision_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type BulkOfferStatus = 'draft' | 'active' | 'paused' | 'expired';
+
+export interface BulkOffer {
+  id: string;
+  vendor_id: string;
+  product_id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  face_value_minor: number;
+  base_unit_price_minor: number;
+  currency: string;
+  min_quantity: number;
+  max_quantity: number | null;
+  available_quantity: number | null;
+  min_order_value_minor: number | null;
+  max_order_value_minor: number | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  expires_at: string | null;
+  delivered_digitally: boolean;
+  status: BulkOfferStatus;
+  enabled: boolean;
+  additional_conditions: string | null;
+  created_at: string;
+  updated_at: string;
+  products?: Pick<Product, 'id' | 'title' | 'fulfilment_type' | 'image_url'> | null;
+  vendors?: Pick<Vendor, 'id' | 'name' | 'logo_url' | 'slug'> | null;
+  bulk_offer_price_tiers?: BulkOfferPriceTier[];
+}
+
+export interface BulkOfferPriceTier {
+  id: string;
+  offer_id: string;
+  min_quantity: number;
+  max_quantity: number | null;
+  unit_price_minor: number;
+  sort_order: number;
+  created_at: string;
+}
+
+export type BulkOrderStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded' | 'partially_fulfilled' | 'fulfilled';
+
+export interface BulkOrder {
+  id: string;
+  order_ref: string;
+  business_account_id: string;
+  buyer_user_id: string;
+  vendor_id: string;
+  offer_id: string;
+  product_id: string;
+  quantity: number;
+  face_value_minor: number;
+  unit_price_minor: number;
+  total_face_value_minor: number;
+  total_paid_minor: number;
+  discount_minor: number;
+  platform_fee_minor: number;
+  vendor_payable_minor: number;
+  currency: string;
+  status: BulkOrderStatus;
+  payment_status: string;
+  pricing_tier_snapshot: unknown;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+  bulk_offers?: Pick<BulkOffer, 'id' | 'title'> | null;
+  vendors?: Pick<Vendor, 'id' | 'name'> | null;
+  business_accounts?: Pick<BusinessAccount, 'id' | 'company_name'> | null;
+}
+
+export interface BulkOrderVoucher {
+  id: string;
+  bulk_order_id: string;
+  voucher_id: string | null;
+  voucher_code: string | null;
+  recipient_name: string | null;
+  recipient_email: string | null;
+  delivery_status: string;
+  delivered_at: string | null;
+  created_at: string;
+}

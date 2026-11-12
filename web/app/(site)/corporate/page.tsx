@@ -44,10 +44,10 @@ export default async function EnterprisePage({
             <h1>{t.title}</h1>
             <p className="lede">{t.lede}</p>
             <div className="btn-row">
-              <a className="btn primary lg" href="#enquiry">
+              <Link className="btn primary lg" href="/business/register">
                 {t.talkToTeam} <ArrowRight size={18} />
-              </a>
-              <Link className="btn ghost lg" href="/enterprise/login">
+              </Link>
+              <Link className="btn ghost lg" href="/business/login">
                 {t.partnerSignIn}
               </Link>
             </div>
@@ -199,8 +199,11 @@ export default async function EnterprisePage({
             </div>
             <div className="callout info" style={{ marginTop: 20 }}>
               {t.alreadyPartnerBefore}{' '}
-              <Link href="/enterprise/login">{t.signInDashboard}</Link> {t.alreadyPartnerAfter}
+              <Link href="/business/login">{t.signInDashboard}</Link> {t.alreadyPartnerAfter}
             </div>
+            <p className="small muted" style={{ marginTop: 12 }}>
+              Supplier/partner portal? <Link href="/enterprise/login">Enterprise partner sign in</Link>
+            </p>
           </div>
           <div className="card">
             <h3>{t.enquiryTitle}</h3>
@@ -257,10 +260,10 @@ export default async function EnterprisePage({
           <h2>{t.titleCta}</h2>
           <p>{t.bodyCta}</p>
           <div className="btn-row">
-            <a className="btn primary" href="#enquiry">
+            <Link className="btn primary" href="/business/register">
               {t.requestDemo} <ArrowRight size={16} />
-            </a>
-            <Link className="btn ghost" href="/enterprise/login" style={{ color: '#fff', borderColor: '#fff' }}>
+            </Link>
+            <Link className="btn ghost" href="/business/login" style={{ color: '#fff', borderColor: '#fff' }}>
               {t.partnerSignIn}
             </Link>
           </div>

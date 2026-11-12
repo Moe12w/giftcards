@@ -320,3 +320,27 @@ export async function adminSaveSetting(formData: FormData) {
   revalidatePath('/admin/settings');
   redirect('/admin/settings?saved=1');
 }
+
+export async function adminSetBusinessAccountStatus(formData: FormData) {
+  const ctx = await requireAdmin();
+  const accountId = str(formData, 'account_id');
+  const status = str(formData, 'status');
+  const note = optional(formData, 'note');
+  const returnTo = str(formData, 'return_to') || '/admin/business-accounts';
+
+  if (!['pending_approval', 'approved', 'rejected', 'suspended'].includes(status)) {
+    back(returnTo, 'Choose a valid business account status.');
+  }
+  if (!accountId) back(returnTo, 'Missing business account.');
+
+  const { error } = await ctx.supabase.rpc('admin_set_business_account_status', {
+    p_account_id: accountId,
+    p_status: status,
+    p_note: note,
+  });
+  if (error) back(returnTo, error.message);
+
+  await record(ctx.supabase, `business_account.status.${status}`, 'business_account', accountId, { status });
+  revalidatePath('/admin/business-accounts');
+  redirect(`${returnTo}?saved=1`);
+}
