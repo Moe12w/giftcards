@@ -2703,29 +2703,34 @@ table.data .sub {
   }
 
   .enterprise-art {
-    min-height: 500px;
-    margin-top: 18px;
+    min-height: 580px;
+    margin-top: 20px;
   }
 
   .enterprise-tile {
-    width: 208px;
-    padding: 16px;
+    width: 182px;
+    padding: 14px;
+    gap: 5px;
+  }
+
+  .enterprise-tile strong {
+    font-size: 1rem;
   }
 
   .enterprise-tile.one {
-    top: 10px;
+    top: 6px;
     left: -2px;
   }
 
   .enterprise-tile.two {
-    top: 168px;
-    right: -2px;
+    top: 200px;
+    right: -4px;
   }
 
   .enterprise-tile.three {
-    top: 326px;
+    top: 394px;
     bottom: auto;
-    left: 12px;
+    left: 8px;
   }
 }
 
