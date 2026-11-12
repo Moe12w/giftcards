@@ -45,7 +45,7 @@ alter table public.ledger_entries enable trigger ledger_no_update;
 alter table public.audit_log enable trigger audit_no_update;
 
 -- ---------------------------------------------------------------------
--- Test accounts (password for all of them: GiftlyTest123)
+-- Test accounts (password for all of them: test12345)
 -- ---------------------------------------------------------------------
 insert into auth.users (
   id, instance_id, email, encrypted_password, email_confirmed_at, created_at, updated_at,
@@ -56,7 +56,7 @@ select
   u.id,
   '00000000-0000-0000-0000-000000000000'::uuid,
   u.email,
-  extensions.crypt('GiftlyTest123', extensions.gen_salt('bf', 10)),
+  extensions.crypt('test12345', extensions.gen_salt('bf', 10)),
   now(), now(), now(),
   jsonb_build_object('sub', u.id, 'email', u.email, 'full_name', u.name, 'email_verified', true),
   '{"provider":"email","providers":["email"]}'::jsonb,
@@ -69,6 +69,8 @@ from (values
   ('44444444-4444-4444-8444-444444444444'::uuid, 'staff@giftly.test', 'Redemption Staff'),
   ('55555555-5555-4555-8555-555555555555'::uuid, 'partner@giftly.test', 'Enterprise Partner'),
   ('66666666-6666-4666-8666-666666666666'::uuid, 'admin@giftly.test', 'Platform Admin'),
+  -- One account for every dashboard: admin, vendor owner and enterprise owner.
+  ('99999999-9999-4999-8999-999999999999'::uuid, 'test@test.com', 'Test Account'),
   ('72215636-34c1-4635-9479-dba62aa65c56'::uuid, 'layla@giftly.test', 'Layla'),
   ('131437af-94dd-46ed-b3dd-8576e10ceaba'::uuid, 'omar@giftly.test', 'Omar'),
   ('29eb9902-b88e-4490-8785-737206825852'::uuid, 'noor@giftly.test', 'Noor'),
@@ -79,24 +81,28 @@ from (values
   ('ff2c387d-ec50-4a87-bd8c-dd8b2e277828'::uuid, 'aisha@giftly.test', 'Aisha'),
   ('7e322058-fbcb-4c77-8da8-8b52d393d709'::uuid, 'ahmed@giftly.test', 'Ahmed')
 ) as u(id, email, name)
-on conflict (id) do nothing;
+on conflict (id) do update
+  set encrypted_password = excluded.encrypted_password,
+      email_confirmed_at = coalesce(auth.users.email_confirmed_at, now());
 
 insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 select
   gen_random_uuid(), id, id::text, jsonb_build_object('sub', id, 'email', email), 'email', now(), now(), now()
 from auth.users
-where email in ('customer@giftly.test', 'owner@giftly.test', 'manager@giftly.test', 'staff@giftly.test', 'partner@giftly.test', 'admin@giftly.test', 'layla@giftly.test', 'omar@giftly.test', 'noor@giftly.test', 'sara@giftly.test', 'mariam@giftly.test', 'faris@giftly.test', 'hind@giftly.test', 'aisha@giftly.test', 'ahmed@giftly.test')
+where email in ('customer@giftly.test', 'owner@giftly.test', 'manager@giftly.test', 'staff@giftly.test', 'partner@giftly.test', 'admin@giftly.test', 'test@test.com', 'layla@giftly.test', 'omar@giftly.test', 'noor@giftly.test', 'sara@giftly.test', 'mariam@giftly.test', 'faris@giftly.test', 'hind@giftly.test', 'aisha@giftly.test', 'ahmed@giftly.test')
 on conflict do nothing;
 
 insert into public.profiles (id, full_name, email, preferred_language)
 select id, raw_user_meta_data ->> 'full_name', email, 'en' from auth.users
-where email in ('customer@giftly.test', 'owner@giftly.test', 'manager@giftly.test', 'staff@giftly.test', 'partner@giftly.test', 'admin@giftly.test', 'layla@giftly.test', 'omar@giftly.test', 'noor@giftly.test', 'sara@giftly.test', 'mariam@giftly.test', 'faris@giftly.test', 'hind@giftly.test', 'aisha@giftly.test', 'ahmed@giftly.test')
+where email in ('customer@giftly.test', 'owner@giftly.test', 'manager@giftly.test', 'staff@giftly.test', 'partner@giftly.test', 'admin@giftly.test', 'test@test.com', 'layla@giftly.test', 'omar@giftly.test', 'noor@giftly.test', 'sara@giftly.test', 'mariam@giftly.test', 'faris@giftly.test', 'hind@giftly.test', 'aisha@giftly.test', 'ahmed@giftly.test')
 on conflict (id) do nothing;
 
 insert into public.user_roles (user_id, role) values
   ('66666666-6666-4666-8666-666666666666', 'admin'),
   ('55555555-5555-4555-8555-555555555555', 'enterprise_user'),
-  ('11111111-1111-4111-8111-111111111111', 'customer')
+  ('11111111-1111-4111-8111-111111111111', 'customer'),
+  -- test@test.com opens every dashboard: admin, vendor and enterprise.
+  ('99999999-9999-4999-8999-999999999999', 'admin')
 on conflict (user_id) do update set role = excluded.role;
 
 -- ---------------------------------------------------------------------
@@ -134,7 +140,10 @@ insert into public.vendor_members (vendor_id, user_id, role, permissions) values
   ('58852d5f-8486-42fa-a423-b199925159b0', '22222222-2222-4222-8222-222222222222', 'owner', '{"all":true}'::jsonb),
   ('58852d5f-8486-42fa-a423-b199925159b0', '33333333-3333-4333-8333-333333333333', 'manager', '{"products":true,"redeem":true,"staff":true}'::jsonb),
   ('58852d5f-8486-42fa-a423-b199925159b0', '44444444-4444-4444-8444-444444444444', 'redemption_staff', '{"redeem":true}'::jsonb),
-  ('2533ec89-f5b1-4409-9273-c87bf133d095', '22222222-2222-4222-8222-222222222222', 'owner', '{"all":true}'::jsonb)
+  ('2533ec89-f5b1-4409-9273-c87bf133d095', '22222222-2222-4222-8222-222222222222', 'owner', '{"all":true}'::jsonb),
+  -- test@test.com opens every dashboard, so it owns the same two vendors.
+  ('58852d5f-8486-42fa-a423-b199925159b0', '99999999-9999-4999-8999-999999999999', 'owner', '{"all":true}'::jsonb),
+  ('2533ec89-f5b1-4409-9273-c87bf133d095', '99999999-9999-4999-8999-999999999999', 'owner', '{"all":true}'::jsonb)
 on conflict (vendor_id, user_id) do update set role = excluded.role, permissions = excluded.permissions;
 
 insert into public.vendor_locations (id, vendor_id, area, address, hours) values
@@ -525,7 +534,9 @@ insert into public.enterprise_partners (
 on conflict (id) do nothing;
 
 insert into public.enterprise_members (partner_id, user_id, role) values
-  ('96d72e91-21e8-47bd-8298-8f991a2ca84e', '55555555-5555-4555-8555-555555555555', 'owner')
+  ('96d72e91-21e8-47bd-8298-8f991a2ca84e', '55555555-5555-4555-8555-555555555555', 'owner'),
+  -- test@test.com owns the partner too, so one login opens every dashboard.
+  ('96d72e91-21e8-47bd-8298-8f991a2ca84e', '99999999-9999-4999-8999-999999999999', 'owner')
 on conflict (partner_id, user_id) do nothing;
 
 insert into public.enterprise_products (

@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "builds": {
+    "default": "vercel-build"
+  },
+  "functions": {
+    "api/*": {
+      "maxDuration": 60
+    }
+  },
+  "routes": []
+}

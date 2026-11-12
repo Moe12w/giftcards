@@ -156,6 +156,7 @@ with the Admin API using the service role key. Create one account per role:
 
 | Account | Role | How to grant it |
 |---|---|---|
+| `test@test.com` | everything | `user_roles` row with role `admin`, plus `vendor_members` and `enterprise_members` rows |
 | `customer@giftly.test` | customer | default — no role row needed |
 | `owner@giftly.test` | vendor owner | `vendor_members` row with role `owner` |
 | `manager@giftly.test` | vendor manager | `vendor_members` row with role `manager` |
@@ -198,16 +199,22 @@ data, regenerate it:
 node scripts/generate-seed.cjs
 ```
 
-Test accounts created by the seed (password for all: `GiftlyTest123`):
+Test accounts created by the seed (password for all: `test12345`):
 
 | Email | Role |
 |---|---|
+| `test@test.com` | **everything** — admin, vendor owner and enterprise owner |
 | `customer@giftly.test` | customer |
 | `owner@giftly.test` | vendor owner (The Coffee House + Dune Spa) |
 | `manager@giftly.test` | vendor manager |
 | `staff@giftly.test` | redemption staff |
 | `partner@giftly.test` | enterprise partner |
 | `admin@giftly.test` | platform admin |
+
+`test@test.com` is the account to use on the deployed site: one login opens the
+admin, vendor and enterprise dashboards. The email in `auth.users` is unique, so
+every role is granted to that one account through `user_roles`,
+`vendor_members` and `enterprise_members`.
 
 ## 8. Point the Expo app at the database
 
