@@ -260,6 +260,7 @@ export interface EnterpriseProduct {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  partner?: Pick<EnterprisePartner, 'id' | 'name' | 'commission_bps' | 'slug'> | null;
 }
 
 export interface InventorySummary {

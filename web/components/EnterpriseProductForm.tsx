@@ -79,8 +79,7 @@ export function EnterpriseProductForm({
             readOnly
           />
           <span className="hint">
-            {t.partnerCommission} {product?.partner?.name ?? ''}{' '}
-            {t.rateIsSetByAdmin}
+            Commission taken from partner company
           </span>
         </div>
         <div className="field">
