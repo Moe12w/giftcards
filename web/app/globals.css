@@ -1396,6 +1396,7 @@ textarea.input {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
 }
 
 .dash-top {
