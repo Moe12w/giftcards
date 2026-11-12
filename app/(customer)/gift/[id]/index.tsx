@@ -18,6 +18,7 @@ import {
   offerBusinessLogo,
   offerBusinessName,
   offerIcon,
+  offerIsFixedAmount,
   offerPackages,
   offerStartingPriceMinor,
   offerTitle,
@@ -100,7 +101,11 @@ export default function GiftDetailScreen() {
     update({
       offerId: offer.id,
       variantId: null,
-      amountMinor: isExperience ? 0 : offer.preset_amounts_minor[1] ?? offer.min_amount_minor,
+      amountMinor: isExperience
+        ? 0
+        : offerIsFixedAmount(offer)
+          ? offer.min_amount_minor
+          : offer.preset_amounts_minor[1] ?? offer.min_amount_minor,
     });
     router.push(`/(customer)/gift/${offer.id}/design`);
   }

@@ -77,7 +77,15 @@ export function GiftDraftProvider({ children }: { children: React.ReactNode }) {
   }, [draft, ready]);
 
   const update = useCallback((patch: Partial<GiftDraft>) => {
-    setDraft((prev) => ({ ...prev, ...patch }));
+    setDraft((prev) => {
+      // Ignore a patch that would not change anything. Screens often sync the
+      // same offer into the draft from an effect; returning the previous object
+      // lets React bail out instead of rendering again.
+      const changed = (Object.keys(patch) as (keyof GiftDraft)[]).some(
+        (key) => !Object.is(prev[key], patch[key]),
+      );
+      return changed ? { ...prev, ...patch } : prev;
+    });
   }, []);
 
   const reset = useCallback(() => {

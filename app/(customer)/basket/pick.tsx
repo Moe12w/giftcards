@@ -21,7 +21,7 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
-import { CATEGORIES, offerBusinessLogo, offerBusinessName, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
+import { CATEGORIES, offerBusinessLogo, offerBusinessName, offerIsFixedAmount, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
 import { listActiveOffers } from '@/src/lib/data';
 import { formatMoney } from '@/src/lib/money';
 import type { AccentTone, CategoryId, OccasionId, Offer } from '@/src/lib/types';
@@ -311,6 +311,9 @@ export default function PickGiftsScreen() {
                 {selected ? (
                   <View style={styles.amountRow}>
                     <Text style={styles.amountLabel}>{t('basket.amount')}</Text>
+                    {offerIsFixedAmount(offer) ? (
+                      <Money minor={selection[offer.id] ?? offer.min_amount_minor} style={styles.amountFixed} />
+                    ) : (
                     <ScrollView
                       horizontal
                       showsHorizontalScrollIndicator={false}
@@ -337,6 +340,7 @@ export default function PickGiftsScreen() {
                             />
                           ))}
                     </ScrollView>
+                    )}
                   </View>
                 ) : (
                   <View style={styles.offerFooter}>
@@ -453,6 +457,7 @@ const styles = StyleSheet.create({
   amountRow: { gap: spacing.xs },
   amountLabel: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
   amountChips: { gap: spacing.xs, paddingRight: spacing.md },
+  amountFixed: { fontSize: fontSizes.md, color: colors.text },
   offerFooter: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
   offerFrom: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
   offerAmount: { fontSize: fontSizes.md, color: colors.text },

@@ -288,6 +288,8 @@
     "packagesAvailable_other": "{{count}} packages available",
     "customAmount": "Custom amount",
     "customAmountPlaceholder": "Enter amount",
+    "fixedValue": "Gift card value",
+    "fixedValueHint": "This gift card has a fixed value set by the business.",
     "continue": "Continue",
     "terms": "Terms & conditions",
     "termsBody": "Gift cards are valid for the period shown on the card. They cannot be exchanged for cash, are not refundable after delivery, and can be used in full or in part at the business. Lost or shared codes are the responsibility of the holder.",

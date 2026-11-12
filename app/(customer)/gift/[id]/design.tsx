@@ -13,7 +13,7 @@ import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
-import { offerBusinessLogo, offerIcon, offerPackages, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerBusinessLogo, offerIcon, offerIsFixedAmount, offerPackages, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft, type DeliveryMethod } from '@/src/lib/gift-draft';
 import { isUsablePhone } from '@/src/lib/whatsapp';
@@ -72,8 +72,16 @@ export default function GiftComposeScreen() {
   // Starting from a different gift card resets the amount to that card's
   // suggested value while keeping the rest of the draft (recipient, message).
   // Experience gifts always start on the vendor's first package.
+  //
+  // This is an initialisation step, not a continuous reconciliation. The draft
+  // is shared by every gift screen, so re-running this on every draft change
+  // lets two mounted screens (or a Fast Refresh) overwrite each other forever.
+  // Sync once per offer, after AsyncStorage has hydrated.
+  const syncedOfferId = useRef<string | null>(null);
   useEffect(() => {
-    if (!offer) return;
+    if (!ready || !offer) return;
+    if (syncedOfferId.current === offer.id) return;
+    syncedOfferId.current = offer.id;
     if (offer.fulfilment_type === 'experience') {
       const packages = offerPackages(offer);
       const first = packages[0];
@@ -94,6 +102,21 @@ export default function GiftComposeScreen() {
       }
       return;
     }
+    if (offerIsFixedAmount(offer)) {
+      if (
+        draft.offerId !== offer.id ||
+        draft.amountMinor !== offer.min_amount_minor ||
+        draft.variantId !== null
+      ) {
+        update({
+          offerId: offer.id,
+          variantId: null,
+          amountMinor: offer.min_amount_minor,
+        });
+      }
+      setCustom('');
+      return;
+    }
     if (draft.offerId !== offer.id || draft.amountMinor <= 0 || draft.variantId) {
       update({
         offerId: offer.id,
@@ -102,7 +125,7 @@ export default function GiftComposeScreen() {
       });
       setCustom('');
     }
-  }, [draft.amountMinor, draft.offerId, draft.variantId, offer, update]);
+  }, [draft.amountMinor, draft.offerId, draft.variantId, offer, ready, update]);
 
   // The draft hydrates from AsyncStorage. If it lands after this screen mounts,
   // pull the saved recipient/message/date in once without clobbering edits.
@@ -145,10 +168,11 @@ export default function GiftComposeScreen() {
 
   const packages = offerPackages(offer);
   const isExperience = offer.fulfilment_type === 'experience';
+  const isFixedAmount = offerIsFixedAmount(offer);
   const selectedPackage = packages.find((variant) => variant.id === draft.variantId) ?? packages[0] ?? null;
   const min = offer.min_amount_minor;
   const max = offer.max_amount_minor;
-  const amount = draft.amountMinor;
+  const amount = isFixedAmount ? min : draft.amountMinor;
 
   function chooseAmount(minor: number) {
     update({ amountMinor: minor, variantId: null });
@@ -195,7 +219,7 @@ export default function GiftComposeScreen() {
     const nextErrors: Record<string, string> = {};
     if (isExperience) {
       if (!selectedPackage) nextErrors.amount = t('gift.choosePackage');
-    } else {
+    } else if (!isFixedAmount) {
       if (custom.trim()) {
         try {
           const parsed = toMinorUnits(custom);
@@ -318,6 +342,14 @@ export default function GiftComposeScreen() {
             </View>
           )}
           {errors.amount ? <Text style={styles.errorText}>{errors.amount}</Text> : null}
+        </Card>
+      ) : isFixedAmount ? (
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('gift.fixedValue')}</Text>
+          <View style={styles.fixedAmountRow}>
+            <Money minor={min} style={styles.fixedAmountValue} />
+          </View>
+          <Text style={styles.sectionHint}>{t('gift.fixedValueHint')}</Text>
         </Card>
       ) : (
         <Card style={styles.section}>
@@ -580,6 +612,16 @@ const styles = StyleSheet.create({
   },
   errorText: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.danger },
   presets: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  fixedAmountRow: {
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderBottomWidth: 5,
+    borderColor: colors.ink,
+    backgroundColor: colors.tealTint,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  fixedAmountValue: { fontSize: fontSizes.xl },
   designRow: { flexDirection: 'row', gap: spacing.xs },
   designItem: { flex: 1, alignItems: 'center', gap: 4 },
   designSwatch: {

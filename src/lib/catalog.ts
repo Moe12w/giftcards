@@ -168,6 +168,14 @@ export function offerPackages(offer: Offer): ProductVariant[] {
 }
 
 /**
+ * A gift card whose value is fixed by the business, such as a partner voucher.
+ * There is nothing for the customer to choose or type.
+ */
+export function offerIsFixedAmount(offer: Offer): boolean {
+  return offer.fulfilment_type !== 'experience' && offer.min_amount_minor === offer.max_amount_minor;
+}
+
+/**
  * The lowest price a customer can pay today. Experience gifts price from the
  * vendor's packages; money cards fall back to their presets.
  */
