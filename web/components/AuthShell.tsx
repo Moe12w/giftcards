@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Check } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowLeft, Check } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 
 export function AuthShell({
@@ -38,7 +39,13 @@ export function AuthShell({
         <p className="small">Giftly for business · Doha, Qatar</p>
       </aside>
       <main className="auth-main">
-        <div className="auth-card">{children}</div>
+        <div className="auth-card">
+          <Link className="auth-back" href="/">
+            <ArrowLeft size={15} />
+            Back to home
+          </Link>
+          {children}
+        </div>
       </main>
     </div>
   );

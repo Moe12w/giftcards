@@ -84,7 +84,6 @@ export default async function AdminLoginPage({
       </form>
       <div className="auth-links" style={{ marginTop: 16 }}>
         <Link href="/admin/forgot-password">Forgot your password?</Link>
-        <Link href="/">Back to giftly.qa</Link>
       </div>
       <div className="auth-switch">
         Not an admin? <Link href="/vendor/login">Vendor portal</Link> ·{' '}
