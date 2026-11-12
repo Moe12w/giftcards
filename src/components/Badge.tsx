@@ -21,7 +21,7 @@ const tones: Record<BadgeTone, string> = {
 
 export function Badge({ label, tone = 'neutral' }: BadgeProps) {
   return (
-    <View style={[styles.badge, { backgroundColor: tones[tone] }]}>
+    <View style={[styles.badge, { backgroundColor: tones[tone] ?? tones.neutral }]}>
       <Text style={styles.text}>{label}</Text>
     </View>
   );

@@ -1,6 +1,7 @@
 'use server';
 
-import { redirect, revalidatePath } from 'next/navigation';
+import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { requireEnterprise } from '@/lib/auth';
 
 const MEDIA_BUCKET = 'vendor-media';

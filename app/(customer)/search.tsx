@@ -9,7 +9,7 @@ import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
 import { listActiveOffers } from '@/src/lib/data';
-import { offerTitle } from '@/src/lib/catalog';
+import { offerBusinessName, offerTitle } from '@/src/lib/catalog';
 import type { Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
@@ -38,7 +38,7 @@ export default function SearchScreen() {
       const haystack = [
         offer.title,
         offer.title_ar ?? '',
-        offer.vendor?.name ?? '',
+        offerBusinessName(offer),
         offer.category ?? '',
         offer.location ?? '',
       ]

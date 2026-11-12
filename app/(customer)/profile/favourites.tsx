@@ -7,6 +7,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
+import { offerBusinessId } from '@/src/lib/catalog';
 import { listFavourites } from '@/src/lib/data';
 import type { Offer } from '@/src/lib/types';
 import { colors, spacing } from '@/src/theme';
@@ -47,7 +48,7 @@ export default function FavouritesScreen() {
               key={offer.id}
               offer={offer}
               index={index}
-              onPress={() => router.push(`/(customer)/business/${offer.vendor_id}`)}
+              onPress={() => router.push(`/(customer)/business/${offerBusinessId(offer)}`)}
             />
           ))}
         </View>

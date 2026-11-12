@@ -94,6 +94,8 @@ export interface Offer {
   is_active: boolean;
   created_at: string;
   vendor?: Pick<Vendor, 'id' | 'name' | 'name_ar' | 'logo_url' | 'banner_url'>;
+  /** The enterprise partner that supplies this gift, when it is a partner code. */
+  partner?: Pick<MarketplaceBusiness, 'id' | 'name' | 'logo_url' | 'banner_url'>;
   /** Active denominations/packages, ordered by the vendor. */
   variants?: ProductVariant[];
   // Presentation metadata used by the customer app.
@@ -267,17 +269,24 @@ export interface BusinessLocation {
   hours: string;
 }
 
-/** A partner business (enterprise partner), for public storefronts. */
-export interface PartnerBusiness {
+/** A business in the public directory: a vendor or an enterprise partner. */
+export interface MarketplaceBusiness {
   id: string;
+  business_kind: 'vendor' | 'partner';
   name: string;
   slug: string | null;
   logo_url: string | null;
   banner_url: string | null;
+  city: string | null;
+  area: string | null;
+  rating: number | null;
   description: string | null;
   status: string;
   gift_count: number;
 }
+
+/** A partner business, as seen by the public storefront. */
+export type PartnerBusiness = MarketplaceBusiness;
 
 export type BasketStatus = 'open' | 'ready' | 'completed';
 
@@ -285,7 +294,7 @@ export type BasketStatus = 'open' | 'ready' | 'completed';
 export interface BasketItem {
   id: string;
   offer_id: string;
-  vendor_id: string;
+  vendor_id: string | null;
   vendor_name: string;
   title: string;
   amount_minor: number;

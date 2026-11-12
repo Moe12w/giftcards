@@ -98,7 +98,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                     {[business.area, business.city].filter(Boolean).join(', ') || 'Qatar'}
                   </span>
                 )}
-                {(!isPartner && business.website) || (isPartner && business.website) ? (
+                {business.website ? (
                   <span>
                     <Globe size={16} /> {business.website.replace(/^https?:\/\//, '')}
                   </span>

@@ -25,9 +25,9 @@ import { fulfilmentLabel, priceLabel, productTone } from '@/lib/catalog';
 export default async function HomePage() {
   const supabase = await createClient();
 
-  const [vendorCount, productCount, categoryResult, featuredResult, offersResult] =
+  const [businessCount, productCount, categoryResult, featuredResult, offersResult] =
     await Promise.all([
-      supabase.from('vendors').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
+      supabase.from('marketplace_businesses').select('id', { count: 'exact', head: true }),
       supabase
         .from('products')
         .select('id', { count: 'exact', head: true })
@@ -35,25 +35,25 @@ export default async function HomePage() {
         .eq('is_active', true),
       supabase.from('categories').select('id, name, slug').eq('active', true),
       supabase
-        .from('vendors')
-        .select('id, name, slug, logo_url, city, area, rating, description, is_featured')
-        .eq('status', 'approved')
-        .order('is_featured', { ascending: false })
+        .from('marketplace_businesses')
+        .select('id, business_kind, name, slug, logo_url, city, area, rating, description, gift_count')
+        .order('business_kind', { ascending: true })
+        .order('gift_count', { ascending: false })
         .order('rating', { ascending: false })
         .limit(6),
       supabase
         .from('products')
-        .select('*, vendors(id, name, slug, logo_url, status), product_variants(*)')
+        .select('*, vendors(id, name, slug, logo_url, status), partner:enterprise_partners(id, name, slug, logo_url), product_variants(*)')
         .eq('status', 'published')
         .eq('is_active', true)
         .order('rating', { ascending: false })
         .limit(6),
     ]);
 
-  const vendors = featuredResult.data ?? [];
+  const businesses = featuredResult.data ?? [];
   const offers = mapProducts(offersResult.data);
   const categories = categoryResult.data ?? [];
-  const vendorTotal = vendorCount.count ?? 0;
+  const businessTotal = businessCount.count ?? 0;
   const productTotal = productCount.count ?? 0;
 
   return (
@@ -75,7 +75,7 @@ export default async function HomePage() {
                 Get the app <ArrowRight size={18} />
               </Link>
               <Link className="btn ghost lg" href="/vendors">
-                Browse vendors
+                Browse businesses
               </Link>
             </div>
             <div className="hero-trust">
@@ -147,8 +147,8 @@ export default async function HomePage() {
       <section className="container section tight">
         <div className="stat-strip">
           <div>
-            <strong>{vendorTotal || '—'}</strong>
-            <span>Independent vendors</span>
+            <strong>{businessTotal || '—'}</strong>
+            <span>Businesses on Giftly</span>
           </div>
           <div>
             <strong>{productTotal || '—'}</strong>
@@ -234,47 +234,52 @@ export default async function HomePage() {
             <span className="eyebrow lavender">Local favourites</span>
             <h2>Independent businesses doing lovely things.</h2>
             <p>
-              Every vendor is reviewed before they go live. No chains, no filler — just places
+              Every business is reviewed before they go live. No chains, no filler — just places
               worth leaving the house for.
             </p>
           </div>
           <Link className="btn sm" href="/vendors">
-            All vendors <ArrowRight size={16} />
+            All businesses <ArrowRight size={16} />
           </Link>
         </div>
 
-        {vendors.length === 0 ? (
+        {businesses.length === 0 ? (
           <div className="empty">
-            <h3>Vendors are moving in</h3>
+            <h3>Businesses are moving in</h3>
             <p>We are onboarding our first Doha partners right now. Check back soon.</p>
           </div>
         ) : (
           <div className="grid-3">
-            {vendors.slice(0, 6).map((vendor) => (
+            {businesses.slice(0, 6).map((business) => (
               <Link
                 className="card vendor-card"
-                key={vendor.id}
-                href={`/vendors/${vendor.slug ?? vendor.id}`}
+                key={business.id}
+                href={`/vendors/${business.slug ?? business.id}`}
               >
                 <div className="vendor-top">
                   <span className="vendor-logo">
-                    {vendor.logo_url ? (
-                      <img src={vendor.logo_url} alt="" />
+                    {business.logo_url ? (
+                      <img src={business.logo_url} alt="" />
                     ) : (
-                      initials(vendor.name)
+                      initials(business.name)
                     )}
                   </span>
                   <div>
-                    <h3 style={{ fontSize: '1.15rem' }}>{vendor.name}</h3>
+                    <h3 style={{ fontSize: '1.15rem' }}>{business.name}</h3>
+                    {business.business_kind === 'partner' ? (
+                      <span className="tag gold" style={{ display: 'block', marginTop: 4 }}>
+                        Enterprise partner
+                      </span>
+                    ) : null}
                     <span className="small muted">
-                      {[vendor.area, vendor.city].filter(Boolean).join(' · ') || 'Qatar'}
+                      {[business.area, business.city].filter(Boolean).join(' · ') || 'Qatar'}
                     </span>
                   </div>
                   <span className="tag gold" style={{ marginLeft: 'auto' }}>
-                    <Star size={12} fill="currentColor" /> {Number(vendor.rating ?? 0).toFixed(1)}
+                    <Star size={12} fill="currentColor" /> {Number(business.rating ?? 0).toFixed(1)}
                   </span>
                 </div>
-                <p className="small">{vendor.description ?? 'A local favourite on Giftly.'}</p>
+                <p className="small">{business.description ?? 'A local favourite on Giftly.'}</p>
                 <span className="small" style={{ fontWeight: 800 }}>
                   View gifts <ArrowRight size={14} style={{ display: 'inline', verticalAlign: '-2px' }} />
                 </span>
@@ -294,7 +299,7 @@ export default async function HomePage() {
         {offers.length === 0 ? (
           <div className="empty">
             <h3>No live gifts yet</h3>
-            <p>Once our vendors publish their offers, they will appear right here.</p>
+            <p>Once our businesses publish their offers, they will appear right here.</p>
           </div>
         ) : (
           <div className="offer-grid">
@@ -302,14 +307,14 @@ export default async function HomePage() {
               <Link
                 className="offer-card"
                 key={offer.id}
-                href={`/vendors/${offer.vendors?.slug ?? offer.vendor_id ?? ''}`}
+                href={`/vendors/${offer.partner?.slug ?? offer.vendors?.slug ?? offer.vendor_id ?? offer.partner_id ?? ''}`}
               >
                 <div className={`offer-art ${productTone(offer)}`}>
                   <span className="tag">{fulfilmentLabel(offer.fulfilment_type)}</span>
                   <Gift size={34} />
                 </div>
                 <div className="offer-body">
-                  <span className="small muted">{offer.vendors?.name ?? 'Giftly partner'}</span>
+                  <span className="small muted">{offer.partner?.name ?? offer.vendors?.name ?? 'Giftly partner'}</span>
                   <h3>{offer.title}</h3>
                   <div className="offer-meta">
                     <strong>{priceLabel(offer)}</strong>

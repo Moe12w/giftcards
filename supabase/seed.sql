@@ -518,9 +518,10 @@ insert into public.redemption_items (id, redemption_id, voucher_id, sessions, am
 -- ---------------------------------------------------------------------
 insert into public.enterprise_partners (
   id, owner_id, name, slug, website, contact_name, contact_email, contact_phone,
-  industry, expected_volume, status, integration_config, settlement_terms
+  industry, expected_volume, status, integration_config, settlement_terms,
+  logo_url, banner_url, notes
 ) values
-  ('96d72e91-21e8-47bd-8298-8f991a2ca84e', '55555555-5555-4555-8555-555555555555', 'RetailPlus Rewards', 'retailplus-rewards', 'https://retailplus.example', 'Nadia Haddad', 'partner@giftly.test', '+974 5555 0900', 'Retail', '25,000 codes / quarter', 'active', '{}'::jsonb, '{"model":"wholesale","net_days":30}'::jsonb)
+  ('96d72e91-21e8-47bd-8298-8f991a2ca84e', '55555555-5555-4555-8555-555555555555', 'RetailPlus Rewards', 'retailplus-rewards', 'https://retailplus.example', 'Nadia Haddad', 'partner@giftly.test', '+974 5555 0900', 'Retail', '25,000 codes / quarter', 'active', '{}'::jsonb, '{"model":"wholesale","net_days":30}'::jsonb, 'https://placehold.co/200x200/png?text=RP', 'https://placehold.co/900x300/png?text=RetailPlus+Rewards', 'Everyday rewards for shopping, dining and fuel across Qatar. Use your RetailPlus gift card at any till or online checkout.')
 on conflict (id) do nothing;
 
 insert into public.enterprise_members (partner_id, user_id, role) values
@@ -537,14 +538,14 @@ insert into public.enterprise_products (
 on conflict (id) do nothing;
 
 insert into public.products (
-  id, vendor_id, category_id, fulfilment_type, enterprise_product_id, title, title_ar,
+  id, vendor_id, category_id, fulfilment_type, enterprise_product_id, partner_id, title, title_ar,
   slug, description, terms_and_conditions, redemption_instructions, booking_required,
   split_session_allowed, multi_session_per_visit, session_count, min_amount_minor,
   max_amount_minor, preset_amounts_minor, currency, expiry_days, valid_until, is_active,
   status, icon, tone, rating, location, occasions, created_at
 ) values
-  ('281f0523-5642-4d8c-9a14-1effc26d6126', null, '7e48017f-3145-46b5-9c70-b4a5973f9d85', 'enterprise_code', '552487ae-23fb-463f-b05e-f73e7cea3a6a', 'RetailPlus Gift Card', 'بطاقة هدية RetailPlus', 'retailplus-gift-card', 'A digital gift card supplied by RetailPlus, redeemed at any RetailPlus checkout.', 'Valid for the stated period from issue.', 'Enter the code at checkout.', false, true, true, null, 10000, 10000, '{10000}', 'QAR', 365, now() + interval '365 days', true, 'published', 'creditCard', 'gold', 4.6, 'Doha', '{just-because,thank-you}', now()),
-  ('920db701-bdec-4796-80c0-43a3f16b4a9a', null, '7e48017f-3145-46b5-9c70-b4a5973f9d85', 'enterprise_code', 'a0afc6d0-fa3f-4f0f-8b45-2b0d7583da06', 'RetailPlus Digital Voucher', 'بطاقة رقمية RetailPlus', 'retailplus-digital-voucher', 'A digital gift card supplied by RetailPlus, redeemed at any RetailPlus checkout.', 'Valid for the stated period from issue.', 'Enter the code at checkout.', false, true, true, null, 25000, 25000, '{25000}', 'QAR', 180, now() + interval '180 days', true, 'published', 'creditCard', 'gold', 4.6, 'Doha', '{just-because,thank-you}', now());
+  ('281f0523-5642-4d8c-9a14-1effc26d6126', null, '7e48017f-3145-46b5-9c70-b4a5973f9d85', 'enterprise_code', '552487ae-23fb-463f-b05e-f73e7cea3a6a', '96d72e91-21e8-47bd-8298-8f991a2ca84e', 'RetailPlus Gift Card', 'بطاقة هدية RetailPlus', 'retailplus-gift-card', 'A digital gift card supplied by RetailPlus, redeemed at any RetailPlus checkout.', 'Valid for the stated period from issue.', 'Enter the code at checkout.', false, true, true, null, 10000, 10000, '{10000}', 'QAR', 365, now() + interval '365 days', true, 'published', 'creditCard', 'gold', 4.6, 'Doha', '{just-because,thank-you}', now()),
+  ('920db701-bdec-4796-80c0-43a3f16b4a9a', null, '7e48017f-3145-46b5-9c70-b4a5973f9d85', 'enterprise_code', 'a0afc6d0-fa3f-4f0f-8b45-2b0d7583da06', '96d72e91-21e8-47bd-8298-8f991a2ca84e', 'RetailPlus Digital Voucher', 'بطاقة رقمية RetailPlus', 'retailplus-digital-voucher', 'A digital gift card supplied by RetailPlus, redeemed at any RetailPlus checkout.', 'Valid for the stated period from issue.', 'Enter the code at checkout.', false, true, true, null, 25000, 25000, '{25000}', 'QAR', 180, now() + interval '180 days', true, 'published', 'creditCard', 'gold', 4.6, 'Doha', '{just-because,thank-you}', now());
 
 -- The encryption key for the seeded inventory. Replace it in production.
 insert into public.system_settings (key, value, description, is_public)
@@ -702,6 +703,35 @@ where i.partner_id = '96d72e91-21e8-47bd-8298-8f991a2ca84e'
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------
+-- A demo partner purchase: a real paid order, a real allocated code
+--
+-- The order starts pending, the item is added, then the order is marked
+-- paid. The normal fulfilment trigger allocates a code from the inventory
+-- above and creates the customer's voucher.
+-- ---------------------------------------------------------------------
+insert into public.orders (
+  id, order_ref, buyer_id, status, currency, subtotal_minor, discount_minor,
+  fee_minor, total_minor, sender_name, gift_message, delivery_method,
+  payment_status, payment_provider, payment_reference, paid_at, created_at
+) values
+  ('c4b0a0d0-6c1e-4a4e-9f5e-2d8b7c6a5f01', 'ORD-2000', '11111111-1111-4111-8111-111111111111', 'pending', 'QAR', 12000, 0, 0, 12000, 'Demo Customer', 'A little RetailPlus treat.', 'email', 'unpaid', 'demo', 'MF-DEMO-2000', null, now())
+on conflict (id) do nothing;
+
+insert into public.order_items (
+  id, order_id, product_id, enterprise_product_id, vendor_id, quantity,
+  unit_price_minor, total_minor, commission_minor, vendor_share_minor,
+  currency, gift_message, recipient_name, recipient_email, delivery_method,
+  created_at
+) values
+  ('c4b0a0d0-6c1e-4a4e-9f5e-2d8b7c6a5f02', 'c4b0a0d0-6c1e-4a4e-9f5e-2d8b7c6a5f01', '281f0523-5642-4d8c-9a14-1effc26d6126', '552487ae-23fb-463f-b05e-f73e7cea3a6a', null, 1, 12000, 12000, 2500, 9500, 'QAR', 'A little RetailPlus treat.', 'Layla', 'layla@example.com', 'email', now())
+on conflict (id) do nothing;
+
+update public.orders
+set status = 'paid', payment_status = 'paid', paid_at = now()
+where id = 'c4b0a0d0-6c1e-4a4e-9f5e-2d8b7c6a5f01'
+  and status = 'pending';
+
+-- ---------------------------------------------------------------------
 -- Notifications for the demo customer
 -- ---------------------------------------------------------------------
 insert into public.notifications (id, user_id, kind, title_key, body_key, payload, read_at, created_at) values
@@ -805,4 +835,6 @@ insert into public.gift_basket_activity (id, basket_id, kind, actor_id, actor_na
   ('5e1c6bb3-8f57-45c8-ad23-193f8ba8da54', 'd2e26847-0ab2-4888-a655-1ecb818651c0', 'item_added', '11111111-1111-4111-8111-111111111111', 'Noor', 'Dune Spa', 50000, '2026-10-04T01:53:35.710Z'),
   ('a6f4277d-249a-47b8-8558-926dae058d79', 'd2e26847-0ab2-4888-a655-1ecb818651c0', 'completed', '11111111-1111-4111-8111-111111111111', 'Demo User', null, null, '2026-10-12T01:53:35.710Z')
 on conflict (id) do nothing;
+
+commit;
 

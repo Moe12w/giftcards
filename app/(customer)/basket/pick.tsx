@@ -21,7 +21,7 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
-import { CATEGORIES, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
+import { CATEGORIES, offerBusinessLogo, offerBusinessName, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
 import { listActiveOffers } from '@/src/lib/data';
 import { formatMoney } from '@/src/lib/money';
 import type { AccentTone, CategoryId, OccasionId, Offer } from '@/src/lib/types';
@@ -79,7 +79,7 @@ export default function PickGiftsScreen() {
     return offers.filter((offer) => {
       if (category !== 'all' && offer.category !== category) return false;
       if (!needle) return true;
-      return [offer.title, offer.title_ar ?? '', offer.vendor?.name ?? '', offer.location ?? '']
+      return [offer.title, offer.title_ar ?? '', offerBusinessName(offer), offer.location ?? '']
         .join(' ')
         .toLowerCase()
         .includes(needle);
@@ -195,12 +195,12 @@ export default function PickGiftsScreen() {
               <View key={offer.id} style={styles.selectedRow}>
                 <IconTile
                   icon={offer.icon}
-                  imageUrl={offer.vendor?.logo_url}
+                  imageUrl={offerBusinessLogo(offer)}
                   size={34}
                   tone={(offerTone(offer) as AccentTone) as IconTileTone}
                 />
                 <Text style={styles.selectedTitle} numberOfLines={1}>
-                  {offer.vendor?.name ?? offerTitle(offer, i18n.language)}
+                  {offerBusinessName(offer, offerTitle(offer, i18n.language))}
                 </Text>
                 <Money minor={selection[offer.id]} style={styles.selectedAmount} />
                 <Pressable
@@ -272,7 +272,7 @@ export default function PickGiftsScreen() {
                 <View style={styles.offerRow}>
                   <IconTile
                     icon={offer.icon}
-                    imageUrl={offer.vendor?.logo_url}
+                    imageUrl={offerBusinessLogo(offer)}
                     size={56}
                     tone={tone}
                   />
@@ -281,7 +281,7 @@ export default function PickGiftsScreen() {
                       {offerTitle(offer, i18n.language)}
                     </Text>
                     <Text style={styles.offerVendor} numberOfLines={1}>
-                      {offer.vendor?.name ?? offer.title}
+                      {offerBusinessName(offer, offer.title)}
                     </Text>
                     <View style={styles.offerMeta}>
                       <Star size={11} color={colors.gold} />

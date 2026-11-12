@@ -91,6 +91,7 @@ export interface ProductVariant {
 export interface Product {
   id: string;
   vendor_id: string | null;
+  partner_id: string | null;
   enterprise_product_id: string | null;
   category_id: string | null;
   title: string;
@@ -122,6 +123,7 @@ export interface Product {
   updated_at: string;
   variants?: ProductVariant[];
   vendors?: Pick<Vendor, 'id' | 'name' | 'logo_url' | 'status' | 'slug'> | null;
+  partner?: Pick<Vendor, 'id' | 'name' | 'logo_url' | 'slug'> | null;
 }
 
 export interface Voucher {
@@ -225,6 +227,8 @@ export interface EnterprisePartner {
   industry: string | null;
   expected_volume: string | null;
   notes: string | null;
+  logo_url: string | null;
+  banner_url: string | null;
   status: string;
   created_at: string;
   updated_at: string;

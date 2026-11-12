@@ -28,7 +28,7 @@ export function Avatar({ name, size = 48, tone = 'lavender', style }: AvatarProp
           width: size,
           height: size,
           borderRadius: radii.pill,
-          backgroundColor: tones[tone],
+          backgroundColor: tones[tone] ?? tones.teal,
         },
         style,
       ]}

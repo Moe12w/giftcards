@@ -11,7 +11,7 @@ import { IconTile } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
-import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerBusinessName, offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer, validatePromoCode } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import type { AccentTone, Offer } from '@/src/lib/types';
@@ -93,7 +93,7 @@ export default function CheckoutSummaryScreen() {
           <IconTile icon={offerIcon(offer)} size={56} tone={tone === 'sky' ? 'sky' : tone} />
           <View style={styles.offerCopy}>
             <Text style={styles.offerTitle}>{offerTitle(offer, i18n.language)}</Text>
-            <Text style={styles.offerVendor}>{offer.vendor?.name ?? ''}</Text>
+            <Text style={styles.offerVendor}>{offerBusinessName(offer)}</Text>
           </View>
         </View>
       </Card>

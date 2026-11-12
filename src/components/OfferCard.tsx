@@ -4,7 +4,15 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, ArrowRight, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { offerIcon, offerStartingPriceMinor, offerTitle, offerTone } from '../lib/catalog';
+import {
+  offerBusinessId,
+  offerBusinessLogo,
+  offerBusinessName,
+  offerIcon,
+  offerStartingPriceMinor,
+  offerTitle,
+  offerTone,
+} from '../lib/catalog';
 import type { AccentTone, Offer } from '../lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '../theme';
 import { Card, type CardTone } from './Card';
@@ -27,6 +35,9 @@ export function OfferCard({ offer, index = 0, onPress, vendorLink = true }: Offe
   const title = offerTitle(offer, i18n.language);
   const tone = offerTone(offer, index) as AccentTone;
   const rtl = i18n.language === 'ar';
+  const businessId = offerBusinessId(offer);
+  const businessName = offerBusinessName(offer, title);
+  const businessLogo = offerBusinessLogo(offer);
 
   return (
     <Pressable
@@ -39,7 +50,7 @@ export function OfferCard({ offer, index = 0, onPress, vendorLink = true }: Offe
         <View style={styles.row}>
           <IconTile
             icon={offerIcon(offer, index)}
-            imageUrl={offer.vendor?.logo_url ?? undefined}
+            imageUrl={businessLogo}
             size={64}
             tone={tone as IconTileTone}
           />
@@ -47,20 +58,20 @@ export function OfferCard({ offer, index = 0, onPress, vendorLink = true }: Offe
             <Text style={styles.title} numberOfLines={1}>
               {title}
             </Text>
-            {vendorLink ? (
+            {vendorLink && businessId ? (
               <Pressable
-                onPress={() => router.push(`/(customer)/business/${offer.vendor_id}`)}
+                onPress={() => router.push(`/(customer)/business/${businessId}`)}
                 accessibilityRole="button"
-                accessibilityLabel={offer.vendor?.name ?? title}
+                accessibilityLabel={businessName}
                 hitSlop={6}
               >
                 <Text style={styles.vendor} numberOfLines={1}>
-                  {t('home.fromVendor', { vendor: offer.vendor?.name ?? title })}
+                  {t('home.fromVendor', { vendor: businessName })}
                 </Text>
               </Pressable>
             ) : (
               <Text style={styles.vendor} numberOfLines={1}>
-                {t('home.fromVendor', { vendor: offer.vendor?.name ?? title })}
+                {t('home.fromVendor', { vendor: businessName })}
               </Text>
             )}
             <View style={styles.meta}>
@@ -95,6 +106,7 @@ export function OfferTile({ offer, index = 0, onPress }: OfferCardProps) {
   const { t, i18n } = useTranslation();
   const title = offerTitle(offer, i18n.language);
   const tone = offerTone(offer, index) as AccentTone;
+  const businessName = offerBusinessName(offer, title);
 
   return (
     <Pressable
@@ -106,7 +118,7 @@ export function OfferTile({ offer, index = 0, onPress }: OfferCardProps) {
       <Card tone={tone as CardTone} style={styles.tileCard}>
         <IconTile
           icon={offerIcon(offer, index)}
-          imageUrl={offer.vendor?.logo_url ?? undefined}
+          imageUrl={offerBusinessLogo(offer)}
           size={52}
           tone={tone as IconTileTone}
         />
@@ -114,7 +126,7 @@ export function OfferTile({ offer, index = 0, onPress }: OfferCardProps) {
           {title}
         </Text>
         <Text style={styles.tileVendor} numberOfLines={1}>
-          {offer.vendor?.name ?? title}
+          {businessName}
         </Text>
         <View style={styles.tileAmountRow}>
           <Text style={styles.from}>{t('common.from')}</Text>

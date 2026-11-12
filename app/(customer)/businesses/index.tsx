@@ -1,29 +1,30 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { ArrowLeft, ArrowRight, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/src/components/Button';
+import { Badge } from '@/src/components/Badge';
 import { Card } from '@/src/components/Card';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
-import { IconTile } from '@/src/components/IconTile';
+import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
-import { SectionHeader } from '@/src/components/SectionHeader';
 import { listMarketplaceBusinesses } from '@/src/lib/data';
-import type { PartnerBusiness } from '@/src/lib/data';
+import type { MarketplaceBusiness } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 
+const TONES: IconTileTone[] = ['teal', 'gold', 'pink', 'lavender', 'sky'];
+
 export default function BusinessesScreen() {
-  const { t } = useTranslation();
-  const [businesses, setBusinesses] = useState<PartnerBusiness[]>([]);
+  const { t, i18n } = useTranslation();
+  const [businesses, setBusinesses] = useState<MarketplaceBusiness[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await listMarketplaceBusinesses();
-      setBusinesses(data);
+      setBusinesses(await listMarketplaceBusinesses());
     } catch {
       setBusinesses([]);
     } finally {
@@ -35,29 +36,8 @@ export default function BusinessesScreen() {
     load();
   }, [load]);
 
-  const renderItem = ({ item }: { item: PartnerBusiness }) => (
-    <Card style={styles.card}>
-      <View style={styles.row}>
-        <IconTile
-          icon="gift"
-          imageUrl={item.logo_url ?? undefined}
-          size={56}
-          tone="teal"
-        />
-        <View style={styles.copy}>
-          <Text style={styles.name} numberOfLines={1}>
-            {item.name}
-          </Text>
-          <Text style={styles.meta}>
-            {item.gift_count} {item.gift_count === 1 ? t('business.oneGift') : t('business.manyGifts')}
-          </Text>
-        </View>
-        <View style={styles.chevronWrap}>
-          <Button label="" style={styles.chevronBtn} onPress={() => router.push(`/(customer)/business/${item.id}`)} />
-        </View>
-      </View>
-    </Card>
-  );
+  const rtl = i18n.language === 'ar';
+  const Arrow = rtl ? ArrowLeft : ArrowRight;
 
   return (
     <Screen>
@@ -66,15 +46,68 @@ export default function BusinessesScreen() {
       {loading ? (
         <ActivityIndicator color={colors.teal} style={styles.loader} />
       ) : businesses.length === 0 ? (
-        <EmptyState title={t('home.noOffers')} body={t('home.noOffersBody')} icon="warning" tone="lavender" />
-      ) : (
-        <FlatList
-          data={businesses}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.list}
+        <EmptyState
+          title={t('home.noOffers')}
+          body={t('home.noOffersBody')}
+          icon="store"
+          tone="lavender"
         />
+      ) : (
+        <View style={styles.list}>
+          {businesses.map((business, index) => {
+            const tone = TONES[index % TONES.length];
+            const location = business.area ?? business.city;
+            const isPartner = business.business_kind === 'partner';
+            return (
+              <Pressable
+                key={business.id}
+                onPress={() => router.push(`/(customer)/business/${business.id}`)}
+                accessibilityRole="button"
+                accessibilityLabel={business.name}
+                style={({ pressed }) => pressed && styles.pressed}
+              >
+                <Card>
+                  <View style={styles.row}>
+                    <IconTile
+                      icon={isPartner ? 'creditCard' : 'store'}
+                      imageUrl={business.logo_url ?? undefined}
+                      size={60}
+                      tone={tone}
+                    />
+                    <View style={styles.body}>
+                      <View style={styles.nameRow}>
+                        <Text style={styles.name} numberOfLines={1}>
+                          {business.name}
+                        </Text>
+                        {isPartner ? <Badge label={t('business.partner')} tone="primary" /> : null}
+                      </View>
+                      <View style={styles.metaRow}>
+                        <Star size={12} color={colors.gold} />
+                        <Text style={styles.meta}>{(business.rating ?? 4.8).toFixed(1)}</Text>
+                        {location ? (
+                          <>
+                            <Text style={styles.dot}>·</Text>
+                            <Text style={styles.meta} numberOfLines={1}>
+                              {location}
+                            </Text>
+                          </>
+                        ) : null}
+                      </View>
+                      <Text style={styles.gifts}>
+                        {business.gift_count === 1
+                          ? t('business.oneGift')
+                          : t('business.manyGifts', { count: business.gift_count })}
+                      </Text>
+                    </View>
+                    <View style={styles.chevron}>
+                      <Arrow size={16} color={colors.ink} />
+                    </View>
+                  </View>
+                </Card>
+              </Pressable>
+            );
+          })}
+        </View>
       )}
     </Screen>
   );
@@ -82,12 +115,29 @@ export default function BusinessesScreen() {
 
 const styles = StyleSheet.create({
   loader: { marginTop: spacing.xxl },
-  list: { paddingHorizontal: spacing.gutter, paddingBottom: spacing.xxl },
-  card: { marginBottom: spacing.sm },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  copy: { flex: 1 },
-  name: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
+  list: { gap: spacing.sm },
+  pressed: { opacity: 0.9 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  body: { flex: 1, gap: 2 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap' },
+  name: {
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.md,
+    color: colors.text,
+    flexShrink: 1,
+  },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
   meta: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
-  chevronWrap: { alignItems: 'center', justifyContent: 'center' },
-  chevronBtn: { paddingHorizontal: 8 },
+  dot: { color: colors.textMuted, fontSize: fontSizes.xs },
+  gifts: { fontFamily: fonts.semibold, fontSize: fontSizes.xs, color: colors.textMuted },
+  chevron: {
+    width: 28,
+    height: 28,
+    borderRadius: radii.pill,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    backgroundColor: colors.tealTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

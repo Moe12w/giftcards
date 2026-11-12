@@ -28,11 +28,11 @@ import {
   RecommendationRow,
   TrendingGiftCard,
 } from '@/src/components/DiscoveryCards';
-import { CATEGORIES, CURATED_COLLECTIONS, groupOffersByVendor, offerStartingPriceMinor, offerTitle, offersForCollection } from '@/src/lib/catalog';
-import { countUnreadNotifications, listActiveOffers } from '@/src/lib/data';
+import { CATEGORIES, CURATED_COLLECTIONS, offerStartingPriceMinor, offerTitle, offersForCollection } from '@/src/lib/catalog';
+import { countUnreadNotifications, listActiveOffers, listMarketplaceBusinesses } from '@/src/lib/data';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
 import { useAuth } from '@/src/lib/auth';
-import type { Offer } from '@/src/lib/types';
+import type { MarketplaceBusiness, Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
 
 export default function ExploreHomeScreen() {
@@ -40,6 +40,7 @@ export default function ExploreHomeScreen() {
   const { user } = useAuth();
   const { activeBasket, baskets } = useBaskets();
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [businesses, setBusinesses] = useState<MarketplaceBusiness[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [pickerOffer, setPickerOffer] = useState<Offer | null>(null);
@@ -47,8 +48,16 @@ export default function ExploreHomeScreen() {
   useEffect(() => {
     let active = true;
     setError(false);
-    listActiveOffers()
-      .then((data) => active && setOffers(data))
+    Promise.all([listActiveOffers(), listMarketplaceBusinesses()])
+      .then(([offerRows, businessRows]) => {
+        if (!active) return;
+        setOffers(offerRows);
+        // Partners are first-class businesses, so feature them alongside the
+        // busiest vendors instead of letting the vendor count bury them.
+        const partners = businessRows.filter((row) => row.business_kind === 'partner');
+        const vendors = businessRows.filter((row) => row.business_kind === 'vendor');
+        setBusinesses([...partners, ...vendors].slice(0, 6));
+      })
       .catch(() => active && setError(true))
       .finally(() => active && setLoading(false));
     return () => {
@@ -69,7 +78,6 @@ export default function ExploreHomeScreen() {
     }, []),
   );
 
-  const businesses = useMemo(() => groupOffersByVendor(offers).slice(0, 6), [offers]);
   const trending = useMemo(() => offersForCollection(offers, 'trending').slice(0, 8), [offers]);
   const recommended = useMemo(
     () =>
@@ -170,7 +178,7 @@ export default function ExploreHomeScreen() {
         <SectionHeader
           title={t('discovery.featuredBusinesses')}
           actionLabel={t('common.seeAll')}
-          onAction={() => router.push('/(customer)/collection/featured-businesses')}
+          onAction={() => router.push('/(customer)/businesses')}
         />
         {loading ? (
           <ActivityIndicator color={colors.teal} style={styles.loader} />
@@ -198,11 +206,12 @@ export default function ExploreHomeScreen() {
             style={styles.hScrollOuter}
             contentContainerStyle={styles.hScrollFeatured}
           >
-            {businesses.map((offer) => (
+            {businesses.map((business, index) => (
               <FeaturedBusinessCard
-                key={offer.vendor_id}
-                offer={offer}
-                onPress={() => router.push(`/(customer)/business/${offer.vendor_id}`)}
+                key={business.id}
+                business={business}
+                index={index}
+                onPress={() => router.push(`/(customer)/business/${business.id}`)}
               />
             ))}
           </ScrollView>

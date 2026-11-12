@@ -14,6 +14,7 @@ import React, {
 } from 'react';
 
 import { useAuth } from './auth';
+import { offerBusinessBanner, offerBusinessLogo, offerBusinessName } from './catalog';
 import { getSupabase } from './supabase';
 import { hasSupabaseConfig } from './env';
 import { resolveTone } from './tone';
@@ -326,13 +327,13 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           basket_id: basket.id,
           offer_id: item.offer.id,
           vendor_id: item.offer.vendor_id,
-          vendor_name: item.offer.vendor?.name ?? item.offer.title ?? 'Gift card',
+          vendor_name: offerBusinessName(item.offer, item.offer.title ?? 'Gift card'),
           title: item.offer.title,
           amount_minor: item.amountMinor,
           emoji: item.offer.icon ?? 'gift',
           tone: resolveTone(item.offer.tone),
-          logo_url: item.offer.vendor?.logo_url ?? null,
-          banner_url: item.offer.vendor?.banner_url ?? null,
+          logo_url: offerBusinessLogo(item.offer) ?? null,
+          banner_url: offerBusinessBanner(item.offer) ?? null,
           added_by: ownerId,
           added_by_name: ownerName,
         });
@@ -362,13 +363,13 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           basket_id: basketId,
           offer_id: input.offer.id,
           vendor_id: input.offer.vendor_id,
-          vendor_name: input.offer.vendor?.name ?? input.offer.title ?? 'Gift card',
+          vendor_name: offerBusinessName(input.offer, input.offer.title ?? 'Gift card'),
           title: input.offer.title,
           amount_minor: input.amountMinor,
           emoji: input.offer.icon ?? 'gift',
           tone: resolveTone(input.offer.tone),
-          logo_url: input.offer.vendor?.logo_url ?? null,
-          banner_url: input.offer.vendor?.banner_url ?? null,
+          logo_url: offerBusinessLogo(input.offer) ?? null,
+          banner_url: offerBusinessBanner(input.offer) ?? null,
           added_by: user.id,
           added_by_name: ownerName,
         })
@@ -391,7 +392,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
         id: data.id,
         offer_id: input.offer.id,
         vendor_id: input.offer.vendor_id,
-        vendor_name: input.offer.vendor?.name ?? input.offer.title ?? 'Gift card',
+        vendor_name: offerBusinessName(input.offer, input.offer.title ?? 'Gift card'),
         title: input.offer.title,
         amount_minor: input.amountMinor,
         icon: input.offer.icon ?? 'gift',

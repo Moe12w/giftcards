@@ -264,7 +264,12 @@
     "noLocations": "No locations yet",
     "location": "Location",
     "openMaps": "Open in maps",
-    "rating": "{{rating}} rating"
+    "rating": "{{rating}} rating",
+    "partner": "Partner",
+    "partnerGift": "Partner gift card",
+    "partnerGiftBody": "This code is redeemed in the partner's app or at their checkout. Your code and balance stay here in your wallet.",
+    "oneGift": "1 gift",
+    "manyGifts": "{{count}} gifts"
   },
   "gift": {
     "detailsTitle": "Gift card",
@@ -845,6 +850,7 @@
     "featuredCategories": "Featured categories",
     "featuredCollections": "Featured collections",
     "featuredBusinesses": "Featured businesses",
+    "allBusinesses": "All businesses",
     "trending": "Trending gift cards",
     "recommended": "Recommended for you",
     "quickAdd": "Add to basket",

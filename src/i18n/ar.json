@@ -264,7 +264,12 @@
     "noLocations": "لا توجد فروع بعد",
     "location": "الموقع",
     "openMaps": "افتح في الخرائط",
-    "rating": "تقييم {{rating}}"
+    "rating": "تقييم {{rating}}",
+    "partner": "شريك",
+    "partnerGift": "بطاقة هدية من شريك",
+    "partnerGiftBody": "يُستخدم هذا الرمز في تطبيق الشريك أو عند الدفع. يبقى الرمز والرصيد هنا في محفظتك.",
+    "oneGift": "هدية واحدة",
+    "manyGifts": "{{count}} هدايا"
   },
   "gift": {
     "detailsTitle": "بطاقة هدايا",
@@ -845,6 +850,7 @@
     "featuredCategories": "فئات مميزة",
     "featuredCollections": "مجموعات مميزة",
     "featuredBusinesses": "متاجر مميزة",
+    "allBusinesses": "كل المتاجر",
     "trending": "بطاقات هدايا رائجة",
     "recommended": "مقترحة لك",
     "quickAdd": "أضف إلى السلة",

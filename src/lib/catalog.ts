@@ -141,6 +141,27 @@ export function offerTone(offer: Offer, index = 0): AccentTone {
   return resolveTone(offer.tone, TONE_CYCLE[index % TONE_CYCLE.length]);
 }
 
+/**
+ * The business that sells a gift: a vendor for normal gifts, an enterprise
+ * partner for partner codes. Every link and every logo goes through here so a
+ * partner is never rendered as a missing vendor.
+ */
+export function offerBusinessId(offer: Offer): string {
+  return offer.partner?.id ?? offer.vendor_id ?? offer.partner_id ?? '';
+}
+
+export function offerBusinessName(offer: Offer, fallback = ''): string {
+  return offer.partner?.name ?? offer.vendor?.name ?? fallback;
+}
+
+export function offerBusinessLogo(offer: Offer): string | undefined {
+  return offer.partner?.logo_url ?? offer.vendor?.logo_url ?? undefined;
+}
+
+export function offerBusinessBanner(offer: Offer): string | undefined {
+  return offer.partner?.banner_url ?? offer.vendor?.banner_url ?? undefined;
+}
+
 /** Vendor-defined packages for an experience gift, in the vendor's order. */
 export function offerPackages(offer: Offer): ProductVariant[] {
   return (offer.variants ?? []).filter((variant) => variant.kind === 'package');
@@ -193,13 +214,14 @@ export function offersForCollection(offers: Offer[], slug: string): Offer[] {
   }
 }
 
-/** Groups offers by vendor, keeping the highest-rated offer as the vendor's card. */
+/** Groups offers by business, keeping the highest-rated gift as its card. */
 export function groupOffersByVendor(offers: Offer[]): Offer[] {
   const seen = new Set<string>();
   const result: Offer[] = [];
   for (const offer of [...offers].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))) {
-    if (seen.has(offer.vendor_id)) continue;
-    seen.add(offer.vendor_id);
+    const businessId = offerBusinessId(offer);
+    if (!businessId || seen.has(businessId)) continue;
+    seen.add(businessId);
     result.push(offer);
   }
   return result;
@@ -209,6 +231,6 @@ export function findOffer(offers: Offer[], id: string): Offer | null {
   return offers.find((offer) => offer.id === id) ?? null;
 }
 
-export function findBusiness(offers: Offer[], vendorId: string): Offer | null {
-  return offers.find((offer) => offer.vendor_id === vendorId) ?? null;
+export function findBusiness(offers: Offer[], businessId: string): Offer | null {
+  return offers.find((offer) => offerBusinessId(offer) === businessId) ?? null;
 }

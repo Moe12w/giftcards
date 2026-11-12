@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Star } from 'lucide-react-native';
+import { MapPin, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/src/components/Badge';
@@ -13,24 +13,16 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
-import { offerTone } from '@/src/lib/catalog';
-import { getPartner, listActiveOffers, listVendorLocations } from '@/src/lib/data';
-import type { AccentTone, BusinessLocation, Offer, PartnerBusiness, Vendor } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
-
-type BusinessKind = 'partner' | 'vendor';
-
-type BusinessState = {
-  kind: BusinessKind;
-  partner?: PartnerBusiness;
-  vendor?: Vendor;
-};
+import { offerBusinessId, offerTone } from '@/src/lib/catalog';
+import { getBusiness, listActiveOffers, listVendorLocations } from '@/src/lib/data';
+import type { AccentTone, BusinessLocation, MarketplaceBusiness, Offer } from '@/src/lib/types';
+import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 export default function BusinessScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [business, setBusiness] = useState<BusinessState | null>(null);
+  const [business, setBusiness] = useState<MarketplaceBusiness | null>(null);
   const [locations, setLocations] = useState<BusinessLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,25 +33,17 @@ export default function BusinessScreen() {
     }
     setLoading(true);
     try {
-      const [data, partner] = await Promise.all([
-        listActiveOffers(),
-        getPartner(id),
-      ]);
+      const [data, found] = await Promise.all([listActiveOffers(), getBusiness(id)]);
       setOffers(data);
-      if (partner) {
-        setBusiness({ kind: 'partner', partner });
+      setBusiness(found);
+      if (found?.business_kind === 'vendor') {
+        setLocations(await listVendorLocations(found.id));
       } else {
-        const vendor = await fetchVendor(id);
-        if (vendor) {
-          setBusiness({ kind: 'vendor', vendor });
-        }
-      }
-      if (!partner) {
-        const rows = await listVendorLocations(id);
-        setLocations(rows);
+        setLocations([]);
       }
     } catch {
-      // fall back to empty state
+      setBusiness(null);
+      setLocations([]);
     } finally {
       setLoading(false);
     }
@@ -69,79 +53,125 @@ export default function BusinessScreen() {
     load();
   }, [load]);
 
-  const offersMatching = offers.filter(
-    (offer) => offer.vendor_id === id || offer.partner_id === id,
-  );
+  const businessId = business?.id ?? id ?? '';
+  const offersMatching = offers.filter((offer) => offerBusinessId(offer) === businessId);
   const primary = offersMatching[0];
   const tone = primary ? (offerTone(primary) as AccentTone) : 'lavender';
-  const isPartner = business?.kind === 'partner';
-  const name = isPartner ? (business?.partner?.name ?? t('business.title')) : (business?.vendor?.name ?? t('business.title'));
-  const logoUrl = isPartner ? (business?.partner?.logo_url ?? null) : (business?.vendor?.logo_url ?? null);
-  const bannerUrl = isPartner ? (business?.partner?.banner_url ?? null) : (business?.vendor?.banner_url ?? null);
-  const description = isPartner ? (business?.partner?.description ?? null) : (business?.vendor?.description ?? null);
-  const rating = primary?.rating ?? 4.8;
-  const location = !isPartner ? (primary?.location ?? undefined) : undefined;
+  const isPartner = business?.business_kind === 'partner';
+  const name = business?.name ?? t('business.title');
+  const location = business?.area ?? business?.city ?? primary?.location ?? null;
 
   return (
     <Screen>
-      <FlowHeader title={name} subtitle={primary ? t('business.giftCards') : undefined} onBack={() => router.back()} />
+      <FlowHeader
+        title={name}
+        subtitle={offersMatching.length > 0 ? t('business.giftCards') : undefined}
+        onBack={() => router.back()}
+      />
 
       {loading ? (
         <ActivityIndicator color={colors.teal} style={styles.loader} />
       ) : !business ? (
-        <EmptyState title={t('states.not-found.title')} body={t('states.not-found.body')} icon="store" tone="lavender" />
+        <EmptyState
+          title={t('states.not-found.title')}
+          body={t('states.not-found.body')}
+          icon="store"
+          tone="lavender"
+        />
       ) : (
         <>
-          {bannerUrl ? (
+          {business.banner_url ? (
             <Card tone="surface" padded={false} style={styles.banner}>
-              <Image source={{ uri: bannerUrl }} style={styles.bannerImage} resizeMode="cover" />
+              <Image source={{ uri: business.banner_url }} style={styles.bannerImage} resizeMode="cover" />
             </Card>
           ) : null}
 
           <Card tone={tone === 'sky' ? 'sky' : tone}>
             <View style={styles.heroRow}>
-              <IconTile icon={primary?.icon ?? 'gift'} imageUrl={logoUrl ?? undefined} size={72} tone={tone === 'sky' ? 'sky' : (tone as IconTileTone)} />
+              <IconTile
+                icon="store"
+                imageUrl={business.logo_url ?? undefined}
+                size={72}
+                tone={tone === 'sky' ? 'sky' : (tone as IconTileTone)}
+              />
               <View style={styles.heroCopy}>
-                <Text style={styles.name}>{name}</Text>
+                <View style={styles.nameRow}>
+                  <Text style={styles.name} numberOfLines={2}>
+                    {business.name}
+                  </Text>
+                  {isPartner ? <Badge label={t('business.partner')} tone="primary" /> : null}
+                </View>
                 <View style={styles.metaRow}>
                   <Star size={13} color={colors.gold} />
-                  <Text style={styles.meta}>{t('business.rating', { rating: rating.toFixed(1) })}</Text>
+                  <Text style={styles.meta}>
+                    {t('business.rating', { rating: (business.rating ?? 4.8).toFixed(1) })}
+                  </Text>
                   {location ? (
                     <>
                       <Text style={styles.dot}>·</Text>
-                      <Text style={styles.meta}>{location}</Text>
+                      <MapPin size={12} color={colors.ink} />
+                      <Text style={styles.meta} numberOfLines={1}>
+                        {location}
+                      </Text>
                     </>
                   ) : null}
                 </View>
+                <Text style={styles.giftCount}>
+                  {business.gift_count === 1
+                    ? t('business.oneGift')
+                    : t('business.manyGifts', { count: business.gift_count })}
+                </Text>
               </View>
             </View>
           </Card>
 
-          {description ? (
+          {isPartner ? (
+            <Card tone="gold" style={styles.partnerNote}>
+              <Text style={styles.partnerNoteTitle}>{t('business.partnerGift')}</Text>
+              <Text style={styles.partnerNoteBody}>{t('business.partnerGiftBody')}</Text>
+            </Card>
+          ) : null}
+
+          {business.description ? (
             <Card style={styles.section}>
               <Text style={styles.sectionTitle}>{t('business.about')}</Text>
-              <Text style={styles.body}>{description}</Text>
+              <Text style={styles.body}>{business.description}</Text>
             </Card>
           ) : null}
 
           <SectionHeader title={t('business.giftCards')} />
-          <View style={styles.list}>
-            {offersMatching.map((offer, index) => (
-              <OfferCard key={offer.id} offer={offer} index={index} vendorLink={false} onPress={() => router.push(`/(customer)/gift/${offer.id}`)} />
-            ))}
-          </View>
+          {offersMatching.length === 0 ? (
+            <EmptyState
+              title={t('home.noOffers')}
+              body={t('home.noOffersBody')}
+              icon="gift"
+              tone="lavender"
+            />
+          ) : (
+            <View style={styles.list}>
+              {offersMatching.map((offer, index) => (
+                <OfferCard
+                  key={offer.id}
+                  offer={offer}
+                  index={index}
+                  vendorLink={false}
+                  onPress={() => router.push(`/(customer)/gift/${offer.id}`)}
+                />
+              ))}
+            </View>
+          )}
 
           {!isPartner && locations.length > 0 ? (
             <>
               <SectionHeader title={t('business.locations')} />
               <View style={styles.list}>
-                {locations.map((location) => (
-                  <Card key={location.id} style={styles.location}>
+                {locations.map((item) => (
+                  <Card key={item.id} style={styles.location}>
                     <View style={styles.locationTop}>
-                      <Text style={styles.locationArea}>{location.area}</Text>
-                      <Badge label={location.hours} tone="success" />
+                      <Text style={styles.locationArea}>{item.area}</Text>
+                      <Badge label={item.hours} tone="success" />
                     </View>
-                    <Text style={styles.locationAddress}>{location.address}</Text>
+                    <Text style={styles.locationAddress}>{item.address}</Text>
                     <Text style={styles.locationLink}>{t('business.openMaps')} →</Text>
                   </Card>
                 ))}
@@ -149,31 +179,32 @@ export default function BusinessScreen() {
             </>
           ) : null}
 
-          <Button label={t('gift.buyNow')} fullWidth onPress={() => primary && router.push(`/(customer)/gift/${primary.id}`)} />
+          {primary ? (
+            <Button
+              label={t('gift.buyNow')}
+              fullWidth
+              onPress={() => router.push(`/(customer)/gift/${primary.id}`)}
+            />
+          ) : null}
         </>
       )}
     </Screen>
   );
 }
 
-async function fetchVendor(id: string): Promise<Vendor | null> {
-  const { getSupabase } = await import('@/src/lib/supabase');
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-  const supabase = getSupabase();
-  let query = supabase.from('vendors').select('*').eq('status', 'approved');
-  query = isUuid ? query.eq('id', id) : query.eq('slug', id);
-  const { data } = await query.maybeSingle();
-  return (data ?? null) as Vendor | null;
-}
-
 const styles = StyleSheet.create({
   loader: { marginTop: spacing.xxl },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  heroCopy: { flex: 1, gap: 2 },
-  name: { fontFamily: fonts.extrabold, fontSize: fontSizes.xl, color: colors.text },
+  heroCopy: { flex: 1, gap: 3 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap' },
+  name: { fontFamily: fonts.extrabold, fontSize: fontSizes.xl, color: colors.text, flexShrink: 1 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   meta: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
   dot: { color: colors.textMuted, fontSize: fontSizes.xs },
+  giftCount: { fontFamily: fonts.semibold, fontSize: fontSizes.xs, color: colors.textMuted },
+  partnerNote: { gap: spacing.xs },
+  partnerNoteTitle: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
+  partnerNoteBody: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted, lineHeight: 19 },
   section: { gap: spacing.sm },
   sectionTitle: { fontFamily: fonts.bold, fontSize: fontSizes.lg, color: colors.text },
   body: { fontFamily: fonts.regular, fontSize: fontSizes.md, color: colors.textMuted, lineHeight: 21 },

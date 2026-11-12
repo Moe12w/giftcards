@@ -7,9 +7,15 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, Check, Plus, Star } from 'lucide-react-native';
 
-import { offerStartingPriceMinor, offerTitle, offerTone } from '../lib/catalog';
+import {
+  offerBusinessLogo,
+  offerBusinessName,
+  offerStartingPriceMinor,
+  offerTitle,
+  offerTone,
+} from '../lib/catalog';
 import { glyphIcon } from '../lib/glyphs';
-import type { AccentTone, Offer } from '../lib/types';
+import type { AccentTone, MarketplaceBusiness, Offer } from '../lib/types';
 import { colors, edges, fonts, fontSizes, radii, spacing } from '../theme';
 import { Card, type CardTone } from './Card';
 import { IconTile, type IconTileTone } from './IconTile';
@@ -39,12 +45,7 @@ const CARD_TONES: Record<AccentTone, CardTone> = {
   sky: 'sky',
 };
 
-function vendorBanner(offer: Offer): string {
-  return (
-    offer.vendor?.banner_url ??
-    `https://placehold.co/900x300/png?text=${encodeURIComponent(offer.vendor?.name ?? offer.title)}`
-  );
-}
+const FEATURED_TONES: AccentTone[] = ['gold', 'teal', 'pink', 'lavender', 'sky'];
 
 interface CategoryShortcutProps {
   label: string;
@@ -134,51 +135,58 @@ export function CuratedCollectionCard({
 }
 
 interface FeaturedBusinessCardProps {
-  offer: Offer;
+  business: MarketplaceBusiness;
+  index?: number;
   onPress: () => void;
 }
 
-export function FeaturedBusinessCard({ offer, onPress }: FeaturedBusinessCardProps) {
-  const { t, i18n } = useTranslation();
-  const tone = offerTone(offer) as AccentTone;
-  const name = offer.vendor?.name ?? offerTitle(offer, i18n.language);
+export function FeaturedBusinessCard({ business, index = 0, onPress }: FeaturedBusinessCardProps) {
+  const { t } = useTranslation();
+  const tone = FEATURED_TONES[index % FEATURED_TONES.length];
+  const location = business.area ?? business.city;
+  const banner =
+    business.banner_url ??
+    `https://placehold.co/900x300/png?text=${encodeURIComponent(business.name)}`;
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={name}
+      accessibilityLabel={business.name}
       style={({ pressed }) => [styles.businessEdge, { backgroundColor: EDGES[tone] }, pressed && styles.pressed]}
     >
       <View style={styles.businessCard}>
-        <Image source={{ uri: vendorBanner(offer) }} style={styles.businessBanner} resizeMode="cover" />
+        <Image source={{ uri: banner }} style={styles.businessBanner} resizeMode="cover" />
         <View style={styles.businessBody}>
           <View style={styles.businessLogo}>
             <IconTile
-              icon={offer.icon}
-              imageUrl={offer.vendor?.logo_url}
+              icon="store"
+              imageUrl={business.logo_url}
               size={48}
               tone={tone as IconTileTone}
             />
           </View>
           <Text style={styles.businessName} numberOfLines={1}>
-            {name}
+            {business.name}
           </Text>
           <View style={styles.businessMeta}>
             <Star size={12} color={colors.gold} />
-            <Text style={styles.businessMetaText}>{(offer.rating ?? 4.8).toFixed(1)}</Text>
-            {offer.location ? (
+            <Text style={styles.businessMetaText}>{(business.rating ?? 4.8).toFixed(1)}</Text>
+            {location ? (
               <>
                 <Text style={styles.dot}>·</Text>
                 <Text style={styles.businessMetaText} numberOfLines={1}>
-                  {offer.location}
+                  {location}
                 </Text>
               </>
             ) : null}
           </View>
           <View style={styles.businessFooter}>
-            <Text style={styles.businessFrom}>{t('common.from')}</Text>
-            <Money minor={offerStartingPriceMinor(offer)} style={styles.businessAmount} />
+            <Text style={styles.businessFrom}>
+              {business.gift_count === 1
+                ? t('business.oneGift')
+                : t('business.manyGifts', { count: business.gift_count })}
+            </Text>
           </View>
         </View>
       </View>
@@ -216,7 +224,7 @@ export function TrendingGiftCard({
         <View style={styles.trendingTop}>
           <IconTile
             icon={offer.icon}
-            imageUrl={offer.vendor?.logo_url}
+            imageUrl={offerBusinessLogo(offer)}
             size={46}
             tone={tone as IconTileTone}
           />
@@ -229,7 +237,7 @@ export function TrendingGiftCard({
           {title}
         </Text>
         <Text style={styles.trendingVendor} numberOfLines={1}>
-          {offer.vendor?.name ?? title}
+          {offerBusinessName(offer, title)}
         </Text>
         <View style={styles.trendingFooter}>
           <View style={styles.trendingPrice}>
@@ -280,7 +288,7 @@ export function RecommendationRow({ offer, reason, onPress }: RecommendationRowP
         <View style={styles.recommendRow}>
           <IconTile
             icon={offer.icon}
-            imageUrl={offer.vendor?.logo_url}
+            imageUrl={offerBusinessLogo(offer)}
             size={54}
             tone={tone as IconTileTone}
           />

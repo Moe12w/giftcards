@@ -13,7 +13,7 @@ import { Money } from '@/src/components/Money';
 import { PaymentMethods } from '@/src/components/PaymentMethods';
 import { Screen } from '@/src/components/Screen';
 import { useBaskets } from '@/src/lib/baskets';
-import { offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerBusinessLogo, offerBusinessName, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
 import { formatMoney } from '@/src/lib/money';
 import type { AccentTone, Offer, OccasionId } from '@/src/lib/types';
@@ -207,7 +207,7 @@ export default function ContributeScreen() {
           <View key={offer.id} style={styles.itemRow}>
             <IconTile
               icon={offer.icon}
-              imageUrl={offer.vendor?.logo_url}
+              imageUrl={offerBusinessLogo(offer)}
               size={42}
               tone={(offerTone(offer) as AccentTone) as IconTileTone}
             />
@@ -216,7 +216,7 @@ export default function ContributeScreen() {
                 {offerTitle(offer, i18n.language)}
               </Text>
               <Text style={styles.itemVendor} numberOfLines={1}>
-                {offer.vendor?.name ?? offer.title}
+                {offerBusinessName(offer, offer.title)}
               </Text>
             </View>
             <Money minor={amountMinor} style={styles.itemAmount} />

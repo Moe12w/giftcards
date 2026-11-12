@@ -25,6 +25,7 @@ import type {
   CardStatus,
   GiftCard,
   LedgerEntry,
+  MarketplaceBusiness,
   NotificationKind,
   Offer,
   Order,
@@ -58,6 +59,16 @@ interface NotificationRow {
 }
 
 /** A voucher row with the product and vendor it belongs to. */
+interface VoucherProduct {
+  title: string | null;
+  icon: string | null;
+  tone: string | null;
+  partner?:
+    | { name: string | null; logo_url: string | null }
+    | { name: string | null; logo_url: string | null }[]
+    | null;
+}
+
 export interface VoucherRow {
   id: string;
   voucher_code: string | null;
@@ -81,10 +92,7 @@ export interface VoucherRow {
   gift_message: string | null;
   expires_at: string | null;
   created_at: string;
-  product?:
-    | { title: string | null; icon: string | null; tone: string | null; enterprise_products?: { name: string | null; enterprise_partners?: { name: string | null } | { name: string | null }[] | null } | null }
-    | { title: string | null; icon: string | null; tone: string | null; enterprise_products?: { name: string | null; enterprise_partners?: { name: string | null } | { name: string | null }[] | null } | null }[]
-    | null;
+  product?: VoucherProduct | VoucherProduct[] | null;
   vendor?: { name: string | null; logo_url: string | null } | { name: string | null; logo_url: string | null }[] | null;
 }
 
@@ -98,8 +106,7 @@ function firstRelation<T>(value: T | T[] | null | undefined): T | null {
 export function mapVoucher(row: VoucherRow): GiftCard {
   const product = firstRelation(row.product);
   const vendor = firstRelation(row.vendor);
-  const enterpriseProduct = firstRelation(product?.enterprise_products);
-  const partner = firstRelation(enterpriseProduct?.enterprise_partners);
+  const partner = firstRelation(product?.partner);
   const status = ((): CardStatus => {
     switch (row.status) {
       case 'issued':
@@ -154,7 +161,7 @@ export async function listMyVouchers(): Promise<GiftCard[]> {
   const { data, error } = await getSupabase()
     .from('vouchers')
     .select(
-      'id, voucher_code, qr_payload, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, enterprise_products(name, enterprise_partners(name))), vendor:vendors(name, logo_url)',
+      'id, voucher_code, qr_payload, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
     )
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -280,48 +287,41 @@ export async function listVendorLocations(vendorId: string): Promise<BusinessLoc
   );
 }
 
-/** A partner business (enterprise partner), for public storefronts. */
-export interface PartnerBusiness {
-  id: string;
-  name: string;
-  slug: string | null;
-  logo_url: string | null;
-  banner_url: string | null;
-  description: string | null;
-  status: string;
-  gift_count: number;
-}
-
-/** Fetches a single partner business by id or slug for the public storefront. */
-export async function getPartner(idOrSlug: string): Promise<PartnerBusiness | null> {
+/** Fetches one business (vendor or partner) by id or slug. */
+export async function getBusiness(idOrSlug: string): Promise<MarketplaceBusiness | null> {
   if (!hasSupabaseConfig) return null;
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
-  let query = getSupabase()
-    .from('enterprise_partners')
-    .select('id, name, slug, logo_url, banner_url, description, status')
-    .eq('status', 'active');
+  let query = getSupabase().from('marketplace_businesses').select('*');
   query = isUuid ? query.eq('id', idOrSlug) : query.eq('slug', idOrSlug);
   const { data, error } = await query.maybeSingle();
   if (error) throw error;
-  return (data ?? null) as PartnerBusiness | null;
+  return (data ?? null) as MarketplaceBusiness | null;
+}
+
+/** Kept for older callers: a partner is one kind of business. */
+export async function getPartner(idOrSlug: string): Promise<MarketplaceBusiness | null> {
+  const business = await getBusiness(idOrSlug);
+  return business?.business_kind === 'partner' ? business : null;
 }
 
 /** The public business directory: vendors and partners combined. */
-export async function listMarketplaceBusinesses(): Promise<PartnerBusiness[]> {
+export async function listMarketplaceBusinesses(): Promise<MarketplaceBusiness[]> {
   if (!hasSupabaseConfig) return [];
   const { data, error } = await getSupabase()
     .from('marketplace_businesses')
-    .select('id, name, slug, logo_url, banner_url, description, status, gift_count')
+    .select('id, business_kind, name, slug, logo_url, banner_url, city, area, rating, description, status, gift_count')
     .order('gift_count', { ascending: false })
     .order('rating', { ascending: false });
   if (error) throw error;
-  return (data ?? []) as PartnerBusiness[];
+  return (data ?? []) as MarketplaceBusiness[];
 }
 export async function listFavourites(): Promise<Offer[]> {
   if (!hasSupabaseConfig) return [];
   const { data, error } = await getSupabase()
     .from('favourites')
-    .select('product_id, vendor_id, product:products(*, vendor:vendors(id, name, name_ar, logo_url, banner_url)), vendor:vendors(*)')
+    .select(
+      'product_id, vendor_id, product:products(*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)), vendor:vendors(*)',
+    )
     .order('created_at', { ascending: false });
   if (error) throw error;
 
@@ -331,7 +331,7 @@ export async function listFavourites(): Promise<Offer[]> {
         product: (Offer & { vendor?: Offer['vendor'] }) | null;
         vendor: Offer['vendor'] | null;
       };
-      if (entry.product) return entry.product;
+      if (entry.product) return mapOffer(entry.product as OfferRow);
       if (entry.vendor) {
         return {
           id: entry.vendor.id,
@@ -377,7 +377,7 @@ export async function listActiveOffers(): Promise<Offer[]> {
   const { data, error } = await getSupabase()
     .from('products')
     .select(
-      '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
+      '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
     )
     .eq('is_active', true)
     .eq('status', 'published')
@@ -393,7 +393,7 @@ export async function getOffer(id: string): Promise<Offer | null> {
   const { data, error } = await getSupabase()
     .from('products')
     .select(
-      '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
+      '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
     )
     .eq('id', id)
     .maybeSingle();
@@ -402,66 +402,24 @@ export async function getOffer(id: string): Promise<Offer | null> {
 }
 
 export async function listMyCards(): Promise<GiftCard[]> {
-  if (!hasSupabaseConfig) {
-    return MOCK_CARDS;
-  }
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from('vouchers')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-
-  const cards = (data ?? []) as GiftCard[];
-  if (cards.length === 0) return cards;
-
-  // Balance is derived in the `card_balances` view, never stored on the row.
-  const { data: balances, error: balanceError } = await supabase
-    .from('card_balances')
-    .select('card_id, balance_minor')
-    .in(
-      'card_id',
-      cards.map((c) => c.id),
-    );
-  if (balanceError) throw balanceError;
-
-  const byCard = new Map(
-    (balances ?? []).map((b: { card_id: string; balance_minor: number }) => [
-      b.card_id,
-      Number(b.balance_minor),
-    ]),
-  );
-
-  return cards.map((card) => ({
-    ...card,
-    balance_minor: byCard.get(card.id) ?? 0,
-  }));
+  // The cards tab and the wallet read the same rows. Reusing the voucher
+  // mapping keeps partner and vendor names, logos and partner-code balances.
+  return listMyVouchers();
 }
 
 export async function getMyCard(id: string): Promise<GiftCard | null> {
   if (!hasSupabaseConfig) {
     return MOCK_CARDS.find((c) => c.id === id) ?? null;
   }
-  const supabase = getSupabase();
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('vouchers')
-    .select('*')
+    .select(
+      'id, voucher_code, qr_payload, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
+    )
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
-  if (!data) return null;
-
-  const { data: balance, error: balanceError } = await supabase
-    .from('card_balances')
-    .select('balance_minor')
-    .eq('card_id', id)
-    .maybeSingle();
-  if (balanceError) throw balanceError;
-
-  return {
-    ...(data as GiftCard),
-    balance_minor: Number(balance?.balance_minor ?? 0),
-  };
+  return data ? mapVoucher(data as unknown as VoucherRow) : null;
 }
 
 export async function listMyOrders(): Promise<Order[]> {
