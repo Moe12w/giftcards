@@ -1,8 +1,12 @@
 import type { ReactNode } from 'react';
 import { Inbox } from 'lucide-react';
-import { titleCase } from '@/lib/format';
+import { labelFor } from '@/lib/i18n/labels';
+import { pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { getLocale } from '@/lib/i18n/server';
 
-export function StatusTag({ status }: { status: string | null | undefined }) {
+export async function StatusTag({ status }: { status: string | null | undefined }) {
+  const locale = await getLocale();
   const value = (status ?? 'unknown').toLowerCase();
   const tone =
     value === 'approved' ||
@@ -32,7 +36,8 @@ export function StatusTag({ status }: { status: string | null | undefined }) {
           : value === 'draft' || value === 'archived' || value === 'incomplete'
             ? 'neutral'
             : 'neutral';
-  return <span className={`tag ${tone}`}>{titleCase(value)}</span>;
+  const label = value === 'unknown' ? pick(common, locale).states.unknown : labelFor(value, locale);
+  return <span className={`tag ${tone}`}>{label}</span>;
 }
 
 export function PageHead({

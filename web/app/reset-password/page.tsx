@@ -2,8 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { updatePassword } from '@/lib/actions/auth';
 import { Logo } from '@/components/Logo';
+import { pick } from '@/lib/i18n';
+import { componentsCopy } from '@/lib/i18n/components';
+import { getLocale } from '@/lib/i18n/server';
 
-export const metadata: Metadata = { title: 'Set a new password' };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: pick(componentsCopy, locale).resetPassword.title };
+}
 
 export default async function ResetPasswordPage({
   searchParams,
@@ -11,65 +17,60 @@ export default async function ResetPasswordPage({
   searchParams: Promise<{ done?: string; error?: string }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const t = pick(componentsCopy, locale).resetPassword;
   const done = params.done === '1';
-  const error =
-    params.error === 'link'
-      ? 'That reset link is invalid or has expired. Request a new one from your sign-in page.'
-      : null;
+  const error = params.error === 'link' ? t.invalidLink : null;
 
   return (
     <div className="auth-shell">
       <div className="auth-side lavender">
         <Logo />
         <div>
-          <h2>Back into your account, safely.</h2>
-          <p>Choose a new password with at least eight characters. You will stay signed in on this device.</p>
+          <h2>{t.heading}</h2>
+          <p>{t.body}</p>
         </div>
-        <p className="small">Giftly · Doha, Qatar</p>
+        <p className="small">{t.footer}</p>
       </div>
       <div className="auth-main">
         <div className="auth-card">
-          <span className="eyebrow lavender">Password reset</span>
-          <h1 style={{ marginTop: 14 }}>{done ? 'Password updated' : 'Choose a new password'}</h1>
+          <span className="eyebrow lavender">{t.eyebrow}</span>
+          <h1 style={{ marginTop: 14 }}>{done ? t.doneTitle : t.newTitle}</h1>
           {done ? (
             <>
-              <p style={{ marginTop: 12 }}>
-                Your password has been changed. You can now open the dashboard you use.
-              </p>
+              <p style={{ marginTop: 12 }}>{t.doneBody}</p>
               <div className="form">
                 <Link className="btn primary block" href="/vendor">
-                  Vendor dashboard
+                  {t.vendorDashboard}
                 </Link>
                 <Link className="btn block" href="/enterprise">
-                  Enterprise dashboard
+                  {t.enterpriseDashboard}
                 </Link>
                 <Link className="btn block" href="/admin">
-                  Admin dashboard
+                  {t.adminDashboard}
                 </Link>
               </div>
             </>
           ) : (
             <>
-              <p style={{ marginTop: 12 }}>
-                Pick something you have not used before. Eight characters minimum.
-              </p>
+              <p style={{ marginTop: 12 }}>{t.pickNew}</p>
               {error ? <div className="callout error" style={{ marginTop: 16 }}>{error}</div> : null}
               {params.error && !error ? (
                 <div className="callout error" style={{ marginTop: 16 }}>
-                  Could not update your password. Open the reset link from your email again.
+                  {t.failed}
                 </div>
               ) : null}
               <form action={updatePassword} className="form">
                 <div className="field">
-                  <label htmlFor="password">New password</label>
+                  <label htmlFor="password">{t.newPassword}</label>
                   <input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} />
                 </div>
                 <div className="field">
-                  <label htmlFor="confirm">Confirm password</label>
+                  <label htmlFor="confirm">{t.confirmPassword}</label>
                   <input id="confirm" name="confirm" type="password" autoComplete="new-password" required minLength={8} />
                 </div>
                 <button className="btn primary block" type="submit">
-                  Update password
+                  {t.updatePassword}
                 </button>
               </form>
             </>

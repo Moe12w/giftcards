@@ -4,99 +4,54 @@ import { DashShell, type NavGroup } from '@/components/DashShell';
 import { requireEnterprise } from '@/lib/auth';
 import { initials, titleCase } from '@/lib/format';
 import { ENTERPRISE_SCRIPT } from '@/lib/tutorial';
+import { getUserLocale } from '@/lib/i18n/server';
+import { enterpriseCopy } from '@/lib/i18n/enterprise';
+import { pick } from '@/lib/i18n';
 
 export default async function EnterpriseDashboardLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireEnterprise();
   const partner = ctx.partner;
-  const locale = ctx.profile?.preferred_language === 'ar' ? 'ar' : 'en';
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const chrome = pick(enterpriseCopy, locale).chrome;
+  const t = pick(enterpriseCopy, locale).nav;
 
   // The menu follows the life cycle of a corporate code: set up, define the
   // reward, import the codes, then allocate and reconcile them.
   const nav: NavGroup[] = [
     {
       step: 1,
-      label: 'Start here',
-      labelAr: 'ابدأ من هنا',
+      label: t.group1,
       items: [
-        {
-          href: '/enterprise',
-          label: 'Overview',
-          labelAr: 'نظرة عامة',
-          icon: 'dashboard',
-          hint: 'Stock, allocations and redemptions today.',
-          hintAr: 'المخزون والتخصيصات والاستبدالات اليوم.',
-        },
-        {
-          href: '/enterprise/settings',
-          label: 'Company settings',
-          labelAr: 'إعدادات الشركة',
-          icon: 'settings',
-          hint: 'Your details and who on the team can act.',
-          hintAr: 'بياناتك ومن يمكنه التصرف من الفريق.',
-        },
+        { href: '/enterprise', label: t.overview, icon: 'dashboard', hint: t.overviewHint },
+        { href: '/enterprise/settings', label: t.settings, icon: 'settings', hint: t.settingsHint },
       ],
     },
     {
       step: 2,
-      label: 'Define the reward',
-      labelAr: 'عرّف المكافأة',
-      items: [
-        {
-          href: '/enterprise/products',
-          label: 'Products',
-          labelAr: 'المنتجات',
-          icon: 'products',
-          hint: 'Face value, selling price and commission.',
-          hintAr: 'قيمة الرمز وسعر البيع والعمولة.',
-        },
-      ],
+      label: t.group2,
+      items: [{ href: '/enterprise/products', label: t.products, icon: 'products', hint: t.productsHint }],
     },
     {
       step: 3,
-      label: 'Bring the codes',
-      labelAr: 'استورد الرموز',
-      items: [
-        {
-          href: '/enterprise/import',
-          label: 'Import codes',
-          labelAr: 'استيراد الرموز',
-          icon: 'import',
-          hint: 'Paste your codes and check the result.',
-          hintAr: 'الصق رموزك وراجع النتيجة.',
-        },
-      ],
+      label: t.group3,
+      items: [{ href: '/enterprise/import', label: t.import, icon: 'import', hint: t.importHint }],
     },
     {
       step: 4,
-      label: 'Allocate and reconcile',
-      labelAr: 'الخصم والمطابقة',
+      label: t.group4,
       items: [
-        {
-          href: '/enterprise/inventory',
-          label: 'Inventory',
-          labelAr: 'المخزون',
-          icon: 'inventory',
-          hint: 'Every code and where it is in its life.',
-          hintAr: 'كل رمز وأين هو في رحلته.',
-        },
-        {
-          href: '/enterprise/reports',
-          label: 'Reports',
-          labelAr: 'التقارير',
-          icon: 'reports',
-          hint: 'What to hand over to finance.',
-          hintAr: 'ما يمرَّر إلى المحاسبة.',
-        },
+        { href: '/enterprise/inventory', label: t.inventory, icon: 'inventory', hint: t.inventoryHint },
+        { href: '/enterprise/reports', label: t.reports, icon: 'reports', hint: t.reportsHint },
       ],
     },
   ];
 
   return (
     <DashShell
-      portalLabel="Enterprise portal"
+      portalLabel={chrome.portal}
       workspaceName={partner.name}
-      workspaceMeta={`${[partner.industry, partner.status].filter(Boolean).map((value) => titleCase(String(value))).join(' · ') || 'Qatar'}`}
-      userName={ctx.profile?.full_name ?? ctx.user.email ?? 'Partner'}
+      workspaceMeta={`${[partner.industry, partner.status].filter(Boolean).map((value) => titleCase(String(value), locale)).join(' · ') || chrome.qatar}`}
+      userName={ctx.profile?.full_name ?? ctx.user.email ?? chrome.workspaceFallback}
       userEmail={ctx.user.email ?? ''}
       userInitials={initials(ctx.profile?.full_name ?? ctx.user.email ?? 'P')}
       accent="lavender"
@@ -106,12 +61,12 @@ export default async function EnterpriseDashboardLayout({ children }: { children
       autoOpenTutorial={!ctx.profile?.tutorial_completed_at}
       topRight={
         <>
-          <span className="tag lavender">{titleCase(ctx.role)}</span>
+          <span className="tag lavender dash-role">{titleCase(ctx.role, locale)}</span>
           <Link className="btn sm ghost" href="/corporate#enquiry" target="_blank">
-            <ExternalLink size={14} /> Corporate site
+            <ExternalLink size={14} /> {chrome.corporateSite}
           </Link>
           <Link className="btn sm primary" href="/enterprise/import">
-            Import codes
+            {chrome.importCodes}
           </Link>
         </>
       }

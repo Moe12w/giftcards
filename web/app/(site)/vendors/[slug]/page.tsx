@@ -17,6 +17,10 @@ import { mapProducts } from '@/lib/data';
 import { activeVariants, fulfilmentLabel, priceLabel, productTone } from '@/lib/catalog';
 import { formatMoney } from '@/lib/money';
 import { initials } from '@/lib/format';
+import { site } from '@/lib/i18n/site';
+import { common } from '@/lib/i18n/common';
+import { pick, fill } from '@/lib/i18n';
+import { getLocale } from '@/lib/i18n/server';
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -31,11 +35,13 @@ async function getBusiness(slug: string) {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const locale = await getLocale();
+  const t = pick(site, locale).vendorDetail;
   const business = await getBusiness(slug);
-  if (!business) return { title: 'Business not found' };
+  if (!business) return { title: t.notFound };
   return {
     title: business.name,
-    description: business.description ?? `Gifts from ${business.name} on Giftly.`,
+    description: fill(t.metaDescription, { name: business.name }),
   };
 }
 
@@ -43,6 +49,10 @@ export default async function BusinessDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const business = await getBusiness(slug);
   if (!business) notFound();
+
+  const locale = await getLocale();
+  const t = pick(site, locale).vendorDetail;
+  const c = pick(common, locale);
 
   const supabase = await createClient();
   const isPartner = business.business_kind === 'partner';
@@ -72,7 +82,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
       <section className="vendor-hero">
         <div className="container">
           <Link className="back-link" href="/vendors">
-            <ArrowLeft size={16} /> All businesses
+            <ArrowLeft size={16} /> {t.allBusinesses}
           </Link>
           <div className="vendor-hero-card">
             <span className="vendor-logo xl">
@@ -81,21 +91,21 @@ export default async function BusinessDetailPage({ params }: PageProps) {
             <div className="vendor-hero-copy">
               <div className="pill-row">
                 {isPartner ? (
-                  <span className="tag mint">Enterprise partner</span>
+                  <span className="tag mint">{t.enterprisePartner}</span>
                 ) : (
-                  <span className="tag mint">Verified business</span>
+                  <span className="tag mint">{t.verifiedBusiness}</span>
                 )}
                 <span className="tag gold">
                   <Star size={12} fill="currentColor" /> {Number(business.rating ?? 0).toFixed(1)}
                 </span>
               </div>
               <h1>{business.name}</h1>
-              <p className="lede">{business.description ?? 'A local favourite on Giftly.'}</p>
+              <p className="lede">{business.description ?? t.localFavourite}</p>
               <div className="hero-trust">
                 {!isPartner && (
                   <span>
                     <MapPin size={16} />{' '}
-                    {[business.area, business.city].filter(Boolean).join(', ') || 'Qatar'}
+                    {[business.area, business.city].filter(Boolean).join(', ') || t.qatar}
                   </span>
                 )}
                 {business.website ? (
@@ -107,9 +117,9 @@ export default async function BusinessDetailPage({ params }: PageProps) {
             </div>
             <div className="vendor-hero-cta">
               <Link className="btn primary" href="/download">
-                Get the app to send <ArrowRight size={16} />
+                {t.getTheAppToSend} <ArrowRight size={16} />
               </Link>
-              <span className="small muted">Gifts are sent and stored in the Giftly app.</span>
+              <span className="small muted">{t.sentAndStored}</span>
             </div>
           </div>
         </div>
@@ -118,15 +128,15 @@ export default async function BusinessDetailPage({ params }: PageProps) {
       <section className="container section tight">
         <div className="section-head">
           <div className="copy">
-            <span className="eyebrow mint">Gifts from {business.name}</span>
-            <h2>Pick something they will remember.</h2>
+            <span className="eyebrow mint">{fill(t.giftsFrom, { name: business.name })}</span>
+            <h2>{t.title}</h2>
           </div>
         </div>
 
         {products.length === 0 ? (
           <div className="empty">
-            <h3>Gifts are on the way</h3>
-            <p>{business.name} has not published an offer yet. Check back shortly.</p>
+            <h3>{t.emptyTitle}</h3>
+            <p>{fill(t.emptyBody, { name: business.name })}</p>
           </div>
         ) : (
           <div className="offer-grid">
@@ -135,7 +145,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
               return (
                 <article className="offer-card static" key={product.id}>
                   <div className={`offer-art ${productTone(product)}`}>
-                    <span className="tag">{fulfilmentLabel(product.fulfilment_type)}</span>
+                    <span className="tag">{fulfilmentLabel(product.fulfilment_type, locale)}</span>
                     {product.fulfilment_type === 'experience' ? (
                       <CalendarHeart size={34} />
                     ) : (
@@ -146,7 +156,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                     <div>
                       <h3>{product.title}</h3>
                       <p className="small" style={{ marginTop: 6 }}>
-                        {product.description ?? 'A thoughtful local gift.'}
+                        {product.description ?? t.thoughtfulGift}
                       </p>
                     </div>
                     {product.fulfilment_type === 'experience' && variants.length > 0 ? (
@@ -157,28 +167,28 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                               {variant.label}
                               {variant.session_count
                                 ? ` · ${variant.session_count} ${
-                                    variant.session_count === 1 ? 'session' : 'sessions'
+                                    variant.session_count === 1 ? c.time.session : c.time.sessions
                                   }`
                                 : ''}
                             </span>
-                            <strong>{formatMoney(variant.price_minor)}</strong>
+                            <strong>{formatMoney(variant.price_minor, locale)}</strong>
                           </div>
                         ))}
                       </div>
                     ) : null}
                     <div className="offer-meta">
-                      <strong>{priceLabel(product)}</strong>
+                      <strong>{priceLabel(product, locale)}</strong>
                       <span className="small muted">
                         <Clock size={12} style={{ display: 'inline', verticalAlign: '-2px' }} />{' '}
                         {product.expiry_days
-                          ? `Valid ${product.expiry_days} days`
+                          ? fill(t.validDays, { days: product.expiry_days })
                           : product.valid_until
-                            ? `Valid until ${product.valid_until.slice(0, 10)}`
-                            : 'No expiry'}
+                            ? fill(t.validUntil, { date: product.valid_until.slice(0, 10) })
+                            : t.noExpiry}
                       </span>
                     </div>
                     <Link className="btn primary block sm" href="/download">
-                      Send this gift
+                      {t.sendThisGift}
                     </Link>
                   </div>
                 </article>
@@ -195,12 +205,12 @@ export default async function BusinessDetailPage({ params }: PageProps) {
               <span className="icon-tile lavender">
                 <MapPin size={22} />
               </span>
-              <h3 style={{ marginTop: 14 }}>Where to find them</h3>
+              <h3 style={{ marginTop: 14 }}>{t.whereToFind}</h3>
               <div className="split-list" style={{ marginTop: 10 }}>
                 {locations.map((location) => (
                   <div key={location.id}>
-                    <span className="k">{location.address ?? location.area ?? 'Doha'}</span>
-                    <span className="v small">{location.hours ?? 'See vendor for hours'}</span>
+                    <span className="k">{location.address ?? location.area ?? t.doha}</span>
+                    <span className="v small">{location.hours ?? t.seeVendorForHours}</span>
                   </div>
                 ))}
               </div>
@@ -209,12 +219,12 @@ export default async function BusinessDetailPage({ params }: PageProps) {
               <span className="icon-tile ink">
                 <Mail size={22} />
               </span>
-              <h3 style={{ marginTop: 14 }}>Questions about this gift?</h3>
+              <h3 style={{ marginTop: 14 }}>{t.questionsTitle}</h3>
               <p className="small" style={{ marginTop: 8 }}>
-                Reach the Giftly team and we will help with delivery, balances or bookings.
+                {t.questionsBody}
               </p>
               <Link className="btn sm" href="/contact" style={{ marginTop: 14 }}>
-                Contact us <ArrowRight size={14} />
+                {t.contactUs} <ArrowRight size={14} />
               </Link>
             </div>
           </div>

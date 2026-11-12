@@ -14,10 +14,18 @@ import { formatDate, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
 import { HelpButton } from '@/components/HelpButton';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function AdminOverviewPage() {
   const ctx = await requireAdmin();
   const supabase = ctx.supabase;
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).overview;
+  const c = pick(common, locale);
+  const nav = pick(adminCopy, locale).nav;
 
   const [
     vendorsCount,
@@ -84,17 +92,17 @@ export default async function AdminOverviewPage() {
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Overview"
-        title="The marketplace at a glance."
-        description="Applications, sales, vouchers and the support queue. Everything that needs a decision is linked below."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
         actions={
           <>
             <HelpButton step="lifecycle" />
             <Link className="btn sm" href="/admin/support">
-              <LifeBuoy size={15} /> Support
+              <LifeBuoy size={15} /> {t.support}
             </Link>
             <Link className="btn sm primary" href="/admin/vendors?status=pending">
-              Review vendors
+              {t.reviewVendors}
             </Link>
           </>
         }
@@ -102,30 +110,30 @@ export default async function AdminOverviewPage() {
 
       <div className="kpi-grid">
         <Kpi
-          label="Approved vendors"
+          label={t.approvedVendors}
           value={String(vendorsCount.count ?? 0)}
-          hint={`${pendingCount.count ?? 0} applications waiting`}
+          hint={fill(t.applicationsWaiting, { count: pendingCount.count ?? 0 })}
           icon={<Store size={17} />}
           tone="mint"
         />
         <Kpi
-          label="Customers"
+          label={t.customers}
           value={String(customersCount.count ?? 0)}
-          hint={`${partnersCount.count ?? 0} active enterprise partners`}
+          hint={fill(t.activePartners, { count: partnersCount.count ?? 0 })}
           icon={<UserRound size={17} />}
           tone="lavender"
         />
         <Kpi
-          label="Paid order value"
+          label={t.paidOrderValue}
           value={formatMoney(gmv)}
-          hint={`${paid.length} paid orders`}
+          hint={fill(t.paidOrders, { count: paid.length })}
           icon={<CreditCard size={17} />}
           tone="gold"
         />
         <Kpi
-          label="Outstanding balance"
+          label={t.outstanding}
           value={formatMoney(outstanding)}
-          hint={`${activeVouchers.length} active vouchers`}
+          hint={fill(t.activeVouchers, { count: activeVouchers.length })}
           icon={<Ticket size={17} />}
           tone="coral"
         />
@@ -134,23 +142,23 @@ export default async function AdminOverviewPage() {
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Applications to review</h3>
+            <h3>{t.applicationsToReview}</h3>
             <Link className="small" href="/admin/vendors?status=pending" style={{ fontWeight: 800 }}>
-              All applications <ArrowRight size={13} style={{ display: 'inline', verticalAlign: '-2px' }} />
+              {t.allApplications} <ArrowRight size={13} style={{ display: 'inline', verticalAlign: '-2px' }} />
             </Link>
           </div>
           <div className="panel-body flush">
             {applications.length === 0 ? (
-              <div className="table-empty">No applications waiting. Nice.</div>
+              <div className="table-empty">{t.noApplications}</div>
             ) : (
               <div className="table-wrap">
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Business</th>
-                      <th>Submitted</th>
-                      <th>Status</th>
-                      <th style={{ textAlign: 'right' }}>Review</th>
+                      <th>{t.business}</th>
+                      <th>{t.submitted}</th>
+                      <th>{c.labels.status}</th>
+                      <th style={{ textAlign: 'right' }}>{t.review}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -161,18 +169,20 @@ export default async function AdminOverviewPage() {
                       return (
                         <tr key={application.id}>
                           <td>
-                            <span className="strong">{application.business_name ?? vendor?.name ?? 'Vendor'}</span>
+                            <span className="strong">
+                              {application.business_name ?? vendor?.name ?? t.vendorFallback}
+                            </span>
                             <br />
                             <span className="sub">{vendor?.slug ?? '—'}</span>
                           </td>
-                          <td className="small muted">{formatDate(application.submitted_at)}</td>
+                          <td className="small muted">{formatDate(application.submitted_at, locale)}</td>
                           <td>
                             <StatusTag status={application.status} />
                           </td>
                           <td>
                             <div className="row-actions">
                               <Link className="btn sm" href={`/admin/vendors/${application.vendor_id}`}>
-                                Open
+                                {c.actions.open}
                               </Link>
                             </div>
                           </td>
@@ -188,21 +198,21 @@ export default async function AdminOverviewPage() {
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Support queue</h3>
-            <span className="tag warning">{openSupport} open</span>
+            <h3>{t.supportQueue}</h3>
+            <span className="tag warning">{fill(t.openTickets, { count: openSupport })}</span>
           </div>
           <div className="panel-body flush">
             {support.length === 0 ? (
-              <div className="table-empty">No support requests yet.</div>
+              <div className="table-empty">{t.noSupport}</div>
             ) : (
               <div className="table-wrap">
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Request</th>
-                      <th>Kind</th>
-                      <th>Status</th>
-                      <th>Date</th>
+                      <th>{t.request}</th>
+                      <th>{t.kind}</th>
+                      <th>{c.labels.status}</th>
+                      <th>{c.labels.date}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -210,14 +220,14 @@ export default async function AdminOverviewPage() {
                       <tr key={request.id}>
                         <td>
                           <Link href="/admin/support" className="strong">
-                            {request.subject ?? request.reference ?? 'Support request'}
+                            {request.subject ?? request.reference ?? t.supportRequest}
                           </Link>
                         </td>
-                        <td className="small muted">{titleCase(request.kind)}</td>
+                        <td className="small muted">{titleCase(request.kind, locale)}</td>
                         <td>
                           <StatusTag status={request.status} />
                         </td>
-                        <td className="small muted">{formatDate(request.created_at)}</td>
+                        <td className="small muted">{formatDate(request.created_at, locale)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -230,25 +240,25 @@ export default async function AdminOverviewPage() {
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Recent orders</h3>
+          <h3>{t.recentOrders}</h3>
           <Link className="small" href="/admin/orders" style={{ fontWeight: 800 }}>
-            All orders <ArrowRight size={13} style={{ display: 'inline', verticalAlign: '-2px' }} />
+            {t.allOrders} <ArrowRight size={13} style={{ display: 'inline', verticalAlign: '-2px' }} />
           </Link>
         </div>
         <div className="panel-body flush">
           {orders.length === 0 ? (
-            <div className="table-empty">No orders yet.</div>
+            <div className="table-empty">{t.noOrders}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Order</th>
-                    <th>Buyer</th>
-                    <th>Recipient</th>
-                    <th className="num">Total</th>
-                    <th>Status</th>
-                    <th>Date</th>
+                    <th>{t.order}</th>
+                    <th>{t.buyer}</th>
+                    <th>{t.recipient}</th>
+                    <th className="num">{t.total}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{c.labels.date}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -266,7 +276,7 @@ export default async function AdminOverviewPage() {
                             <span className="avatar" style={{ width: 28, height: 28, fontSize: '0.64rem' }}>
                               {initials(buyer?.full_name ?? buyer?.email ?? order.sender_name ?? '?')}
                             </span>
-                            {buyer?.full_name ?? order.sender_name ?? 'Guest'}
+                            {buyer?.full_name ?? order.sender_name ?? t.guest}
                           </span>
                         </td>
                         <td>{order.recipient_name ?? '—'}</td>
@@ -274,7 +284,7 @@ export default async function AdminOverviewPage() {
                         <td>
                           <StatusTag status={order.status} />
                         </td>
-                        <td className="small muted">{formatDate(order.created_at)}</td>
+                        <td className="small muted">{formatDate(order.created_at, locale)}</td>
                       </tr>
                     );
                   })}
@@ -290,25 +300,25 @@ export default async function AdminOverviewPage() {
           <span className="icon-tile mint">
             <Store size={18} />
           </span>
-          Vendors
+          {nav.vendors}
         </Link>
         <Link className="quick-link" href="/admin/enterprise">
           <span className="icon-tile lavender">
             <Building2 size={18} />
           </span>
-          Enterprise
+          {nav.enterprise}
         </Link>
         <Link className="quick-link" href="/admin/products">
           <span className="icon-tile gold">
             <ShoppingBag size={18} />
           </span>
-          Products
+          {nav.products}
         </Link>
         <Link className="quick-link" href="/admin/vouchers">
           <span className="icon-tile coral">
             <Ticket size={18} />
           </span>
-          Vouchers
+          {nav.vouchers}
         </Link>
       </div>
     </div>

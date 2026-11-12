@@ -382,7 +382,11 @@ p {
   z-index: 40;
   background: rgba(255, 248, 236, 0.94);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 2px solid var(--ink);
+  /* On a phone the Safari bar covers the top of the page, so the header is
+     padded down by the safe area and the background runs under it. */
+  padding-top: env(safe-area-inset-top);
 }
 
 .site-header .inner {
@@ -464,6 +468,8 @@ p {
   margin-top: 80px;
   border-top: 2px solid var(--ink);
   background: var(--canvas-deep);
+  /* Leaves room for the Safari bar at the bottom of the phone. */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .site-footer .inner {
@@ -1161,6 +1167,8 @@ textarea.input {
   display: grid;
   place-items: center;
   padding: 48px 24px;
+  /* Leaves room for the Safari bar at the bottom of the phone. */
+  padding-bottom: calc(48px + env(safe-area-inset-bottom));
 }
 
 .auth-card {
@@ -1255,6 +1263,7 @@ textarea.input {
 
 .dash {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: 264px minmax(0, 1fr);
   background: var(--canvas);
@@ -1399,9 +1408,13 @@ textarea.input {
   gap: 20px;
   min-height: 72px;
   padding: 12px 32px;
+  /* On a phone the Safari bar covers the top of the page, so the header is
+     padded down by the safe area and the background runs under it. */
+  padding-top: calc(12px + env(safe-area-inset-top));
   border-bottom: 2px solid var(--ink);
   background: rgba(255, 248, 236, 0.95);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .dash-top .title {
@@ -1424,6 +1437,8 @@ textarea.input {
 
 .dash-content {
   padding: 30px 32px 64px;
+  /* Leaves room for the Safari bar at the bottom of the phone. */
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
   display: grid;
   gap: 24px;
   align-content: start;
@@ -1772,6 +1787,14 @@ table.data .sub {
   gap: 10px;
 }
 
+/* The overview pages ask for four quick actions in a row. A phone cannot fit
+   four, so they stack into two columns there. */
+@media (max-width: 640px) {
+  .quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
 .quick-link {
   display: flex;
   align-items: center;
@@ -1795,6 +1818,19 @@ table.data .sub {
   height: 34px;
   border-radius: 9px;
   flex: 0 0 auto;
+}
+
+/* On a narrow phone the label wraps, so the icon goes above it and the text
+   is allowed to use the full width of the tile. */
+@media (max-width: 640px) {
+  .quick-link {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px;
+    font-size: 0.8rem;
+    line-height: 1.25;
+  }
 }
 
 .workspace-switch {
@@ -2028,11 +2064,41 @@ table.data .sub {
   .dash-top {
     top: 0;
     padding: 10px 16px;
+    padding-top: calc(10px + env(safe-area-inset-top));
     min-height: 60px;
+    gap: 10px;
+  }
+
+  /* The two header buttons stay on one line on a phone, so the header is one
+     row tall instead of two. */
+  .dash-top .btn-row {
+    flex-wrap: nowrap;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+
+  .dash-top .btn-row .btn.sm {
+    padding: 8px 11px;
+    font-size: 0.78rem;
+  }
+
+  /* The workspace name keeps whatever room is left and truncates. */
+  .dash-top .title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .dash-top .title strong,
+  .dash-top .title span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .dash-content {
     padding: 20px 16px 52px;
+    padding-bottom: calc(52px + env(safe-area-inset-bottom));
   }
 
   .site-footer .inner {
@@ -2806,6 +2872,13 @@ table.data .sub {
 }
 
 @media (max-width: 900px) {
+  /* The phone header is small: the role tag and the tutorial button push the
+     workspace name out of view, so they only show on a wide screen. */
+  .dash-role,
+  .dash-help {
+    display: none;
+  }
+
   .dash-menu-button,
   .dash-menu-close {
     display: inline-grid;
@@ -2848,7 +2921,11 @@ table.data .sub {
     z-index: 50;
     width: 282px;
     max-width: 86vw;
+    /* The dynamic height leaves room for the Safari bar, so the top of the
+       drawer is not hidden behind the browser's address bar. */
     height: 100vh;
+    height: 100dvh;
+    padding-top: env(safe-area-inset-top);
     transform: translateX(-102%);
     transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.3, 1);
     box-shadow: 6px 0 0 rgba(28, 28, 28, 0.12);
@@ -3263,6 +3340,37 @@ table.data .sub {
   gap: 6px;
 }
 
+.lang-button-form {
+  display: inline-flex;
+}
+
+.lang-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.lang-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 0 var(--ink);
+}
+
+.lang-button:focus-visible {
+  outline: 3px solid var(--lavender-dark);
+  outline-offset: 3px;
+}
+
 .lang-switch > .small {
   margin-right: auto;
 }
@@ -3537,135 +3645,15 @@ table.data .sub {
 }
 
 /* ------------------------------------------------------------------ */
-/* The menu can shrink to a rail of icons                             */
+/* ------------------------------------------------------------------ */
+/* Business logos in the dashboards                                    */
 /* ------------------------------------------------------------------ */
 
 .dash-side-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
 }
-
-.dash-collapse {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  border: 2px solid var(--ink);
-  border-radius: 9px;
-  background: var(--surface);
-  color: var(--ink);
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-
-.dash-collapse:hover {
-  background: var(--lavender-soft);
-  transform: translateY(-1px);
-}
-
-.dash.collapsed {
-  grid-template-columns: 74px minmax(0, 1fr);
-}
-
-.dash.collapsed .dash-side {
-  padding: 18px 10px;
-  align-items: center;
-  gap: 14px;
-}
-
-/* Nothing inside the narrow rail may be wider than the rail. */
-.dash.collapsed .dash-side > * {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.dash.collapsed .dash-side-top {
-  flex-direction: column;
-  gap: 12px;
-}
-
-.dash.collapsed .logo {
-  justify-content: center;
-}
-
-.dash.collapsed .logo-label,
-.dash.collapsed .dash-workspace,
-.dash.collapsed .dash-nav .group-label,
-.dash.collapsed .dash-nav .flow-label,
-.dash.collapsed .dash-nav .flow-arrow,
-.dash.collapsed .dash-nav a .nav-text,
-.dash.collapsed .dash-user .who,
-.dash.collapsed .tut-launch .small,
-.dash.collapsed .tut-launch > span:last-child strong,
-.dash.collapsed .lang-switch > .small {
-  display: none;
-}
-
-.dash.collapsed .dash-nav a {
-  width: 100%;
-  justify-content: center;
-  padding: 11px;
-}
-
-.dash.collapsed .dash-nav a svg {
-  flex: 0 0 auto;
-  width: 19px;
-  height: 19px;
-}
-
-.dash.collapsed .tut-launch {
-  justify-content: center;
-  padding: 8px;
-}
-
-.dash.collapsed .tut-launch > span:last-child {
-  display: none;
-}
-
-.dash.collapsed .tut-launch-icon {
-  width: 30px;
-  height: 30px;
-}
-
-.dash.collapsed .lang-switch {
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.dash.collapsed .dash-user {
-  justify-items: center;
-}
-
-.dash.collapsed .dash-user form,
-.dash.collapsed .dash-user button {
-  width: 100%;
-}
-
-@media (max-width: 900px) {
-  .dash.collapsed {
-    grid-template-columns: 1fr;
-  }
-
-  .dash.collapsed .dash-side .logo-label,
-  .dash.collapsed .dash-side .dash-workspace,
-  .dash.collapsed .dash-side .dash-nav .group-label,
-  .dash.collapsed .dash-side .dash-nav a .nav-text,
-  .dash.collapsed .dash-side .dash-user .who {
-    display: revert;
-  }
-
-  .dash.collapsed .dash-side .dash-nav a {
-    width: auto;
-    justify-content: flex-start;
-    padding: 9px 11px;
-  }
-}
-/* ------------------------------------------------------------------ */
-/* Business logos in the dashboards                                    */
-/* ------------------------------------------------------------------ */
 
 .dash-workspace-name {
   display: flex;

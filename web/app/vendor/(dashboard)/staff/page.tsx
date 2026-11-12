@@ -5,6 +5,10 @@ import { formatDate, initials, titleCase } from '@/lib/format';
 import { inviteStaff, removeStaff, updateStaffRole } from '@/lib/actions/vendor';
 import { CopyField } from '@/components/CopyField';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { fill, pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { getLocale } from '@/lib/i18n/server';
+import { vendorCopy } from '@/lib/i18n/vendor';
 
 export default async function VendorStaffPage({
   searchParams,
@@ -13,6 +17,9 @@ export default async function VendorStaffPage({
 }) {
   const params = await searchParams;
   const ctx = await requireVendor();
+  const locale = await getLocale();
+  const t = pick(vendorCopy, locale).staff;
+  const c = pick(common, locale);
 
   const [membersResult, invitesResult] = await Promise.all([
     ctx.supabase
@@ -46,24 +53,22 @@ export default async function VendorStaffPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Team"
-        title="People behind the counter."
-        description="Owners and managers can invite teammates. Redemption staff can scan and redeem but cannot change prices or settings."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
 
       <Notice
         error={params.error}
-        success={params.saved === '1' ? 'Team updated.' : null}
+        success={params.saved === '1' ? t.teamUpdated : null}
       />
 
       {invitedLink ? (
         <div className="callout" style={{ display: 'grid', gap: 10 }}>
           <strong>
-            <UserPlus size={16} style={{ display: 'inline', verticalAlign: '-3px' }} /> Invite created
+            <UserPlus size={16} style={{ display: 'inline', verticalAlign: '-3px' }} /> {t.inviteCreated}
           </strong>
-          <span className="small">
-            Send this link to the invitee. They must sign in with the email you entered.
-          </span>
+          <span className="small">{t.inviteCreatedBody}</span>
           <CopyField value={invitedLink} />
         </div>
       ) : null}
@@ -74,57 +79,56 @@ export default async function VendorStaffPage({
             <Users size={17} />
           </span>
           <strong>{members.length}</strong>
-          <span>Active team members</span>
+          <span>{t.activeMembers}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <Mail size={17} />
           </span>
           <strong>{invites.length}</strong>
-          <span>Pending invites</span>
+          <span>{t.pendingInvites}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <ShieldCheck size={17} />
           </span>
-          <strong>{titleCase(ctx.role)}</strong>
-          <span>Your role</span>
+          <strong>{titleCase(ctx.role, locale)}</strong>
+          <span>{t.yourRole}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <UserPlus size={17} />
           </span>
-          <strong>{canManage ? 'Open' : 'Restricted'}</strong>
-          <span>Invite permissions</span>
+          <strong>{canManage ? t.open : t.restricted}</strong>
+          <span>{t.invitePermissions}</span>
         </div>
       </div>
 
       {canManage ? (
         <section className="panel">
           <div className="panel-head">
-            <h3>Invite someone</h3>
-            <span className="tag mint">Email must match</span>
+            <h3>{t.inviteSomeone}</h3>
+            <span className="tag mint">{t.emailMustMatch}</span>
           </div>
           <div className="panel-body">
             <form action={inviteStaff} className="inline-form">
               <div className="field" style={{ flex: '1 1 260px' }}>
-                <label htmlFor="email">Email address</label>
+                <label htmlFor="email">{t.emailAddress}</label>
                 <input id="email" name="email" type="email" required placeholder="teammate@business.qa" />
               </div>
               <div className="field">
-                <label htmlFor="role">Role</label>
+                <label htmlFor="role">{t.role}</label>
                 <select id="role" name="role" defaultValue="redemption_staff">
-                  <option value="redemption_staff">Redemption staff</option>
-                  {ctx.role === 'owner' ? <option value="manager">Manager</option> : null}
+                  <option value="redemption_staff">{c.roles.redemption_staff}</option>
+                  {ctx.role === 'owner' ? <option value="manager">{c.roles.manager}</option> : null}
                 </select>
               </div>
               <button className="btn primary" type="submit">
-                <UserPlus size={15} /> Create invite
+                <UserPlus size={15} /> {t.createInvite}
               </button>
             </form>
             <p className="small muted" style={{ marginTop: 10 }}>
-              Invites expire after 14 days. The invitee signs in or creates an account with the same
-              email, then opens the link.
+              {t.inviteExpiry}
             </p>
           </div>
         </section>
@@ -132,21 +136,21 @@ export default async function VendorStaffPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Team members</h3>
-          <span className="small muted">{members.length} active</span>
+          <h3>{t.teamMembers}</h3>
+          <span className="small muted">{fill(t.activeCount, { count: members.length })}</span>
         </div>
         <div className="panel-body flush">
           {members.length === 0 ? (
-            <div className="table-empty">No team members yet.</div>
+            <div className="table-empty">{t.noMembers}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Person</th>
-                    <th>Role</th>
-                    <th>Joined</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th>{t.person}</th>
+                    <th>{t.role}</th>
+                    <th>{t.joined}</th>
+                    <th style={{ textAlign: 'right' }}>{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -162,8 +166,8 @@ export default async function VendorStaffPage({
                             </span>
                             <div>
                               <span className="strong">
-                                {profile?.full_name ?? profile?.email ?? 'Team member'}
-                                {isSelf ? ' (you)' : ''}
+                                {profile?.full_name ?? profile?.email ?? t.teamMember}
+                                {isSelf ? t.youSuffix : ''}
                               </span>
                               <br />
                               <span className="sub">{profile?.email ?? '—'}</span>
@@ -173,21 +177,27 @@ export default async function VendorStaffPage({
                         <td>
                           <StatusTag status={member.role === 'owner' ? 'approved' : member.role === 'manager' ? 'active' : 'pending'} />
                           <span className="small" style={{ marginLeft: 8 }}>
-                            {titleCase(member.role)}
+                            {titleCase(member.role, locale)}
                           </span>
                         </td>
-                        <td className="small muted">{formatDate(member.created_at)}</td>
+                        <td className="small muted">{formatDate(member.created_at, locale)}</td>
                         <td>
                           <div className="row-actions">
                             {ctx.role === 'owner' && member.role !== 'owner' ? (
                               <form action={updateStaffRole} className="inline-role">
                                 <input type="hidden" name="user_id" value={member.user_id} />
-                                <select name="role" defaultValue={member.role} aria-label={`Role for ${profile?.email ?? 'member'}`}>
-                                  <option value="manager">Manager</option>
-                                  <option value="redemption_staff">Redemption staff</option>
+                                <select
+                                  name="role"
+                                  defaultValue={member.role}
+                                  aria-label={fill(t.roleFor, {
+                                    name: profile?.email ?? t.memberFallback,
+                                  })}
+                                >
+                                  <option value="manager">{c.roles.manager}</option>
+                                  <option value="redemption_staff">{c.roles.redemption_staff}</option>
                                 </select>
                                 <button className="btn sm" type="submit">
-                                  Save
+                                  {c.actions.save}
                                 </button>
                               </form>
                             ) : null}
@@ -195,7 +205,7 @@ export default async function VendorStaffPage({
                               <form action={removeStaff}>
                                 <input type="hidden" name="user_id" value={member.user_id} />
                                 <button className="btn sm ghost" type="submit">
-                                  Remove
+                                  {c.actions.remove}
                                 </button>
                               </form>
                             ) : null}
@@ -213,29 +223,29 @@ export default async function VendorStaffPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Pending invites</h3>
-          <span className="small muted">Expire after 14 days</span>
+          <h3>{t.pendingInvitesTitle}</h3>
+          <span className="small muted">{t.expireAfter}</span>
         </div>
         <div className="panel-body flush">
           {invites.length === 0 ? (
-            <div className="table-empty">No pending invites.</div>
+            <div className="table-empty">{t.noInvites}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Expires</th>
-                    <th>Invite link</th>
+                    <th>{c.labels.email}</th>
+                    <th>{t.role}</th>
+                    <th>{t.expires}</th>
+                    <th>{t.inviteLink}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {invites.map((invite) => (
                     <tr key={invite.id}>
                       <td className="strong">{invite.email}</td>
-                      <td>{titleCase(invite.role)}</td>
-                      <td className="small muted">{formatDate(invite.expires_at)}</td>
+                      <td>{titleCase(invite.role, locale)}</td>
+                      <td className="small muted">{formatDate(invite.expires_at, locale)}</td>
                       <td style={{ minWidth: 320 }}>
                         <CopyField value={`${origin}/vendor/join?token=${invite.token}`} />
                       </td>

@@ -16,8 +16,15 @@ import { formatDate, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
 import { HelpButton } from '@/components/HelpButton';
+import { fill, pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { enterpriseCopy } from '@/lib/i18n/enterprise';
+import { getLocale } from '@/lib/i18n/server';
 
 export default async function EnterpriseOverviewPage() {
+  const locale = await getLocale();
+  const t = pick(enterpriseCopy, locale).overview;
+  const c = pick(common, locale);
   const ctx = await requireEnterprise();
   const supabase = ctx.supabase;
   const partner = ctx.partner;
@@ -77,26 +84,26 @@ export default async function EnterpriseOverviewPage() {
   const activeProducts = products.filter((product) => product.is_active).length;
 
   const checklist = [
-    { label: 'Company profile complete', done: Boolean(partner.contact_name && partner.contact_email), href: '/enterprise/settings' },
-    { label: 'At least one reward product', done: products.length > 0, href: '/enterprise/products' },
-    { label: 'Codes imported into inventory', done: inventory.length > 0, href: '/enterprise/import' },
-    { label: 'First order allocated', done: allocated.length > 0, href: '/enterprise/reports' },
+    { label: t.checklistProfile, done: Boolean(partner.contact_name && partner.contact_email), href: '/enterprise/settings' },
+    { label: t.checklistProduct, done: products.length > 0, href: '/enterprise/products' },
+    { label: t.checklistImport, done: inventory.length > 0, href: '/enterprise/import' },
+    { label: t.checklistOrder, done: allocated.length > 0, href: '/enterprise/reports' },
   ];
 
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Overview"
-        title={`Good to see you, ${ctx.profile?.full_name?.split(' ')[0] ?? 'there'}.`}
-        description={`Inventory, allocations and redemptions for ${partner.name}. Codes are encrypted and shown masked.`}
+        eyebrow={t.eyebrow}
+        title={fill(t.greeting, { name: ctx.profile?.full_name?.split(' ')[0] ?? t.greetingFallback })}
+        description={fill(t.description, { company: partner.name })}
         actions={
           <>
             <HelpButton step="lifecycle" />
             <Link className="btn sm" href="/enterprise/products">
-              <Package size={15} /> Products
+              <Package size={15} /> {t.products}
             </Link>
             <Link className="btn sm primary" href="/enterprise/import">
-              <Upload size={15} /> Import codes
+              <Upload size={15} /> {t.importCodes}
             </Link>
           </>
         }
@@ -104,30 +111,30 @@ export default async function EnterpriseOverviewPage() {
 
       <div className="kpi-grid">
         <Kpi
-          label="Available codes"
+          label={t.availableCodes}
           value={String(available.length)}
-          hint={`${formatMoney(availableValue)} face value`}
+          hint={fill(t.faceValueHint, { amount: formatMoney(availableValue) })}
           icon={<Boxes size={17} />}
           tone="lavender"
         />
         <Kpi
-          label="Allocated"
+          label={t.allocated}
           value={String(allocated.length)}
-          hint={`${redeemed.length} confirmed redeemed`}
+          hint={fill(t.confirmedRedeemed, { count: redeemed.length })}
           icon={<Wallet size={17} />}
           tone="mint"
         />
         <Kpi
-          label="Paid orders"
+          label={t.paidOrders}
           value={String(new Set(paidItems.map((item) => (Array.isArray(item.orders) ? item.orders[0] : item.orders)?.order_ref)).size)}
           hint={formatMoney(soldValue)}
           icon={<Building2 size={17} />}
           tone="gold"
         />
         <Kpi
-          label="Active products"
+          label={t.activeProducts}
           value={String(activeProducts)}
-          hint={`${products.length} in the catalogue`}
+          hint={fill(t.inCatalogue, { count: products.length })}
           icon={<Package size={17} />}
           tone="coral"
         />
@@ -136,26 +143,26 @@ export default async function EnterpriseOverviewPage() {
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Recent allocations</h3>
+            <h3>{t.recentAllocations}</h3>
             <Link className="small" href="/enterprise/reports" style={{ fontWeight: 800 }}>
-              Reports <ArrowRight size={13} style={{ display: 'inline', verticalAlign: '-2px' }} />
+              {t.reports} <ArrowRight size={13} style={{ display: 'inline', verticalAlign: '-2px' }} />
             </Link>
           </div>
           <div className="panel-body flush">
             {paidItems.length === 0 ? (
               <div className="table-empty">
-                No orders yet. When your codes are allocated to an order, it appears here.
+                {t.noOrdersYet}
               </div>
             ) : (
               <div className="table-wrap">
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Order</th>
-                      <th>Recipient</th>
-                      <th>Date</th>
-                      <th className="num">Value</th>
-                      <th>Status</th>
+                      <th>{t.order}</th>
+                      <th>{t.recipient}</th>
+                      <th>{c.labels.date}</th>
+                      <th className="num">{c.labels.value}</th>
+                      <th>{c.labels.status}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -165,7 +172,7 @@ export default async function EnterpriseOverviewPage() {
                         <tr key={item.id}>
                           <td className="strong">{order?.order_ref ?? '—'}</td>
                           <td>{order?.recipient_name ?? '—'}</td>
-                          <td className="small muted">{formatDate(item.created_at)}</td>
+                          <td className="small muted">{formatDate(item.created_at, locale)}</td>
                           <td className="num">{formatMoney(Number(item.total_minor ?? 0))}</td>
                           <td>
                             <StatusTag status={order?.status ?? 'pending'} />
@@ -182,7 +189,7 @@ export default async function EnterpriseOverviewPage() {
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Setup checklist</h3>
+            <h3>{t.setupChecklist}</h3>
             <span className="tag neutral">
               {checklist.filter((item) => item.done).length}/{checklist.length}
             </span>
@@ -201,10 +208,10 @@ export default async function EnterpriseOverviewPage() {
                   </span>
                   <span className="v small">
                     {item.done ? (
-                      'Done'
+                      t.done
                     ) : (
                       <Link href={item.href} style={{ textDecoration: 'underline' }}>
-                        Set up
+                        {t.setUp}
                       </Link>
                     )}
                   </span>
@@ -213,10 +220,10 @@ export default async function EnterpriseOverviewPage() {
             </div>
             <div className="btn-row" style={{ marginTop: 16 }}>
               <Link className="btn sm" href="/enterprise/settings">
-                Company settings
+                {t.companySettings}
               </Link>
               <Link className="btn sm ghost" href="/enterprise/import">
-                Import
+                {t.import}
               </Link>
             </div>
           </div>
@@ -226,38 +233,38 @@ export default async function EnterpriseOverviewPage() {
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Recent imports</h3>
+            <h3>{t.recentImports}</h3>
             <Link className="small" href="/enterprise/import" style={{ fontWeight: 800 }}>
-              Import codes
+              {t.importCodes}
             </Link>
           </div>
           <div className="panel-body flush">
             {batches.length === 0 ? (
-              <div className="table-empty">No imports yet.</div>
+              <div className="table-empty">{t.noImportsYet}</div>
             ) : (
               <div className="table-wrap">
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>File</th>
-                      <th>Status</th>
-                      <th className="num">Inserted</th>
-                      <th className="num">Duplicates</th>
-                      <th className="num">Invalid</th>
-                      <th>Date</th>
+                      <th>{t.file}</th>
+                      <th>{c.labels.status}</th>
+                      <th className="num">{t.inserted}</th>
+                      <th className="num">{t.duplicates}</th>
+                      <th className="num">{t.invalid}</th>
+                      <th>{c.labels.date}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {batches.map((batch) => (
                       <tr key={batch.id}>
-                        <td className="strong">{batch.filename ?? 'Manual import'}</td>
+                        <td className="strong">{batch.filename ?? t.manualImport}</td>
                         <td>
                           <StatusTag status={batch.status} />
                         </td>
                         <td className="num">{batch.inserted_rows}</td>
                         <td className="num">{batch.duplicate_rows}</td>
                         <td className="num">{batch.invalid_rows}</td>
-                        <td className="small muted">{formatDate(batch.created_at)}</td>
+                        <td className="small muted">{formatDate(batch.created_at, locale)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -269,12 +276,12 @@ export default async function EnterpriseOverviewPage() {
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Your team</h3>
+            <h3>{t.yourTeam}</h3>
             <Users size={16} />
           </div>
           <div className="panel-body">
             {members.length === 0 ? (
-              <p className="small muted">No team members linked yet.</p>
+              <p className="small muted">{t.noTeamMembers}</p>
             ) : (
               <div className="split-list">
                 {members.map((member) => {
@@ -287,7 +294,7 @@ export default async function EnterpriseOverviewPage() {
                         </span>
                         <span>
                           <strong style={{ color: 'var(--ink)' }}>
-                            {profile?.full_name ?? profile?.email ?? 'Team member'}
+                            {profile?.full_name ?? profile?.email ?? t.teamMember}
                           </strong>
                           <br />
                           <span className="small muted">{profile?.email ?? '—'}</span>
@@ -295,7 +302,7 @@ export default async function EnterpriseOverviewPage() {
                       </span>
                       <span className="v small">
                         <StatusTag status={member.role === 'owner' ? 'approved' : member.role === 'manager' ? 'active' : 'pending'} />{' '}
-                        {titleCase(member.role)}
+                        {titleCase(member.role, locale)}
                       </span>
                     </div>
                   );
@@ -303,7 +310,7 @@ export default async function EnterpriseOverviewPage() {
               </div>
             )}
             <div className="callout info" style={{ marginTop: 14 }}>
-              Team access is managed by the Giftly team. Ask us to add or remove a colleague.
+              {t.teamAccessNote}
             </div>
           </div>
         </section>
@@ -314,25 +321,25 @@ export default async function EnterpriseOverviewPage() {
           <span className="icon-tile lavender">
             <Package size={18} />
           </span>
-          Products
+          {t.products}
         </Link>
         <Link className="quick-link" href="/enterprise/inventory">
           <span className="icon-tile mint">
             <Boxes size={18} />
           </span>
-          Inventory
+          {t.inventory}
         </Link>
         <Link className="quick-link" href="/enterprise/import">
           <span className="icon-tile gold">
             <Upload size={18} />
           </span>
-          Import
+          {t.import}
         </Link>
         <Link className="quick-link" href="/enterprise/reports">
           <span className="icon-tile coral">
             <FileBarChart size={18} />
           </span>
-          Reports
+          {t.reports}
         </Link>
       </div>
     </div>

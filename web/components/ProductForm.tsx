@@ -5,6 +5,9 @@ import { ArrowRight, CalendarHeart, Gift } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { minorToInput } from '@/lib/money';
 import { normalizeTone } from '@/lib/catalog';
+import { useLocale } from '@/components/I18nProvider';
+import { pick } from '@/lib/i18n';
+import { componentsCopy } from '@/lib/i18n/components';
 
 export function ProductForm({
   action,
@@ -20,6 +23,8 @@ export function ProductForm({
   const [type, setType] = useState<'monetary' | 'experience'>(
     product?.fulfilment_type === 'experience' ? 'experience' : 'monetary',
   );
+  const locale = useLocale();
+  const t = pick(componentsCopy, locale).productForm;
 
   return (
     <form action={action} className="card" style={{ display: 'grid', gap: 18 }}>
@@ -27,23 +32,23 @@ export function ProductForm({
 
       <div className="form-grid">
         <div className="field full">
-          <label htmlFor="title">Gift title</label>
+          <label htmlFor="title">{t.title}</label>
           <input
             id="title"
             name="title"
             required
             defaultValue={product?.title ?? ''}
-            placeholder="Weekend coffee for two"
+            placeholder={t.placeholders.title}
           />
         </div>
         <div className="field">
-          <label htmlFor="title_ar">Arabic title (optional)</label>
+          <label htmlFor="title_ar">{t.titleAr}</label>
           <input id="title_ar" name="title_ar" defaultValue={product?.title_ar ?? ''} dir="rtl" />
         </div>
         <div className="field">
-          <label htmlFor="category_id">Category</label>
+          <label htmlFor="category_id">{t.category}</label>
           <select id="category_id" name="category_id" defaultValue={product?.category_id ?? ''}>
-            <option value="">No category</option>
+            <option value="">{t.noCategory}</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
@@ -53,17 +58,17 @@ export function ProductForm({
         </div>
 
         <div className="field full">
-          <label htmlFor="description">Short description</label>
+          <label htmlFor="description">{t.description}</label>
           <textarea
             id="description"
             name="description"
             defaultValue={product?.description ?? ''}
-            placeholder="What is included, and why it is a lovely gift."
+            placeholder={t.placeholders.description}
           />
         </div>
 
         <div className="field">
-          <label htmlFor="fulfilment_type">Gift type</label>
+          <label htmlFor="fulfilment_type">{t.fulfilment}</label>
           {mode === 'create' ? (
             <select
               id="fulfilment_type"
@@ -71,8 +76,8 @@ export function ProductForm({
               value={type}
               onChange={(event) => setType(event.target.value as 'monetary' | 'experience')}
             >
-              <option value="monetary">Gift card (any amount)</option>
-              <option value="experience">Experience (packages)</option>
+              <option value="monetary">{t.fulfilmentMoney}</option>
+              <option value="experience">{t.fulfilmentExperience}</option>
             </select>
           ) : (
             <>
@@ -81,12 +86,11 @@ export function ProductForm({
                 {type === 'experience' ? (
                   <>
                     <CalendarHeart size={15} style={{ display: 'inline', verticalAlign: '-2px' }} />{' '}
-                    Experience gift — pricing comes from the packages below.
+                    {t.experienceNote}
                   </>
                 ) : (
                   <>
-                    <Gift size={15} style={{ display: 'inline', verticalAlign: '-2px' }} /> Gift card
-                    — customers choose an amount between the limits.
+                    <Gift size={15} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.moneyNote}
                   </>
                 )}
               </div>
@@ -95,10 +99,10 @@ export function ProductForm({
         </div>
 
         <div className="field">
-          <label htmlFor="status">Status</label>
+          <label htmlFor="status">{t.status}</label>
           <select id="status" name="status" defaultValue={product?.status === 'published' ? 'published' : 'draft'}>
-            <option value="draft">Draft — not visible</option>
-            <option value="published">Published — live on Giftify</option>
+            <option value="draft">{t.statusDraft}</option>
+            <option value="published">{t.statusPublished}</option>
           </select>
         </div>
       </div>
@@ -106,7 +110,7 @@ export function ProductForm({
       {type === 'monetary' ? (
         <div className="form-grid">
           <div className="field">
-            <label htmlFor="min_amount">Minimum amount (QAR)</label>
+            <label htmlFor="min_amount">{t.minAmount}</label>
             <input
               id="min_amount"
               name="min_amount"
@@ -116,7 +120,7 @@ export function ProductForm({
             />
           </div>
           <div className="field">
-            <label htmlFor="max_amount">Maximum amount (QAR)</label>
+            <label htmlFor="max_amount">{t.maxAmount}</label>
             <input
               id="max_amount"
               name="max_amount"
@@ -126,7 +130,7 @@ export function ProductForm({
             />
           </div>
           <div className="field full">
-            <label htmlFor="presets">Preset amounts (QAR)</label>
+            <label htmlFor="presets">{t.presetAmounts}</label>
             <input
               id="presets"
               name="presets"
@@ -137,14 +141,14 @@ export function ProductForm({
               }
               placeholder="50, 100, 200, 500"
             />
-            <span className="hint">Comma-separated. Customers can still enter a custom amount.</span>
+            <span className="hint">{t.presetsHint}</span>
           </div>
         </div>
       ) : (
         <>
           {mode === 'create' ? (
             <div className="field">
-              <label htmlFor="packages">Packages</label>
+              <label htmlFor="packages">{t.packages}</label>
               <textarea
                 id="packages"
                 name="packages"
@@ -152,22 +156,17 @@ export function ProductForm({
                 placeholder={'Massage for two | 1 | 250\nThree-visit reset | 3 | 600'}
                 style={{ minHeight: 120 }}
               />
-              <span className="hint">
-                One package per line: <strong>Label | sessions | price in QAR</strong>. The customer
-                chooses a package; they cannot choose the amount.
-              </span>
+              <span className="hint">{t.packagesHint}</span>
             </div>
           ) : (
-            <div className="callout info">
-              Packages are managed below the form. Add, pause or remove packages there.
-            </div>
+            <div className="callout info">{t.packagesManagedBelow}</div>
           )}
         </>
       )}
 
       <div className="form-grid">
         <div className="field">
-          <label htmlFor="expiry_days">Expiry (days)</label>
+          <label htmlFor="expiry_days">{t.expiryDays}</label>
           <input
             id="expiry_days"
             name="expiry_days"
@@ -175,10 +174,10 @@ export function ProductForm({
             defaultValue={product?.expiry_days ?? ''}
             placeholder="365"
           />
-          <span className="hint">Leave blank for no expiry.</span>
+          <span className="hint">{t.expiryHint}</span>
         </div>
         <div className="field">
-          <label htmlFor="valid_until">Valid until (optional)</label>
+          <label htmlFor="valid_until">{t.validUntil}</label>
           <input
             id="valid_until"
             name="valid_until"
@@ -187,36 +186,36 @@ export function ProductForm({
           />
         </div>
         <div className="field">
-          <label htmlFor="location">Location</label>
+          <label htmlFor="location">{t.location}</label>
           <input
             id="location"
             name="location"
             defaultValue={product?.location ?? ''}
-            placeholder="West Bay, Doha"
+            placeholder={t.placeholders.location}
           />
         </div>
         <div className="field">
-          <label htmlFor="occasions">Occasions</label>
+          <label htmlFor="occasions">{t.occasions}</label>
           <input
             id="occasions"
             name="occasions"
             defaultValue={(product?.occasions ?? []).join(', ')}
-            placeholder="Birthday, Thank you, Eid"
+            placeholder={t.placeholders.occasions}
           />
         </div>
         <div className="field">
-          <label htmlFor="tone">Card colour</label>
+          <label htmlFor="tone">{t.tone}</label>
           <select id="tone" name="tone" defaultValue={normalizeTone(product?.tone)}>
-            <option value="teal">Teal</option>
-            <option value="pink">Pink</option>
-            <option value="lavender">Lavender</option>
-            <option value="gold">Gold</option>
-            <option value="sky">Sky</option>
+            <option value="teal">{t.tones.teal}</option>
+            <option value="pink">{t.tones.pink}</option>
+            <option value="lavender">{t.tones.lavender}</option>
+            <option value="gold">{t.tones.gold}</option>
+            <option value="sky">{t.tones.sky}</option>
           </select>
-          <span className="hint">The same five colours the app uses.</span>
+          <span className="hint">{t.toneHint}</span>
         </div>
         <div className="field">
-          <label htmlFor="image_url">Image URL (optional)</label>
+          <label htmlFor="image_url">{t.imageUrl}</label>
           <input
             id="image_url"
             name="image_url"
@@ -228,21 +227,21 @@ export function ProductForm({
 
       <div className="form-grid">
         <div className="field full">
-          <label htmlFor="terms_and_conditions">Terms and conditions</label>
+          <label htmlFor="terms_and_conditions">{t.terms}</label>
           <textarea
             id="terms_and_conditions"
             name="terms_and_conditions"
             defaultValue={product?.terms_and_conditions ?? ''}
-            placeholder="Anything the customer should know before buying."
+            placeholder={t.placeholders.terms}
           />
         </div>
         <div className="field full">
-          <label htmlFor="redemption_instructions">Redemption instructions</label>
+          <label htmlFor="redemption_instructions">{t.redemption}</label>
           <textarea
             id="redemption_instructions"
             name="redemption_instructions"
             defaultValue={product?.redemption_instructions ?? ''}
-            placeholder="What the customer should do when they visit."
+            placeholder={t.placeholders.redemption}
           />
         </div>
       </div>
@@ -254,7 +253,7 @@ export function ProductForm({
             name="booking_required"
             defaultChecked={product?.booking_required ?? false}
           />
-          Booking required
+          {t.bookingRequired}
         </label>
         <label className="checkbox-row">
           <input
@@ -262,7 +261,7 @@ export function ProductForm({
             name="split_session_allowed"
             defaultChecked={product?.split_session_allowed ?? true}
           />
-          Sessions can be split across visits
+          {t.sessionsSplit}
         </label>
         <label className="checkbox-row">
           <input
@@ -270,18 +269,16 @@ export function ProductForm({
             name="multi_session_per_visit"
             defaultChecked={product?.multi_session_per_visit ?? false}
           />
-          More than one session per visit
+          {t.moreThanOneSession}
         </label>
       </div>
 
       <div className="btn-row">
         <button className="btn primary" type="submit">
-          {mode === 'create' ? 'Create gift' : 'Save changes'} <ArrowRight size={16} />
+          {mode === 'create' ? t.createGift : t.saveChanges} <ArrowRight size={16} />
         </button>
         <span className="small muted">
-          {mode === 'create'
-            ? 'You can keep it as a draft and publish when it looks right.'
-            : 'Changes go live immediately for published gifts.'}
+          {mode === 'create' ? t.draftHint : t.changesHint}
         </span>
       </div>
     </form>

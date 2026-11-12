@@ -4,8 +4,15 @@ import { ArrowRight, MapPin, Search, Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { initials } from '@/lib/format';
 import { EmptyState } from '@/components/ui';
+import { site } from '@/lib/i18n/site';
+import { common } from '@/lib/i18n/common';
+import { pick, fill } from '@/lib/i18n';
+import { getLocale } from '@/lib/i18n/server';
 
-export const metadata: Metadata = { title: 'Businesses' };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: pick(site, locale).vendors.pageTitle };
+}
 
 export default async function VendorsPage({
   searchParams,
@@ -15,6 +22,9 @@ export default async function VendorsPage({
   const params = await searchParams;
   const q = (params.q ?? '').trim();
   const categorySlug = params.category ?? '';
+  const locale = await getLocale();
+  const t = pick(site, locale).vendors;
+  const c = pick(common, locale);
   const supabase = await createClient();
 
   let query = supabase
@@ -34,22 +44,16 @@ export default async function VendorsPage({
     <>
       <section className="page-hero">
         <div className="container">
-          <span className="eyebrow lavender">The directory</span>
-          <h1>Find a business worth leaving the house for.</h1>
+          <span className="eyebrow lavender">{t.eyebrow}</span>
+          <h1>{t.title}</h1>
           <p className="lede">
-            {rows.length} business{rows.length === 1 ? '' : 'es'} on Giftly,
-            reviewed and ready to welcome you. Every gift can be spent in parts.
+            {fill(rows.length === 1 ? t.ledeOne : t.ledeMany, { count: rows.length })}
           </p>
           <form className="search-bar" action="/vendors" method="get">
             <Search size={18} />
-            <input
-              name="q"
-              defaultValue={q}
-              placeholder="Search cafés, spas, adventures…"
-              aria-label="Search businesses"
-            />
+            <input name="q" defaultValue={q} placeholder={t.searchPlaceholder} aria-label={t.searchLabel} />
             <button className="btn sm primary" type="submit">
-              Search
+              {c.actions.search}
             </button>
           </form>
         </div>
@@ -58,11 +62,11 @@ export default async function VendorsPage({
       <section className="container section tight">
         {rows.length === 0 ? (
           <EmptyState
-            title="Nothing matches that search"
-            body="Try a different word, or clear the filters to see everyone on Giftly."
+            title={t.emptyTitle}
+            body={t.emptyBody}
             action={
               <Link className="btn primary sm" href="/vendors">
-                Clear filters
+                {t.clearFilters}
               </Link>
             }
           />
@@ -89,25 +93,25 @@ export default async function VendorsPage({
                       <h3 style={{ fontSize: '1.15rem' }}>{business.name}</h3>
                       {isPartner ? (
                         <span className="tag gold" style={{ display: 'block', marginTop: 4 }}>
-                          Enterprise partner
+                          {t.enterprisePartner}
                         </span>
                       ) : null}
                       <span className="small muted">
                         <MapPin size={12} style={{ display: 'inline', verticalAlign: '-2px' }} />{' '}
-                        {[business.area, business.city].filter(Boolean).join(' · ') || 'Qatar'}
+                        {[business.area, business.city].filter(Boolean).join(' · ') || t.qatar}
                       </span>
                     </div>
                     <span className="tag gold" style={{ marginLeft: 'auto' }}>
                       <Star size={12} fill="currentColor" /> {Number(business.rating ?? 0).toFixed(1)}
                     </span>
                   </div>
-                  <p className="small">{business.description ?? 'A local favourite on Giftly.'}</p>
+                  <p className="small">{business.description ?? t.localFavourite}</p>
                   <div className="vendor-foot">
                     <span className="tag neutral">
-                      {productCount} {productCount === 1 ? 'gift' : 'gifts'}
+                      {productCount} {productCount === 1 ? t.giftCountOne : t.giftCountMany}
                     </span>
                     <span className="small" style={{ fontWeight: 800 }}>
-                      View gifts <ArrowRight size={14} style={{ display: 'inline', verticalAlign: '-2px' }} />
+                      {t.viewGifts} <ArrowRight size={14} style={{ display: 'inline', verticalAlign: '-2px' }} />
                     </span>
                   </div>
                 </Link>

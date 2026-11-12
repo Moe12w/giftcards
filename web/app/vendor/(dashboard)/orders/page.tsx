@@ -4,6 +4,10 @@ import { requireVendor } from '@/lib/auth';
 import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { fill, pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { getLocale } from '@/lib/i18n/server';
+import { vendorCopy } from '@/lib/i18n/vendor';
 
 export default async function VendorOrdersPage({
   searchParams,
@@ -14,6 +18,9 @@ export default async function VendorOrdersPage({
   const ctx = await requireVendor();
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
+  const locale = await getLocale();
+  const t = pick(vendorCopy, locale).orders;
+  const c = pick(common, locale);
 
   const { data, error } = await ctx.supabase
     .from('order_items')
@@ -52,12 +59,12 @@ export default async function VendorOrdersPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Sales"
-        title="Orders"
-        description="Every order that includes one of your gifts. Commission and your share are calculated per item."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
         actions={
           <Link className="btn sm" href="/vendor/analytics">
-            Open analytics
+            {t.openAnalytics}
           </Link>
         }
       />
@@ -70,81 +77,82 @@ export default async function VendorOrdersPage({
             <ShoppingBag size={17} />
           </span>
           <strong>{paid.length}</strong>
-          <span>Paid order items</span>
+          <span>{t.paidOrderItems}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <ShoppingBag size={17} />
           </span>
           <strong>{formatMoney(gross)}</strong>
-          <span>Gross sales</span>
+          <span>{t.grossSales}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <ShoppingBag size={17} />
           </span>
           <strong>{formatMoney(share)}</strong>
-          <span>Your share</span>
+          <span>{t.yourShare}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <ShoppingBag size={17} />
           </span>
           <strong>{formatMoney(gross - share)}</strong>
-          <span>Platform commission</span>
+          <span>{t.platformCommission}</span>
         </div>
       </div>
 
       <form className="toolbar" action="/vendor/orders" method="get">
         <div className="search-bar">
           <Search size={17} />
-          <input name="q" defaultValue={params.q ?? ''} placeholder="Order, customer or gift…" aria-label="Search orders" />
+          <input
+            name="q"
+            defaultValue={params.q ?? ''}
+            placeholder={t.searchPlaceholder}
+            aria-label={t.searchLabel}
+          />
         </div>
-        <select name="status" defaultValue={status} aria-label="Order status">
-          <option value="">All statuses</option>
-          <option value="paid">Paid</option>
-          <option value="pending">Pending</option>
-          <option value="failed">Failed</option>
-          <option value="refunded">Refunded</option>
+        <select name="status" defaultValue={status} aria-label={t.statusLabel}>
+          <option value="">{t.allStatuses}</option>
+          <option value="paid">{c.status.paid}</option>
+          <option value="pending">{c.status.pending}</option>
+          <option value="failed">{c.status.failed}</option>
+          <option value="refunded">{t.refunded}</option>
         </select>
         <button className="btn sm" type="submit">
-          Filter
+          {c.actions.filter}
         </button>
         {q || status ? (
           <Link className="btn sm ghost" href="/vendor/orders">
-            Clear
+            {c.actions.clear}
           </Link>
         ) : null}
       </form>
 
       {items.length === 0 ? (
         <EmptyState
-          title={q || status ? 'No orders match' : 'No orders yet'}
-          body={
-            q || status
-              ? 'Try a different search or clear the status filter.'
-              : 'When someone buys one of your gifts, the order appears here with commission and your share.'
-          }
+          title={q || status ? t.noMatchTitle : t.emptyTitle}
+          body={q || status ? t.noMatchBody : t.emptyBody}
         />
       ) : (
         <section className="panel">
           <div className="panel-head">
-            <h3>{items.length} order items</h3>
-            <span className="small muted">Newest first</span>
+            <h3>{fill(t.orderItems, { count: items.length })}</h3>
+            <span className="small muted">{t.newestFirst}</span>
           </div>
           <div className="panel-body flush">
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Order</th>
-                    <th>Date</th>
-                    <th>Gift</th>
-                    <th>Recipient</th>
-                    <th className="num">Total</th>
-                    <th className="num">Commission</th>
-                    <th className="num">Your share</th>
-                    <th>Status</th>
+                    <th>{t.order}</th>
+                    <th>{c.labels.date}</th>
+                    <th>{t.gift}</th>
+                    <th>{t.recipient}</th>
+                    <th className="num">{c.labels.total}</th>
+                    <th className="num">{t.commission}</th>
+                    <th className="num">{t.yourShare}</th>
+                    <th>{c.labels.status}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -158,8 +166,8 @@ export default async function VendorOrdersPage({
                           <br />
                           <span className="sub">{order?.sender_name ?? order?.recipient_email ?? ''}</span>
                         </td>
-                        <td className="small muted">{formatDate(item.created_at)}</td>
-                        <td>{product?.title ?? 'Gift'}</td>
+                        <td className="small muted">{formatDate(item.created_at, locale)}</td>
+                        <td>{product?.title ?? t.gift}</td>
                         <td>{item.recipient_name ?? order?.recipient_name ?? '—'}</td>
                         <td className="num">{formatMoney(Number(item.total_minor ?? 0))}</td>
                         <td className="num muted">{formatMoney(Number(item.commission_minor ?? 0))}</td>

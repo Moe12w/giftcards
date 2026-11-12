@@ -412,7 +412,13 @@ export function RedeemScanner({ locale = 'en' }: { locale?: 'en' | 'ar' }) {
               </span>
             </div>
             <span className={`tag ${voucher.fulfilmentType === 'monetary' ? 'mint' : 'lavender'}`}>
-              {voucher.fulfilmentType === 'monetary' ? 'Gift card' : 'Experience'}
+              {voucher.fulfilmentType === 'monetary'
+                ? locale === 'ar'
+                  ? 'بطاقة هدايا'
+                  : 'Gift card'
+                : locale === 'ar'
+                  ? 'تجربة'
+                  : 'Experience'}
             </span>
           </div>
 

@@ -17,6 +17,10 @@ import { formatDate, formatDateTime, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { fulfilmentLabel } from '@/lib/catalog';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 const ACTIVE_VOUCHER = ['issued', 'claimed', 'active', 'partially_redeemed'];
 
@@ -31,6 +35,9 @@ export default async function AdminCustomerDetailPage({
   const query = await searchParams;
   const ctx = await requireAdmin();
   const supabase = ctx.supabase;
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).customerDetail;
+  const c = pick(common, locale);
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -96,29 +103,29 @@ export default async function AdminCustomerDetailPage({
   return (
     <div className="dash-content">
       <Link className="back-link" href="/admin/customers">
-        <ArrowLeft size={15} /> Back to customers
+        <ArrowLeft size={15} /> {t.backToCustomers}
       </Link>
 
       <PageHead
-        eyebrow="Customer"
-        title={profile.full_name ?? 'Unnamed customer'}
-        description={[profile.email, profile.phone].filter(Boolean).join(' · ') || 'No contact details.'}
+        eyebrow={t.eyebrow}
+        title={profile.full_name ?? t.unnamedCustomer}
+        description={[profile.email, profile.phone].filter(Boolean).join(' · ') || t.noContactDetails}
         actions={
           <>
             <StatusTag status={profile.status} />
             <span className={`tag ${isAdmin ? 'coral' : 'neutral'}`}>
-              {isAdmin ? 'Admin' : 'Customer'}
+              {isAdmin ? c.roles.admin : c.roles.customer}
             </span>
             {profile.email ? (
               <a className="btn sm" href={`mailto:${profile.email}`}>
-                <Mail size={14} /> Email
+                <Mail size={14} /> {c.labels.email}
               </a>
             ) : null}
           </>
         }
       />
 
-      <Notice error={query.error ?? error?.message} success={query.saved === '1' ? 'Customer updated.' : null} />
+      <Notice error={query.error ?? error?.message} success={query.saved === '1' ? t.saved : null} />
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -126,65 +133,65 @@ export default async function AdminCustomerDetailPage({
             <CreditCard size={17} />
           </span>
           <strong>{paid.length}</strong>
-          <span>Paid orders</span>
+          <span>{t.paidOrders}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <CreditCard size={17} />
           </span>
           <strong>{formatMoney(lifetime)}</strong>
-          <span>Lifetime value</span>
+          <span>{t.lifetimeValue}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Ticket size={17} />
           </span>
           <strong>{vouchers.length}</strong>
-          <span>{activeVouchers.length} still active</span>
+          <span>{fill(t.stillActive, { count: activeVouchers.length })}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <LifeBuoy size={17} />
           </span>
           <strong>{openSupport}</strong>
-          <span>Open support requests</span>
+          <span>{t.openSupportRequests}</span>
         </div>
       </div>
 
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Account</h3>
+            <h3>{t.account}</h3>
             <UserRound size={16} />
           </div>
           <div className="panel-body">
             <div className="split-list">
               <div>
-                <span className="k">Full name</span>
+                <span className="k">{t.fullName}</span>
                 <span className="v">{profile.full_name ?? '—'}</span>
               </div>
               <div>
                 <span className="k">
-                  <Mail size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Email
+                  <Mail size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {c.labels.email}
                 </span>
                 <span className="v small">{profile.email ?? '—'}</span>
               </div>
               <div>
                 <span className="k">
-                  <Phone size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Phone
+                  <Phone size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {c.labels.phone}
                 </span>
                 <span className="v small">{profile.phone ?? '—'}</span>
               </div>
               <div>
-                <span className="k">Language</span>
-                <span className="v">{titleCase(profile.preferred_language ?? 'en')}</span>
+                <span className="k">{t.language}</span>
+                <span className="v">{titleCase(profile.preferred_language ?? 'en', locale)}</span>
               </div>
               <div>
-                <span className="k">Joined</span>
-                <span className="v small">{formatDateTime(profile.created_at)}</span>
+                <span className="k">{t.joined}</span>
+                <span className="v small">{formatDateTime(profile.created_at, locale)}</span>
               </div>
               <div>
-                <span className="k">Account ID</span>
+                <span className="k">{t.accountId}</span>
                 <span className="v mono small">{profile.id}</span>
               </div>
             </div>
@@ -193,7 +200,7 @@ export default async function AdminCustomerDetailPage({
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Account status</h3>
+            <h3>{t.accountStatus}</h3>
             <StatusTag status={profile.status} />
           </div>
           <div className="panel-body">
@@ -201,18 +208,17 @@ export default async function AdminCustomerDetailPage({
               <input type="hidden" name="user_id" value={profile.id} />
               <input type="hidden" name="return_to" value={`/admin/customers/${profile.id}`} />
               <div className="field">
-                <label htmlFor="status">Status</label>
+                <label htmlFor="status">{c.labels.status}</label>
                 <select id="status" name="status" defaultValue={profile.status}>
-                  <option value="active">Active</option>
-                  <option value="suspended">Suspended</option>
+                  <option value="active">{c.status.active}</option>
+                  <option value="suspended">{c.status.suspended}</option>
                 </select>
               </div>
               <button className="btn primary" type="submit">
-                Save status
+                {t.saveStatus}
               </button>
               <p className="small muted">
-                A suspended account keeps its history but cannot sign in or use vouchers. Use this only
-                for abuse or fraud.
+                {t.suspendNote}
               </p>
             </form>
 
@@ -220,11 +226,11 @@ export default async function AdminCustomerDetailPage({
 
             <div className="split-list">
               <div>
-                <span className="k">Outstanding gift value</span>
+                <span className="k">{t.outstandingGiftValue}</span>
                 <span className="v">{formatMoney(outstanding)}</span>
               </div>
               <div>
-                <span className="k">Support requests</span>
+                <span className="k">{t.supportRequests}</span>
                 <span className="v">{support.length}</span>
               </div>
             </div>
@@ -237,7 +243,7 @@ export default async function AdminCustomerDetailPage({
           {vendorMemberships.length > 0 ? (
             <section className="panel">
               <div className="panel-head">
-                <h3>Vendor access</h3>
+                <h3>{t.vendorAccess}</h3>
                 <Store size={16} />
               </div>
               <div className="panel-body flush">
@@ -245,10 +251,10 @@ export default async function AdminCustomerDetailPage({
                   <table className="data">
                     <thead>
                       <tr>
-                        <th>Vendor</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Since</th>
+                        <th>{t.vendor}</th>
+                        <th>{t.role}</th>
+                        <th>{c.labels.status}</th>
+                        <th>{t.since}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -264,14 +270,14 @@ export default async function AdminCustomerDetailPage({
                                   {vendor.name}
                                 </Link>
                               ) : (
-                                'Vendor'
+                                t.vendor
                               )}
                             </td>
-                            <td>{titleCase(membership.role)}</td>
+                            <td>{titleCase(membership.role, locale)}</td>
                             <td>
                               <StatusTag status={membership.active ? 'active' : 'suspended'} />
                             </td>
-                            <td className="small muted">{formatDate(membership.created_at)}</td>
+                            <td className="small muted">{formatDate(membership.created_at, locale)}</td>
                           </tr>
                         );
                       })}
@@ -285,7 +291,7 @@ export default async function AdminCustomerDetailPage({
           {enterpriseMemberships.length > 0 ? (
             <section className="panel">
               <div className="panel-head">
-                <h3>Enterprise access</h3>
+                <h3>{t.enterpriseAccess}</h3>
                 <Building2 size={16} />
               </div>
               <div className="panel-body flush">
@@ -293,10 +299,10 @@ export default async function AdminCustomerDetailPage({
                   <table className="data">
                     <thead>
                       <tr>
-                        <th>Partner</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Since</th>
+                        <th>{t.partner}</th>
+                        <th>{t.role}</th>
+                        <th>{c.labels.status}</th>
+                        <th>{t.since}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -312,14 +318,14 @@ export default async function AdminCustomerDetailPage({
                                   {partner.name}
                                 </Link>
                               ) : (
-                                'Partner'
+                                t.partner
                               )}
                             </td>
-                            <td>{titleCase(membership.role)}</td>
+                            <td>{titleCase(membership.role, locale)}</td>
                             <td>
                               <StatusTag status={membership.active ? 'active' : 'suspended'} />
                             </td>
-                            <td className="small muted">{formatDate(membership.created_at)}</td>
+                            <td className="small muted">{formatDate(membership.created_at, locale)}</td>
                           </tr>
                         );
                       })}
@@ -334,23 +340,23 @@ export default async function AdminCustomerDetailPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Orders</h3>
-          <span className="small muted">{orders.length} total</span>
+          <h3>{t.orders}</h3>
+          <span className="small muted">{fill(t.totalCount, { count: orders.length })}</span>
         </div>
         <div className="panel-body flush">
           {orders.length === 0 ? (
-            <div className="table-empty">No orders yet.</div>
+            <div className="table-empty">{t.noOrders}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Order</th>
-                    <th>Recipient</th>
-                    <th className="num">Total</th>
-                    <th>Status</th>
-                    <th>Delivery</th>
-                    <th>Date</th>
+                    <th>{t.order}</th>
+                    <th>{t.recipient}</th>
+                    <th className="num">{c.labels.total}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{t.delivery}</th>
+                    <th>{c.labels.date}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -366,8 +372,8 @@ export default async function AdminCustomerDetailPage({
                       <td>
                         <StatusTag status={order.status} />
                       </td>
-                      <td className="small muted">{titleCase(order.delivery_method ?? '—')}</td>
-                      <td className="small muted">{formatDate(order.created_at)}</td>
+                      <td className="small muted">{titleCase(order.delivery_method ?? '—', locale)}</td>
+                      <td className="small muted">{formatDate(order.created_at, locale)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -379,25 +385,25 @@ export default async function AdminCustomerDetailPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Vouchers</h3>
-          <span className="small muted">{activeVouchers.length} active</span>
+          <h3>{t.vouchers}</h3>
+          <span className="small muted">{fill(t.activeCount, { count: activeVouchers.length })}</span>
         </div>
         <div className="panel-body flush">
           {vouchers.length === 0 ? (
-            <div className="table-empty">No vouchers yet.</div>
+            <div className="table-empty">{t.noVouchersYet}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Code</th>
-                    <th>Gift</th>
-                    <th>Type</th>
-                    <th>Recipient</th>
-                    <th className="num">Value</th>
-                    <th>Status</th>
-                    <th>Expires</th>
-                    <th>Issued</th>
+                    <th>{c.labels.code}</th>
+                    <th>{t.gift}</th>
+                    <th>{t.type}</th>
+                    <th>{t.recipient}</th>
+                    <th className="num">{c.labels.value}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{t.expires}</th>
+                    <th>{t.issued}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -406,17 +412,19 @@ export default async function AdminCustomerDetailPage({
                     return (
                       <tr key={voucher.id}>
                         <td className="mono small strong">{voucher.voucher_code}</td>
-                        <td>{product?.title ?? 'Gift'}</td>
+                        <td>{product?.title ?? t.gift}</td>
                         <td>
-                          <span className="tag">{fulfilmentLabel(voucher.fulfilment_type)}</span>
+                          <span className="tag">{fulfilmentLabel(voucher.fulfilment_type, locale)}</span>
                         </td>
                         <td>{voucher.recipient_name ?? '—'}</td>
                         <td className="num">{formatMoney(Number(voucher.initial_value_minor ?? 0))}</td>
                         <td>
                           <StatusTag status={voucher.status} />
                         </td>
-                        <td className="small muted">{voucher.expires_at ? formatDate(voucher.expires_at) : 'No expiry'}</td>
-                        <td className="small muted">{formatDate(voucher.created_at)}</td>
+                        <td className="small muted">
+                          {voucher.expires_at ? formatDate(voucher.expires_at, locale) : t.noExpiry}
+                        </td>
+                        <td className="small muted">{formatDate(voucher.created_at, locale)}</td>
                       </tr>
                     );
                   })}
@@ -429,36 +437,36 @@ export default async function AdminCustomerDetailPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Support requests</h3>
+          <h3>{t.supportRequests}</h3>
           <Link className="small" href="/admin/support" style={{ fontWeight: 800 }}>
-            Support queue
+            {t.supportQueue}
           </Link>
         </div>
         <div className="panel-body flush">
           {support.length === 0 ? (
-            <div className="table-empty">No support requests from this customer.</div>
+            <div className="table-empty">{t.noCustomerSupport}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Subject</th>
-                    <th>Kind</th>
-                    <th>Reference</th>
-                    <th>Status</th>
-                    <th>Date</th>
+                    <th>{t.subject}</th>
+                    <th>{t.kind}</th>
+                    <th>{c.labels.reference}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{c.labels.date}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {support.map((request) => (
                     <tr key={request.id}>
-                      <td className="strong">{request.subject ?? 'Support request'}</td>
-                      <td className="small">{titleCase(request.kind)}</td>
+                      <td className="strong">{request.subject ?? t.supportRequest}</td>
+                      <td className="small">{titleCase(request.kind, locale)}</td>
                       <td className="small mono">{request.reference ?? '—'}</td>
                       <td>
                         <StatusTag status={request.status} />
                       </td>
-                      <td className="small muted">{formatDate(request.created_at)}</td>
+                      <td className="small muted">{formatDate(request.created_at, locale)}</td>
                     </tr>
                   ))}
                 </tbody>

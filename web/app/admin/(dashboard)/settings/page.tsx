@@ -3,6 +3,10 @@ import { requireAdmin } from '@/lib/auth';
 import { adminSaveSetting } from '@/lib/actions/admin';
 import { formatDateTime } from '@/lib/format';
 import { Notice, PageHead } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 function settingValue(value: unknown): string {
   if (typeof value === 'string') return value;
@@ -16,6 +20,9 @@ export default async function AdminSettingsPage({
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).settings;
+  const c = pick(common, locale);
 
   const { data, error } = await ctx.supabase
     .from('system_settings')
@@ -31,12 +38,12 @@ export default async function AdminSettingsPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="System"
-        title="Platform settings"
-        description="Public settings are exposed to the apps and website. Private settings are only readable by admins."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
 
-      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? 'Setting saved.' : null} />
+      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? t.saved : null} />
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -44,52 +51,52 @@ export default async function AdminSettingsPage({
             <Settings2 size={17} />
           </span>
           <strong>{settings.length}</strong>
-          <span>Settings</span>
+          <span>{t.settings}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <Globe size={17} />
           </span>
           <strong>{publicCount}</strong>
-          <span>Public</span>
+          <span>{t.public}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <Lock size={17} />
           </span>
           <strong>{settings.length - publicCount}</strong>
-          <span>Private</span>
+          <span>{t.private}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Settings2 size={17} />
           </span>
           <strong>{recent}</strong>
-          <span>Updated this week</span>
+          <span>{t.updatedThisWeek}</span>
         </div>
       </div>
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Add or replace a setting</h3>
+          <h3>{t.addOrReplace}</h3>
           <Plus size={16} />
         </div>
         <div className="panel-body">
           <form action={adminSaveSetting} className="inline-form">
             <div className="field">
-              <label htmlFor="key">Key</label>
+              <label htmlFor="key">{t.key}</label>
               <input id="key" name="key" required placeholder="support.email" />
             </div>
             <div className="field" style={{ flex: '2 1 320px' }}>
-              <label htmlFor="value">Value</label>
+              <label htmlFor="value">{c.labels.value}</label>
               <input id="value" name="value" placeholder='hello@giftly.qa or {"enabled":true}' />
-              <span className="hint">JSON is parsed when valid; otherwise the value is stored as text.</span>
+              <span className="hint">{t.jsonHint}</span>
             </div>
             <label className="checkbox-row">
-              <input type="checkbox" name="is_public" /> Public
+              <input type="checkbox" name="is_public" /> {t.public}
             </label>
             <button className="btn primary" type="submit">
-              Save setting
+              {t.saveSetting}
             </button>
           </form>
         </div>
@@ -100,8 +107,8 @@ export default async function AdminSettingsPage({
           <span className="icon-tile lavender">
             <Settings2 size={22} />
           </span>
-          <h3>No settings yet</h3>
-          <p>Add a key above to make platform configuration available to the apps.</p>
+          <h3>{t.noSettings}</h3>
+          <p>{t.noSettingsBody}</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gap: 16 }}>
@@ -113,18 +120,19 @@ export default async function AdminSettingsPage({
                     {setting.key}
                   </h3>
                   <span className="small muted">
-                    {setting.description ?? 'No description'} · updated {formatDateTime(setting.updated_at)}
+                    {setting.description ?? t.noDescription} ·{' '}
+                    {fill(t.updatedAt, { date: formatDateTime(setting.updated_at, locale) })}
                   </span>
                 </div>
                 <span className={`tag ${setting.is_public ? 'mint' : 'neutral'}`}>
-                  {setting.is_public ? 'Public' : 'Private'}
+                  {setting.is_public ? t.public : t.private}
                 </span>
               </div>
               <div className="panel-body">
                 <form action={adminSaveSetting} style={{ display: 'grid', gap: 12 }}>
                   <input type="hidden" name="key" value={setting.key} />
                   <div className="field">
-                    <label htmlFor={`value-${setting.key}`}>Value</label>
+                    <label htmlFor={`value-${setting.key}`}>{c.labels.value}</label>
                     <textarea
                       id={`value-${setting.key}`}
                       name="value"
@@ -138,10 +146,10 @@ export default async function AdminSettingsPage({
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                     <label className="checkbox-row">
-                      <input type="checkbox" name="is_public" defaultChecked={setting.is_public} /> Public
+                      <input type="checkbox" name="is_public" defaultChecked={setting.is_public} /> {t.public}
                     </label>
                     <button className="btn sm primary" type="submit">
-                      Save
+                      {c.actions.save}
                     </button>
                   </div>
                 </form>
@@ -152,9 +160,7 @@ export default async function AdminSettingsPage({
       )}
 
       <div className="callout info">
-        <Lock size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Public settings can be read
-        by anyone using the public API. Never store secrets, service keys or personal data in a public
-        setting.
+        <Lock size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.publicWarning}
       </div>
     </div>
   );

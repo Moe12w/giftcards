@@ -3,8 +3,15 @@ import Link from 'next/link';
 import { Clock, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
 import { submitContact } from '@/lib/actions/public';
 import { Notice } from '@/components/ui';
+import { site } from '@/lib/i18n/site';
+import { common } from '@/lib/i18n/common';
+import { pick } from '@/lib/i18n';
+import { getLocale } from '@/lib/i18n/server';
 
-export const metadata: Metadata = { title: 'Contact' };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: pick(site, locale).nav.contact };
+}
 
 export default async function ContactPage({
   searchParams,
@@ -12,59 +19,57 @@ export default async function ContactPage({
   searchParams: Promise<{ sent?: string; error?: string }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const copy = pick(site, locale);
+  const t = copy.contact;
+  const c = pick(common, locale);
 
   return (
     <>
       <section className="page-hero">
         <div className="container">
-          <span className="eyebrow coral">Say hello</span>
-          <h1>We are real people, in Doha.</h1>
-          <p className="lede">
-            Questions about a gift, a balance, a booking or a partnership — send us a note and we
-            will help.
-          </p>
+          <span className="eyebrow coral">{t.eyebrow}</span>
+          <h1>{t.title}</h1>
+          <p className="lede">{t.lede}</p>
         </div>
       </section>
 
       <section className="container section tight">
         <div className="grid-2" style={{ alignItems: 'start' }}>
           <div className="card">
-            <h3>Send us a message</h3>
-            <Notice
-              error={params.error}
-              success={params.sent === '1' ? 'Thank you — your message is with our team.' : null}
-            />
+            <h3>{t.formTitle}</h3>
+            <Notice error={params.error} success={params.sent === '1' ? t.formSuccess : null} />
             <form action={submitContact} className="form" style={{ marginTop: 16 }}>
               <div className="form-grid">
                 <div className="field">
-                  <label htmlFor="name">Your name</label>
-                  <input id="name" name="name" required placeholder="Full name" />
+                  <label htmlFor="name">{t.labelYourName}</label>
+                  <input id="name" name="name" required placeholder={t.placeholderFullName} />
                 </div>
                 <div className="field">
-                  <label htmlFor="email">Email</label>
+                  <label htmlFor="email">{c.labels.email}</label>
                   <input id="email" name="email" type="email" required placeholder="you@example.com" />
                 </div>
                 <div className="field full">
-                  <label htmlFor="subject">Subject</label>
+                  <label htmlFor="subject">{t.labelSubject}</label>
                   <select id="subject" name="subject" defaultValue="Gift support">
-                    <option>Gift support</option>
-                    <option>Vendor question</option>
-                    <option>Corporate gifting</option>
-                    <option>Press or partnership</option>
-                    <option>Something else</option>
+                    <option value="Gift support">{t.subjectGiftSupport}</option>
+                    <option value="Vendor question">{t.subjectVendorQuestion}</option>
+                    <option value="Corporate gifting">{t.subjectCorporateGifting}</option>
+                    <option value="Press or partnership">{t.subjectPress}</option>
+                    <option value="Something else">{t.subjectOther}</option>
                   </select>
                 </div>
                 <div className="field full">
-                  <label htmlFor="message">Message</label>
-                  <textarea id="message" name="message" required placeholder="How can we help?" />
+                  <label htmlFor="message">{t.labelMessage}</label>
+                  <textarea id="message" name="message" required placeholder={t.placeholderHowCanWeHelp} />
                 </div>
               </div>
               <button className="btn primary block" type="submit">
-                Send message <Send size={16} />
+                {t.sendMessage} <Send size={16} />
               </button>
               <p className="small muted">
-                We usually reply within one working day. See our <Link href="/privacy">privacy policy</Link>{' '}
-                for how we handle your details.
+                {t.replyNoteBefore} <Link href="/privacy">{t.privacyPolicy}</Link>{' '}
+                {t.replyNoteAfter}
               </p>
             </form>
           </div>
@@ -74,7 +79,7 @@ export default async function ContactPage({
               <span className="icon-tile ink">
                 <Mail size={22} />
               </span>
-              <h3 style={{ marginTop: 14 }}>Email</h3>
+              <h3 style={{ marginTop: 14 }}>{c.labels.email}</h3>
               <p className="small" style={{ marginTop: 6 }}>
                 hello@giftly.qa
                 <br />
@@ -85,49 +90,48 @@ export default async function ContactPage({
               <span className="icon-tile">
                 <Phone size={22} />
               </span>
-              <h3 style={{ marginTop: 14 }}>Phone</h3>
+              <h3 style={{ marginTop: 14 }}>{c.labels.phone}</h3>
               <p className="small" style={{ marginTop: 6 }}>
                 +974 4000 0000
                 <br />
-                Sunday to Thursday, 9am–6pm
+                {t.phoneHours}
               </p>
             </div>
             <div className="card">
               <span className="icon-tile coral">
                 <MapPin size={22} />
               </span>
-              <h3 style={{ marginTop: 14 }}>Office</h3>
+              <h3 style={{ marginTop: 14 }}>{t.officeTitle}</h3>
               <p className="small" style={{ marginTop: 6 }}>
-                Doha, Qatar
+                {t.dohaQatar}
                 <br />
-                Visits by appointment.
+                {t.visitsByAppointment}
               </p>
             </div>
             <div className="card gold">
               <span className="icon-tile ink">
                 <Clock size={22} />
               </span>
-              <h3 style={{ marginTop: 14 }}>For vendors</h3>
+              <h3 style={{ marginTop: 14 }}>{t.forVendorsTitle}</h3>
               <p className="small" style={{ marginTop: 6 }}>
-                Already selling on Giftly? Sign in to your dashboard for order and redemption
-                support.
+                {t.forVendorsBody}
               </p>
               <div className="btn-row" style={{ marginTop: 12 }}>
                 <Link className="btn sm" href="/vendor/login">
-                  Vendor sign in
+                  {copy.nav.vendorSignIn}
                 </Link>
                 <Link className="btn sm ghost" href="/faq">
-                  Vendor FAQ
+                  {t.vendorFaq}
                 </Link>
               </div>
             </div>
             <div className="callout info">
-              <MessageCircle size={16} style={{ display: 'inline', verticalAlign: '-3px' }} /> Looking
-              for a corporate quote? Use the{' '}
+              <MessageCircle size={16} style={{ display: 'inline', verticalAlign: '-3px' }} />{' '}
+              {t.corporateQuoteBefore}{' '}
               <Link href="/corporate#enquiry" style={{ fontWeight: 800 }}>
-                enterprise enquiry form
+                {t.enterpriseEnquiryForm}
               </Link>{' '}
-              so it reaches the right team.
+              {t.corporateQuoteAfter}
             </div>
           </div>
         </div>

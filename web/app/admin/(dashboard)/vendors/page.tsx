@@ -3,6 +3,10 @@ import { Search, Store } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
 import { formatDate, initials } from '@/lib/format';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function AdminVendorsPage({
   searchParams,
@@ -11,6 +15,9 @@ export default async function AdminVendorsPage({
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).vendors;
+  const c = pick(common, locale);
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
 
@@ -40,68 +47,68 @@ export default async function AdminVendorsPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Network"
-        title="Vendors"
-        description="Review applications, manage commercial terms and see how each business is performing."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
 
       <Notice
         error={params.error ?? error?.message}
-        success={params.saved === '1' ? 'Vendor updated.' : null}
+        success={params.saved === '1' ? t.saved : null}
       />
 
       <form className="toolbar" action="/admin/vendors" method="get">
         <div className="search-bar">
           <Search size={17} />
-          <input name="q" defaultValue={params.q ?? ''} placeholder="Business, email or area…" aria-label="Search vendors" />
+          <input name="q" defaultValue={params.q ?? ''} placeholder={t.searchPlaceholder} aria-label={t.searchLabel} />
         </div>
-        <select name="status" defaultValue={status} aria-label="Vendor status">
-          <option value="">All vendors</option>
-          <option value="pending">Pending review</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-          <option value="suspended">Suspended</option>
+        <select name="status" defaultValue={status} aria-label={t.statusLabel}>
+          <option value="">{t.allVendors}</option>
+          <option value="pending">{c.status.pending_review}</option>
+          <option value="approved">{c.status.approved}</option>
+          <option value="rejected">{c.status.rejected}</option>
+          <option value="suspended">{c.status.suspended}</option>
         </select>
         <button className="btn sm" type="submit">
-          Filter
+          {c.actions.filter}
         </button>
         {q || status ? (
           <Link className="btn sm ghost" href="/admin/vendors">
-            Clear
+            {c.actions.clear}
           </Link>
         ) : null}
       </form>
 
       {vendors.length === 0 ? (
         <EmptyState
-          title={q || status ? 'No vendors match' : 'No vendors yet'}
+          title={q || status ? t.noVendorsMatch : t.noVendorsYet}
           body={
             q || status
-              ? 'Try a different search or clear the filters.'
-              : 'Vendor applications will appear here as businesses sign up.'
+              ? t.tryDifferentSearch
+              : t.emptyBody
           }
         />
       ) : (
         <section className="panel">
           <div className="panel-head">
             <h3>
-              {vendors.length} {vendors.length === 1 ? 'vendor' : 'vendors'}
+              {fill(vendors.length === 1 ? t.vendorCountOne : t.vendorCount, { count: vendors.length })}
             </h3>
-            <span className="small muted">Newest first</span>
+            <span className="small muted">{t.newestFirst}</span>
           </div>
           <div className="panel-body flush">
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Business</th>
-                    <th>Contact</th>
-                    <th>Location</th>
-                    <th className="num">Commission</th>
-                    <th className="num">Products</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th>{t.business}</th>
+                    <th>{t.contact}</th>
+                    <th>{t.location}</th>
+                    <th className="num">{t.commission}</th>
+                    <th className="num">{t.products}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{t.joined}</th>
+                    <th style={{ textAlign: 'right' }}>{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -129,7 +136,7 @@ export default async function AdminVendorsPage({
                               <br />
                               <span className="sub">
                                 {vendor.slug ?? '—'}
-                                {vendor.is_featured ? ' · Featured' : ''}
+                                {vendor.is_featured ? ` · ${t.featured}` : ''}
                               </span>
                             </div>
                           </div>
@@ -147,11 +154,11 @@ export default async function AdminVendorsPage({
                         <td>
                           <StatusTag status={vendor.status} />
                         </td>
-                        <td className="small muted">{formatDate(vendor.created_at)}</td>
+                        <td className="small muted">{formatDate(vendor.created_at, locale)}</td>
                         <td>
                           <div className="row-actions">
                             <Link className="btn sm" href={`/admin/vendors/${vendor.id}`}>
-                              <Store size={13} /> Open
+                              <Store size={13} /> {c.actions.open}
                             </Link>
                           </div>
                         </td>

@@ -25,7 +25,7 @@ export function RedeemPanel({
 
   return (
     <div>
-      <div className="seg-tabs" role="tablist" aria-label="Redemption method">
+      <div className="seg-tabs" role="tablist" aria-label={locale === 'ar' ? 'طريقة الاستبدال' : 'Redemption method'}>
         <button
           type="button"
           role="tab"

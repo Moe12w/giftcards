@@ -1,7 +1,12 @@
+'use client';
+
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Check } from 'lucide-react';
 import { Logo } from '@/components/Logo';
+import { useLocale } from '@/components/I18nProvider';
+import { pick } from '@/lib/i18n';
+import { componentsCopy } from '@/lib/i18n/components';
 
 export function AuthShell({
   tone = 'mint',
@@ -18,6 +23,9 @@ export function AuthShell({
   points?: string[];
   children: ReactNode;
 }) {
+  const locale = useLocale();
+  const t = pick(componentsCopy, locale).authShell;
+
   return (
     <div className="auth-shell">
       <aside className={`auth-side ${tone}`}>
@@ -36,13 +44,13 @@ export function AuthShell({
             </ul>
           ) : null}
         </div>
-        <p className="small">Giftly for business · Doha, Qatar</p>
+        <p className="small">{t.forBusiness}</p>
       </aside>
       <main className="auth-main">
         <div className="auth-card">
           <Link className="auth-back" href="/">
             <ArrowLeft size={15} />
-            Back to home
+            {t.backToHome}
           </Link>
           {children}
         </div>

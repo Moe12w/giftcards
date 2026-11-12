@@ -1,5 +1,8 @@
 import type { Product, ProductVariant } from '@/lib/types';
 import { formatMoney } from '@/lib/money';
+import { fill, pick, type Locale } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { labelFor } from '@/lib/i18n/labels';
 
 export function activeVariants(product: Pick<Product, 'variants'>): ProductVariant[] {
   return (product.variants ?? [])
@@ -14,27 +17,28 @@ export function startingPriceMinor(product: Product): number {
   return product.min_amount_minor;
 }
 
-export function priceLabel(product: Product): string {
+export function priceLabel(product: Product, locale: Locale = 'en'): string {
   if (product.fulfilment_type === 'experience') {
     const variants = activeVariants(product);
-    if (variants.length === 0) return 'Packages coming soon';
-    return `From ${formatMoney(Math.min(...variants.map((variant) => variant.price_minor)))}`;
+    if (variants.length === 0) {
+      return locale === 'ar' ? 'الباقات قريباً' : 'Packages coming soon';
+    }
+    const from = formatMoney(Math.min(...variants.map((variant) => variant.price_minor)), locale);
+    return locale === 'ar' ? `ابتداءً من ${from}` : `From ${from}`;
   }
   if (product.fulfilment_type === 'enterprise_code') {
     return product.min_amount_minor === product.max_amount_minor
-      ? formatMoney(product.min_amount_minor)
-      : `${formatMoney(product.min_amount_minor)} – ${formatMoney(product.max_amount_minor)}`;
+      ? formatMoney(product.min_amount_minor, locale)
+      : `${formatMoney(product.min_amount_minor, locale)} – ${formatMoney(product.max_amount_minor, locale)}`;
   }
   if (product.min_amount_minor === product.max_amount_minor) {
-    return formatMoney(product.min_amount_minor);
+    return formatMoney(product.min_amount_minor, locale);
   }
-  return `${formatMoney(product.min_amount_minor)} – ${formatMoney(product.max_amount_minor)}`;
+  return `${formatMoney(product.min_amount_minor, locale)} – ${formatMoney(product.max_amount_minor, locale)}`;
 }
 
-export function fulfilmentLabel(type: string): string {
-  if (type === 'experience') return 'Experience';
-  if (type === 'enterprise_code') return 'Corporate code';
-  return 'Gift card';
+export function fulfilmentLabel(type: string, locale: Locale = 'en'): string {
+  return labelFor(type, locale);
 }
 
 /**
@@ -80,10 +84,11 @@ export function productTone(product: Pick<Product, 'tone' | 'fulfilment_type'>):
   return tone;
 }
 
-export function packageSummary(variant: ProductVariant): string {
+export function packageSummary(variant: ProductVariant, locale: Locale = 'en'): string {
+  const copy = pick(common, locale);
   const sessions =
     variant.session_count && variant.session_count > 0
-      ? `${variant.session_count} ${variant.session_count === 1 ? 'session' : 'sessions'}`
+      ? `${variant.session_count} ${variant.session_count === 1 ? copy.time.session : copy.time.sessions}`
       : null;
   return sessions ? `${variant.label} · ${sessions}` : variant.label;
 }

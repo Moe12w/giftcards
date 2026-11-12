@@ -6,6 +6,10 @@ import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { fulfilmentLabel } from '@/lib/catalog';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 const TYPES = ['monetary', 'experience', 'enterprise_code'];
 
@@ -16,6 +20,9 @@ export default async function AdminProductsPage({
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).products;
+  const c = pick(common, locale);
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
   const type = params.type ?? '';
@@ -60,12 +67,12 @@ export default async function AdminProductsPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Catalogue"
-        title="Products"
-        description="Every gift on the marketplace, whether it comes from a vendor or a corporate reward programme."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
 
-      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? 'Product updated.' : null} />
+      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? t.saved : null} />
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -73,97 +80,99 @@ export default async function AdminProductsPage({
             <ShoppingBag size={17} />
           </span>
           <strong>{allProducts.length}</strong>
-          <span>All products</span>
+          <span>{t.allProducts}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <ShoppingBag size={17} />
           </span>
           <strong>{published}</strong>
-          <span>Published</span>
+          <span>{t.published}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <Package size={17} />
           </span>
           <strong>{experience}</strong>
-          <span>Experience packages</span>
+          <span>{t.experiencePackages}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Package size={17} />
           </span>
           <strong>{enterprise}</strong>
-          <span>Corporate codes</span>
+          <span>{t.corporateCodes}</span>
         </div>
       </div>
 
       <form className="toolbar" action="/admin/products" method="get">
         <div className="search-bar">
           <Search size={17} />
-          <input name="q" defaultValue={params.q ?? ''} placeholder="Gift, vendor or slug…" aria-label="Search products" />
+          <input name="q" defaultValue={params.q ?? ''} placeholder={t.searchPlaceholder} aria-label={t.searchLabel} />
         </div>
-        <select name="vendor" defaultValue={vendorFilter} aria-label="Vendor">
-          <option value="">All vendors</option>
+        <select name="vendor" defaultValue={vendorFilter} aria-label={t.vendorLabel}>
+          <option value="">{t.allVendors}</option>
           {vendors.map((vendor) => (
             <option key={vendor.id} value={vendor.id}>
               {vendor.name}
             </option>
           ))}
         </select>
-        <select name="type" defaultValue={type} aria-label="Fulfilment type">
-          <option value="">All types</option>
+        <select name="type" defaultValue={type} aria-label={t.fulfilmentTypeLabel}>
+          <option value="">{t.allTypes}</option>
           {TYPES.map((value) => (
             <option key={value} value={value}>
-              {fulfilmentLabel(value)}
+              {fulfilmentLabel(value, locale)}
             </option>
           ))}
         </select>
-        <select name="status" defaultValue={status} aria-label="Product status">
-          <option value="">All statuses</option>
-          <option value="published">Published</option>
-          <option value="draft">Draft</option>
-          <option value="archived">Archived</option>
+        <select name="status" defaultValue={status} aria-label={t.statusLabel}>
+          <option value="">{t.allStatuses}</option>
+          <option value="published">{t.published}</option>
+          <option value="draft">{t.draft}</option>
+          <option value="archived">{t.archived}</option>
         </select>
         <button className="btn sm" type="submit">
-          Filter
+          {c.actions.filter}
         </button>
         {q || status || type || vendorFilter ? (
           <Link className="btn sm ghost" href="/admin/products">
-            Clear
+            {c.actions.clear}
           </Link>
         ) : null}
       </form>
 
       {products.length === 0 ? (
         <EmptyState
-          title={q || status || type || vendorFilter ? 'No products match' : 'No products yet'}
+          title={q || status || type || vendorFilter ? t.noProductsMatch : t.noProductsYet}
           body={
             q || status || type || vendorFilter
-              ? 'Try a different search or clear the filters.'
-              : 'Vendor and enterprise products will appear here once they are created.'
+              ? t.tryDifferentSearch
+              : t.emptyBody
           }
         />
       ) : (
         <section className="panel">
           <div className="panel-head">
             <h3>
-              {products.length} {products.length === 1 ? 'product' : 'products'}
+              {fill(products.length === 1 ? t.productCountOne : t.productCount, {
+                count: products.length,
+              })}
             </h3>
-            <span className="small muted">Newest first</span>
+            <span className="small muted">{t.newestFirst}</span>
           </div>
           <div className="panel-body flush">
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Gift</th>
-                    <th>Owner</th>
-                    <th>Type</th>
-                    <th className="num">Price</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th style={{ textAlign: 'right' }}>Change status</th>
+                    <th>{t.gift}</th>
+                    <th>{t.owner}</th>
+                    <th>{t.type}</th>
+                    <th className="num">{c.labels.price}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{c.labels.created}</th>
+                    <th style={{ textAlign: 'right' }}>{t.changeStatus}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -190,13 +199,13 @@ export default async function AdminProductsPage({
                               {vendor.name}
                             </Link>
                           ) : partner ? (
-                            `${partner.name} · ${enterpriseProduct?.name ?? 'Reward'}`
+                            `${partner.name} · ${enterpriseProduct?.name ?? t.reward}`
                           ) : (
                             'Giftly'
                           )}
                         </td>
                         <td>
-                          <span className="tag">{fulfilmentLabel(product.fulfilment_type)}</span>
+                          <span className="tag">{fulfilmentLabel(product.fulfilment_type, locale)}</span>
                         </td>
                         <td className="num">
                           {product.min_amount_minor === product.max_amount_minor
@@ -206,18 +215,18 @@ export default async function AdminProductsPage({
                         <td>
                           <StatusTag status={product.status} />
                         </td>
-                        <td className="small muted">{formatDate(product.created_at)}</td>
+                        <td className="small muted">{formatDate(product.created_at, locale)}</td>
                         <td>
                           <form action={adminSetProductStatus} className="inline-role" style={{ justifyContent: 'flex-end' }}>
                             <input type="hidden" name="product_id" value={product.id} />
                             <input type="hidden" name="return_to" value="/admin/products" />
-                            <select name="status" defaultValue={product.status} aria-label={`Status for ${product.title}`}>
-                              <option value="draft">Draft</option>
-                              <option value="published">Published</option>
-                              <option value="archived">Archived</option>
+                            <select name="status" defaultValue={product.status} aria-label={fill(t.statusFor, { title: product.title })}>
+                              <option value="draft">{t.draft}</option>
+                              <option value="published">{t.published}</option>
+                              <option value="archived">{t.archived}</option>
                             </select>
                             <button className="btn sm" type="submit">
-                              Save
+                              {c.actions.save}
                             </button>
                           </form>
                         </td>

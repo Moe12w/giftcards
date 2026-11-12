@@ -5,6 +5,10 @@ import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { toggleEnterpriseProduct } from '@/lib/actions/enterprise';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { enterpriseCopy } from '@/lib/i18n/enterprise';
+import { getLocale } from '@/lib/i18n/server';
 
 export default async function EnterpriseProductsPage({
   searchParams,
@@ -12,6 +16,9 @@ export default async function EnterpriseProductsPage({
   searchParams: Promise<{ q?: string; status?: string; saved?: string; error?: string }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const t = pick(enterpriseCopy, locale).products;
+  const c = pick(common, locale);
   const ctx = await requireEnterprise();
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
@@ -51,13 +58,13 @@ export default async function EnterpriseProductsPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Catalogue"
-        title="Reward products"
-        description="Each product defines a denomination, price and validity. Import codes against a product to build inventory."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
         actions={
           canManage ? (
             <Link className="btn sm primary" href="/enterprise/products/new">
-              <Plus size={15} /> New product
+              <Plus size={15} /> {t.newProduct}
             </Link>
           ) : undefined
         }
@@ -65,41 +72,41 @@ export default async function EnterpriseProductsPage({
 
       <Notice
         error={params.error}
-        success={params.saved === '1' ? 'Product saved.' : null}
+        success={params.saved === '1' ? t.saved : null}
       />
 
       <form className="toolbar" action="/enterprise/products" method="get">
         <div className="search-bar">
           <Search size={17} />
-          <input name="q" defaultValue={params.q ?? ''} placeholder="Search products…" aria-label="Search products" />
+          <input name="q" defaultValue={params.q ?? ''} placeholder={t.searchPlaceholder} aria-label={t.searchLabel} />
         </div>
-        <select name="status" defaultValue={status} aria-label="Product status">
-          <option value="">All products</option>
-          <option value="active">Active</option>
-          <option value="paused">Paused</option>
+        <select name="status" defaultValue={status} aria-label={t.statusLabel}>
+          <option value="">{t.allProducts}</option>
+          <option value="active">{c.status.active}</option>
+          <option value="paused">{t.paused}</option>
         </select>
         <button className="btn sm" type="submit">
-          Filter
+          {c.actions.filter}
         </button>
         {q || status ? (
           <Link className="btn sm ghost" href="/enterprise/products">
-            Clear
+            {c.actions.clear}
           </Link>
         ) : null}
       </form>
 
       {products.length === 0 ? (
         <EmptyState
-          title={q || status ? 'No products match' : 'No reward products yet'}
+          title={q || status ? t.noMatchTitle : t.emptyTitle}
           body={
             q || status
-              ? 'Try a different search or clear the filters.'
-              : 'Create a product first, then import the codes that belong to it.'
+              ? t.noMatchBody
+              : t.emptyBody
           }
           action={
             canManage ? (
               <Link className="btn primary sm" href="/enterprise/products/new">
-                <Plus size={14} /> Create a product
+                <Plus size={14} /> {t.createProduct}
               </Link>
             ) : undefined
           }
@@ -108,25 +115,25 @@ export default async function EnterpriseProductsPage({
         <section className="panel">
           <div className="panel-head">
             <h3>
-              {products.length} {products.length === 1 ? 'product' : 'products'}
+              {products.length} {products.length === 1 ? t.product : t.products}
             </h3>
-            <span className="small muted">Prices in QAR</span>
+            <span className="small muted">{t.pricesInQar}</span>
           </div>
           <div className="panel-body flush">
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Product</th>
-                    <th className="num">Face value</th>
-                    <th className="num">Selling price</th>
-                    <th className="num">Commission</th>
-                    <th className="num">Available</th>
-                    <th className="num">Allocated</th>
-                    <th className="num">Redeemed</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th>{t.productTitle}</th>
+                    <th className="num">{t.faceValue}</th>
+                    <th className="num">{t.sellingPrice}</th>
+                    <th className="num">{t.commission}</th>
+                    <th className="num">{t.available}</th>
+                    <th className="num">{t.allocated}</th>
+                    <th className="num">{t.redeemed}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{c.labels.created}</th>
+                    <th style={{ textAlign: 'right' }}>{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -137,7 +144,7 @@ export default async function EnterpriseProductsPage({
                         <td>
                           <span className="strong">{product.name}</span>
                           <br />
-                          <span className="sub">{product.external_ref ?? 'No internal reference'}</span>
+                          <span className="sub">{product.external_ref ?? t.noInternalRef}</span>
                         </td>
                         <td className="num">{formatMoney(Number(product.denomination_minor))}</td>
                         <td className="num">{formatMoney(Number(product.selling_price_minor))}</td>
@@ -148,18 +155,18 @@ export default async function EnterpriseProductsPage({
                         <td>
                           <StatusTag status={product.is_active ? 'active' : 'draft'} />
                         </td>
-                        <td className="small muted">{formatDate(product.created_at)}</td>
+                        <td className="small muted">{formatDate(product.created_at, locale)}</td>
                         <td>
                           <div className="row-actions">
                             <Link className="btn sm" href={`/enterprise/products/${product.id}`}>
-                              <Pencil size={14} /> Edit
+                              <Pencil size={14} /> {c.actions.edit}
                             </Link>
                             {canManage ? (
                               <form action={toggleEnterpriseProduct}>
                                 <input type="hidden" name="product_id" value={product.id} />
                                 <input type="hidden" name="active" value={product.is_active ? 'false' : 'true'} />
                                 <button className="btn sm ghost" type="submit">
-                                  <Power size={13} /> {product.is_active ? 'Pause' : 'Activate'}
+                                  <Power size={13} /> {product.is_active ? t.pause : t.activate}
                                 </button>
                               </form>
                             ) : null}

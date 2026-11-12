@@ -1,6 +1,11 @@
 'use client';
 
 import type { TutorialArt } from '@/lib/tutorial';
+import { useLocale } from '@/components/I18nProvider';
+import { pick } from '@/lib/i18n';
+import { componentsCopy, type ComponentsCopyShape } from '@/lib/i18n/components';
+
+type ArtCopy = ComponentsCopyShape['tutorialArt'];
 
 const INK = 'var(--ink)';
 
@@ -10,22 +15,24 @@ const INK = 'var(--ink)';
  * works in both directions.
  */
 export function TutorialArt({ art }: { art: TutorialArt }) {
+  const locale = useLocale();
+  const t = pick(componentsCopy, locale).tutorialArt;
   return (
     <div className="tut-art" aria-hidden="true">
       <svg viewBox="0 0 340 190" role="presentation">
-        {art === 'lifecycle' ? <Lifecycle /> : null}
-        {art === 'types' ? <GiftTypes /> : null}
-        {art === 'create' ? <CreateForm /> : null}
-        {art === 'packages' ? <Packages /> : null}
+        {art === 'lifecycle' ? <Lifecycle t={t} /> : null}
+        {art === 'types' ? <GiftTypes t={t} /> : null}
+        {art === 'create' ? <CreateForm t={t} /> : null}
+        {art === 'packages' ? <Packages t={t} /> : null}
         {art === 'publish' ? <Publish /> : null}
-        {art === 'sell' ? <Sell /> : null}
-        {art === 'issue' ? <Issue /> : null}
-        {art === 'claim' ? <Claim /> : null}
-        {art === 'redeem' ? <Redeem /> : null}
-        {art === 'ledger' ? <Ledger /> : null}
-        {art === 'import' ? <ImportCodes /> : null}
-        {art === 'reconcile' ? <Reconcile /> : null}
-        {art === 'approve' ? <Approve /> : null}
+        {art === 'sell' ? <Sell t={t} /> : null}
+        {art === 'issue' ? <Issue t={t} /> : null}
+        {art === 'claim' ? <Claim t={t} /> : null}
+        {art === 'redeem' ? <Redeem t={t} /> : null}
+        {art === 'ledger' ? <Ledger t={t} /> : null}
+        {art === 'import' ? <ImportCodes t={t} /> : null}
+        {art === 'reconcile' ? <Reconcile t={t} /> : null}
+        {art === 'approve' ? <Approve t={t} /> : null}
         {art === 'moderate' ? <Moderate /> : null}
         {art === 'support' ? <Support /> : null}
         {art === 'report' ? <Report /> : null}
@@ -50,13 +57,13 @@ function Label({ x, y, children }: { x: number; y: number; children: React.React
   );
 }
 
-function Lifecycle() {
+function Lifecycle({ t }: { t: ArtCopy }) {
   const steps = [
-    { x: 30, label: 'Create', fill: 'var(--mint)' },
-    { x: 100, label: 'Sell', fill: 'var(--gold)' },
-    { x: 170, label: 'Issue', fill: 'var(--lavender)' },
-    { x: 240, label: 'Claim', fill: 'var(--sky)' },
-    { x: 310, label: 'Redeem', fill: 'var(--coral)' },
+    { x: 30, label: t.create, fill: 'var(--mint)' },
+    { x: 100, label: t.sell, fill: 'var(--gold)' },
+    { x: 170, label: t.issue, fill: 'var(--lavender)' },
+    { x: 240, label: t.claim, fill: 'var(--sky)' },
+    { x: 310, label: t.redeem, fill: 'var(--coral)' },
   ];
   return (
     <>
@@ -75,11 +82,11 @@ function Lifecycle() {
   );
 }
 
-function GiftTypes() {
+function GiftTypes({ t }: { t: ArtCopy }) {
   const cards = [
-    { x: 12, fill: 'var(--mint)', label: 'Gift card', sub: 'any amount' },
-    { x: 117, fill: 'var(--lavender)', label: 'Experience', sub: 'fixed packages' },
-    { x: 222, fill: 'var(--coral)', label: 'Corporate', sub: 'bulk codes' },
+    { x: 12, fill: 'var(--mint)', label: t.giftCard, sub: t.anyAmount },
+    { x: 117, fill: 'var(--lavender)', label: t.experience, sub: t.fixedPackages },
+    { x: 222, fill: 'var(--coral)', label: t.corporate, sub: t.bulkCodes },
   ];
   return (
     <>
@@ -109,7 +116,7 @@ function GiftTypes() {
   );
 }
 
-function CreateForm() {
+function CreateForm({ t }: { t: ArtCopy }) {
   return (
     <>
       <rect x="58" y="18" width="224" height="150" rx="16" fill="#fff" stroke={INK} strokeWidth="2.5" />
@@ -120,19 +127,19 @@ function CreateForm() {
       <rect className="tut-write" x="82" y="70" width="70" height="8" rx="4" fill={INK} opacity="0.65" />
       <rect x="196" y="116" width="66" height="28" rx="10" fill="var(--gold)" stroke={INK} strokeWidth="2.5" />
       <Label x={229} y={134}>
-        Save
+        {t.save}
       </Label>
       <circle className="tut-pulse" cx="282" cy="60" r="10" fill="var(--lavender)" stroke={INK} strokeWidth="2" />
     </>
   );
 }
 
-function Packages() {
+function Packages({ t }: { t: ArtCopy }) {
   return (
     <>
       <rect x="16" y="24" width="144" height="132" rx="16" fill="var(--mint-soft)" stroke={INK} strokeWidth="2.5" />
       <Label x={88} y={50}>
-        Money
+        {t.money}
       </Label>
       {[0, 1, 2].map((index) => (
         <g key={index} className="tut-rise" style={{ animationDelay: `${index * 0.15}s` }}>
@@ -146,13 +153,13 @@ function Packages() {
 
       <rect x="182" y="24" width="144" height="132" rx="16" fill="var(--lavender-soft)" stroke={INK} strokeWidth="2.5" />
       <Label x={254} y={50}>
-        Experience
+        {t.experience}
       </Label>
       {[0, 1, 2].map((index) => (
         <g key={index} className="tut-rise" style={{ animationDelay: `${0.15 + index * 0.15}s` }}>
           <rect x={202} y={66 + index * 26} width="104" height="20" rx="10" fill="var(--lavender)" stroke={INK} strokeWidth="2.5" />
           <text x={254} y={80 + index * 26} textAnchor="middle" fontSize="10" fontWeight="800" fill={INK}>
-            {['1 session', '3 sessions', '2 people'][index]}
+            {[t.oneSession, t.threeSessions, t.twoPeople][index]}
           </text>
         </g>
       ))}
@@ -177,7 +184,7 @@ function Publish() {
   );
 }
 
-function Sell() {
+function Sell({ t }: { t: ArtCopy }) {
   return (
     <>
       <rect x="22" y="28" width="122" height="128" rx="16" fill="#fff" stroke={INK} strokeWidth="2.5" />
@@ -191,21 +198,21 @@ function Sell() {
 
       <rect x="176" y="28" width="142" height="128" rx="16" fill="var(--lavender-soft)" stroke={INK} strokeWidth="2.5" />
       <Label x={247} y={60}>
-        Paid
+        {t.paid}
       </Label>
       <rect x="196" y="76" width="102" height="14" rx="7" fill="#fff" stroke={INK} strokeWidth="2" />
       <rect x="196" y="100" width="72" height="14" rx="7" fill="#fff" stroke={INK} strokeWidth="2" />
       <g className="tut-rise">
         <rect x="196" y="124" width="102" height="20" rx="10" fill="var(--mint)" stroke={INK} strokeWidth="2.5" />
         <text x="247" y="138" textAnchor="middle" fontSize="10" fontWeight="800" fill={INK}>
-          Gift card issued
+          {t.giftCardIssued}
         </text>
       </g>
     </>
   );
 }
 
-function Issue() {
+function Issue({ t }: { t: ArtCopy }) {
   return (
     <>
       <rect x="40" y="52" width="180" height="104" rx="16" fill="#fff" stroke={INK} strokeWidth="2.5" />
@@ -218,14 +225,14 @@ function Issue() {
       <g className="tut-rise" style={{ animationDelay: '0.5s' }}>
         <rect x="96" y="118" width="70" height="22" rx="11" fill="var(--mint)" stroke={INK} strokeWidth="2.5" />
         <text x="131" y="133" textAnchor="middle" fontSize="10" fontWeight="800" fill={INK}>
-          Code sent
+          {t.codeSent}
         </text>
       </g>
     </>
   );
 }
 
-function Claim() {
+function Claim({ t }: { t: ArtCopy }) {
   return (
     <>
       <rect x="96" y="18" width="120" height="158" rx="20" fill="#fff" stroke={INK} strokeWidth="2.5" />
@@ -240,14 +247,14 @@ function Claim() {
       <g className="tut-rise" style={{ animationDelay: '0.4s' }}>
         <rect x="262" y="82" width="60" height="40" rx="10" fill="var(--gold)" stroke={INK} strokeWidth="2.5" />
         <text x="292" y="106" textAnchor="middle" fontSize="10" fontWeight="800" fill={INK}>
-          Wallet
+          {t.wallet}
         </text>
       </g>
     </>
   );
 }
 
-function Redeem() {
+function Redeem({ t }: { t: ArtCopy }) {
   return (
     <>
       <rect x="36" y="30" width="120" height="130" rx="16" fill="var(--lavender-soft)" stroke={INK} strokeWidth="2.5" />
@@ -273,7 +280,7 @@ function Redeem() {
 
       <rect x="196" y="30" width="116" height="130" rx="16" fill="#fff" stroke={INK} strokeWidth="2.5" />
       <Label x={254} y={58}>
-        Balance
+        {t.balance}
       </Label>
       <rect x="212" y="70" width="84" height="14" rx="7" fill="var(--surface-soft)" stroke={INK} strokeWidth="2" />
       <rect className="tut-drain" x="212" y="96" width="84" height="18" rx="9" fill="var(--mint)" stroke={INK} strokeWidth="2.5" />
@@ -285,7 +292,7 @@ function Redeem() {
   );
 }
 
-function Ledger() {
+function Ledger({ t }: { t: ArtCopy }) {
   return (
     <>
       <rect x="22" y="24" width="296" height="142" rx="16" fill="#fff" stroke={INK} strokeWidth="2.5" />
@@ -315,13 +322,13 @@ function Ledger() {
         </g>
       ))}
       <text x="288" y="158" textAnchor="middle" fontSize="9" fontWeight="700" fill={INK} opacity="0.6">
-        Every movement is written down
+        {t.everyMovement}
       </text>
     </>
   );
 }
 
-function ImportCodes() {
+function ImportCodes({ t }: { t: ArtCopy }) {
   return (
     <>
       <rect x="18" y="30" width="120" height="130" rx="16" fill="#fff" stroke={INK} strokeWidth="2.5" />
@@ -337,14 +344,14 @@ function ImportCodes() {
         <path d="M228 30v-10a18 18 0 0136 0v10" fill="none" stroke={INK} strokeWidth="2.5" />
         <circle cx="246" cy="54" r="5" fill={INK} />
         <text x="246" y="120" textAnchor="middle" fontSize="10" fontWeight="800" fill={INK}>
-        Encrypted
-      </text>
+          {t.encrypted}
+        </text>
       </g>
     </>
   );
 }
 
-function Reconcile() {
+function Reconcile({ t }: { t: ArtCopy }) {
   return (
     <>
       {[0, 1, 2].map((row) => (
@@ -365,13 +372,13 @@ function Reconcile() {
         </g>
       ))}
       <text x="170" y="160" textAnchor="middle" fontSize="10" fontWeight="800" fill={INK} opacity="0.7">
-        Report rows matched to codes
+        {t.rowsMatched}
       </text>
     </>
   );
 }
 
-function Approve() {
+function Approve({ t }: { t: ArtCopy }) {
   return (
     <>
       <rect x="58" y="22" width="150" height="146" rx="16" fill="#fff" stroke={INK} strokeWidth="2.5" />
@@ -386,7 +393,7 @@ function Approve() {
       <g className="tut-rise" style={{ animationDelay: '0.35s' }}>
         <rect x="248" y="56" width="74" height="34" rx="10" fill="var(--gold)" stroke={INK} strokeWidth="2.5" />
         <text x="285" y="78" textAnchor="middle" fontSize="10" fontWeight="800" fill={INK}>
-          Approved
+          {t.approved}
         </text>
       </g>
     </>

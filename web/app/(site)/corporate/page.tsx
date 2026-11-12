@@ -15,8 +15,15 @@ import {
 } from 'lucide-react';
 import { submitEnterpriseEnquiry } from '@/lib/actions/public';
 import { Notice } from '@/components/ui';
+import { site } from '@/lib/i18n/site';
+import { common } from '@/lib/i18n/common';
+import { pick } from '@/lib/i18n';
+import { getLocale } from '@/lib/i18n/server';
 
-export const metadata: Metadata = { title: 'Corporate gifting' };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: pick(site, locale).home.corporateGifting };
+}
 
 export default async function EnterprisePage({
   searchParams,
@@ -24,54 +31,53 @@ export default async function EnterprisePage({
   searchParams: Promise<{ sent?: string; error?: string }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const t = pick(site, locale).corporate;
+  const c = pick(common, locale);
 
   return (
     <>
       <section className="page-hero split">
         <div className="container hero-grid">
           <div className="hero-copy">
-            <span className="eyebrow coral">Giftly for business</span>
-            <h1>Reward the people who make the work happen.</h1>
-            <p className="lede">
-              Curated gift codes from Qatar&apos;s best independent businesses, bought in bulk and
-              tracked in one place. For teams, clients and the moments that deserve more than a
-              generic hamper.
-            </p>
+            <span className="eyebrow coral">{t.eyebrow}</span>
+            <h1>{t.title}</h1>
+            <p className="lede">{t.lede}</p>
             <div className="btn-row">
               <a className="btn primary lg" href="#enquiry">
-                Talk to our team <ArrowRight size={18} />
+                {t.talkToTeam} <ArrowRight size={18} />
               </a>
               <Link className="btn ghost lg" href="/enterprise/login">
-                Partner sign in
+                {t.partnerSignIn}
               </Link>
             </div>
             <div className="hero-trust">
               <span>
-                <ShieldCheck size={16} /> One invoice
+                <ShieldCheck size={16} /> {t.trustInvoice}
               </span>
               <span>
-                <FileSpreadsheet size={16} /> Redemption reporting
+                <FileSpreadsheet size={16} /> {t.trustReporting}
               </span>
               <span>
-                <HeartHandshake size={16} /> Local businesses
+                <HeartHandshake size={16} /> {t.trustLocal}
               </span>
             </div>
           </div>
           <div className="enterprise-art" aria-hidden="true">
             <div className="card mint enterprise-tile one">
               <Users size={22} />
-              <strong>120 team members</strong>
-              <span className="small">One reward, sent in minutes</span>
+              <strong>{t.tileMembers}</strong>
+              <span className="small">{t.tileMembersBody}</span>
             </div>
             <div className="card lavender enterprise-tile two">
               <Gift size={22} />
-              <strong>QAR 250 each</strong>
-              <span className="small">Spend across any partner</span>
+              <strong>{t.tileEach}</strong>
+              <span className="small">{t.tileEachBody}</span>
             </div>
             <div className="card coral enterprise-tile three">
               <BadgeCheck size={22} />
-              <strong>78% redeemed</strong>
-              <span className="small">Live in your dashboard</span>
+              <strong>{t.tileRedeemed}</strong>
+              <span className="small">{t.tileRedeemedBody}</span>
             </div>
           </div>
         </div>
@@ -80,8 +86,8 @@ export default async function EnterprisePage({
       <section className="container section">
         <div className="section-head">
           <div className="copy">
-            <span className="eyebrow mint">Why Giftly</span>
-            <h2>Gifting that finance and people teams both like.</h2>
+            <span className="eyebrow mint">{t.eyebrowWhy}</span>
+            <h2>{t.titleWhy}</h2>
           </div>
         </div>
         <div className="grid-3">
@@ -89,30 +95,27 @@ export default async function EnterprisePage({
             <span className="icon-tile">
               <Building2 size={22} />
             </span>
-            <h3 style={{ marginTop: 14 }}>Local, not generic</h3>
+            <h3 style={{ marginTop: 14 }}>{t.cardLocalTitle}</h3>
             <p className="small" style={{ marginTop: 8 }}>
-              Coffee, spa days, dinners and adventures from independent Qatari businesses. The kind
-              of reward people actually talk about.
+              {t.cardLocalBody}
             </p>
           </article>
           <article className="card">
             <span className="icon-tile lavender">
               <FileSpreadsheet size={22} />
             </span>
-            <h3 style={{ marginTop: 14 }}>Numbers that add up</h3>
+            <h3 style={{ marginTop: 14 }}>{t.cardNumbersTitle}</h3>
             <p className="small" style={{ marginTop: 8 }}>
-              Import codes, allocate them to orders and see exactly what has been delivered and
-              redeemed. Export the detail whenever you need it.
+              {t.cardNumbersBody}
             </p>
           </article>
           <article className="card">
             <span className="icon-tile coral">
               <ShieldCheck size={22} />
             </span>
-            <h3 style={{ marginTop: 14 }}>Safe by default</h3>
+            <h3 style={{ marginTop: 14 }}>{t.cardSafeTitle}</h3>
             <p className="small" style={{ marginTop: 8 }}>
-              Codes are stored encrypted, revealed only when allocated, and every status change is
-              recorded. No spreadsheets full of plain-text codes.
+              {t.cardSafeBody}
             </p>
           </article>
         </div>
@@ -121,41 +124,33 @@ export default async function EnterprisePage({
       <section className="container section">
         <div className="grid-2">
           <div>
-            <span className="eyebrow lavender">How it works</span>
-            <h2 style={{ marginTop: 14 }}>From brief to delivered in four steps.</h2>
-            <p style={{ marginTop: 12 }}>
-              Tell us the occasion, the headcount and the budget. We handle the catalogue and the
-              codes; you keep control of who gets what.
-            </p>
+            <span className="eyebrow lavender">{t.eyebrowHow}</span>
+            <h2 style={{ marginTop: 14 }}>{t.titleHow}</h2>
+            <p style={{ marginTop: 12 }}>{t.bodyHow}</p>
             <ul className="check-list">
               <li>
-                <Check size={16} /> Choose from live vendor offers or build a custom package
+                <Check size={16} /> {t.check1}
               </li>
               <li>
-                <Check size={16} /> Buy codes in bulk at an agreed corporate rate
+                <Check size={16} /> {t.check2}
               </li>
               <li>
-                <Check size={16} /> Import and allocate codes from your dashboard
+                <Check size={16} /> {t.check3}
               </li>
               <li>
-                <Check size={16} /> Track delivery, redemption and remaining liability
+                <Check size={16} /> {t.check4}
               </li>
             </ul>
           </div>
           <div className="timeline-card">
-            {[
-              ['Brief', 'Occasion, headcount, budget and any branding.'],
-              ['Catalogue', 'We shortlist vendors and agree the reward value.'],
-              ['Codes', 'Your inventory is imported and ready to allocate.'],
-              ['Report', 'Monthly redemption and liability reporting.'],
-            ].map(([title, body], index) => (
-              <div className="timeline-item" key={title}>
+            {t.timeline.map((step, index) => (
+              <div className="timeline-item" key={step.title}>
                 <span className="timeline-dot" />
                 <div>
                   <strong>
-                    {index + 1}. {title}
+                    {index + 1}. {step.title}
                   </strong>
-                  <span>{body}</span>
+                  <span>{step.body}</span>
                 </div>
               </div>
             ))}
@@ -167,24 +162,12 @@ export default async function EnterprisePage({
         <div className="card ink">
           <div className="grid-2" style={{ alignItems: 'center' }}>
             <div>
-              <span className="eyebrow gold">Use cases</span>
-              <h2 style={{ color: '#fff', marginTop: 14 }}>For the moments that matter.</h2>
-              <p style={{ marginTop: 12 }}>
-                Onboarding kits, Ramadan and National Day gifts, sales incentives, client
-                thank-yous, wellness weeks and long-service awards.
-              </p>
+              <span className="eyebrow gold">{t.eyebrowUseCases}</span>
+              <h2 style={{ color: '#fff', marginTop: 14 }}>{t.titleUseCases}</h2>
+              <p style={{ marginTop: 12 }}>{t.bodyUseCases}</p>
             </div>
             <div className="pill-row">
-              {[
-                'Employee rewards',
-                'Client gifting',
-                'Onboarding',
-                'Sales incentives',
-                'Wellness',
-                'Ramadan',
-                'National Day',
-                'Long service',
-              ].map((item) => (
+              {t.useCases.map((item) => (
                 <span className="tag" key={item}>
                   {item}
                 </span>
@@ -197,59 +180,53 @@ export default async function EnterprisePage({
       <section className="container section" id="enquiry">
         <div className="grid-2" style={{ alignItems: 'start' }}>
           <div>
-            <span className="eyebrow coral">Let&apos;s talk</span>
-            <h2 style={{ marginTop: 14 }}>Tell us about your team.</h2>
-            <p style={{ marginTop: 12 }}>
-              Send a few details and our corporate team will come back with a catalogue and a
-              quote. No commitment, no automated sales sequence.
-            </p>
+            <span className="eyebrow coral">{t.eyebrowLetsTalk}</span>
+            <h2 style={{ marginTop: 14 }}>{t.titleLetsTalk}</h2>
+            <p style={{ marginTop: 12 }}>{t.bodyLetsTalk}</p>
             <div className="split-list" style={{ marginTop: 20 }}>
               <div>
-                <span className="k">Email</span>
+                <span className="k">{c.labels.email}</span>
                 <span className="v">corporate@giftly.qa</span>
               </div>
               <div>
-                <span className="k">Phone</span>
+                <span className="k">{c.labels.phone}</span>
                 <span className="v">+974 4000 0000</span>
               </div>
               <div>
-                <span className="k">Office</span>
-                <span className="v">Doha, Qatar</span>
+                <span className="k">{t.officeTitle}</span>
+                <span className="v">{t.dohaQatar}</span>
               </div>
             </div>
             <div className="callout info" style={{ marginTop: 20 }}>
-              Already a partner? <Link href="/enterprise/login">Sign in to your dashboard</Link> to
-              manage products, inventory and reports.
+              {t.alreadyPartnerBefore}{' '}
+              <Link href="/enterprise/login">{t.signInDashboard}</Link> {t.alreadyPartnerAfter}
             </div>
           </div>
           <div className="card">
-            <h3>Corporate enquiry</h3>
-            <Notice
-              error={params.error}
-              success={params.sent === '1' ? 'Thank you — your enquiry is with our team.' : null}
-            />
+            <h3>{t.enquiryTitle}</h3>
+            <Notice error={params.error} success={params.sent === '1' ? t.enquirySuccess : null} />
             <form action={submitEnterpriseEnquiry} className="form" style={{ marginTop: 16 }}>
               <div className="form-grid">
                 <div className="field full">
-                  <label htmlFor="company">Company</label>
-                  <input id="company" name="company" required placeholder="Company name" />
+                  <label htmlFor="company">{c.labels.company}</label>
+                  <input id="company" name="company" required placeholder={t.placeholderCompanyName} />
                 </div>
                 <div className="field">
-                  <label htmlFor="name">Your name</label>
-                  <input id="name" name="name" required placeholder="Full name" />
+                  <label htmlFor="name">{t.labelYourName}</label>
+                  <input id="name" name="name" required placeholder={t.placeholderFullName} />
                 </div>
                 <div className="field">
-                  <label htmlFor="email">Work email</label>
+                  <label htmlFor="email">{t.labelWorkEmail}</label>
                   <input id="email" name="email" type="email" required placeholder="you@company.com" />
                 </div>
                 <div className="field">
-                  <label htmlFor="phone">Phone</label>
+                  <label htmlFor="phone">{c.labels.phone}</label>
                   <input id="phone" name="phone" placeholder="+974 …" />
                 </div>
                 <div className="field">
-                  <label htmlFor="team_size">Team size</label>
+                  <label htmlFor="team_size">{t.labelTeamSize}</label>
                   <select id="team_size" name="team_size" defaultValue="">
-                    <option value="">Select</option>
+                    <option value="">{t.optionSelect}</option>
                     <option>1–20</option>
                     <option>21–100</option>
                     <option>101–500</option>
@@ -257,19 +234,15 @@ export default async function EnterprisePage({
                   </select>
                 </div>
                 <div className="field full">
-                  <label htmlFor="message">What are you planning?</label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    placeholder="Occasion, budget per person, timeline…"
-                  />
+                  <label htmlFor="message">{t.labelPlanning}</label>
+                  <textarea id="message" name="message" placeholder={t.placeholderPlanning} />
                 </div>
               </div>
               <button className="btn primary block" type="submit">
-                Send enquiry <Send size={16} />
+                {t.sendEnquiry} <Send size={16} />
               </button>
               <p className="small muted">
-                By sending this form you agree to our <Link href="/privacy">privacy policy</Link>.
+                {t.formConsentBefore} <Link href="/privacy">{t.privacyPolicy}</Link>.
               </p>
             </form>
           </div>
@@ -279,19 +252,16 @@ export default async function EnterprisePage({
       <section className="container section">
         <div className="cta-band">
           <span className="eyebrow gold">
-            <Sparkles size={14} /> Corporate gifting, minus the admin
+            <Sparkles size={14} /> {t.eyebrowCta}
           </span>
-          <h2>One dashboard for every code, team and report.</h2>
-          <p>
-            Our enterprise partners manage their own catalogue, inventory and redemptions. You can
-            too.
-          </p>
+          <h2>{t.titleCta}</h2>
+          <p>{t.bodyCta}</p>
           <div className="btn-row">
             <a className="btn primary" href="#enquiry">
-              Request a demo <ArrowRight size={16} />
+              {t.requestDemo} <ArrowRight size={16} />
             </a>
             <Link className="btn ghost" href="/enterprise/login" style={{ color: '#fff', borderColor: '#fff' }}>
-              Partner sign in
+              {t.partnerSignIn}
             </Link>
           </div>
         </div>

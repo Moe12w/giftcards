@@ -1,35 +1,43 @@
+'use client';
+
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
-
-const columns = [
-  {
-    title: 'Marketplace',
-    links: [
-      { href: '/vendors', label: 'Browse vendors' },
-      { href: '/download', label: 'Get the app' },
-      { href: '/faq', label: 'How it works' },
-      { href: '/corporate', label: 'Corporate gifting' },
-    ],
-  },
-  {
-    title: 'Company',
-    links: [
-      { href: '/contact', label: 'Contact us' },
-      { href: '/terms', label: 'Terms of service' },
-      { href: '/privacy', label: 'Privacy policy' },
-    ],
-  },
-  {
-    title: 'Partners',
-    links: [
-      { href: '/vendor/login', label: 'Vendor dashboard' },
-      { href: '/enterprise/login', label: 'Enterprise dashboard' },
-      { href: '/admin/login', label: 'Admin' },
-    ],
-  },
-];
+import { useLocale } from '@/components/I18nProvider';
+import { pick } from '@/lib/i18n';
+import { componentsCopy } from '@/lib/i18n/components';
 
 export function SiteFooter() {
+  const locale = useLocale();
+  const t = pick(componentsCopy, locale).siteFooter;
+
+  const columns = [
+    {
+      title: t.marketplace,
+      links: [
+        { href: '/vendors', label: t.vendors },
+        { href: '/download', label: t.download },
+        { href: '/faq', label: t.faq },
+        { href: '/corporate', label: t.corporate },
+      ],
+    },
+    {
+      title: t.forBusiness,
+      links: [
+        { href: '/contact', label: t.contact },
+        { href: '/terms', label: t.terms },
+        { href: '/privacy', label: t.privacy },
+      ],
+    },
+    {
+      title: t.support,
+      links: [
+        { href: '/vendor/login', label: t.vendorDashboard },
+        { href: '/enterprise/login', label: t.enterpriseDashboard },
+        { href: '/admin/login', label: t.admin },
+      ],
+    },
+  ];
+
   return (
     <footer className="site-footer">
       <div className="container">
@@ -37,8 +45,7 @@ export function SiteFooter() {
           <div>
             <Logo />
             <p className="small" style={{ marginTop: 14, maxWidth: 300 }}>
-              Gift cards, experiences and corporate rewards from the best independent
-              businesses in Qatar. One app, three ways to give.
+              {t.tagline}
             </p>
             <p className="small" style={{ marginTop: 14 }}>
               Doha, Qatar · hello@giftly.qa
@@ -58,8 +65,10 @@ export function SiteFooter() {
           ))}
         </div>
         <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} Giftly. All rights reserved.</span>
-          <span>Made for Qatar · English & العربية</span>
+          <span>
+            © {new Date().getFullYear()} Giftly. {t.rights}
+          </span>
+          <span>{t.madeFor}</span>
         </div>
       </div>
     </footer>

@@ -5,6 +5,10 @@ import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
 import type { InventoryStatus } from '@/lib/types';
+import { pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { enterpriseCopy } from '@/lib/i18n/enterprise';
+import { getLocale } from '@/lib/i18n/server';
 
 const STATUSES: InventoryStatus[] = [
   'available',
@@ -24,6 +28,9 @@ export default async function EnterpriseInventoryPage({
   searchParams: Promise<{ q?: string; status?: string; product?: string; error?: string }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const t = pick(enterpriseCopy, locale).inventory;
+  const c = pick(common, locale);
   const ctx = await requireEnterprise();
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
@@ -62,12 +69,12 @@ export default async function EnterpriseInventoryPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Inventory"
-        title="Every code, accounted for."
-        description="Codes are stored encrypted. Only the last four digits are shown here; the full code is revealed to the recipient when allocated."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
         actions={
           <Link className="btn sm primary" href="/enterprise/import">
-            <Boxes size={15} /> Import codes
+            <Boxes size={15} /> {t.importCodes}
           </Link>
         }
       />
@@ -80,74 +87,74 @@ export default async function EnterpriseInventoryPage({
             <Boxes size={17} />
           </span>
           <strong>{available.length}</strong>
-          <span>Available</span>
+          <span>{t.available}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <Boxes size={17} />
           </span>
           <strong>{allocated.length}</strong>
-          <span>Allocated or delivered</span>
+          <span>{t.allocatedOrDelivered}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Boxes size={17} />
           </span>
           <strong>{redeemed.length}</strong>
-          <span>Confirmed redeemed</span>
+          <span>{t.confirmedRedeemed}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <Boxes size={17} />
           </span>
           <strong>{formatMoney(availableValue)}</strong>
-          <span>Available face value</span>
+          <span>{t.availableFaceValue}</span>
         </div>
       </div>
 
       <form className="toolbar" action="/enterprise/inventory" method="get">
         <div className="search-bar">
           <Search size={17} />
-          <input name="q" defaultValue={params.q ?? ''} placeholder="Reference or last four digits…" aria-label="Search inventory" />
+          <input name="q" defaultValue={params.q ?? ''} placeholder={t.searchPlaceholder} aria-label={t.searchLabel} />
         </div>
-        <select name="product" defaultValue={productFilter} aria-label="Product">
-          <option value="">All products</option>
+        <select name="product" defaultValue={productFilter} aria-label={t.productLabel}>
+          <option value="">{t.allProducts}</option>
           {products.map((product) => (
             <option key={product.id} value={product.id}>
               {product.name}
             </option>
           ))}
         </select>
-        <select name="status" defaultValue={status} aria-label="Status">
-          <option value="">All statuses</option>
+        <select name="status" defaultValue={status} aria-label={c.labels.status}>
+          <option value="">{t.allStatuses}</option>
           {STATUSES.map((value) => (
             <option key={value} value={value}>
-              {value}
+              {t.statusLabels[value]}
             </option>
           ))}
         </select>
         <button className="btn sm" type="submit">
-          Filter
+          {c.actions.filter}
         </button>
         {q || status || productFilter ? (
           <Link className="btn sm ghost" href="/enterprise/inventory">
-            Clear
+            {c.actions.clear}
           </Link>
         ) : null}
       </form>
 
       {inventory.length === 0 ? (
         <EmptyState
-          title={all.length === 0 ? 'No codes imported yet' : 'No codes match'}
+          title={all.length === 0 ? t.emptyTitle : t.noMatchTitle}
           body={
             all.length === 0
-              ? 'Choose a product and paste your codes. We encrypt each one and check for duplicates before storing it.'
-              : 'Try a different reference, product or status.'
+              ? t.emptyBody
+              : t.noMatchBody
           }
           action={
             all.length === 0 ? (
               <Link className="btn primary sm" href="/enterprise/import">
-                Import codes
+                {t.importCodes}
               </Link>
             ) : undefined
           }
@@ -156,44 +163,44 @@ export default async function EnterpriseInventoryPage({
         <section className="panel">
           <div className="panel-head">
             <h3>
-              {inventory.length} {inventory.length === 1 ? 'code' : 'codes'}
+              {inventory.length} {inventory.length === 1 ? t.code : t.codes}
             </h3>
-            <span className="small muted">Showing up to 2,000</span>
+            <span className="small muted">{t.showingUpTo}</span>
           </div>
           <div className="panel-body flush">
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Reference</th>
-                    <th>Product</th>
-                    <th>Code</th>
-                    <th className="num">Value</th>
-                    <th>Status</th>
-                    <th>Allocated</th>
-                    <th>Delivered</th>
-                    <th>Redeemed</th>
-                    <th>Expires</th>
-                    <th>Imported</th>
+                    <th>{t.reference}</th>
+                    <th>{t.productLabel}</th>
+                    <th>{c.labels.code}</th>
+                    <th className="num">{t.value}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{t.allocated}</th>
+                    <th>{t.delivered}</th>
+                    <th>{t.redeemed}</th>
+                    <th>{t.expires}</th>
+                    <th>{t.imported}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {inventory.map((item) => (
                     <tr key={item.inventory_id}>
                       <td className="strong mono small">{item.inventory_ref}</td>
-                      <td>{productNames.get(item.enterprise_product_id) ?? 'Product'}</td>
+                      <td>{productNames.get(item.enterprise_product_id) ?? t.productFallback}</td>
                       <td className="mono masked">{item.code_masked}</td>
                       <td className="num">{formatMoney(Number(item.denomination_minor))}</td>
                       <td>
                         <StatusTag status={item.status} />
                       </td>
-                      <td className="small muted">{item.allocated_at ? formatDate(item.allocated_at) : '—'}</td>
-                      <td className="small muted">{item.delivered_at ? formatDate(item.delivered_at) : '—'}</td>
+                      <td className="small muted">{item.allocated_at ? formatDate(item.allocated_at, locale) : '—'}</td>
+                      <td className="small muted">{item.delivered_at ? formatDate(item.delivered_at, locale) : '—'}</td>
                       <td className="small muted">
-                        {item.confirmed_redeemed_at ? formatDate(item.confirmed_redeemed_at) : '—'}
+                        {item.confirmed_redeemed_at ? formatDate(item.confirmed_redeemed_at, locale) : '—'}
                       </td>
-                      <td className="small muted">{item.expires_at ? formatDate(item.expires_at) : 'No expiry'}</td>
-                      <td className="small muted">{formatDate(item.created_at)}</td>
+                      <td className="small muted">{item.expires_at ? formatDate(item.expires_at, locale) : t.noExpiry}</td>
+                      <td className="small muted">{formatDate(item.created_at, locale)}</td>
                     </tr>
                   ))}
                 </tbody>

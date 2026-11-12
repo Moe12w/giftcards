@@ -1,83 +1,58 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { site } from '@/lib/i18n/site';
+import { pick } from '@/lib/i18n';
+import { getLocale } from '@/lib/i18n/server';
 
-export const metadata: Metadata = { title: 'Privacy policy' };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: pick(site, locale).privacy.title };
+}
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const locale = await getLocale();
+  const t = pick(site, locale).privacy;
+
   return (
     <>
       <section className="page-hero">
         <div className="container narrow">
-          <span className="eyebrow">Legal</span>
-          <h1>Privacy policy</h1>
-          <p className="lede">Last updated: 11 November 2026</p>
+          <span className="eyebrow">{t.eyebrow}</span>
+          <h1>{t.title}</h1>
+          <p className="lede">{t.lastUpdated}</p>
         </div>
       </section>
       <section className="container narrow section tight legal-copy">
-        <h2>What we collect</h2>
+        <h2>{t.collectTitle}</h2>
+        <p>{t.collectBody}</p>
+
+        <h2>{t.useTitle}</h2>
+        <p>{t.useBody}</p>
+
+        <h2>{t.whoTitle}</h2>
+        <p>{t.whoBody}</p>
+
+        <h2>{t.paymentsTitle}</h2>
+        <p>{t.paymentsBody}</p>
+
+        <h2>{t.storageTitle}</h2>
+        <p>{t.storageBody}</p>
+
+        <h2>{t.retentionTitle}</h2>
+        <p>{t.retentionBody}</p>
+
+        <h2>{t.choicesTitle}</h2>
         <p>
-          Account details (name, email, phone), gift and order details, delivery details for the
-          recipient, and the information you send us through support forms. Vendors provide business
-          details, locations and payout information. Enterprise partners provide company and contact
-          details.
+          {t.choicesBodyOne} <a href="mailto:privacy@giftly.qa">privacy@giftly.qa</a>{' '}
+          {t.choicesBodyTwo}
         </p>
 
-        <h2>How we use it</h2>
-        <p>
-          To create and secure your account, issue and deliver gifts, let vendors redeem them,
-          calculate settlements, provide support, prevent fraud and meet our legal obligations. We
-          also use aggregated, non-identifying information to understand which parts of the
-          marketplace are working.
-        </p>
+        <h2>{t.cookiesTitle}</h2>
+        <p>{t.cookiesBody}</p>
 
-        <h2>Who sees what</h2>
+        <h2>{t.contactTitle}</h2>
         <p>
-          Vendors see the details needed to fulfil and redeem a gift, such as the recipient name,
-          voucher code and redemption history. Enterprise partners see their own inventory and
-          redemption reports. Our team sees what is needed to operate and support the platform.
-          We do not sell personal data.
-        </p>
-
-        <h2>Payments</h2>
-        <p>
-          Card payments are processed by our licensed payment provider. Giftly does not store full
-          card numbers. Payment references and status are kept so we can reconcile orders and
-          refunds.
-        </p>
-
-        <h2>Storage and security</h2>
-        <p>
-          Data is stored with our cloud database provider using encryption in transit and at rest.
-          Access is limited by role-based policies. Enterprise codes are stored encrypted and shown
-          only when allocated. No system is perfect; if we become aware of a breach that affects
-          you, we will tell you.
-        </p>
-
-        <h2>Retention</h2>
-        <p>
-          We keep account and transaction records for as long as needed to provide the service and
-          meet accounting and legal requirements. Support messages are kept for two years unless
-          they relate to an open dispute.
-        </p>
-
-        <h2>Your choices</h2>
-        <p>
-          You can ask for a copy of your data, correct it, or ask us to close your account. Some
-          records must be kept for tax and accounting. Email{' '}
-          <a href="mailto:privacy@giftly.qa">privacy@giftly.qa</a> and we will respond within 30
-          days.
-        </p>
-
-        <h2>Cookies</h2>
-        <p>
-          The website uses essential cookies to keep you signed in to a dashboard. We do not use
-          advertising cookies. You can clear cookies in your browser, but you will need to sign in
-          again.
-        </p>
-
-        <h2>Contact</h2>
-        <p>
-          Giftly, Doha, Qatar. Questions? <Link href="/contact">Contact us</Link>.
+          {t.contactBodyBefore} <Link href="/contact">{t.contactLink}</Link>.
         </p>
       </section>
     </>

@@ -5,119 +5,52 @@ import { requireVendor } from '@/lib/auth';
 import { switchVendor } from '@/lib/actions/vendor';
 import { initials, titleCase } from '@/lib/format';
 import { VENDOR_SCRIPT } from '@/lib/tutorial';
+import { getUserLocale } from '@/lib/i18n/server';
+import { vendorCopy } from '@/lib/i18n/vendor';
+import { pick } from '@/lib/i18n';
 
 export default async function VendorDashboardLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireVendor();
   const vendor = ctx.vendor;
-  const locale = ctx.profile?.preferred_language === 'ar' ? 'ar' : 'en';
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const chrome = pick(vendorCopy, locale).chrome;
+  const t = pick(vendorCopy, locale).nav;
 
   // The menu follows the life cycle of a gift: set up, create, sell, redeem, report.
   const nav: NavGroup[] = [
     {
       step: 1,
-      label: 'Start here',
-      labelAr: 'ابدأ من هنا',
+      label: t.group1,
       items: [
-        {
-          href: '/vendor',
-          label: 'Overview',
-          labelAr: 'نظرة عامة',
-          icon: 'dashboard',
-          hint: 'How the business stands today.',
-          hintAr: 'حالة نشاطك اليوم.',
-        },
-        {
-          href: '/vendor/onboarding',
-          label: 'Onboarding',
-          labelAr: 'خطوات البدء',
-          icon: 'onboarding',
-          hint: 'The checklist before you go live.',
-          hintAr: 'قائمة التحقق قبل الانطلاق.',
-        },
+        { href: '/vendor', label: t.overview, icon: 'dashboard', hint: t.overviewHint },
+        { href: '/vendor/onboarding', label: t.onboarding, icon: 'onboarding', hint: t.onboardingHint },
       ],
     },
     {
       step: 2,
-      label: 'Create the gift',
-      labelAr: 'أنشئ الهدية',
-      items: [
-        {
-          href: '/vendor/products',
-          label: 'Gifts',
-          labelAr: 'الهدايا',
-          icon: 'products',
-          hint: 'Money, experiences and the packages you sell.',
-          hintAr: 'Money والتجارب والباقات التي تبيعها.',
-        },
-      ],
+      label: t.group2,
+      items: [{ href: '/vendor/products', label: t.gifts, icon: 'products', hint: t.giftsHint }],
     },
     {
       step: 3,
-      label: 'Sell and deliver',
-      labelAr: 'البيع والتسليم',
+      label: t.group3,
       items: [
-        {
-          href: '/vendor/orders',
-          label: 'Orders',
-          labelAr: 'الطلبات',
-          icon: 'orders',
-          hint: 'What was bought, and what you earned.',
-          hintAr: 'ما تم شراؤه وما استحق لك.',
-        },
-        {
-          href: '/vendor/vouchers',
-          label: 'Vouchers',
-          labelAr: 'البطاقات',
-          icon: 'vouchers',
-          hint: 'Every code issued and its balance.',
-          hintAr: 'كل رمز صدر ورصيده.',
-        },
+        { href: '/vendor/orders', label: t.orders, icon: 'orders', hint: t.ordersHint },
+        { href: '/vendor/vouchers', label: t.vouchers, icon: 'vouchers', hint: t.vouchersHint },
       ],
     },
     {
       step: 4,
-      label: 'Redeem at the counter',
-      labelAr: 'الاستبدال عند الكاونتر',
-      items: [
-        {
-          href: '/vendor/redeem',
-          label: 'Redeem a code',
-          labelAr: 'استبدال رمز',
-          icon: 'redeem',
-          hint: 'Take payment off a gift card.',
-          hintAr: 'خصم الدفعة من بطاقة الهدية.',
-        },
-      ],
+      label: t.group4,
+      items: [{ href: '/vendor/redeem', label: t.redeem, icon: 'redeem', hint: t.redeemHint }],
     },
     {
       step: 5,
-      label: 'Run the business',
-      labelAr: 'إدارة النشاط',
+      label: t.group5,
       items: [
-        {
-          href: '/vendor/analytics',
-          label: 'Analytics',
-          labelAr: 'التحليلات',
-          icon: 'analytics',
-          hint: 'What sells, and what is still unredeemed.',
-          hintAr: 'ما يبيع وما لم يُستبدل بعد.',
-        },
-        {
-          href: '/vendor/staff',
-          label: 'Team',
-          labelAr: 'الفريق',
-          icon: 'staff',
-          hint: 'Who can redeem, and who can manage.',
-          hintAr: 'من يستبدل ومن يدير.',
-        },
-        {
-          href: '/vendor/settings',
-          label: 'Business settings',
-          labelAr: 'إعدادات النشاط',
-          icon: 'settings',
-          hint: 'Your storefront, locations and documents.',
-          hintAr: 'واجهتك ومواقعك ووثائقك.',
-        },
+        { href: '/vendor/analytics', label: t.analytics, icon: 'analytics', hint: t.analyticsHint },
+        { href: '/vendor/staff', label: t.team, icon: 'staff', hint: t.teamHint },
+        { href: '/vendor/settings', label: t.settings, icon: 'settings', hint: t.settingsHint },
       ],
     },
   ];
@@ -125,26 +58,26 @@ export default async function VendorDashboardLayout({ children }: { children: Re
   const switcher =
     ctx.memberships.length > 1 ? (
       <form action={switchVendor} className="workspace-switch">
-        <select name="vendor_id" defaultValue={vendor.id} aria-label="Switch vendor">
+        <select name="vendor_id" defaultValue={vendor.id} aria-label={chrome.switchVendor}>
           {ctx.memberships.map((membership) => (
             <option key={membership.vendor_id} value={membership.vendor_id}>
-              {membership.vendors?.name ?? 'Vendor'}
+              {membership.vendors?.name ?? chrome.workspaceFallback}
             </option>
           ))}
         </select>
         <button className="btn sm" type="submit">
-          Switch
+          {chrome.switch}
         </button>
       </form>
     ) : null;
 
   return (
     <DashShell
-      portalLabel="Vendor dashboard"
+      portalLabel={chrome.portal}
       workspaceName={vendor.name}
       workspaceLogoUrl={vendor.logo_url ?? null}
-      workspaceMeta={`${[vendor.area, vendor.city].filter(Boolean).join(' · ') || 'Qatar'} · ${titleCase(vendor.status)}`}
-      userName={ctx.profile?.full_name ?? ctx.user.email ?? 'Vendor'}
+      workspaceMeta={`${[vendor.area, vendor.city].filter(Boolean).join(' · ') || chrome.qatar} · ${titleCase(vendor.status, locale)}`}
+      userName={ctx.profile?.full_name ?? ctx.user.email ?? chrome.workspaceFallback}
       userEmail={ctx.user.email ?? ''}
       userInitials={initials(ctx.profile?.full_name ?? ctx.user.email ?? 'V')}
       accent="mint"
@@ -155,12 +88,12 @@ export default async function VendorDashboardLayout({ children }: { children: Re
       autoOpenTutorial={!ctx.profile?.tutorial_completed_at}
       topRight={
         <>
-          <span className="tag mint">{titleCase(ctx.role)}</span>
+          <span className="tag mint dash-role">{titleCase(ctx.role, locale)}</span>
           <Link className="btn sm ghost" href={`/vendors/${vendor.slug ?? vendor.id}`} target="_blank">
-            View public page
+            {chrome.viewPublicPage}
           </Link>
           <Link className="btn sm primary" href="/vendor/redeem">
-            <ScanLine size={15} /> Scan a gift
+            <ScanLine size={15} /> {chrome.scanAGift}
           </Link>
         </>
       }

@@ -23,6 +23,10 @@ import { formatDate, formatDateTime, initials, titleCase } from '@/lib/format';
 import { formatMoney, minorToInput } from '@/lib/money';
 import { fulfilmentLabel } from '@/lib/catalog';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 const ACTIVE_VOUCHER = ['issued', 'claimed', 'active', 'partially_redeemed'];
 
@@ -37,6 +41,9 @@ export default async function AdminVendorDetailPage({
   const query = await searchParams;
   const ctx = await requireAdmin();
   const supabase = ctx.supabase;
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).vendorDetail;
+  const c = pick(common, locale);
 
   const { data: vendor, error: vendorError } = await supabase
     .from('vendors')
@@ -124,15 +131,15 @@ export default async function AdminVendorDetailPage({
   return (
     <div className="dash-content">
       <Link className="back-link" href="/admin/vendors">
-        <ArrowLeft size={15} /> Back to vendors
+        <ArrowLeft size={15} /> {t.backToVendors}
       </Link>
 
       <PageHead
-        eyebrow="Vendor"
+        eyebrow={t.eyebrow}
         title={vendor.name}
         description={
           [category?.name, vendor.area, vendor.city].filter(Boolean).join(' · ') ||
-          'Vendor on the Giftly marketplace.'
+          t.marketplaceDescription
         }
         logoUrl={vendor.logo_url ?? null}
         actions={
@@ -140,28 +147,28 @@ export default async function AdminVendorDetailPage({
             <StatusTag status={vendor.status} />
             {vendor.slug ? (
               <Link className="btn sm ghost" href={`/vendors/${vendor.slug}`} target="_blank">
-                <ExternalLink size={14} /> Public page
+                <ExternalLink size={14} /> {t.publicPage}
               </Link>
             ) : null}
             <a className="btn sm" href={`mailto:${vendor.email ?? ''}`}>
-              <Mail size={14} /> Contact
+              <Mail size={14} /> {t.contact}
             </a>
           </>
         }
       />
 
-      <Notice error={query.error ?? error?.message} success={query.saved === '1' ? 'Vendor updated.' : null} />
+      <Notice error={query.error ?? error?.message} success={query.saved === '1' ? t.saved : null} />
 
       {pendingApplication ? (
         <div className="callout warn" style={{ display: 'grid', gap: 6 }}>
           <strong>
-            <FileText size={16} style={{ display: 'inline', verticalAlign: '-3px' }} /> Application waiting
-            for review
+            <FileText size={16} style={{ display: 'inline', verticalAlign: '-3px' }} /> {t.applicationWaiting}
           </strong>
           <span className="small">
-            {pendingApplication.business_name ?? vendor.name} submitted{' '}
-            {formatDate(pendingApplication.submitted_at ?? pendingApplication.created_at)}. Review the
-            details below, then approve or reject.
+            {fill(t.applicationWaitingBody, {
+              name: pendingApplication.business_name ?? vendor.name,
+              date: formatDate(pendingApplication.submitted_at ?? pendingApplication.created_at, locale),
+            })}
           </span>
         </div>
       ) : null}
@@ -172,65 +179,65 @@ export default async function AdminVendorDetailPage({
             <ShoppingBag size={17} />
           </span>
           <strong>{publishedProducts}</strong>
-          <span>Published products</span>
+          <span>{t.publishedProducts}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <BadgeCheck size={17} />
           </span>
           <strong>{formatMoney(gross)}</strong>
-          <span>Gross sales (recent)</span>
+          <span>{t.grossSales}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <Percent size={17} />
           </span>
           <strong>{(Number(vendor.commission_bps ?? 0) / 100).toFixed(2)}%</strong>
-          <span>Commission · {formatMoney(share)} vendor share</span>
+          <span>{fill(t.commissionShare, { amount: formatMoney(share) })}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Ticket size={17} />
           </span>
           <strong>{formatMoney(outstanding)}</strong>
-          <span>{activeVouchers.length} active vouchers</span>
+          <span>{fill(t.activeVouchers, { count: activeVouchers.length })}</span>
         </div>
       </div>
 
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Business details</h3>
-            <span className="tag neutral">{titleCase(vendor.status)}</span>
+            <h3>{t.businessDetails}</h3>
+            <span className="tag neutral">{titleCase(vendor.status, locale)}</span>
           </div>
           <div className="panel-body">
             <div className="split-list">
               <div>
                 <span className="k">
-                  <Building2 size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Legal name
+                  <Building2 size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.legalName}
                 </span>
                 <span className="v">{vendor.name}</span>
               </div>
               <div>
-                <span className="k">Arabic name</span>
+                <span className="k">{t.arabicName}</span>
                 <span className="v" dir="rtl">
                   {vendor.name_ar ?? '—'}
                 </span>
               </div>
               <div>
                 <span className="k">
-                  <Mail size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Email
+                  <Mail size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {c.labels.email}
                 </span>
                 <span className="v small">{vendor.email ?? '—'}</span>
               </div>
               <div>
                 <span className="k">
-                  <Phone size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Phone
+                  <Phone size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {c.labels.phone}
                 </span>
                 <span className="v small">{vendor.phone ?? '—'}</span>
               </div>
               <div>
-                <span className="k">Website</span>
+                <span className="k">{t.website}</span>
                 <span className="v small">
                   {vendor.website ? (
                     <a href={vendor.website} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>
@@ -242,12 +249,12 @@ export default async function AdminVendorDetailPage({
                 </span>
               </div>
               <div>
-                <span className="k">Social</span>
+                <span className="k">{t.social}</span>
                 <span className="v small">{vendor.social_handle ?? '—'}</span>
               </div>
               <div>
                 <span className="k">
-                  <MapPin size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Location
+                  <MapPin size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.location}
                 </span>
                 <span className="v small">
                   {[vendor.address, vendor.area, vendor.city].filter(Boolean).join(', ') || '—'}
@@ -255,17 +262,19 @@ export default async function AdminVendorDetailPage({
               </div>
               <div>
                 <span className="k">
-                  <Star size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Rating
+                  <Star size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.rating}
                 </span>
                 <span className="v">{Number(vendor.rating ?? 0).toFixed(1)}</span>
               </div>
               <div>
-                <span className="k">Joined</span>
-                <span className="v small">{formatDate(vendor.created_at)}</span>
+                <span className="k">{t.joined}</span>
+                <span className="v small">{formatDate(vendor.created_at, locale)}</span>
               </div>
               <div>
-                <span className="k">Approved</span>
-                <span className="v small">{vendor.approved_at ? formatDateTime(vendor.approved_at) : 'Not yet'}</span>
+                <span className="k">{t.approvedDate}</span>
+                <span className="v small">
+                  {vendor.approved_at ? formatDateTime(vendor.approved_at, locale) : t.notYet}
+                </span>
               </div>
             </div>
             {vendor.description ? (
@@ -279,7 +288,7 @@ export default async function AdminVendorDetailPage({
         <div style={{ display: 'grid', gap: 20 }}>
           <section className="panel">
             <div className="panel-head">
-              <h3>Account status</h3>
+              <h3>{t.accountStatus}</h3>
               {vendor.status === 'approved' ? <CheckCircle2 size={16} /> : <Ban size={16} />}
             </div>
             <div className="panel-body">
@@ -287,29 +296,28 @@ export default async function AdminVendorDetailPage({
                 <input type="hidden" name="vendor_id" value={vendor.id} />
                 <input type="hidden" name="return_to" value={`/admin/vendors/${vendor.id}`} />
                 <div className="field">
-                  <label htmlFor="status">Status</label>
+                  <label htmlFor="status">{c.labels.status}</label>
                   <select id="status" name="status" defaultValue={vendor.status}>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="suspended">Suspended</option>
+                    <option value="pending">{c.status.pending}</option>
+                    <option value="approved">{c.status.approved}</option>
+                    <option value="rejected">{c.status.rejected}</option>
+                    <option value="suspended">{c.status.suspended}</option>
                   </select>
                 </div>
                 <div className="field">
-                  <label htmlFor="note">Decision note</label>
+                  <label htmlFor="note">{t.decisionNote}</label>
                   <textarea
                     id="note"
                     name="note"
-                    placeholder="Shown to the vendor and saved with the decision."
+                    placeholder={t.decisionNotePlaceholder}
                     defaultValue={pendingApplication?.decision_note ?? ''}
                   />
                 </div>
                 <button className="btn primary" type="submit">
-                  Save status
+                  {t.saveStatus}
                 </button>
                 <p className="small muted">
-                  Approving publishes the vendor storefront and products. Suspending hides them from
-                  customers but keeps the records.
+                  {t.approvingNote}
                 </p>
               </form>
             </div>
@@ -317,7 +325,7 @@ export default async function AdminVendorDetailPage({
 
           <section className="panel">
             <div className="panel-head">
-              <h3>Commercial terms</h3>
+              <h3>{t.commercialTerms}</h3>
               <Percent size={16} />
             </div>
             <div className="panel-body">
@@ -325,7 +333,7 @@ export default async function AdminVendorDetailPage({
                 <input type="hidden" name="vendor_id" value={vendor.id} />
                 <input type="hidden" name="return_to" value={`/admin/vendors/${vendor.id}`} />
                 <div className="field">
-                  <label htmlFor="commission_percent">Commission (%)</label>
+                  <label htmlFor="commission_percent">{t.commissionPercent}</label>
                   <input
                     id="commission_percent"
                     name="commission_percent"
@@ -334,19 +342,19 @@ export default async function AdminVendorDetailPage({
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="max_unredeemed">Exposure limit (QAR)</label>
+                  <label htmlFor="max_unredeemed">{t.exposureLimit}</label>
                   <input
                     id="max_unredeemed"
                     name="max_unredeemed"
                     inputMode="decimal"
                     defaultValue={minorToInput(vendor.max_unredeemed_minor)}
                   />
-                  <span className="hint">The maximum unredeemed balance allowed for this vendor.</span>
+                  <span className="hint">{t.exposureHint}</span>
                 </div>
                 <div className="field">
-                  <label htmlFor="category_id">Category</label>
+                  <label htmlFor="category_id">{c.labels.category}</label>
                   <select id="category_id" name="category_id" defaultValue={vendor.category_id ?? ''}>
-                    <option value="">No category</option>
+                    <option value="">{t.noCategory}</option>
                     {categories.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.name}
@@ -355,11 +363,10 @@ export default async function AdminVendorDetailPage({
                   </select>
                 </div>
                 <label className="checkbox-row">
-                  <input type="checkbox" name="is_featured" defaultChecked={vendor.is_featured} /> Feature on
-                  the marketplace
+                  <input type="checkbox" name="is_featured" defaultChecked={vendor.is_featured} /> {t.featureOnMarketplace}
                 </label>
                 <button className="btn" type="submit">
-                  Save commercial terms
+                  {t.saveCommercialTerms}
                 </button>
               </form>
             </div>
@@ -369,24 +376,24 @@ export default async function AdminVendorDetailPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Application</h3>
-          <span className="small muted">{applications.length} on record</span>
+          <h3>{t.application}</h3>
+          <span className="small muted">{fill(t.onRecord, { count: applications.length })}</span>
         </div>
         <div className="panel-body flush">
           {applications.length === 0 ? (
-            <div className="table-empty">No application submitted yet.</div>
+            <div className="table-empty">{t.noApplication}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Business</th>
-                    <th>Contact</th>
-                    <th>Location</th>
-                    <th>Status</th>
-                    <th>Submitted</th>
-                    <th>Decided</th>
-                    <th>Note</th>
+                    <th>{t.business}</th>
+                    <th>{t.contact}</th>
+                    <th>{t.location}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{t.submitted}</th>
+                    <th>{t.decided}</th>
+                    <th>{c.labels.notes}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -395,7 +402,7 @@ export default async function AdminVendorDetailPage({
                       <td>
                         <span className="strong">{application.business_name ?? vendor.name}</span>
                         <br />
-                        <span className="sub">{application.business_category ?? 'No category'}</span>
+                        <span className="sub">{application.business_category ?? t.noCategory}</span>
                       </td>
                       <td className="small">
                         {application.business_email ?? '—'}
@@ -406,8 +413,10 @@ export default async function AdminVendorDetailPage({
                       <td>
                         <StatusTag status={application.status} />
                       </td>
-                      <td className="small muted">{formatDate(application.submitted_at ?? application.created_at)}</td>
-                      <td className="small muted">{formatDate(application.decided_at)}</td>
+                      <td className="small muted">
+                        {formatDate(application.submitted_at ?? application.created_at, locale)}
+                      </td>
+                      <td className="small muted">{formatDate(application.decided_at, locale)}</td>
                       <td className="small muted">{application.decision_note ?? '—'}</td>
                     </tr>
                   ))}
@@ -421,23 +430,23 @@ export default async function AdminVendorDetailPage({
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Team</h3>
+            <h3>{t.team}</h3>
             <span className="tag neutral">
               <Users size={12} /> {members.filter((member) => member.active).length}
             </span>
           </div>
           <div className="panel-body flush">
             {members.length === 0 ? (
-              <div className="table-empty">No team members.</div>
+              <div className="table-empty">{t.noTeamMembers}</div>
             ) : (
               <div className="table-wrap">
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Member</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                      <th>Joined</th>
+                      <th>{t.member}</th>
+                      <th>{t.role}</th>
+                      <th>{c.labels.status}</th>
+                      <th>{t.joined}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -451,17 +460,17 @@ export default async function AdminVendorDetailPage({
                                 {initials(profile?.full_name ?? profile?.email ?? '?')}
                               </span>
                               <span>
-                                <span className="strong">{profile?.full_name ?? 'Team member'}</span>
+                                <span className="strong">{profile?.full_name ?? t.teamMember}</span>
                                 <br />
                                 <span className="sub">{profile?.email ?? member.user_id}</span>
                               </span>
                             </span>
                           </td>
-                          <td>{titleCase(member.role)}</td>
+                          <td>{titleCase(member.role, locale)}</td>
                           <td>
                             <StatusTag status={member.active ? 'active' : 'suspended'} />
                           </td>
-                          <td className="small muted">{formatDate(member.created_at)}</td>
+                          <td className="small muted">{formatDate(member.created_at, locale)}</td>
                         </tr>
                       );
                     })}
@@ -474,18 +483,20 @@ export default async function AdminVendorDetailPage({
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Locations & documents</h3>
+            <h3>{t.locationsAndDocuments}</h3>
           </div>
           <div className="panel-body">
             <div className="split-list">
               {locations.length === 0 ? (
-                <p className="small muted">No locations on file.</p>
+                <p className="small muted">{t.noLocations}</p>
               ) : (
                 locations.map((location) => (
                   <div key={location.id}>
                     <span className="k">
-                      {location.is_primary ? <strong style={{ color: 'var(--ink)' }}>Primary · </strong> : null}
-                      {location.area ?? 'Location'}
+                      {location.is_primary ? (
+                        <strong style={{ color: 'var(--ink)' }}>{t.primary} · </strong>
+                      ) : null}
+                      {location.area ?? t.location}
                     </span>
                     <span className="v small">{location.address ?? location.hours ?? '—'}</span>
                   </div>
@@ -495,16 +506,16 @@ export default async function AdminVendorDetailPage({
             <div className="divider" style={{ margin: '14px 0' }} />
             <div className="split-list">
               {documents.length === 0 ? (
-                <p className="small muted">No documents uploaded.</p>
+                <p className="small muted">{t.noDocuments}</p>
               ) : (
                 documents.map((document) => (
                   <div key={document.id}>
                     <span className="k">
                       <FileText size={14} style={{ display: 'inline', verticalAlign: '-2px' }} />{' '}
-                      {titleCase(document.doc_type)}
+                      {titleCase(document.doc_type, locale)}
                     </span>
                     <span className="v small">
-                      <StatusTag status={document.status} /> {formatDate(document.created_at)}
+                      <StatusTag status={document.status} /> {formatDate(document.created_at, locale)}
                     </span>
                   </div>
                 ))
@@ -516,24 +527,24 @@ export default async function AdminVendorDetailPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Products</h3>
+          <h3>{t.products}</h3>
           <Link className="small" href={`/admin/products?vendor=${vendor.id}`} style={{ fontWeight: 800 }}>
-            Manage products
+            {t.manageProducts}
           </Link>
         </div>
         <div className="panel-body flush">
           {products.length === 0 ? (
-            <div className="table-empty">No products yet.</div>
+            <div className="table-empty">{t.noProductsYet}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Gift</th>
-                    <th>Type</th>
-                    <th className="num">From</th>
-                    <th>Status</th>
-                    <th>Created</th>
+                    <th>{t.gift}</th>
+                    <th>{t.type}</th>
+                    <th className="num">{t.from}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{c.labels.created}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -541,13 +552,13 @@ export default async function AdminVendorDetailPage({
                     <tr key={product.id}>
                       <td className="strong">{product.title}</td>
                       <td>
-                        <span className="tag">{fulfilmentLabel(product.fulfilment_type)}</span>
+                        <span className="tag">{fulfilmentLabel(product.fulfilment_type, locale)}</span>
                       </td>
                       <td className="num">{formatMoney(Number(product.min_amount_minor ?? 0))}</td>
                       <td>
                         <StatusTag status={product.status} />
                       </td>
-                      <td className="small muted">{formatDate(product.created_at)}</td>
+                      <td className="small muted">{formatDate(product.created_at, locale)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -560,23 +571,23 @@ export default async function AdminVendorDetailPage({
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Recent orders</h3>
-            <span className="small muted">Latest 12 items</span>
+            <h3>{t.recentOrders}</h3>
+            <span className="small muted">{t.latestItems}</span>
           </div>
           <div className="panel-body flush">
             {items.length === 0 ? (
-              <div className="table-empty">No orders yet.</div>
+              <div className="table-empty">{t.noOrders}</div>
             ) : (
               <div className="table-wrap">
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Order</th>
-                      <th>Gift</th>
-                      <th className="num">Total</th>
-                      <th className="num">Share</th>
-                      <th>Status</th>
-                      <th>Date</th>
+                      <th>{t.order}</th>
+                      <th>{t.gift}</th>
+                      <th className="num">{c.labels.total}</th>
+                      <th className="num">{t.share}</th>
+                      <th>{c.labels.status}</th>
+                      <th>{c.labels.date}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -594,13 +605,13 @@ export default async function AdminVendorDetailPage({
                               '—'
                             )}
                           </td>
-                          <td>{product?.title ?? 'Gift'}</td>
+                          <td>{product?.title ?? t.gift}</td>
                           <td className="num">{formatMoney(Number(item.total_minor ?? 0))}</td>
                           <td className="num">{formatMoney(Number(item.vendor_share_minor ?? 0))}</td>
                           <td>
                             <StatusTag status={order?.status ?? 'pending'} />
                           </td>
-                          <td className="small muted">{formatDate(item.created_at)}</td>
+                          <td className="small muted">{formatDate(item.created_at, locale)}</td>
                         </tr>
                       );
                     })}
@@ -613,21 +624,21 @@ export default async function AdminVendorDetailPage({
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Recent vouchers</h3>
+            <h3>{t.recentVouchers}</h3>
             <Ticket size={16} />
           </div>
           <div className="panel-body flush">
             {vouchers.length === 0 ? (
-              <div className="table-empty">No vouchers issued yet.</div>
+              <div className="table-empty">{t.noVouchersIssued}</div>
             ) : (
               <div className="table-wrap">
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Code</th>
-                      <th>Recipient</th>
-                      <th>Status</th>
-                      <th>Date</th>
+                      <th>{c.labels.code}</th>
+                      <th>{t.recipient}</th>
+                      <th>{c.labels.status}</th>
+                      <th>{c.labels.date}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -638,7 +649,7 @@ export default async function AdminVendorDetailPage({
                         <td>
                           <StatusTag status={voucher.status} />
                         </td>
-                        <td className="small muted">{formatDate(voucher.created_at)}</td>
+                        <td className="small muted">{formatDate(voucher.created_at, locale)}</td>
                       </tr>
                     ))}
                   </tbody>

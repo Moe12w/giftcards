@@ -4,6 +4,10 @@ import { requireAdmin } from '@/lib/auth';
 import { formatDate, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function AdminCustomersPage({
   searchParams,
@@ -12,6 +16,9 @@ export default async function AdminCustomersPage({
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).customers;
+  const c = pick(common, locale);
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
 
@@ -74,12 +81,12 @@ export default async function AdminCustomersPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Network"
-        title="Customers"
-        description="Everyone with a Giftly account, their order history and account standing."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
 
-      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? 'Customer updated.' : null} />
+      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? t.saved : null} />
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -87,82 +94,84 @@ export default async function AdminCustomersPage({
             <UserRound size={17} />
           </span>
           <strong>{(profilesResult.data ?? []).length}</strong>
-          <span>Accounts</span>
+          <span>{t.accounts}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <UserRound size={17} />
           </span>
           <strong>{withOrders}</strong>
-          <span>Have placed an order</span>
+          <span>{t.haveOrdered}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <UserRound size={17} />
           </span>
           <strong>{orders.filter((order) => order.status === 'paid').length}</strong>
-          <span>Paid orders</span>
+          <span>{t.paidOrders}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <UserRound size={17} />
           </span>
           <strong>{suspended}</strong>
-          <span>Suspended accounts</span>
+          <span>{t.suspendedAccounts}</span>
         </div>
       </div>
 
       <form className="toolbar" action="/admin/customers" method="get">
         <div className="search-bar">
           <Search size={17} />
-          <input name="q" defaultValue={params.q ?? ''} placeholder="Name, email or phone…" aria-label="Search customers" />
+          <input name="q" defaultValue={params.q ?? ''} placeholder={t.searchPlaceholder} aria-label={t.searchLabel} />
         </div>
-        <select name="status" defaultValue={status} aria-label="Account status">
-          <option value="">All accounts</option>
-          <option value="active">Active</option>
-          <option value="suspended">Suspended</option>
+        <select name="status" defaultValue={status} aria-label={t.statusLabel}>
+          <option value="">{t.allAccounts}</option>
+          <option value="active">{c.status.active}</option>
+          <option value="suspended">{c.status.suspended}</option>
         </select>
         <button className="btn sm" type="submit">
-          Filter
+          {c.actions.filter}
         </button>
         {q || status ? (
           <Link className="btn sm ghost" href="/admin/customers">
-            Clear
+            {c.actions.clear}
           </Link>
         ) : null}
       </form>
 
       {profiles.length === 0 ? (
         <EmptyState
-          title={q || status ? 'No customers match' : 'No customers yet'}
+          title={q || status ? t.noCustomersMatch : t.noCustomersYet}
           body={
             q || status
-              ? 'Try a different search or clear the filters.'
-              : 'Customers appear here once they create an account in the app.'
+              ? t.tryDifferentSearch
+              : t.emptyBody
           }
         />
       ) : (
         <section className="panel">
           <div className="panel-head">
             <h3>
-              {profiles.length} {profiles.length === 1 ? 'customer' : 'customers'}
+              {fill(profiles.length === 1 ? t.customerCountOne : t.customerCount, {
+                count: profiles.length,
+              })}
             </h3>
-            <span className="small muted">Newest first</span>
+            <span className="small muted">{t.newestFirst}</span>
           </div>
           <div className="panel-body flush">
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Customer</th>
-                    <th>Contact</th>
-                    <th>Role</th>
-                    <th className="num">Paid orders</th>
-                    <th className="num">Lifetime value</th>
-                    <th className="num">Vouchers</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th>{t.customer}</th>
+                    <th>{t.contact}</th>
+                    <th>{t.role}</th>
+                    <th className="num">{t.paidOrders}</th>
+                    <th className="num">{t.lifetimeValue}</th>
+                    <th className="num">{t.vouchers}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{t.joined}</th>
+                    <th style={{ textAlign: 'right' }}>{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -178,10 +187,10 @@ export default async function AdminCustomersPage({
                             </span>
                             <div>
                               <Link href={`/admin/customers/${profile.id}`} className="strong">
-                                {profile.full_name ?? 'Unnamed customer'}
+                                {profile.full_name ?? t.unnamedCustomer}
                               </Link>
                               <br />
-                              <span className="sub">{titleCase(profile.preferred_language ?? 'en')}</span>
+                              <span className="sub">{titleCase(profile.preferred_language ?? 'en', locale)}</span>
                             </div>
                           </div>
                         </td>
@@ -192,7 +201,7 @@ export default async function AdminCustomersPage({
                         </td>
                         <td>
                           <span className={`tag ${role === 'admin' || profile.is_admin ? 'coral' : 'neutral'}`}>
-                            {role === 'admin' || profile.is_admin ? 'Admin' : 'Customer'}
+                            {role === 'admin' || profile.is_admin ? c.roles.admin : c.roles.customer}
                           </span>
                         </td>
                         <td className="num">{stats?.paidCount ?? 0}</td>
@@ -201,11 +210,11 @@ export default async function AdminCustomersPage({
                         <td>
                           <StatusTag status={profile.status} />
                         </td>
-                        <td className="small muted">{formatDate(profile.created_at)}</td>
+                        <td className="small muted">{formatDate(profile.created_at, locale)}</td>
                         <td>
                           <div className="row-actions">
                             <Link className="btn sm" href={`/admin/customers/${profile.id}`}>
-                              Open
+                              {c.actions.open}
                             </Link>
                           </div>
                         </td>

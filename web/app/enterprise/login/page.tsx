@@ -6,8 +6,14 @@ import { AuthShell } from '@/components/AuthShell';
 import { Notice } from '@/components/ui';
 import { enterpriseSignIn } from '@/lib/actions/auth';
 import { createClient } from '@/lib/supabase/server';
+import { pick } from '@/lib/i18n';
+import { enterpriseCopy } from '@/lib/i18n/enterprise';
+import { getLocale } from '@/lib/i18n/server';
 
-export const metadata: Metadata = { title: 'Enterprise sign in' };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: pick(enterpriseCopy, locale).login.metaTitle };
+}
 
 export default async function EnterpriseLoginPage({
   searchParams,
@@ -15,6 +21,8 @@ export default async function EnterpriseLoginPage({
   searchParams: Promise<{ error?: string; notice?: string }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const t = pick(enterpriseCopy, locale).login;
   const supabase = await createClient();
   const {
     data: { user },
@@ -34,31 +42,31 @@ export default async function EnterpriseLoginPage({
   return (
     <AuthShell
       tone="lavender"
-      eyebrow="Enterprise portal"
-      title="Bulk rewards, without the spreadsheet chaos."
-      description="Sign in to manage your catalogue, import and allocate codes, and see exactly what has been redeemed."
+      eyebrow={t.shellEyebrow}
+      title={t.shellTitle}
+      description={t.shellDescription}
       points={[
-        'Encrypted code inventory and allocation',
-        'Delivery and redemption reporting',
-        'Exportable data for finance',
+        t.point1,
+        t.point2,
+        t.point3,
       ]}
     >
-      <span className="eyebrow lavender">Enterprise sign in</span>
-      <h1 style={{ marginTop: 14 }}>Welcome back.</h1>
+      <span className="eyebrow lavender">{t.eyebrow}</span>
+      <h1 style={{ marginTop: 14 }}>{t.heading}</h1>
       <p style={{ marginTop: 10 }}>
-        Use the work email linked to your partner account.
+        {t.subheading}
       </p>
       <Notice
         error={params.error}
         success={
           params.notice === 'reset-sent'
-            ? 'If that email has an account, a reset link is on its way.'
+            ? t.noticeReset
             : null
         }
       />
       <form action={enterpriseSignIn} className="form" style={{ marginTop: 20 }}>
         <div className="field">
-          <label htmlFor="email">Work email</label>
+          <label htmlFor="email">{t.workEmail}</label>
           <input
             id="email"
             name="email"
@@ -69,7 +77,7 @@ export default async function EnterpriseLoginPage({
           />
         </div>
         <div className="field">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">{t.password}</label>
           <input
             id="password"
             name="password"
@@ -80,17 +88,17 @@ export default async function EnterpriseLoginPage({
           />
         </div>
         <button className="btn lavender block" type="submit">
-          Sign in <ArrowRight size={16} />
+          {t.signIn} <ArrowRight size={16} />
         </button>
       </form>
       <div className="auth-links" style={{ marginTop: 16 }}>
-        <Link href="/enterprise/forgot-password">Forgot your password?</Link>
-        <Link href="/corporate#enquiry">Become a partner</Link>
+        <Link href="/enterprise/forgot-password">{t.forgotPassword}</Link>
+        <Link href="/corporate#enquiry">{t.becomePartner}</Link>
       </div>
       <div className="auth-switch">
-        Not set up yet? <Link href="/corporate#enquiry">Talk to our corporate team</Link>.
+        {t.notSetUp} <Link href="/corporate#enquiry">{t.talkToCorporate}</Link>.
         <br />
-        Vendor instead? <Link href="/vendor/login">Vendor portal</Link>.
+        {t.vendorInstead} <Link href="/vendor/login">{t.vendorPortal}</Link>.
       </div>
     </AuthShell>
   );

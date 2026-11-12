@@ -4,6 +4,10 @@ import { requireAdmin } from '@/lib/auth';
 import { formatDate, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function AdminOrdersPage({
   searchParams,
@@ -12,6 +16,9 @@ export default async function AdminOrdersPage({
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).orders;
+  const c = pick(common, locale);
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
 
@@ -43,12 +50,12 @@ export default async function AdminOrdersPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Operations"
-        title="Orders"
-        description="Every gift order, its payment state and the vouchers it produced."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
 
-      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? 'Order updated.' : null} />
+      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? t.saved : null} />
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -56,86 +63,86 @@ export default async function AdminOrdersPage({
             <ShoppingBag size={17} />
           </span>
           <strong>{allOrders.length}</strong>
-          <span>All orders</span>
+          <span>{t.allOrders}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <CreditCard size={17} />
           </span>
           <strong>{formatMoney(paidValue)}</strong>
-          <span>{paid.length} paid orders</span>
+          <span>{fill(t.paidOrders, { count: paid.length })}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <ShoppingBag size={17} />
           </span>
           <strong>{pending}</strong>
-          <span>Pending payment</span>
+          <span>{t.pendingPayment}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <ShoppingBag size={17} />
           </span>
           <strong>{refunded}</strong>
-          <span>Refunded</span>
+          <span>{t.refunded}</span>
         </div>
       </div>
 
       <form className="toolbar" action="/admin/orders" method="get">
         <div className="search-bar">
           <Search size={17} />
-          <input name="q" defaultValue={params.q ?? ''} placeholder="Order, buyer or recipient…" aria-label="Search orders" />
+          <input name="q" defaultValue={params.q ?? ''} placeholder={t.searchPlaceholder} aria-label={t.searchLabel} />
         </div>
-        <select name="status" defaultValue={status} aria-label="Order status">
-          <option value="">All statuses</option>
-          <option value="paid">Paid</option>
-          <option value="pending">Pending</option>
-          <option value="failed">Failed</option>
-          <option value="refunded">Refunded</option>
-          <option value="cancelled">Cancelled</option>
+        <select name="status" defaultValue={status} aria-label={t.statusLabel}>
+          <option value="">{t.allStatuses}</option>
+          <option value="paid">{c.status.paid}</option>
+          <option value="pending">{c.status.pending}</option>
+          <option value="failed">{c.status.failed}</option>
+          <option value="refunded">{t.refunded}</option>
+          <option value="cancelled">{c.status.cancelled}</option>
         </select>
         <button className="btn sm" type="submit">
-          Filter
+          {c.actions.filter}
         </button>
         {q || status ? (
           <Link className="btn sm ghost" href="/admin/orders">
-            Clear
+            {c.actions.clear}
           </Link>
         ) : null}
       </form>
 
       {orders.length === 0 ? (
         <EmptyState
-          title={q || status ? 'No orders match' : 'No orders yet'}
+          title={q || status ? t.noOrdersMatch : t.noOrdersYet}
           body={
             q || status
-              ? 'Try a different search or clear the filters.'
-              : 'Orders appear here as customers buy gifts in the app.'
+              ? t.tryDifferentSearch
+              : t.emptyBody
           }
         />
       ) : (
         <section className="panel">
           <div className="panel-head">
             <h3>
-              {orders.length} {orders.length === 1 ? 'order' : 'orders'}
+              {fill(orders.length === 1 ? t.orderCountOne : t.orderCount, { count: orders.length })}
             </h3>
-            <span className="small muted">Newest first</span>
+            <span className="small muted">{t.newestFirst}</span>
           </div>
           <div className="panel-body flush">
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Order</th>
-                    <th>Buyer</th>
-                    <th>Recipient</th>
-                    <th className="num">Items</th>
-                    <th className="num">Vouchers</th>
-                    <th className="num">Total</th>
-                    <th>Status</th>
-                    <th>Payment</th>
-                    <th>Date</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th>{t.order}</th>
+                    <th>{t.buyer}</th>
+                    <th>{t.recipient}</th>
+                    <th className="num">{t.items}</th>
+                    <th className="num">{t.vouchers}</th>
+                    <th className="num">{c.labels.total}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{t.payment}</th>
+                    <th>{c.labels.date}</th>
+                    <th style={{ textAlign: 'right' }}>{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -150,7 +157,7 @@ export default async function AdminOrdersPage({
                             {order.order_ref}
                           </Link>
                           <br />
-                          <span className="sub">{titleCase(order.delivery_method ?? '—')}</span>
+                          <span className="sub">{titleCase(order.delivery_method ?? '—', locale)}</span>
                         </td>
                         <td>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -158,7 +165,7 @@ export default async function AdminOrdersPage({
                               {initials(buyer?.full_name ?? buyer?.email ?? order.sender_name ?? '?')}
                             </span>
                             <span className="small">
-                              {buyer?.full_name ?? order.sender_name ?? 'Guest'}
+                              {buyer?.full_name ?? order.sender_name ?? t.guest}
                               <br />
                               <span className="sub">{buyer?.email ?? '—'}</span>
                             </span>
@@ -172,13 +179,13 @@ export default async function AdminOrdersPage({
                           <StatusTag status={order.status} />
                         </td>
                         <td>
-                          <span className="tag neutral">{titleCase(order.payment_status ?? '—')}</span>
+                          <span className="tag neutral">{titleCase(order.payment_status ?? '—', locale)}</span>
                         </td>
-                        <td className="small muted">{formatDate(order.created_at)}</td>
+                        <td className="small muted">{formatDate(order.created_at, locale)}</td>
                         <td>
                           <div className="row-actions">
                             <Link className="btn sm" href={`/admin/orders/${order.id}`}>
-                              Open
+                              {c.actions.open}
                             </Link>
                           </div>
                         </td>

@@ -6,6 +6,10 @@ import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { fulfilmentLabel } from '@/lib/catalog';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 const ACTIVE = ['issued', 'claimed', 'active', 'partially_redeemed'];
 const STATUSES = [
@@ -26,6 +30,9 @@ export default async function AdminVouchersPage({
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).vouchers;
+  const c = pick(common, locale);
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
   const type = params.type ?? '';
@@ -64,12 +71,12 @@ export default async function AdminVouchersPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Operations"
-        title="Vouchers"
-        description="Every gift code on the platform, with its live balance, session count and delivery state."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
 
-      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? 'Voucher updated.' : null} />
+      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? t.saved : null} />
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -77,45 +84,45 @@ export default async function AdminVouchersPage({
             <Ticket size={17} />
           </span>
           <strong>{allVouchers.length}</strong>
-          <span>All vouchers</span>
+          <span>{t.allVouchers}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <Ticket size={17} />
           </span>
           <strong>{active.length}</strong>
-          <span>Active</span>
+          <span>{c.status.active}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Ticket size={17} />
           </span>
           <strong>{formatMoney(outstanding)}</strong>
-          <span>Outstanding balance</span>
+          <span>{t.outstandingBalance}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <Ticket size={17} />
           </span>
           <strong>{redeemed}</strong>
-          <span>{expired} expired</span>
+          <span>{fill(t.expiredCount, { count: expired })}</span>
         </div>
       </div>
 
       <form className="toolbar" action="/admin/vouchers" method="get">
         <div className="search-bar">
           <Search size={17} />
-          <input name="q" defaultValue={params.q ?? ''} placeholder="Code, recipient, buyer or order…" aria-label="Search vouchers" />
+          <input name="q" defaultValue={params.q ?? ''} placeholder={t.searchPlaceholder} aria-label={t.searchLabel} />
         </div>
-        <select name="type" defaultValue={type} aria-label="Fulfilment type">
-          <option value="">All types</option>
-          <option value="monetary">Gift card</option>
-          <option value="experience">Experience</option>
-          <option value="enterprise_code">Corporate code</option>
+        <select name="type" defaultValue={type} aria-label={t.fulfilmentTypeLabel}>
+          <option value="">{t.allTypes}</option>
+          <option value="monetary">{c.fulfilment.gift_card}</option>
+          <option value="experience">{c.fulfilment.experience}</option>
+          <option value="enterprise_code">{c.fulfilment.enterprise_code}</option>
         </select>
-        <select name="status" defaultValue={status} aria-label="Voucher status">
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
+        <select name="status" defaultValue={status} aria-label={t.statusLabel}>
+          <option value="">{t.allStatuses}</option>
+          <option value="active">{c.status.active}</option>
           {STATUSES.filter((value) => value !== 'active').map((value) => (
             <option key={value} value={value}>
               {value}
@@ -123,48 +130,48 @@ export default async function AdminVouchersPage({
           ))}
         </select>
         <button className="btn sm" type="submit">
-          Filter
+          {c.actions.filter}
         </button>
         {q || status || type ? (
           <Link className="btn sm ghost" href="/admin/vouchers">
-            Clear
+            {c.actions.clear}
           </Link>
         ) : null}
       </form>
 
       {vouchers.length === 0 ? (
         <EmptyState
-          title={q || status || type ? 'No vouchers match' : 'No vouchers yet'}
+          title={q || status || type ? t.noVouchersMatch : t.noVouchersYet}
           body={
             q || status || type
-              ? 'Try a different search or clear the filters.'
-              : 'Vouchers are created when a customer buys a gift.'
+              ? t.tryDifferentSearch
+              : t.emptyBody
           }
         />
       ) : (
         <section className="panel">
           <div className="panel-head">
             <h3>
-              {vouchers.length} {vouchers.length === 1 ? 'voucher' : 'vouchers'}
+              {fill(vouchers.length === 1 ? t.voucherCountOne : t.voucherCount, { count: vouchers.length })}
             </h3>
-            <span className="small muted">Showing up to 2,000</span>
+            <span className="small muted">{t.showingUpTo}</span>
           </div>
           <div className="panel-body flush">
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Code</th>
-                    <th>Gift</th>
-                    <th>Type</th>
-                    <th>Recipient / buyer</th>
-                    <th className="num">Value</th>
-                    <th className="num">Remaining</th>
-                    <th>Status</th>
-                    <th>Order</th>
-                    <th>Expires</th>
-                    <th>Issued</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th>{c.labels.code}</th>
+                    <th>{t.gift}</th>
+                    <th>{t.type}</th>
+                    <th>{t.recipientBuyer}</th>
+                    <th className="num">{c.labels.value}</th>
+                    <th className="num">{t.remaining}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{t.order}</th>
+                    <th>{t.expires}</th>
+                    <th>{t.issued}</th>
+                    <th style={{ textAlign: 'right' }}>{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -178,18 +185,18 @@ export default async function AdminVouchersPage({
                       <tr key={voucher.id}>
                         <td className="mono small strong">{voucher.voucher_code}</td>
                         <td>
-                          {product?.title ?? 'Gift'}
+                          {product?.title ?? t.gift}
                           <br />
                           <span className="sub">{vendor?.name ?? 'Giftly'}</span>
                         </td>
                         <td>
-                          <span className="tag">{fulfilmentLabel(voucher.fulfilment_type)}</span>
+                          <span className="tag">{fulfilmentLabel(voucher.fulfilment_type, locale)}</span>
                         </td>
                         <td className="small">
                           {voucher.recipient_name ?? '—'}
                           <br />
                           <span className="sub">
-                            Buyer: {buyer?.full_name ?? buyer?.email ?? '—'}
+                            {t.buyer}: {buyer?.full_name ?? buyer?.email ?? '—'}
                           </span>
                         </td>
                         <td className="num">{formatMoney(Number(voucher.initial_value_minor ?? 0))}</td>
@@ -212,21 +219,23 @@ export default async function AdminVouchersPage({
                             '—'
                           )}
                         </td>
-                        <td className="small muted">{voucher.expires_at ? formatDate(voucher.expires_at) : 'No expiry'}</td>
-                        <td className="small muted">{formatDate(voucher.created_at)}</td>
+                        <td className="small muted">
+                          {voucher.expires_at ? formatDate(voucher.expires_at, locale) : t.noExpiry}
+                        </td>
+                        <td className="small muted">{formatDate(voucher.created_at, locale)}</td>
                         <td>
                           {['void', 'expired', 'redeemed', 'cancelled'].includes(voucher.status) ? (
-                            <span className="small muted">Closed</span>
+                            <span className="small muted">{t.closed}</span>
                           ) : (
                             <form action={adminSetVoucherStatus} className="inline-role" style={{ justifyContent: 'flex-end' }}>
                               <input type="hidden" name="voucher_id" value={voucher.id} />
                               <input type="hidden" name="return_to" value="/admin/vouchers" />
-                              <select name="status" defaultValue="void" aria-label={`Action for ${voucher.voucher_code}`}>
-                                <option value="void">Void</option>
-                                <option value="expired">Expire</option>
+                              <select name="status" defaultValue="void" aria-label={fill(t.actionFor, { code: voucher.voucher_code })}>
+                                <option value="void">{t.void}</option>
+                                <option value="expired">{t.expire}</option>
                               </select>
                               <button className="btn sm ghost" type="submit">
-                                Apply
+                                {c.actions.apply}
                               </button>
                             </form>
                           )}
@@ -242,8 +251,7 @@ export default async function AdminVouchersPage({
       )}
 
       <div className="callout warn">
-        Voiding a voucher stops it being redeemed immediately. Expiring marks it as out of date. Both
-        actions are recorded in the audit log.
+        {t.voidNote}
       </div>
     </div>
   );

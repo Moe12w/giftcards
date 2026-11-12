@@ -4,23 +4,28 @@ import { requireEnterprise } from '@/lib/auth';
 import { saveEnterpriseProduct } from '@/lib/actions/enterprise';
 import { EnterpriseProductForm } from '@/components/EnterpriseProductForm';
 import { PageHead } from '@/components/ui';
+import { pick } from '@/lib/i18n';
+import { enterpriseCopy } from '@/lib/i18n/enterprise';
+import { getLocale } from '@/lib/i18n/server';
 
 export default async function NewEnterpriseProductPage() {
+  const locale = await getLocale();
+  const t = pick(enterpriseCopy, locale).productNew;
   const ctx = await requireEnterprise();
 
   return (
     <div className="dash-content">
       <Link className="back-link" href="/enterprise/products">
-        <ArrowLeft size={15} /> Back to products
+        <ArrowLeft size={15} /> {t.backToProducts}
       </Link>
       <PageHead
-        eyebrow="New product"
-        title="Define a reward."
-        description="Set the face value, your selling price and the commission. Codes imported against this product inherit its denomination."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
       {ctx.role === 'analyst' ? (
         <div className="callout warn">
-          Your role is read-only. Ask an owner or manager on your team to create products.
+          {t.readOnly}
         </div>
       ) : (
         <EnterpriseProductForm action={saveEnterpriseProduct} />

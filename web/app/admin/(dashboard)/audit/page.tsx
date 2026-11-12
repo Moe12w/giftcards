@@ -3,6 +3,10 @@ import { Activity, Search, ShieldCheck } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
 import { formatDateTime, initials, titleCase } from '@/lib/format';
 import { EmptyState, Notice, PageHead } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 interface Entry {
   id: string;
@@ -32,6 +36,9 @@ export default async function AdminAuditPage({
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).audit;
+  const c = pick(common, locale);
   const q = (params.q ?? '').trim().toLowerCase();
   const source = params.source ?? '';
 
@@ -102,9 +109,9 @@ export default async function AdminAuditPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Operations"
-        title="Audit log"
-        description="Every admin action and database change recorded by the platform, newest first."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
 
       <Notice error={params.error ?? error?.message} />
@@ -115,79 +122,79 @@ export default async function AdminAuditPage({
             <Activity size={17} />
           </span>
           <strong>{allEntries.length}</strong>
-          <span>Recent entries</span>
+          <span>{t.recentEntries}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <ShieldCheck size={17} />
           </span>
           <strong>{adminEntries.length}</strong>
-          <span>Admin actions</span>
+          <span>{t.adminActions}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Activity size={17} />
           </span>
           <strong>{todayCount}</strong>
-          <span>Today</span>
+          <span>{t.today}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <ShieldCheck size={17} />
           </span>
           <strong>{uniqueActors}</strong>
-          <span>Actors</span>
+          <span>{t.actors}</span>
         </div>
       </div>
 
       <form className="toolbar" action="/admin/audit" method="get">
         <div className="search-bar">
           <Search size={17} />
-          <input name="q" defaultValue={params.q ?? ''} placeholder="Action, entity or actor…" aria-label="Search audit log" />
+          <input name="q" defaultValue={params.q ?? ''} placeholder={t.searchPlaceholder} aria-label={t.searchLabel} />
         </div>
-        <select name="source" defaultValue={source} aria-label="Log source">
-          <option value="">All sources</option>
-          <option value="admin">Admin actions</option>
-          <option value="audit">Database audit</option>
+        <select name="source" defaultValue={source} aria-label={t.sourceLabel}>
+          <option value="">{t.allSources}</option>
+          <option value="admin">{t.adminActions}</option>
+          <option value="audit">{t.databaseAudit}</option>
         </select>
         <button className="btn sm" type="submit">
-          Filter
+          {c.actions.filter}
         </button>
         {q || source ? (
           <Link className="btn sm ghost" href="/admin/audit">
-            Clear
+            {c.actions.clear}
           </Link>
         ) : null}
       </form>
 
       {entries.length === 0 ? (
         <EmptyState
-          title={q || source ? 'No entries match' : 'No audit entries yet'}
+          title={q || source ? t.noEntriesMatch : t.noEntriesYet}
           body={
             q || source
-              ? 'Try a different search or clear the filters.'
-              : 'Admin actions and database changes will be recorded here.'
+              ? t.tryDifferentSearch
+              : t.emptyBody
           }
         />
       ) : (
         <section className="panel">
           <div className="panel-head">
             <h3>
-              {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+              {fill(entries.length === 1 ? t.entryCountOne : t.entryCount, { count: entries.length })}
             </h3>
-            <span className="small muted">Newest first</span>
+            <span className="small muted">{t.newestFirst}</span>
           </div>
           <div className="panel-body flush">
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>When</th>
-                    <th>Source</th>
-                    <th>Action</th>
-                    <th>Entity</th>
-                    <th>Actor</th>
-                    <th>Details</th>
+                    <th>{t.when}</th>
+                    <th>{t.source}</th>
+                    <th>{t.action}</th>
+                    <th>{t.entity}</th>
+                    <th>{t.actor}</th>
+                    <th>{t.details}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -196,16 +203,16 @@ export default async function AdminAuditPage({
                     return (
                       <tr key={entry.id}>
                         <td className="small muted" style={{ whiteSpace: 'nowrap' }}>
-                          {formatDateTime(entry.createdAt)}
+                          {formatDateTime(entry.createdAt, locale)}
                         </td>
                         <td>
                           <span className={`tag ${entry.source === 'admin' ? 'coral' : 'neutral'}`}>
-                            {entry.source === 'admin' ? 'Admin' : 'Audit'}
+                            {entry.source === 'admin' ? t.admin : t.audit}
                           </span>
                         </td>
                         <td className="strong">{entry.action}</td>
                         <td className="small">
-                          {titleCase(entry.entityType)}
+                          {titleCase(entry.entityType, locale)}
                           {entry.entityId ? (
                             <>
                               <br />
@@ -226,7 +233,7 @@ export default async function AdminAuditPage({
                               </span>
                             </span>
                           ) : (
-                            <span className="small muted">{entry.actorRole ?? 'System'}</span>
+                            <span className="small muted">{entry.actorRole ?? t.system}</span>
                           )}
                         </td>
                         <td className="small muted" style={{ maxWidth: 340 }}>

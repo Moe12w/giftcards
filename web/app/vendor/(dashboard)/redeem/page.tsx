@@ -6,6 +6,10 @@ import { formatMoney } from '@/lib/money';
 import { PageHead, StatusTag } from '@/components/ui';
 import { redeemVoucher } from '@/lib/actions/vendor';
 import { RedeemPanel } from '@/components/RedeemPanel';
+import { pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { getLocale } from '@/lib/i18n/server';
+import { vendorCopy } from '@/lib/i18n/vendor';
 
 export default async function VendorRedeemPage({
   searchParams,
@@ -22,6 +26,9 @@ export default async function VendorRedeemPage({
 }) {
   const params = await searchParams;
   const ctx = await requireVendor();
+  const locale = await getLocale();
+  const t = pick(vendorCopy, locale).redeem;
+  const c = pick(common, locale);
 
   const { data: recent } = await ctx.supabase
     .from('redemptions')
@@ -33,9 +40,9 @@ export default async function VendorRedeemPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="At the counter"
-        title="Redeem a voucher"
-        description="Scan the customer's app or wallet pass with the camera, or type the code by hand. Use the amount for gift cards, or the number of sessions for an experience."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
 
       {params.error ? (
@@ -48,34 +55,34 @@ export default async function VendorRedeemPage({
         <section className="panel" style={{ borderColor: 'var(--success)' }}>
           <div className="panel-head" style={{ background: 'var(--mint-soft)' }}>
             <h3>
-              <CheckCircle2 size={17} style={{ display: 'inline', verticalAlign: '-3px' }} /> Redemption
-              recorded
+              <CheckCircle2 size={17} style={{ display: 'inline', verticalAlign: '-3px' }} />{' '}
+              {t.recordedTitle}
             </h3>
             <StatusTag status={params.status ?? 'completed'} />
           </div>
           <div className="panel-body">
             <div className="grid-3">
               <div>
-                <span className="small muted">Reference</span>
+                <span className="small muted">{c.labels.reference}</span>
                 <div className="strong mono">{params.reference ?? '—'}</div>
               </div>
               <div>
-                <span className="small muted">Remaining value</span>
+                <span className="small muted">{t.remainingValue}</span>
                 <div className="strong">
                   {params.remaining ? formatMoney(Number(params.remaining)) : '—'}
                 </div>
               </div>
               <div>
-                <span className="small muted">Sessions remaining</span>
+                <span className="small muted">{t.sessionsRemaining}</span>
                 <div className="strong">{params.sessions ?? '—'}</div>
               </div>
             </div>
             <div className="btn-row" style={{ marginTop: 18 }}>
               <Link className="btn primary sm" href="/vendor/redeem">
-                Redeem another
+                {t.redeemAnother}
               </Link>
               <Link className="btn sm" href="/vendor/vouchers">
-                View vouchers
+                {t.viewVouchers}
               </Link>
             </div>
           </div>
@@ -85,18 +92,18 @@ export default async function VendorRedeemPage({
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>New redemption</h3>
+            <h3>{t.newRedemption}</h3>
             <span className="tag mint">
-              <ScanLine size={12} /> Live balance
+              <ScanLine size={12} /> {t.liveBalance}
             </span>
           </div>
           <div className="panel-body">
             <RedeemPanel
-              locale={ctx.profile?.preferred_language === 'ar' ? 'ar' : 'en'}
+              locale={locale}
               manual={
                 <form action={redeemVoucher} style={{ display: 'grid', gap: 16 }}>
               <div className="field">
-                <label htmlFor="code">Voucher code</label>
+                <label htmlFor="code">{t.voucherCode}</label>
                 <input
                   id="code"
                   name="code"
@@ -107,30 +114,30 @@ export default async function VendorRedeemPage({
                   placeholder="GFT-XXXX-XXXX"
                   style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800 }}
                 />
-                <span className="hint">The code is on the customer's gift card or QR pass.</span>
+                <span className="hint">{t.codeHint}</span>
               </div>
               <div className="form-grid">
                 <div className="field">
-                  <label htmlFor="amount">Amount to redeem (QAR)</label>
+                  <label htmlFor="amount">{t.amountToRedeem}</label>
                   <input id="amount" name="amount" inputMode="decimal" placeholder="25.00" />
-                  <span className="hint">Gift cards only.</span>
+                  <span className="hint">{t.giftCardsOnly}</span>
                 </div>
                 <div className="field">
-                  <label htmlFor="sessions">Sessions to redeem</label>
+                  <label htmlFor="sessions">{t.sessionsToRedeem}</label>
                   <input id="sessions" name="sessions" inputMode="numeric" placeholder="1" />
-                  <span className="hint">Experience gifts only.</span>
+                  <span className="hint">{t.experienceOnly}</span>
                 </div>
               </div>
               <div className="field">
-                <label htmlFor="notes">Note (optional)</label>
-                <input id="notes" name="notes" placeholder="Table 4, two flat whites" />
+                <label htmlFor="notes">{t.noteOptional}</label>
+                <input id="notes" name="notes" placeholder={t.notePlaceholder} />
               </div>
               <div className="callout info">
-                <Info size={15} style={{ display: 'inline', verticalAlign: '-2px' }} /> Enter either an
-                amount or a number of sessions — not both. The voucher status updates automatically.
+                <Info size={15} style={{ display: 'inline', verticalAlign: '-2px' }} />{' '}
+                {t.eitherAmountOrSessions}
               </div>
               <button className="btn primary" type="submit">
-                <ScanLine size={16} /> Record redemption
+                <ScanLine size={16} /> {t.recordRedemption}
               </button>
                 </form>
               }
@@ -141,64 +148,56 @@ export default async function VendorRedeemPage({
         <div style={{ display: 'grid', gap: 20 }}>
           <section className="panel">
             <div className="panel-head">
-              <h3>How it works</h3>
+              <h3>{t.howItWorks}</h3>
             </div>
             <div className="panel-body">
               <div className="timeline">
                 <div className="timeline-item">
                   <span className="timeline-dot" />
                   <div>
-                    <strong>1. Scan the gift</strong>
-                    <span>
-                      The customer opens the app or their wallet pass and the camera reads the code.
-                      You can still type a code by hand.
-                    </span>
+                    <strong>{t.stepScan}</strong>
+                    <span>{t.stepScanBody}</span>
                   </div>
                 </div>
                 <div className="timeline-item">
                   <span className="timeline-dot" />
                   <div>
-                    <strong>2. Check what is owed</strong>
-                    <span>
-                      You see the gift, the recipient and the balance left before you confirm.
-                    </span>
+                    <strong>{t.stepCheck}</strong>
+                    <span>{t.stepCheckBody}</span>
                   </div>
                 </div>
                 <div className="timeline-item">
                   <span className="timeline-dot" />
                   <div>
-                    <strong>3. Confirm once</strong>
-                    <span>
-                      The balance is deducted immediately and a reference is saved for your reports.
-                    </span>
+                    <strong>{t.stepConfirm}</strong>
+                    <span>{t.stepConfirmBody}</span>
                   </div>
                 </div>
               </div>
               <div className="callout warn" style={{ marginTop: 8 }}>
-                Redemptions cannot be undone from this screen. If you make a mistake, contact support
-                with the reference.
+                {t.cannotUndo}
               </div>
             </div>
           </section>
 
           <section className="panel">
             <div className="panel-head">
-              <h3>Recent redemptions</h3>
+              <h3>{t.recentRedemptions}</h3>
               <Link className="small" href="/vendor/vouchers" style={{ fontWeight: 800 }}>
-                All vouchers
+                {t.allVouchers}
               </Link>
             </div>
             <div className="panel-body flush">
               {(recent ?? []).length === 0 ? (
-                <div className="table-empty">No redemptions yet.</div>
+                <div className="table-empty">{t.noRedemptions}</div>
               ) : (
                 <div className="table-wrap">
                   <table className="data">
                     <thead>
                       <tr>
-                        <th>Code</th>
-                        <th>Used</th>
-                        <th>When</th>
+                        <th>{c.labels.code}</th>
+                        <th>{t.used}</th>
+                        <th>{t.when}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -211,10 +210,12 @@ export default async function VendorRedeemPage({
                             <td className="mono small">{voucher?.voucher_code ?? '—'}</td>
                             <td>
                               {redemption.kind === 'session'
-                                ? `${redemption.sessions ?? 1} session${(redemption.sessions ?? 1) === 1 ? '' : 's'}`
+                                ? `${redemption.sessions ?? 1} ${(redemption.sessions ?? 1) === 1 ? c.time.session : c.time.sessions}`
                                 : formatMoney(Number(redemption.amount_minor ?? 0))}
                             </td>
-                            <td className="small muted">{formatDateTime(redemption.occurred_at)}</td>
+                            <td className="small muted">
+                              {formatDateTime(redemption.occurred_at, locale)}
+                            </td>
                           </tr>
                         );
                       })}
@@ -229,13 +230,12 @@ export default async function VendorRedeemPage({
             <span className="icon-tile ink">
               <Ticket size={20} />
             </span>
-            <h3 style={{ marginTop: 12 }}>Looking for a code?</h3>
+            <h3 style={{ marginTop: 12 }}>{t.lookingForCode}</h3>
             <p className="small" style={{ marginTop: 6 }}>
-              Vouchers are listed with their live balance and status. Use the search to find a
-              recipient.
+              {t.lookingForCodeBody}
             </p>
             <Link className="btn sm" href="/vendor/vouchers" style={{ marginTop: 12 }}>
-              Open vouchers
+              {t.openVouchers}
             </Link>
           </div>
         </div>

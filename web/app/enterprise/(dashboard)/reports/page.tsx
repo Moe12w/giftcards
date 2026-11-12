@@ -4,12 +4,16 @@ import { requireEnterprise } from '@/lib/auth';
 import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
+import { fill, pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { enterpriseCopy } from '@/lib/i18n/enterprise';
+import { getLocale } from '@/lib/i18n/server';
 
 const RANGES = [
-  { value: '30', label: 'Last 30 days' },
-  { value: '90', label: 'Last 90 days' },
-  { value: '365', label: 'Last 12 months' },
-];
+  { value: '30', copyKey: 'd30' },
+  { value: '90', copyKey: 'd90' },
+  { value: '365', copyKey: 'd12m' },
+] as const;
 
 function monthKey(value: string): string {
   return value.slice(0, 7);
@@ -26,6 +30,9 @@ export default async function EnterpriseReportsPage({
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
   const ctx = await requireEnterprise();
+  const locale = await getLocale();
+  const t = pick(enterpriseCopy, locale).reports;
+  const c = pick(common, locale);
   const [productsResult, inventoryResult] = await Promise.all([
     ctx.supabase
       .from('enterprise_products')
@@ -122,25 +129,25 @@ export default async function EnterpriseReportsPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Reports"
-        title="The numbers, ready for finance."
-        description="Inventory position, allocations and confirmed redemptions. Export the detail whenever you need it."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
         actions={
           <>
             <form className="toolbar" action="/enterprise/reports" method="get" style={{ padding: 6, boxShadow: 'none' }}>
-              <select name="range" defaultValue={range} aria-label="Date range">
+              <select name="range" defaultValue={range} aria-label={t.dateRangeLabel}>
                 {RANGES.map((item) => (
                   <option key={item.value} value={item.value}>
-                    {item.label}
+                    {t.ranges[item.copyKey]}
                   </option>
                 ))}
               </select>
               <button className="btn sm" type="submit">
-                Apply
+                {c.actions.apply}
               </button>
             </form>
             <a className="btn sm primary" href={`/enterprise/reports/export?range=${range}`}>
-              <Download size={15} /> Export CSV
+              <Download size={15} /> {t.exportCsv}
             </a>
           </>
         }
@@ -148,30 +155,30 @@ export default async function EnterpriseReportsPage({
 
       <div className="kpi-grid">
         <Kpi
-          label="Sold to customers"
+          label={t.soldToCustomers}
           value={String(allocatedInRange.length)}
-          hint={`${formatMoney(soldValue)} in paid orders`}
+          hint={fill(t.inPaidOrders, { amount: formatMoney(soldValue) })}
           icon={<Wallet size={17} />}
           tone="lavender"
         />
         <Kpi
-          label="Used by customers"
+          label={t.usedByCustomers}
           value={String(redeemedInRange.length)}
-          hint={`${formatMoney(redeemedValue)} of credit spent`}
+          hint={fill(t.ofCreditSpent, { amount: formatMoney(redeemedValue) })}
           icon={<ScanLine size={17} />}
           tone="mint"
         />
         <Kpi
-          label="Paid order value"
+          label={t.paidOrderValue}
           value={formatMoney(soldValue)}
-          hint={`${items.length} order items in period`}
+          hint={fill(t.orderItemsInPeriod, { count: items.length })}
           icon={<FileBarChart size={17} />}
           tone="gold"
         />
         <Kpi
-          label="Still available"
+          label={t.stillAvailable}
           value={String(inventory.filter((item) => item.status === 'available').length)}
-          hint={`${formatMoney(outstandingValue)} of codes left to sell`}
+          hint={fill(t.leftToSell, { amount: formatMoney(outstandingValue) })}
           icon={<Wallet size={17} />}
           tone="coral"
         />
@@ -179,39 +186,39 @@ export default async function EnterpriseReportsPage({
 
       <section className="panel" style={{ marginBottom: 20 }}>
         <div className="panel-head">
-          <h3>Money</h3>
-          <span className="small muted">You set the price, Giftly takes a cut</span>
+          <h3>{t.money}</h3>
+          <span className="small muted">{t.priceAndCut}</span>
         </div>
         <div className="panel-body">
           <div className="grid-3">
             <div className="card mint">
-              <span className="small muted">Sold to customers</span>
+              <span className="small muted">{t.soldToCustomers}</span>
               <div className="strong" style={{ fontSize: '1.6rem', marginTop: 6 }}>
                 {formatMoney(soldValue)}
               </div>
-              <span className="small muted">The price you set, times {items.length} codes sold</span>
+              <span className="small muted">{fill(t.priceTimesSold, { count: items.length })}</span>
             </div>
             <div className="card gold">
-              <span className="small muted">Giftly&apos;s cut</span>
+              <span className="small muted">{t.giftlyCut}</span>
               <div className="strong" style={{ fontSize: '1.6rem', marginTop: 6 }}>
                 {formatMoney(giftlyCut)}
               </div>
               <span className="small muted">
-                {(commissionBps / 100).toFixed(2)}% of every code sold
+                {fill(t.percentOfEveryCode, { percent: (commissionBps / 100).toFixed(2) })}
               </span>
             </div>
             <div className="card lavender">
-              <span className="small muted">Your share</span>
+              <span className="small muted">{t.yourShare}</span>
               <div className="strong" style={{ fontSize: '1.6rem', marginTop: 6 }}>
                 {formatMoney(partnerNet)}
               </div>
-              <span className="small muted">What is left for you, after our cut</span>
+              <span className="small muted">{t.afterOurCut}</span>
             </div>
           </div>
           <div className="callout info" style={{ marginTop: 16 }}>
-            <Wallet size={15} style={{ display: 'inline', verticalAlign: '-2px' }} /> {formatMoney(outstandingValue)}{' '}
-            of codes are still unsold. That is your stock, not a debt: it becomes money when
-            someone buys it.
+            <Wallet size={15} style={{ display: 'inline', verticalAlign: '-2px' }} /> {fill(t.unsoldNote, {
+              amount: formatMoney(outstandingValue),
+            })}
           </div>
         </div>
       </section>
@@ -219,22 +226,22 @@ export default async function EnterpriseReportsPage({
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Inventory by product</h3>
-            <span className="small muted">Live position</span>
+            <h3>{t.inventoryByProduct}</h3>
+            <span className="small muted">{t.livePosition}</span>
           </div>
           <div className="panel-body flush">
             {products.length === 0 ? (
-              <div className="table-empty">No products yet.</div>
+              <div className="table-empty">{t.noProductsYet}</div>
             ) : (
               <div className="table-wrap">
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Product</th>
-                      <th className="num">Available</th>
-                      <th className="num">Allocated</th>
-                      <th className="num">Redeemed</th>
-                      <th className="num">Available value</th>
+                      <th>{t.productHeader}</th>
+                      <th className="num">{t.available}</th>
+                      <th className="num">{t.allocated}</th>
+                      <th className="num">{t.redeemed}</th>
+                      <th className="num">{t.availableValue}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -256,18 +263,21 @@ export default async function EnterpriseReportsPage({
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Redemptions by month</h3>
+            <h3>{t.redemptionsByMonth}</h3>
           </div>
           <div className="panel-body">
             {redeemedInRange.length === 0 ? (
-              <p className="small muted">No confirmed redemptions in this period.</p>
+              <p className="small muted">{t.noConfirmedRedemptions}</p>
             ) : (
               <div style={{ display: 'grid', gap: 14 }}>
                 {[...monthly.entries()].map(([key, value]) => {
-                  const label = new Date(`${key}-01T00:00:00`).toLocaleDateString('en-QA', {
-                    month: 'short',
-                    year: 'numeric',
-                  });
+                  const label = new Date(`${key}-01T00:00:00`).toLocaleDateString(
+                    locale === 'ar' ? 'ar-QA' : 'en-QA',
+                    {
+                      month: 'short',
+                      year: 'numeric',
+                    },
+                  );
                   return (
                     <div key={key} style={{ display: 'grid', gap: 6 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
@@ -288,23 +298,23 @@ export default async function EnterpriseReportsPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Allocated orders in period</h3>
-          <span className="small muted">{items.length} items</span>
+          <h3>{t.allocatedOrders}</h3>
+          <span className="small muted">{fill(t.items, { count: items.length })}</span>
         </div>
         <div className="panel-body flush">
           {items.length === 0 ? (
-            <div className="table-empty">No paid orders in this period.</div>
+            <div className="table-empty">{t.noPaidOrders}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Order</th>
-                    <th>Product</th>
-                    <th>Recipient</th>
-                    <th>Date</th>
-                    <th className="num">Value</th>
-                    <th>Status</th>
+                    <th>{t.order}</th>
+                    <th>{t.productHeader}</th>
+                    <th>{t.recipient}</th>
+                    <th>{c.labels.date}</th>
+                    <th className="num">{c.labels.value}</th>
+                    <th>{c.labels.status}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -314,9 +324,9 @@ export default async function EnterpriseReportsPage({
                     return (
                       <tr key={item.id}>
                         <td className="strong">{order?.order_ref ?? '—'}</td>
-                        <td>{product?.name ?? 'Product'}</td>
+                        <td>{product?.name ?? t.productFallback}</td>
                         <td>{order?.recipient_name ?? '—'}</td>
-                        <td className="small muted">{formatDate(item.created_at)}</td>
+                        <td className="small muted">{formatDate(item.created_at, locale)}</td>
                         <td className="num">{formatMoney(Number(item.total_minor ?? 0))}</td>
                         <td>
                           <StatusTag status={order?.status ?? 'pending'} />
@@ -332,11 +342,9 @@ export default async function EnterpriseReportsPage({
       </section>
 
       <div className="callout info">
-        <Download size={15} style={{ display: 'inline', verticalAlign: '-2px' }} /> The CSV includes every
-        code created in the selected period with its reference, product, masked code, value and status
-        dates. Full codes are never exported.{' '}
+        <Download size={15} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.csvNote}{' '}
         <Link href="/enterprise/import" style={{ textDecoration: 'underline' }}>
-          Reconcile redemptions
+          {t.reconcileRedemptions}
         </Link>
         .
       </div>

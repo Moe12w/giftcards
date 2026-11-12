@@ -5,12 +5,16 @@ import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Kpi, PageHead } from '@/components/ui';
 import { fulfilmentLabel } from '@/lib/catalog';
+import { fill, pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { getLocale } from '@/lib/i18n/server';
+import { vendorCopy } from '@/lib/i18n/vendor';
 
 const RANGES = [
-  { value: '30', label: 'Last 30 days' },
-  { value: '90', label: 'Last 90 days' },
-  { value: '365', label: 'Last 12 months' },
-];
+  { value: '30', copyKey: 'd30' },
+  { value: '90', copyKey: 'd90' },
+  { value: '365', copyKey: 'd12m' },
+] as const;
 
 function monthKey(value: string): string {
   return value.slice(0, 7);
@@ -29,6 +33,10 @@ export default async function VendorAnalyticsPage({
   const ctx = await requireVendor();
   const supabase = ctx.supabase;
   const vendor = ctx.vendor;
+  const locale = await getLocale();
+  const t = pick(vendorCopy, locale).analytics;
+  const c = pick(common, locale);
+  const rangeLabel = t.ranges[RANGES.find((item) => item.value === range)?.copyKey ?? 'd90'];
 
   const [itemsResult, vouchersResult, redemptionsResult] = await Promise.all([
     supabase
@@ -78,7 +86,7 @@ export default async function VendorAnalyticsPage({
   const byProduct = new Map<string, { gross: number; units: number; type: string }>();
   for (const item of paidItems) {
     const product = Array.isArray(item.products) ? item.products[0] : item.products;
-    const name = product?.title ?? 'Gift';
+    const name = product?.title ?? t.gift;
     const current = byProduct.get(name) ?? {
       gross: 0,
       units: 0,
@@ -112,20 +120,20 @@ export default async function VendorAnalyticsPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Analytics"
-        title="How the gifts are moving."
-        description={`Sales, redemptions and your share for the ${RANGES.find((item) => item.value === range)?.label.toLowerCase()}.`}
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={fill(t.description, { range: rangeLabel.toLowerCase() })}
         actions={
           <form className="toolbar" action="/vendor/analytics" method="get" style={{ padding: 6, boxShadow: 'none' }}>
-            <select name="range" defaultValue={range} aria-label="Date range">
+            <select name="range" defaultValue={range} aria-label={t.dateRangeLabel}>
               {RANGES.map((item) => (
                 <option key={item.value} value={item.value}>
-                  {item.label}
+                  {t.ranges[item.copyKey]}
                 </option>
               ))}
             </select>
             <button className="btn sm" type="submit">
-              Apply
+              {c.actions.apply}
             </button>
           </form>
         }
@@ -133,30 +141,30 @@ export default async function VendorAnalyticsPage({
 
       <div className="kpi-grid">
         <Kpi
-          label="Gross sales"
+          label={t.grossSales}
           value={formatMoney(gross)}
-          hint={`${orderRefs.size} paid ${orderRefs.size === 1 ? 'order' : 'orders'}`}
+          hint={`${orderRefs.size} ${orderRefs.size === 1 ? t.paidOrder : t.paidOrders}`}
           icon={<Banknote size={17} />}
           tone="mint"
         />
         <Kpi
-          label="Your share"
+          label={t.yourShare}
           value={formatMoney(share)}
-          hint={`Commission ${formatMoney(commission)}`}
+          hint={fill(t.commission, { amount: formatMoney(commission) })}
           icon={<TrendingUp size={17} />}
           tone="lavender"
         />
         <Kpi
-          label="Vouchers issued"
+          label={t.vouchersIssued}
           value={String(vouchers.length)}
-          hint={`${activeVouchers} still active`}
+          hint={fill(t.stillActive, { count: activeVouchers })}
           icon={<Ticket size={17} />}
           tone="gold"
         />
         <Kpi
-          label="Redeemed in period"
+          label={t.redeemedInPeriod}
           value={formatMoney(redeemedValue)}
-          hint={`${sessionCount} sessions used`}
+          hint={fill(t.sessionsUsed, { count: sessionCount })}
           icon={<ScanLine size={17} />}
           tone="coral"
         />
@@ -165,21 +173,24 @@ export default async function VendorAnalyticsPage({
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Sales by month</h3>
+            <h3>{t.salesByMonth}</h3>
             <span className="tag neutral">
-              <CalendarRange size={12} /> Last 6 months
+              <CalendarRange size={12} /> {t.lastSixMonths}
             </span>
           </div>
           <div className="panel-body">
             {gross === 0 ? (
-              <p className="small muted">No paid sales in this period yet.</p>
+              <p className="small muted">{t.noPaidSales}</p>
             ) : (
               <div style={{ display: 'grid', gap: 14 }}>
                 {[...monthly.entries()].map(([key, value]) => {
-                  const label = new Date(`${key}-01T00:00:00`).toLocaleDateString('en-QA', {
-                    month: 'short',
-                    year: 'numeric',
-                  });
+                  const label = new Date(`${key}-01T00:00:00`).toLocaleDateString(
+                    locale === 'ar' ? 'ar-QA' : 'en-QA',
+                    {
+                      month: 'short',
+                      year: 'numeric',
+                    },
+                  );
                   return (
                     <div key={key} style={{ display: 'grid', gap: 6 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
@@ -199,30 +210,29 @@ export default async function VendorAnalyticsPage({
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Redemption mix</h3>
+            <h3>{t.redemptionMix}</h3>
           </div>
           <div className="panel-body">
             <div className="split-list">
               <div>
-                <span className="k">Monetary value redeemed</span>
+                <span className="k">{t.monetaryRedeemed}</span>
                 <span className="v">{formatMoney(redeemedValue)}</span>
               </div>
               <div>
-                <span className="k">Experience sessions</span>
+                <span className="k">{t.experienceSessions}</span>
                 <span className="v">{sessionCount}</span>
               </div>
               <div>
-                <span className="k">Redemption records</span>
+                <span className="k">{t.redemptionRecords}</span>
                 <span className="v">{redemptions.length}</span>
               </div>
               <div>
-                <span className="k">Fully redeemed vouchers</span>
+                <span className="k">{t.fullyRedeemedVouchers}</span>
                 <span className="v">{redeemedVouchers}</span>
               </div>
             </div>
             <div className="callout info" style={{ marginTop: 14 }}>
-              Redemptions are recorded at the counter. A gift card can be spent across several visits,
-              so the redeemed value is not the same as sales.
+              {t.mixNote}
             </div>
           </div>
         </section>
@@ -230,22 +240,22 @@ export default async function VendorAnalyticsPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Top gifts by sales</h3>
-          <span className="small muted">{paidItems.length} paid items in period</span>
+          <h3>{t.topGifts}</h3>
+          <span className="small muted">{fill(t.paidItemsInPeriod, { count: paidItems.length })}</span>
         </div>
         <div className="panel-body flush">
           {topProducts.length === 0 ? (
-            <div className="table-empty">No sales to rank yet.</div>
+            <div className="table-empty">{t.noSalesToRank}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Gift</th>
-                    <th>Type</th>
-                    <th className="num">Items</th>
-                    <th className="num">Gross sales</th>
-                    <th style={{ width: '32%' }}>Share of sales</th>
+                    <th>{t.gift}</th>
+                    <th>{c.labels.type}</th>
+                    <th className="num">{t.items}</th>
+                    <th className="num">{t.grossSales}</th>
+                    <th style={{ width: '32%' }}>{t.shareOfSales}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -253,7 +263,7 @@ export default async function VendorAnalyticsPage({
                     <tr key={name}>
                       <td className="strong">{name}</td>
                       <td>
-                        <span className="tag">{fulfilmentLabel(value.type)}</span>
+                        <span className="tag">{fulfilmentLabel(value.type, locale)}</span>
                       </td>
                       <td className="num">{value.units}</td>
                       <td className="num strong">{formatMoney(value.gross)}</td>
@@ -273,24 +283,24 @@ export default async function VendorAnalyticsPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Recent paid orders</h3>
+          <h3>{t.recentPaidOrders}</h3>
           <Link className="small" href="/vendor/orders" style={{ fontWeight: 800 }}>
-            All orders <ArrowRight size={13} style={{ display: 'inline', verticalAlign: '-2px' }} />
+            {t.allOrders} <ArrowRight size={13} style={{ display: 'inline', verticalAlign: '-2px' }} />
           </Link>
         </div>
         <div className="panel-body flush">
           {paidItems.length === 0 ? (
-            <div className="table-empty">No paid orders in this period.</div>
+            <div className="table-empty">{t.noPaidOrders}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Order</th>
-                    <th>Gift</th>
-                    <th>Date</th>
-                    <th className="num">Total</th>
-                    <th className="num">Your share</th>
+                    <th>{t.order}</th>
+                    <th>{t.gift}</th>
+                    <th>{c.labels.date}</th>
+                    <th className="num">{c.labels.total}</th>
+                    <th className="num">{t.yourShare}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -300,8 +310,8 @@ export default async function VendorAnalyticsPage({
                     return (
                       <tr key={item.id}>
                         <td className="strong">{order?.order_ref ?? '—'}</td>
-                        <td>{product?.title ?? 'Gift'}</td>
-                        <td className="small muted">{formatDate(item.created_at)}</td>
+                        <td>{product?.title ?? t.gift}</td>
+                        <td className="small muted">{formatDate(item.created_at, locale)}</td>
                         <td className="num">{formatMoney(Number(item.total_minor ?? 0))}</td>
                         <td className="num strong">{formatMoney(Number(item.vendor_share_minor ?? 0))}</td>
                       </tr>
@@ -316,11 +326,11 @@ export default async function VendorAnalyticsPage({
 
       {gross === 0 && vouchers.length === 0 ? (
         <EmptyState
-          title="Analytics will fill up as you sell"
-          body="Publish a gift and share your storefront. Once orders and redemptions come in, this page shows what is working."
+          title={t.emptyTitle}
+          body={t.emptyBody}
           action={
             <Link className="btn primary sm" href="/vendor/products/new">
-              <ShoppingBag size={14} /> Create a gift
+              <ShoppingBag size={14} /> {t.createGift}
             </Link>
           }
         />

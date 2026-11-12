@@ -6,8 +6,15 @@ import { AuthShell } from '@/components/AuthShell';
 import { Notice } from '@/components/ui';
 import { registerVendorAccount } from '@/lib/actions/auth';
 import { createClient } from '@/lib/supabase/server';
+import { pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { getLocale } from '@/lib/i18n/server';
+import { vendorCopy } from '@/lib/i18n/vendor';
 
-export const metadata: Metadata = { title: 'Apply as a vendor' };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: pick(vendorCopy, locale).register.metaTitle };
+}
 
 export default async function VendorRegisterPage({
   searchParams,
@@ -15,6 +22,9 @@ export default async function VendorRegisterPage({
   searchParams: Promise<{ error?: string; notice?: string }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const t = pick(vendorCopy, locale).register;
+  const c = pick(common, locale);
   const supabase = await createClient();
   const {
     data: { user },
@@ -41,29 +51,23 @@ export default async function VendorRegisterPage({
   return (
     <AuthShell
       tone="mint"
-      eyebrow="Become a vendor"
-      title="Sell gifts people are happy to receive."
-      description="Tell us about your business. We review every application, then help you publish your first offer."
-      points={[
-        'No listing fee — commission only on sales',
-        'Set your own amounts and experience packages',
-        'Redeem with a code, get clear reports',
-      ]}
+      eyebrow={t.shellEyebrow}
+      title={t.shellTitle}
+      description={t.shellDescription}
+      points={[t.point1, t.point2, t.point3]}
     >
-      <span className="eyebrow mint">Vendor application</span>
-      <h1 style={{ marginTop: 14 }}>{user ? 'One last step.' : 'Join the marketplace.'}</h1>
+      <span className="eyebrow mint">{t.eyebrow}</span>
+      <h1 style={{ marginTop: 14 }}>{user ? t.lastStep : t.joinMarketplace}</h1>
       <p style={{ marginTop: 10 }}>
-        {user
-          ? 'Your account is ready. Tell us about the business so we can review it.'
-          : 'Create your account and tell us about the business in one go.'}
+        {user ? t.accountReady : t.createAccount}
       </p>
       <Notice
         error={params.error}
         success={
           params.notice === 'confirm-email'
-            ? 'Account created. Check your inbox to confirm your email, then sign in to finish the application.'
+            ? t.noticeConfirmEmail
             : params.notice === 'finish'
-              ? 'Sign in complete. Add your business details below.'
+              ? t.noticeFinish
               : null
         }
       />
@@ -72,11 +76,16 @@ export default async function VendorRegisterPage({
         {!user ? (
           <>
             <div className="field">
-              <label htmlFor="full_name">Your name</label>
-              <input id="full_name" name="full_name" required placeholder="Full name" />
+              <label htmlFor="full_name">{t.yourName}</label>
+              <input
+                id="full_name"
+                name="full_name"
+                required
+                placeholder={t.fullNamePlaceholder}
+              />
             </div>
             <div className="field">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">{c.labels.email}</label>
               <input
                 id="email"
                 name="email"
@@ -87,7 +96,7 @@ export default async function VendorRegisterPage({
               />
             </div>
             <div className="field">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password">{t.password}</label>
               <input
                 id="password"
                 name="password"
@@ -95,49 +104,58 @@ export default async function VendorRegisterPage({
                 autoComplete="new-password"
                 required
                 minLength={8}
-                placeholder="At least 8 characters"
+                placeholder={t.passwordPlaceholder}
               />
             </div>
           </>
         ) : (
           <div className="callout info">
-            Signed in as <strong>{user.email}</strong>
+            {t.signedInAs} <strong>{user.email}</strong>
           </div>
         )}
 
         <hr className="divider" />
 
         <div className="field">
-          <label htmlFor="business_name">Business name</label>
-          <input id="business_name" name="business_name" required placeholder="The Coffee House" />
+          <label htmlFor="business_name">{t.businessName}</label>
+          <input
+            id="business_name"
+            name="business_name"
+            required
+            placeholder={t.businessNamePlaceholder}
+          />
         </div>
         <div className="form-grid">
           <div className="field">
-            <label htmlFor="business_category">Category</label>
+            <label htmlFor="business_category">{c.labels.category}</label>
             <select id="business_category" name="business_category" defaultValue="">
-              <option value="">Choose a category</option>
+              <option value="">{t.chooseCategory}</option>
               {categories.map((category) => (
                 <option key={category.name} value={category.name}>
                   {category.name}
                 </option>
               ))}
-              <option value="Other">Other</option>
+              <option value="Other">{t.other}</option>
             </select>
           </div>
           <div className="field">
-            <label htmlFor="business_location">Area</label>
-            <input id="business_location" name="business_location" placeholder="West Bay, Doha" />
+            <label htmlFor="business_location">{t.area}</label>
+            <input
+              id="business_location"
+              name="business_location"
+              placeholder={`${t.westBay}, ${t.doha}`}
+            />
           </div>
           <div className="field">
-            <label htmlFor="business_phone">Phone</label>
+            <label htmlFor="business_phone">{c.labels.phone}</label>
             <input id="business_phone" name="business_phone" placeholder="+974 …" />
           </div>
           <div className="field">
-            <label htmlFor="business_website">Website or Instagram</label>
+            <label htmlFor="business_website">{t.website}</label>
             <input id="business_website" name="business_website" placeholder="https://…" />
           </div>
           <div className="field full">
-            <label htmlFor="business_email">Business email</label>
+            <label htmlFor="business_email">{t.businessEmail}</label>
             <input
               id="business_email"
               name="business_email"
@@ -147,27 +165,27 @@ export default async function VendorRegisterPage({
             />
           </div>
           <div className="field full">
-            <label htmlFor="business_description">What will you offer?</label>
+            <label htmlFor="business_description">{t.offer}</label>
             <textarea
               id="business_description"
               name="business_description"
-              placeholder="A short description of your business and the gifts you would like to sell."
+              placeholder={t.offerPlaceholder}
             />
           </div>
         </div>
 
         <button className="btn primary block" type="submit">
-          Submit application <ArrowRight size={16} />
+          {t.submitApplication} <ArrowRight size={16} />
         </button>
         <p className="small muted">
-          <BadgeCheck size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> By applying
-          you agree to our <Link href="/terms">vendor terms</Link>. We usually review applications
-          within two working days.
+          <BadgeCheck size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.termsBefore}{' '}
+          <Link href="/terms">{t.termsLink}</Link>
+          {t.termsAfter}
         </p>
       </form>
 
       <div className="auth-switch">
-        Already have an account? <Link href="/vendor/login">Sign in</Link>
+        {t.alreadyAccount} <Link href="/vendor/login">{t.signIn}</Link>
       </div>
     </AuthShell>
   );

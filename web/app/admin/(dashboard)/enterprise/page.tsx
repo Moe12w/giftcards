@@ -4,6 +4,10 @@ import { requireAdmin } from '@/lib/auth';
 import { formatDate, initials } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function AdminEnterprisePage({
   searchParams,
@@ -12,6 +16,9 @@ export default async function AdminEnterprisePage({
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).enterprise;
+  const c = pick(common, locale);
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
 
@@ -86,12 +93,12 @@ export default async function AdminEnterprisePage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Network"
-        title="Enterprise partners"
-        description="Corporate reward programmes, their catalogue, inventory position and redemption performance."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
 
-      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? 'Partner updated.' : null} />
+      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? t.saved : null} />
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -99,85 +106,85 @@ export default async function AdminEnterprisePage({
             <Building2 size={17} />
           </span>
           <strong>{partners.filter((partner) => partner.status === 'active').length}</strong>
-          <span>Active partners</span>
+          <span>{t.activePartners}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <Building2 size={17} />
           </span>
           <strong>{products.length}</strong>
-          <span>Reward products</span>
+          <span>{t.rewardProducts}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Building2 size={17} />
           </span>
           <strong>{totalAvailable}</strong>
-          <span>{formatMoney(totalAvailableValue)} available</span>
+          <span>{fill(t.availableAmount, { amount: formatMoney(totalAvailableValue) })}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <Building2 size={17} />
           </span>
           <strong>{totalRedeemed}</strong>
-          <span>Confirmed redeemed</span>
+          <span>{t.confirmedRedeemed}</span>
         </div>
       </div>
 
       <form className="toolbar" action="/admin/enterprise" method="get">
         <div className="search-bar">
           <Search size={17} />
-          <input name="q" defaultValue={params.q ?? ''} placeholder="Company, contact or industry…" aria-label="Search partners" />
+          <input name="q" defaultValue={params.q ?? ''} placeholder={t.searchPlaceholder} aria-label={t.searchLabel} />
         </div>
-        <select name="status" defaultValue={status} aria-label="Partner status">
-          <option value="">All partners</option>
-          <option value="active">Active</option>
-          <option value="draft">Draft</option>
-          <option value="suspended">Suspended</option>
+        <select name="status" defaultValue={status} aria-label={t.statusLabel}>
+          <option value="">{t.allPartners}</option>
+          <option value="active">{c.status.active}</option>
+          <option value="draft">{c.status.draft}</option>
+          <option value="suspended">{c.status.suspended}</option>
         </select>
         <button className="btn sm" type="submit">
-          Filter
+          {c.actions.filter}
         </button>
         {q || status ? (
           <Link className="btn sm ghost" href="/admin/enterprise">
-            Clear
+            {c.actions.clear}
           </Link>
         ) : null}
       </form>
 
       {filtered.length === 0 ? (
         <EmptyState
-          title={q || status ? 'No partners match' : 'No enterprise partners yet'}
+          title={q || status ? t.noPartnersMatch : t.noPartnersYet}
           body={
             q || status
-              ? 'Try a different search or clear the filters.'
-              : 'Corporate enquiries from the website and partner accounts appear here.'
+              ? t.tryDifferentSearch
+              : t.emptyBody
           }
         />
       ) : (
         <section className="panel">
           <div className="panel-head">
             <h3>
-              {filtered.length} {filtered.length === 1 ? 'partner' : 'partners'}
+              {fill(filtered.length === 1 ? t.partnerCountOne : t.partnerCount, { count: filtered.length })}
             </h3>
-            <span className="small muted">Newest first</span>
+            <span className="small muted">{t.newestFirst}</span>
           </div>
           <div className="panel-body flush">
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Partner</th>
-                    <th>Contact</th>
-                    <th>Industry</th>
-                    <th className="num">Products</th>
-                    <th className="num">Available</th>
-                    <th className="num">Allocated</th>
-                    <th className="num">Redeemed</th>
-                    <th className="num">Team</th>
-                    <th>Status</th>
-                    <th>Since</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th>{t.partner}</th>
+                    <th>{t.contact}</th>
+                    <th>{t.industry}</th>
+                    <th className="num">{t.products}</th>
+                    <th className="num">{t.available}</th>
+                    <th className="num">{t.allocated}</th>
+                    <th className="num">{t.redeemed}</th>
+                    <th className="num">{t.team}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{t.since}</th>
+                    <th style={{ textAlign: 'right' }}>{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -222,11 +229,11 @@ export default async function AdminEnterprisePage({
                         <td>
                           <StatusTag status={partner.status} />
                         </td>
-                        <td className="small muted">{formatDate(partner.created_at)}</td>
+                        <td className="small muted">{formatDate(partner.created_at, locale)}</td>
                         <td>
                           <div className="row-actions">
                             <Link className="btn sm" href={`/admin/enterprise/${partner.id}`}>
-                              Open
+                              {c.actions.open}
                             </Link>
                           </div>
                         </td>

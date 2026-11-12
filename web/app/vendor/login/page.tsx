@@ -6,8 +6,15 @@ import { AuthShell } from '@/components/AuthShell';
 import { Notice } from '@/components/ui';
 import { vendorSignIn } from '@/lib/actions/auth';
 import { createClient } from '@/lib/supabase/server';
+import { pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { getLocale } from '@/lib/i18n/server';
+import { vendorCopy } from '@/lib/i18n/vendor';
 
-export const metadata: Metadata = { title: 'Vendor sign in' };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: pick(vendorCopy, locale).login.metaTitle };
+}
 
 export default async function VendorLoginPage({
   searchParams,
@@ -15,6 +22,9 @@ export default async function VendorLoginPage({
   searchParams: Promise<{ error?: string; notice?: string; next?: string }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const t = pick(vendorCopy, locale).login;
+  const c = pick(common, locale);
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,33 +43,29 @@ export default async function VendorLoginPage({
 
   const notice =
     params.notice === 'reset-sent'
-      ? 'If that email has an account, a reset link is on its way.'
+      ? t.noticeReset
       : params.notice === 'finish'
-        ? 'Sign in to finish your vendor application.'
+        ? t.noticeFinish
         : null;
 
   return (
     <AuthShell
       tone="mint"
-      eyebrow="Vendor portal"
-      title="Your offers, orders and redemptions in one place."
-      description="Sign in to manage the gifts you sell, redeem codes at the counter and see how your business is doing."
-      points={[
-        'Publish gift cards and experience packages',
-        'Redeem with a code — balances update instantly',
-        'Track sales, commission and settlements',
-      ]}
+      eyebrow={t.shellEyebrow}
+      title={t.shellTitle}
+      description={t.shellDescription}
+      points={[t.point1, t.point2, t.point3]}
     >
-      <span className="eyebrow mint">Vendor sign in</span>
-      <h1 style={{ marginTop: 14 }}>Welcome back.</h1>
+      <span className="eyebrow mint">{t.eyebrow}</span>
+      <h1 style={{ marginTop: 14 }}>{t.heading}</h1>
       <p style={{ marginTop: 10 }}>
-        Use the email address linked to your vendor account.
+        {t.subheading}
       </p>
       <Notice error={params.error} success={notice} />
       <form action={vendorSignIn} className="form" style={{ marginTop: 20 }}>
         {params.next ? <input type="hidden" name="next" value={params.next} /> : null}
         <div className="field">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">{c.labels.email}</label>
           <input
             id="email"
             name="email"
@@ -70,7 +76,7 @@ export default async function VendorLoginPage({
           />
         </div>
         <div className="field">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">{t.password}</label>
           <input
             id="password"
             name="password"
@@ -81,17 +87,17 @@ export default async function VendorLoginPage({
           />
         </div>
         <button className="btn primary block" type="submit">
-          Sign in <ArrowRight size={16} />
+          {t.signIn} <ArrowRight size={16} />
         </button>
       </form>
       <div className="auth-links" style={{ marginTop: 16 }}>
-        <Link href="/vendor/forgot-password">Forgot your password?</Link>
-        <Link href="/vendor/register">Apply as a vendor</Link>
+        <Link href="/vendor/forgot-password">{t.forgotPassword}</Link>
+        <Link href="/vendor/register">{t.applyAsVendor}</Link>
       </div>
       <div className="auth-switch">
-        Part of a team? Use the invite link your owner sent you, then sign in here. <br />
-        Looking for a different portal? <Link href="/enterprise/login">Enterprise</Link> ·{' '}
-        <Link href="/admin/login">Admin</Link>
+        {t.teamHint} <br />
+        {t.otherPortal} <Link href="/enterprise/login">{t.enterprise}</Link> ·{' '}
+        <Link href="/admin/login">{t.admin}</Link>
       </div>
     </AuthShell>
   );

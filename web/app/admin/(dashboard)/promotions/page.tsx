@@ -5,6 +5,10 @@ import { adminSavePromo, adminTogglePromo } from '@/lib/actions/admin';
 import { formatDate, formatDateTime, titleCase } from '@/lib/format';
 import { formatMoney, minorToInput } from '@/lib/money';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 function toLocalInput(value: string | null | undefined): string {
   if (!value) return '';
@@ -33,6 +37,9 @@ export default async function AdminPromotionsPage({
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).promotions;
+  const c = pick(common, locale);
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
 
@@ -58,12 +65,12 @@ export default async function AdminPromotionsPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Catalogue"
-        title="Promotions"
-        description="Discount codes customers can apply at checkout. Percent codes use whole percentages; fixed codes use QAR."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
 
-      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? 'Promotion saved.' : null} />
+      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? t.saved : null} />
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -71,38 +78,38 @@ export default async function AdminPromotionsPage({
             <BadgePercent size={17} />
           </span>
           <strong>{allPromos.length}</strong>
-          <span>All promotions</span>
+          <span>{t.allPromotions}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <BadgePercent size={17} />
           </span>
           <strong>{active}</strong>
-          <span>Active now</span>
+          <span>{t.activeNow}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Ticket size={17} />
           </span>
           <strong>{totalRedemptions}</strong>
-          <span>Total redemptions</span>
+          <span>{t.totalRedemptions}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <BadgePercent size={17} />
           </span>
           <strong>{scheduled}</strong>
-          <span>Scheduled</span>
+          <span>{t.scheduled}</span>
         </div>
       </div>
 
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>{editing ? `Edit ${editing.code}` : 'Create a promotion'}</h3>
+            <h3>{editing ? fill(t.editPromo, { code: editing.code }) : t.createPromo}</h3>
             {editing ? (
               <Link className="btn sm ghost" href="/admin/promotions">
-                Cancel edit
+                {t.cancelEdit}
               </Link>
             ) : (
               <Plus size={16} />
@@ -113,7 +120,7 @@ export default async function AdminPromotionsPage({
               {editing ? <input type="hidden" name="promo_id" value={editing.id} /> : null}
               <div className="form-grid">
                 <div className="field">
-                  <label htmlFor="code">Code</label>
+                  <label htmlFor="code">{c.labels.code}</label>
                   <input
                     id="code"
                     name="code"
@@ -124,14 +131,14 @@ export default async function AdminPromotionsPage({
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="kind">Kind</label>
+                  <label htmlFor="kind">{t.kind}</label>
                   <select id="kind" name="kind" defaultValue={editing?.kind ?? 'percent'}>
-                    <option value="percent">Percentage</option>
-                    <option value="fixed">Fixed amount</option>
+                    <option value="percent">{t.percentage}</option>
+                    <option value="fixed">{t.fixedAmount}</option>
                   </select>
                 </div>
                 <div className="field">
-                  <label htmlFor="value">Value</label>
+                  <label htmlFor="value">{c.labels.value}</label>
                   <input
                     id="value"
                     name="value"
@@ -144,12 +151,12 @@ export default async function AdminPromotionsPage({
                           : String(editing.value)
                         : ''
                     }
-                    placeholder="20 or 50.00"
+                    placeholder={t.valuePlaceholder}
                   />
-                  <span className="hint">Percent (1–100) or QAR amount, depending on the kind.</span>
+                  <span className="hint">{t.valueHint}</span>
                 </div>
                 <div className="field">
-                  <label htmlFor="min_subtotal">Minimum subtotal (QAR)</label>
+                  <label htmlFor="min_subtotal">{t.minSubtotal}</label>
                   <input
                     id="min_subtotal"
                     name="min_subtotal"
@@ -158,17 +165,17 @@ export default async function AdminPromotionsPage({
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="max_redemptions">Max redemptions</label>
+                  <label htmlFor="max_redemptions">{t.maxRedemptions}</label>
                   <input
                     id="max_redemptions"
                     name="max_redemptions"
                     inputMode="numeric"
                     defaultValue={editing?.max_redemptions ?? ''}
-                    placeholder="Unlimited"
+                    placeholder={t.unlimited}
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="starts_at">Starts at</label>
+                  <label htmlFor="starts_at">{t.startsAt}</label>
                   <input
                     id="starts_at"
                     name="starts_at"
@@ -177,7 +184,7 @@ export default async function AdminPromotionsPage({
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="ends_at">Ends at</label>
+                  <label htmlFor="ends_at">{t.endsAt}</label>
                   <input
                     id="ends_at"
                     name="ends_at"
@@ -186,14 +193,14 @@ export default async function AdminPromotionsPage({
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="active">Availability</label>
+                  <label htmlFor="active">{t.availability}</label>
                   <label className="checkbox-row">
-                    <input type="checkbox" name="active" defaultChecked={editing?.active ?? true} /> Active
+                    <input type="checkbox" name="active" defaultChecked={editing?.active ?? true} /> {c.status.active}
                   </label>
                 </div>
               </div>
               <button className="btn primary" type="submit">
-                {editing ? 'Save promotion' : 'Create promotion'}
+                {editing ? t.savePromotion : t.createPromotion}
               </button>
             </form>
           </div>
@@ -201,7 +208,7 @@ export default async function AdminPromotionsPage({
 
         <section className="panel">
           <div className="panel-head">
-            <h3>How promo codes work</h3>
+            <h3>{t.howItWorks}</h3>
             <BadgePercent size={16} />
           </div>
           <div className="panel-body">
@@ -209,22 +216,22 @@ export default async function AdminPromotionsPage({
               <div className="timeline-item">
                 <span className="timeline-dot" />
                 <div>
-                  <strong>Percentage</strong>
-                  <span>A value of 20 means 20% off the subtotal.</span>
+                  <strong>{t.percentage}</strong>
+                  <span>{t.percentageHint}</span>
                 </div>
               </div>
               <div className="timeline-item">
                 <span className="timeline-dot" />
                 <div>
-                  <strong>Fixed amount</strong>
-                  <span>The value is stored in fils and shown as QAR.</span>
+                  <strong>{t.fixedAmount}</strong>
+                  <span>{t.fixedHint}</span>
                 </div>
               </div>
               <div className="timeline-item">
                 <span className="timeline-dot" />
                 <div>
-                  <strong>Limits</strong>
-                  <span>Minimum subtotal, maximum redemptions and the date window are enforced at checkout.</span>
+                  <strong>{t.limits}</strong>
+                  <span>{t.limitsHint}</span>
                 </div>
               </div>
             </div>
@@ -235,46 +242,46 @@ export default async function AdminPromotionsPage({
       <form className="toolbar" action="/admin/promotions" method="get">
         <div className="search-bar">
           <Search size={17} />
-          <input name="q" defaultValue={params.q ?? ''} placeholder="Promo code…" aria-label="Search promotions" />
+          <input name="q" defaultValue={params.q ?? ''} placeholder={t.searchPlaceholder} aria-label={t.searchLabel} />
         </div>
-        <select name="status" defaultValue={status} aria-label="Promotion status">
-          <option value="">All promotions</option>
-          <option value="active">Active</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="paused">Paused</option>
-          <option value="expired">Expired</option>
+        <select name="status" defaultValue={status} aria-label={t.statusLabel}>
+          <option value="">{t.allPromotions}</option>
+          <option value="active">{c.status.active}</option>
+          <option value="scheduled">{t.scheduled}</option>
+          <option value="paused">{t.paused}</option>
+          <option value="expired">{c.status.expired}</option>
         </select>
         <button className="btn sm" type="submit">
-          Filter
+          {c.actions.filter}
         </button>
         {q || status ? (
           <Link className="btn sm ghost" href="/admin/promotions">
-            Clear
+            {c.actions.clear}
           </Link>
         ) : null}
       </form>
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Promotions</h3>
-          <span className="small muted">{promos.length} shown</span>
+          <h3>{t.title}</h3>
+          <span className="small muted">{fill(t.shown, { count: promos.length })}</span>
         </div>
         <div className="panel-body flush">
           {promos.length === 0 ? (
-            <div className="table-empty">No promotions match.</div>
+            <div className="table-empty">{t.noPromotionsMatch}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Code</th>
-                    <th>Discount</th>
-                    <th className="num">Min subtotal</th>
-                    <th className="num">Used</th>
-                    <th>Window</th>
-                    <th>State</th>
-                    <th>Created</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th>{c.labels.code}</th>
+                    <th>{t.discount}</th>
+                    <th className="num">{t.minSubtotalShort}</th>
+                    <th className="num">{t.used}</th>
+                    <th>{t.window}</th>
+                    <th>{t.state}</th>
+                    <th>{c.labels.created}</th>
+                    <th style={{ textAlign: 'right' }}>{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -288,7 +295,7 @@ export default async function AdminPromotionsPage({
                             {promo.kind === 'percent' ? `${promo.value}%` : formatMoney(Number(promo.value))}
                           </span>
                           <br />
-                          <span className="sub">{titleCase(promo.kind)}</span>
+                          <span className="sub">{titleCase(promo.kind, locale)}</span>
                         </td>
                         <td className="num">{formatMoney(Number(promo.min_subtotal_minor ?? 0))}</td>
                         <td className="num">
@@ -296,20 +303,22 @@ export default async function AdminPromotionsPage({
                           {promo.max_redemptions ? <span className="sub"> / {promo.max_redemptions}</span> : null}
                         </td>
                         <td className="small">
-                          {promo.starts_at ? formatDateTime(promo.starts_at) : 'Anytime'}
+                          {promo.starts_at ? formatDateTime(promo.starts_at, locale) : t.anytime}
                           <br />
                           <span className="sub">
-                            {promo.ends_at ? `Until ${formatDateTime(promo.ends_at)}` : 'No end date'}
+                            {promo.ends_at
+                              ? fill(t.until, { date: formatDateTime(promo.ends_at, locale) })
+                              : t.noEndDate}
                           </span>
                         </td>
                         <td>
                           <StatusTag status={state} />
                         </td>
-                        <td className="small muted">{formatDate(promo.created_at)}</td>
+                        <td className="small muted">{formatDate(promo.created_at, locale)}</td>
                         <td>
                           <div className="row-actions">
                             <Link className="btn sm" href={`/admin/promotions?edit=${promo.id}`}>
-                              Edit
+                              {c.actions.edit}
                             </Link>
                             <form action={adminTogglePromo}>
                               <input type="hidden" name="promo_id" value={promo.id} />
@@ -317,11 +326,11 @@ export default async function AdminPromotionsPage({
                               <button className="btn sm ghost" type="submit">
                                 {promo.active ? (
                                   <>
-                                    <Pause size={13} /> Pause
+                                    <Pause size={13} /> {t.pause}
                                   </>
                                 ) : (
                                   <>
-                                    <Play size={13} /> Activate
+                                    <Play size={13} /> {t.activate}
                                   </>
                                 )}
                               </button>

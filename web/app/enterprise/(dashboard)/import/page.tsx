@@ -4,6 +4,10 @@ import { requireEnterprise } from '@/lib/auth';
 import { formatDate } from '@/lib/format';
 import { importEnterpriseCodes, importEnterpriseRedemptions } from '@/lib/actions/enterprise';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
+import { fill, pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { enterpriseCopy } from '@/lib/i18n/enterprise';
+import { getLocale } from '@/lib/i18n/server';
 
 export default async function EnterpriseImportPage({
   searchParams,
@@ -20,6 +24,9 @@ export default async function EnterpriseImportPage({
   }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const t = pick(enterpriseCopy, locale).import;
+  const c = pick(common, locale);
   const ctx = await requireEnterprise();
   const canManage = ctx.role !== 'analyst';
 
@@ -43,12 +50,12 @@ export default async function EnterpriseImportPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Import"
-        title="Bring your codes in, safely."
-        description="Paste codes one per line. We check for duplicates, encrypt each code and keep only the last four digits visible."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
         actions={
           <Link className="btn sm" href="/enterprise/inventory">
-            View inventory
+            {t.viewInventory}
           </Link>
         }
       />
@@ -58,11 +65,14 @@ export default async function EnterpriseImportPage({
       {params.imported === '1' ? (
         <div className="callout" role="status" style={{ display: 'grid', gap: 4 }}>
           <strong>
-            <CheckCircle2 size={16} style={{ display: 'inline', verticalAlign: '-3px' }} /> Import complete
+            <CheckCircle2 size={16} style={{ display: 'inline', verticalAlign: '-3px' }} /> {t.importComplete}
           </strong>
           <span className="small">
-            {params.inserted ?? 0} inserted · {params.duplicates ?? 0} duplicates skipped ·{' '}
-            {params.invalid ?? 0} invalid rows.
+            {fill(t.importSummary, {
+              inserted: params.inserted ?? 0,
+              duplicates: params.duplicates ?? 0,
+              invalid: params.invalid ?? 0,
+            })}
           </span>
         </div>
       ) : null}
@@ -70,34 +80,35 @@ export default async function EnterpriseImportPage({
       {params.reconciled === '1' ? (
         <div className="callout" role="status" style={{ display: 'grid', gap: 4 }}>
           <strong>
-            <CheckCircle2 size={16} style={{ display: 'inline', verticalAlign: '-3px' }} /> Reconciliation
-            complete
+            <CheckCircle2 size={16} style={{ display: 'inline', verticalAlign: '-3px' }} /> {t.reconciliationComplete}
           </strong>
           <span className="small">
-            {params.confirmed ?? 0} codes confirmed redeemed · {params.skipped ?? 0} rows skipped.
+            {fill(t.reconciliationSummary, {
+              confirmed: params.confirmed ?? 0,
+              skipped: params.skipped ?? 0,
+            })}
           </span>
         </div>
       ) : null}
 
       {!canManage ? (
         <div className="callout warn">
-          Your role is read-only. Ask an owner or manager on your team to import codes.
+          {t.readOnly}
         </div>
       ) : null}
 
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Import gift codes</h3>
-            <span className="tag lavender">Encrypted at rest</span>
+            <h3>{t.importGiftCodes}</h3>
+            <span className="tag lavender">{t.encryptedAtRest}</span>
           </div>
           <div className="panel-body">
             {products.length === 0 ? (
               <div className="callout warn">
-                Create a reward product first. Codes need a product so the denomination and validity are
-                known.{' '}
+                {t.needsProduct}{' '}
                 <Link href="/enterprise/products/new" style={{ textDecoration: 'underline' }}>
-                  Create a product
+                  {t.createProduct}
                 </Link>
                 .
               </div>
@@ -105,10 +116,10 @@ export default async function EnterpriseImportPage({
               <form action={importEnterpriseCodes} style={{ display: 'grid', gap: 16 }}>
                 <div className="form-grid">
                   <div className="field">
-                    <label htmlFor="enterprise_product_id">Product</label>
+                    <label htmlFor="enterprise_product_id">{t.productLabel}</label>
                     <select id="enterprise_product_id" name="enterprise_product_id" required defaultValue="">
                       <option value="" disabled>
-                        Choose a product
+                        {t.chooseProduct}
                       </option>
                       {products.map((product) => (
                         <option key={product.id} value={product.id}>
@@ -118,12 +129,12 @@ export default async function EnterpriseImportPage({
                     </select>
                   </div>
                   <div className="field">
-                    <label htmlFor="filename">Batch name</label>
+                    <label htmlFor="filename">{t.batchName}</label>
                     <input id="filename" name="filename" placeholder="q1-rewards.txt" />
                   </div>
                 </div>
                 <div className="field">
-                  <label htmlFor="codes">Codes</label>
+                  <label htmlFor="codes">{t.codes}</label>
                   <textarea
                     id="codes"
                     name="codes"
@@ -132,12 +143,11 @@ export default async function EnterpriseImportPage({
                     style={{ minHeight: 180, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: '0.82rem' }}
                   />
                   <span className="hint">
-                    One code per line. Commas are ignored. Up to 2,000 codes per batch. Duplicates are
-                    skipped, not overwritten.
+                    {t.codesHint}
                   </span>
                 </div>
                 <button className="btn lavender" type="submit" disabled={!canManage}>
-                  <Upload size={16} /> Import codes
+                  <Upload size={16} /> {t.importCodes}
                 </button>
               </form>
             )}
@@ -147,53 +157,50 @@ export default async function EnterpriseImportPage({
         <div style={{ display: 'grid', gap: 20 }}>
           <section className="panel">
             <div className="panel-head">
-              <h3>How the import works</h3>
+              <h3>{t.howItWorks}</h3>
             </div>
             <div className="panel-body">
               <div className="timeline">
                 <div className="timeline-item">
                   <span className="timeline-dot" />
                   <div>
-                    <strong>1. Validate</strong>
-                    <span>Each row needs a code and a product. Invalid rows are counted, not stored.</span>
+                    <strong>{t.step1Title}</strong>
+                    <span>{t.step1Body}</span>
                   </div>
                 </div>
                 <div className="timeline-item">
                   <span className="timeline-dot" />
                   <div>
-                    <strong>2. Deduplicate</strong>
-                    <span>A fingerprint per partner stops the same code being imported twice.</span>
+                    <strong>{t.step2Title}</strong>
+                    <span>{t.step2Body}</span>
                   </div>
                 </div>
                 <div className="timeline-item">
                   <span className="timeline-dot" />
                   <div>
-                    <strong>3. Encrypt and store</strong>
-                    <span>The code is encrypted; only the last four digits are shown in the dashboard.</span>
+                    <strong>{t.step3Title}</strong>
+                    <span>{t.step3Body}</span>
                   </div>
                 </div>
               </div>
               <div className="callout info">
-                <ShieldCheck size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Nobody on
-                your team can read a full code from the dashboard. It is revealed to the recipient when it
-                is allocated.
+                <ShieldCheck size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.securityNote}
               </div>
             </div>
           </section>
 
           <section className="panel">
             <div className="panel-head">
-              <h3>Report the codes your app used</h3>
+              <h3>{t.reportUsedCodes}</h3>
               <FileSpreadsheet size={16} />
             </div>
             <div className="panel-body">
               <p className="small muted" style={{ marginBottom: 12 }}>
-                Paste the references of the codes your app has used. Each one closes, and the gift the
-                customer bought is marked used as well.
+                {t.reportUsedCodesBody}
               </p>
               <form action={importEnterpriseRedemptions} style={{ display: 'grid', gap: 12 }}>
                 <div className="field">
-                  <label htmlFor="redemptions">Inventory references</label>
+                  <label htmlFor="redemptions">{t.inventoryReferences}</label>
                   <textarea
                     id="redemptions"
                     name="redemptions"
@@ -203,13 +210,11 @@ export default async function EnterpriseImportPage({
                   />
                 </div>
                 <button className="btn" type="submit" disabled={!canManage}>
-                  Report used codes
+                  {t.reportUsedCodesAction}
                 </button>
               </form>
               <div className="callout warn" style={{ marginTop: 12 }}>
-                <Info size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> This closes the
-                codes permanently, and the customer&apos;s gift with them. Only report what your app
-                really used.
+                <Info size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.warningNote}
               </div>
             </div>
           </section>
@@ -218,32 +223,32 @@ export default async function EnterpriseImportPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Recent batches</h3>
-          <span className="small muted">Newest first</span>
+          <h3>{t.recentBatches}</h3>
+          <span className="small muted">{t.newestFirst}</span>
         </div>
         <div className="panel-body flush">
           {batches.length === 0 ? (
-            <div className="table-empty">No imports yet.</div>
+            <div className="table-empty">{t.noImportsYet}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Batch</th>
-                    <th>Source</th>
-                    <th>Status</th>
-                    <th className="num">Rows</th>
-                    <th className="num">Inserted</th>
-                    <th className="num">Duplicates</th>
-                    <th className="num">Invalid</th>
-                    <th>Started</th>
-                    <th>Completed</th>
+                    <th>{t.batch}</th>
+                    <th>{t.source}</th>
+                    <th>{c.labels.status}</th>
+                    <th className="num">{t.rows}</th>
+                    <th className="num">{t.inserted}</th>
+                    <th className="num">{t.duplicates}</th>
+                    <th className="num">{t.invalid}</th>
+                    <th>{t.started}</th>
+                    <th>{t.completed}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {batches.map((batch) => (
                     <tr key={batch.id}>
-                      <td className="strong">{batch.filename ?? 'Manual import'}</td>
+                      <td className="strong">{batch.filename ?? t.manualImport}</td>
                       <td className="small muted">{batch.source}</td>
                       <td>
                         <StatusTag status={batch.status} />
@@ -252,8 +257,8 @@ export default async function EnterpriseImportPage({
                       <td className="num">{batch.inserted_rows}</td>
                       <td className="num">{batch.duplicate_rows}</td>
                       <td className="num">{batch.invalid_rows}</td>
-                      <td className="small muted">{formatDate(batch.created_at)}</td>
-                      <td className="small muted">{batch.completed_at ? formatDate(batch.completed_at) : '—'}</td>
+                      <td className="small muted">{formatDate(batch.created_at, locale)}</td>
+                      <td className="small muted">{batch.completed_at ? formatDate(batch.completed_at, locale) : '—'}</td>
                     </tr>
                   ))}
                 </tbody>

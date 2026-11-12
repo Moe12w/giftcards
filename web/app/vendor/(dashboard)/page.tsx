@@ -14,16 +14,24 @@ import {
   Users,
 } from 'lucide-react';
 import { requireVendor } from '@/lib/auth';
-import { formatDate, formatDateTime } from '@/lib/format';
+import { formatDate, formatDateTime, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
 import { HelpButton } from '@/components/HelpButton';
 import { fulfilmentLabel } from '@/lib/catalog';
+import { fill, pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
+import { getLocale } from '@/lib/i18n/server';
+import { vendorCopy } from '@/lib/i18n/vendor';
 
 export default async function VendorOverviewPage() {
   const ctx = await requireVendor();
   const supabase = ctx.supabase;
   const vendor = ctx.vendor;
+  const locale = await getLocale();
+  const copy = pick(vendorCopy, locale);
+  const t = copy.overview;
+  const c = pick(common, locale);
 
   const [itemsResult, vouchersResult, redemptionsResult, redemptionCount, productsResult, locationsCount, outstandingResult] =
     await Promise.all([
@@ -89,7 +97,7 @@ export default async function VendorOverviewPage() {
   const topProducts = new Map<string, number>();
   for (const item of paidItems) {
     const product = Array.isArray(item.products) ? item.products[0] : item.products;
-    const name = product?.title ?? 'Gift';
+    const name = product?.title ?? t.gift;
     topProducts.set(name, (topProducts.get(name) ?? 0) + Number(item.total_minor ?? 0));
   }
   const top = [...topProducts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -97,27 +105,27 @@ export default async function VendorOverviewPage() {
 
   const publishedCount = products.filter((product) => product.status === 'published').length;
   const checklist = [
-    { label: 'Add a description', done: Boolean(vendor.description) },
-    { label: 'Add a logo', done: Boolean(vendor.logo_url) },
-    { label: 'Add a location', done: (locationsCount.count ?? 0) > 0 },
-    { label: 'Publish your first gift', done: publishedCount > 0 },
+    { label: t.addDescription, done: Boolean(vendor.description) },
+    { label: t.addLogo, done: Boolean(vendor.logo_url) },
+    { label: t.addLocation, done: (locationsCount.count ?? 0) > 0 },
+    { label: t.publishFirstGift, done: publishedCount > 0 },
   ];
   const remainingChecks = checklist.filter((item) => !item.done).length;
 
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Overview"
-        title={`Good to see you, ${ctx.profile?.full_name?.split(' ')[0] ?? 'there'}.`}
-        description={`Here is how ${vendor.name} is doing on Giftly. Sales and redemptions update as they happen.`}
+        eyebrow={t.eyebrow}
+        title={fill(t.greeting, { name: ctx.profile?.full_name?.split(' ')[0] ?? t.greetingFallback })}
+        description={fill(t.intro, { vendor: vendor.name })}
         actions={
           <>
             <HelpButton step="lifecycle" />
             <Link className="btn sm" href="/vendor/products/new">
-              <Plus size={15} /> New gift
+              <Plus size={15} /> {t.newGift}
             </Link>
             <Link className="btn sm primary" href="/vendor/redeem">
-              <ScanLine size={15} /> Redeem a code
+              <ScanLine size={15} /> {t.redeemCode}
             </Link>
           </>
         }
@@ -127,10 +135,10 @@ export default async function VendorOverviewPage() {
         <div className="callout warn" style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <AlertCircle size={18} style={{ flex: '0 0 auto', marginTop: 2 }} />
           <span>
-            Your vendor account is <strong>{vendor.status}</strong>. You can prepare gifts now; they
-            go live once our team approves the application.{' '}
+            {t.accountStatusBefore} <strong>{titleCase(vendor.status, locale)}</strong>
+            {t.accountStatusAfter}{' '}
             <Link href="/vendor/onboarding" style={{ textDecoration: 'underline' }}>
-              See application status
+              {t.seeApplicationStatus}
             </Link>
             .
           </span>
@@ -139,30 +147,30 @@ export default async function VendorOverviewPage() {
 
       <div className="kpi-grid">
         <Kpi
-          label="Gross sales"
+          label={t.grossSales}
           value={formatMoney(gross)}
-          hint={`${orderRefs.size} paid ${orderRefs.size === 1 ? 'order' : 'orders'}`}
+          hint={`${orderRefs.size} ${orderRefs.size === 1 ? t.paidOrder : t.paidOrders}`}
           icon={<Banknote size={17} />}
           tone="mint"
         />
         <Kpi
-          label="Your share"
+          label={t.yourShare}
           value={formatMoney(share)}
-          hint={`Commission ${formatMoney(gross - share)}`}
+          hint={fill(t.commission, { amount: formatMoney(gross - share) })}
           icon={<TrendingUp size={17} />}
           tone="lavender"
         />
         <Kpi
-          label="Active vouchers"
+          label={t.activeVouchers}
           value={String(activeVouchers)}
-          hint={`${vouchers.length} issued in total`}
+          hint={fill(t.issuedInTotal, { count: vouchers.length })}
           icon={<Ticket size={17} />}
           tone="gold"
         />
         <Kpi
-          label="Outstanding liability"
+          label={t.outstandingLiability}
           value={formatMoney(outstanding)}
-          hint={`${redemptionCount.count ?? 0} redemptions recorded`}
+          hint={fill(t.redemptionsRecorded, { count: redemptionCount.count ?? 0 })}
           icon={<ScanLine size={17} />}
           tone="coral"
         />
@@ -171,27 +179,25 @@ export default async function VendorOverviewPage() {
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Recent orders</h3>
+            <h3>{t.recentOrders}</h3>
             <Link className="small" href="/vendor/orders" style={{ fontWeight: 800 }}>
-              See all <ArrowRight size={13} style={{ display: 'inline', verticalAlign: '-2px' }} />
+              {t.seeAll} <ArrowRight size={13} style={{ display: 'inline', verticalAlign: '-2px' }} />
             </Link>
           </div>
           <div className="panel-body flush">
             {paidItems.length === 0 ? (
-              <div className="table-empty">
-                No paid orders yet. Share your public vendor page to get the first one.
-              </div>
+              <div className="table-empty">{t.noPaidOrders}</div>
             ) : (
               <div className="table-wrap">
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Order</th>
-                      <th>Gift</th>
-                      <th>Recipient</th>
-                      <th className="num">Total</th>
-                      <th className="num">Your share</th>
-                      <th>Date</th>
+                      <th>{t.order}</th>
+                      <th>{t.gift}</th>
+                      <th>{t.recipient}</th>
+                      <th className="num">{c.labels.total}</th>
+                      <th className="num">{t.yourShare}</th>
+                      <th>{c.labels.date}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -203,11 +209,11 @@ export default async function VendorOverviewPage() {
                           <td>
                             <span className="strong">{order?.order_ref ?? '—'}</span>
                           </td>
-                          <td>{product?.title ?? 'Gift'}</td>
+                          <td>{product?.title ?? t.gift}</td>
                           <td>{order?.recipient_name ?? '—'}</td>
                           <td className="num">{formatMoney(Number(item.total_minor ?? 0))}</td>
                           <td className="num strong">{formatMoney(Number(item.vendor_share_minor ?? 0))}</td>
-                          <td className="small muted">{formatDate(item.created_at)}</td>
+                          <td className="small muted">{formatDate(item.created_at, locale)}</td>
                         </tr>
                       );
                     })}
@@ -220,14 +226,14 @@ export default async function VendorOverviewPage() {
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Top gifts</h3>
+            <h3>{t.topGifts}</h3>
             <Link className="small" href="/vendor/analytics" style={{ fontWeight: 800 }}>
-              Analytics
+              {copy.nav.analytics}
             </Link>
           </div>
           <div className="panel-body">
             {top.length === 0 ? (
-              <p className="small muted">No sales yet. Your first order will show up here.</p>
+              <p className="small muted">{t.noSalesYet}</p>
             ) : (
               <div className="split-list">
                 {top.map(([name, value]) => (
@@ -250,14 +256,14 @@ export default async function VendorOverviewPage() {
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Latest redemptions</h3>
+            <h3>{t.latestRedemptions}</h3>
             <Link className="small" href="/vendor/vouchers" style={{ fontWeight: 800 }}>
-              Vouchers
+              {copy.nav.vouchers}
             </Link>
           </div>
           <div className="panel-body">
             {redemptions.length === 0 ? (
-              <p className="small muted">No redemptions yet. Open Redeem when a customer visits.</p>
+              <p className="small muted">{t.noRedemptionsYet}</p>
             ) : (
               <div className="timeline">
                 {redemptions.map((redemption) => {
@@ -270,14 +276,15 @@ export default async function VendorOverviewPage() {
                       <div>
                         <strong>
                           {redemption.kind === 'session'
-                            ? `${redemption.sessions ?? 1} session${(redemption.sessions ?? 1) === 1 ? '' : 's'} redeemed`
+                            ? `${redemption.sessions ?? 1} ${(redemption.sessions ?? 1) === 1 ? t.sessionRedeemed : t.sessionsRedeemed}`
                             : redemption.kind === 'monetary'
-                              ? `${formatMoney(Number(redemption.amount_minor ?? 0))} redeemed`
-                              : 'Code redeemed'}
+                              ? `${formatMoney(Number(redemption.amount_minor ?? 0))} ${t.amountRedeemed}`
+                              : t.codeRedeemed}
                         </strong>
                         <span>
                           {voucher?.voucher_code ?? redemption.reference} ·{' '}
-                          {voucher?.recipient_name ?? 'Customer'} · {formatDateTime(redemption.occurred_at)}
+                          {voucher?.recipient_name ?? t.customer} ·{' '}
+                          {formatDateTime(redemption.occurred_at, locale)}
                         </span>
                       </div>
                     </div>
@@ -290,18 +297,16 @@ export default async function VendorOverviewPage() {
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Get set up</h3>
+            <h3>{t.getSetUp}</h3>
             <span className="tag neutral">{4 - remainingChecks}/4</span>
           </div>
           <div className="panel-body">
             {remainingChecks === 0 ? (
               <div style={{ display: 'grid', gap: 8 }}>
                 <span className="tag success">
-                  <CheckCircle2 size={13} /> Profile complete
+                  <CheckCircle2 size={13} /> {t.profileComplete}
                 </span>
-                <p className="small muted">
-                  Your storefront is ready. Keep your offers fresh and respond to bookings quickly.
-                </p>
+                <p className="small muted">{t.storefrontReady}</p>
               </div>
             ) : (
               <div className="split-list">
@@ -311,17 +316,17 @@ export default async function VendorOverviewPage() {
                       {item.done ? <CheckCircle2 size={15} color="var(--success)" /> : <AlertCircle size={15} />}{' '}
                       {item.label}
                     </span>
-                    <span className="v small">{item.done ? 'Done' : 'To do'}</span>
+                    <span className="v small">{item.done ? t.done : t.toDo}</span>
                   </div>
                 ))}
               </div>
             )}
             <div className="btn-row" style={{ marginTop: 16 }}>
               <Link className="btn sm" href="/vendor/onboarding">
-                Onboarding
+                {copy.nav.onboarding}
               </Link>
               <Link className="btn sm" href="/vendor/settings">
-                Settings
+                {copy.nav.settings}
               </Link>
             </div>
           </div>
@@ -331,9 +336,9 @@ export default async function VendorOverviewPage() {
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Your gifts</h3>
+            <h3>{t.yourGifts}</h3>
             <Link className="small" href="/vendor/products" style={{ fontWeight: 800 }}>
-              Manage
+              {t.manage}
             </Link>
           </div>
           <div className="panel-body">
@@ -342,10 +347,10 @@ export default async function VendorOverviewPage() {
                 <span className="icon-tile mint">
                   <Package size={20} />
                 </span>
-                <h3>No gifts yet</h3>
-                <p>Create a gift card or an experience package to start selling.</p>
+                <h3>{t.noGiftsYet}</h3>
+                <p>{t.createGiftStart}</p>
                 <Link className="btn sm primary" href="/vendor/products/new">
-                  <Plus size={14} /> Create a gift
+                  <Plus size={14} /> {t.createGift}
                 </Link>
               </div>
             ) : (
@@ -355,7 +360,7 @@ export default async function VendorOverviewPage() {
                     <span className="k">
                       <strong style={{ color: 'var(--ink)' }}>{product.title}</strong>
                       <br />
-                      <span className="small muted">{fulfilmentLabel(product.fulfilment_type)}</span>
+                      <span className="small muted">{fulfilmentLabel(product.fulfilment_type, locale)}</span>
                     </span>
                     <span className="v">
                       <StatusTag status={product.status} />
@@ -369,7 +374,7 @@ export default async function VendorOverviewPage() {
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Quick actions</h3>
+            <h3>{t.quickActions}</h3>
           </div>
           <div className="panel-body">
             <div className="quick-grid">
@@ -377,30 +382,30 @@ export default async function VendorOverviewPage() {
                 <span className="icon-tile mint">
                   <Plus size={18} />
                 </span>
-                New gift
+                {t.newGift}
               </Link>
               <Link className="quick-link" href="/vendor/redeem">
                 <span className="icon-tile gold">
                   <ScanLine size={18} />
                 </span>
-                Scan a gift
+                {t.scanGift}
               </Link>
               <Link className="quick-link" href="/vendor/orders">
                 <span className="icon-tile lavender">
                   <ShoppingBag size={18} />
                 </span>
-                Orders
+                {copy.nav.orders}
               </Link>
               <Link className="quick-link" href="/vendor/staff">
                 <span className="icon-tile coral">
                   <Users size={18} />
                 </span>
-                Team
+                {copy.nav.team}
               </Link>
             </div>
             <div className="callout info" style={{ marginTop: 16 }}>
-              <Sparkles size={15} style={{ display: 'inline', verticalAlign: '-2px' }} /> Experience
-              gifts use vendor-set packages. Customers choose a package, not an amount.
+              <Sparkles size={15} style={{ display: 'inline', verticalAlign: '-2px' }} />{' '}
+              {t.experienceNote}
             </div>
           </div>
         </section>

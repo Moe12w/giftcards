@@ -17,6 +17,10 @@ import { adminUpdatePartner } from '@/lib/actions/admin';
 import { formatDate, formatDateTime, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function AdminEnterpriseDetailPage({
   params,
@@ -29,6 +33,9 @@ export default async function AdminEnterpriseDetailPage({
   const query = await searchParams;
   const ctx = await requireAdmin();
   const supabase = ctx.supabase;
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).enterpriseDetail;
+  const c = pick(common, locale);
 
   const { data: partner, error: partnerError } = await supabase
     .from('enterprise_partners')
@@ -102,26 +109,29 @@ export default async function AdminEnterpriseDetailPage({
   return (
     <div className="dash-content">
       <Link className="back-link" href="/admin/enterprise">
-        <ArrowLeft size={15} /> Back to enterprise partners
+        <ArrowLeft size={15} /> {t.backToPartners}
       </Link>
 
       <PageHead
-        eyebrow="Enterprise partner"
+        eyebrow={t.eyebrow}
         title={partner.name}
-        description={[partner.industry, partner.contact_name].filter(Boolean).join(' · ') || 'Corporate rewards partner.'}
+        description={
+          [partner.industry, partner.contact_name].filter(Boolean).join(' · ') ||
+          t.corporateRewardsPartner
+        }
         actions={
           <>
             <StatusTag status={partner.status} />
             {partner.contact_email ? (
               <a className="btn sm" href={`mailto:${partner.contact_email}`}>
-                <Mail size={14} /> Contact
+                <Mail size={14} /> {t.contact}
               </a>
             ) : null}
           </>
         }
       />
 
-      <Notice error={query.error ?? error?.message} success={query.saved === '1' ? 'Partner updated.' : null} />
+      <Notice error={query.error ?? error?.message} success={query.saved === '1' ? t.saved : null} />
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -129,50 +139,50 @@ export default async function AdminEnterpriseDetailPage({
             <Package size={17} />
           </span>
           <strong>{products.filter((product) => product.is_active).length}</strong>
-          <span>{products.length} products total</span>
+          <span>{fill(t.productsTotal, { count: products.length })}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <Upload size={17} />
           </span>
           <strong>{available.length}</strong>
-          <span>{formatMoney(availableValue)} available face value</span>
+          <span>{fill(t.availableFaceValue, { amount: formatMoney(availableValue) })}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <ShieldCheck size={17} />
           </span>
           <strong>{allocated.length}</strong>
-          <span>Allocated or delivered</span>
+          <span>{t.allocatedOrDelivered}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <CheckCircle2 size={17} />
           </span>
           <strong>{redeemed.length}</strong>
-          <span>Confirmed redeemed</span>
+          <span>{t.confirmedRedeemed}</span>
         </div>
       </div>
 
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Company details</h3>
+            <h3>{t.companyDetails}</h3>
             <Building2 size={16} />
           </div>
           <div className="panel-body">
             <div className="split-list">
               <div>
-                <span className="k">Company name</span>
+                <span className="k">{t.companyName}</span>
                 <span className="v">{partner.name}</span>
               </div>
               <div>
-                <span className="k">Partner slug</span>
+                <span className="k">{t.partnerSlug}</span>
                 <span className="v small mono">{partner.slug}</span>
               </div>
               <div>
                 <span className="k">
-                  <Globe size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Website
+                  <Globe size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.website}
                 </span>
                 <span className="v small">
                   {partner.website ? (
@@ -185,35 +195,35 @@ export default async function AdminEnterpriseDetailPage({
                 </span>
               </div>
               <div>
-                <span className="k">Industry</span>
+                <span className="k">{t.industry}</span>
                 <span className="v small">{partner.industry ?? '—'}</span>
               </div>
               <div>
-                <span className="k">Expected volume</span>
+                <span className="k">{t.expectedVolume}</span>
                 <span className="v small">{partner.expected_volume ?? '—'}</span>
               </div>
               <div>
-                <span className="k">Primary contact</span>
+                <span className="k">{t.primaryContact}</span>
                 <span className="v small">{partner.contact_name ?? '—'}</span>
               </div>
               <div>
                 <span className="k">
-                  <Mail size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Contact email
+                  <Mail size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.contactEmail}
                 </span>
                 <span className="v small">{partner.contact_email ?? '—'}</span>
               </div>
               <div>
                 <span className="k">
-                  <Phone size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Contact phone
+                  <Phone size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.contactPhone}
                 </span>
                 <span className="v small">{partner.contact_phone ?? '—'}</span>
               </div>
               <div>
-                <span className="k">Partner since</span>
-                <span className="v small">{formatDateTime(partner.created_at)}</span>
+                <span className="k">{t.partnerSince}</span>
+                <span className="v small">{formatDateTime(partner.created_at, locale)}</span>
               </div>
               <div>
-                <span className="k">Paid order value</span>
+                <span className="k">{t.paidOrderValue}</span>
                 <span className="v">{formatMoney(soldValue)}</span>
               </div>
             </div>
@@ -228,7 +238,7 @@ export default async function AdminEnterpriseDetailPage({
         <div style={{ display: 'grid', gap: 20 }}>
           <section className="panel">
             <div className="panel-head">
-              <h3>Partner status</h3>
+              <h3>{t.partnerStatus}</h3>
               <StatusTag status={partner.status} />
             </div>
             <div className="panel-body">
@@ -236,19 +246,18 @@ export default async function AdminEnterpriseDetailPage({
                 <input type="hidden" name="partner_id" value={partner.id} />
                 <input type="hidden" name="return_to" value={`/admin/enterprise/${partner.id}`} />
                 <div className="field">
-                  <label htmlFor="status">Status</label>
+                  <label htmlFor="status">{c.labels.status}</label>
                   <select id="status" name="status" defaultValue={partner.status}>
-                    <option value="draft">Draft</option>
-                    <option value="active">Active</option>
-                    <option value="suspended">Suspended</option>
+                    <option value="draft">{c.status.draft}</option>
+                    <option value="active">{c.status.active}</option>
+                    <option value="suspended">{c.status.suspended}</option>
                   </select>
                 </div>
                 <button className="btn primary" type="submit">
-                  Save status
+                  {t.saveStatus}
                 </button>
                 <p className="small muted">
-                  Active partners can sign in and allocate codes. Suspending blocks portal access without
-                  deleting inventory.
+                  {t.activePartnersNote}
                 </p>
               </form>
             </div>
@@ -256,29 +265,29 @@ export default async function AdminEnterpriseDetailPage({
 
           <section className="panel">
             <div className="panel-head">
-              <h3>Inventory position</h3>
+              <h3>{t.inventoryPosition}</h3>
               <Upload size={16} />
             </div>
             <div className="panel-body">
               <div className="split-list">
                 <div>
-                  <span className="k">Available codes</span>
+                  <span className="k">{t.availableCodes}</span>
                   <span className="v">{available.length}</span>
                 </div>
                 <div>
-                  <span className="k">Available face value</span>
+                  <span className="k">{t.availableFaceValueLabel}</span>
                   <span className="v">{formatMoney(availableValue)}</span>
                 </div>
                 <div>
-                  <span className="k">Allocated</span>
+                  <span className="k">{t.allocated}</span>
                   <span className="v">{allocated.length}</span>
                 </div>
                 <div>
-                  <span className="k">Redeemed</span>
+                  <span className="k">{t.redeemed}</span>
                   <span className="v">{redeemed.length}</span>
                 </div>
                 <div>
-                  <span className="k">Import batches</span>
+                  <span className="k">{t.importBatches}</span>
                   <span className="v">{batches.length}</span>
                 </div>
               </div>
@@ -289,27 +298,27 @@ export default async function AdminEnterpriseDetailPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Reward products</h3>
-          <span className="small muted">{products.length} products</span>
+          <h3>{t.rewardProducts}</h3>
+          <span className="small muted">{fill(t.productsCount, { count: products.length })}</span>
         </div>
         <div className="panel-body flush">
           {products.length === 0 ? (
-            <div className="table-empty">No products yet.</div>
+            <div className="table-empty">{t.noProductsYet}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Product</th>
-                    <th>Reference</th>
-                    <th className="num">Face value</th>
-                    <th className="num">Selling price</th>
-                    <th className="num">Commission</th>
-                    <th className="num">Available</th>
-                    <th className="num">Allocated</th>
-                    <th className="num">Redeemed</th>
-                    <th>Status</th>
-                    <th>Created</th>
+                    <th>{t.product}</th>
+                    <th>{c.labels.reference}</th>
+                    <th className="num">{t.faceValue}</th>
+                    <th className="num">{t.sellingPrice}</th>
+                    <th className="num">{t.commission}</th>
+                    <th className="num">{t.available}</th>
+                    <th className="num">{t.allocated}</th>
+                    <th className="num">{t.redeemed}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{c.labels.created}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -328,7 +337,7 @@ export default async function AdminEnterpriseDetailPage({
                         <td>
                           <StatusTag status={product.is_active ? 'active' : 'draft'} />
                         </td>
-                        <td className="small muted">{formatDate(product.created_at)}</td>
+                        <td className="small muted">{formatDate(product.created_at, locale)}</td>
                       </tr>
                     );
                   })}
@@ -342,30 +351,30 @@ export default async function AdminEnterpriseDetailPage({
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Recent imports</h3>
-            <span className="small muted">Latest 10 batches</span>
+            <h3>{t.recentImports}</h3>
+            <span className="small muted">{t.latestBatches}</span>
           </div>
           <div className="panel-body flush">
             {batches.length === 0 ? (
-              <div className="table-empty">No import batches.</div>
+              <div className="table-empty">{t.noImportBatches}</div>
             ) : (
               <div className="table-wrap">
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Batch</th>
-                      <th>Status</th>
-                      <th className="num">Rows</th>
-                      <th className="num">Inserted</th>
-                      <th className="num">Duplicates</th>
-                      <th className="num">Invalid</th>
-                      <th>Date</th>
+                      <th>{t.batch}</th>
+                      <th>{c.labels.status}</th>
+                      <th className="num">{t.rows}</th>
+                      <th className="num">{t.inserted}</th>
+                      <th className="num">{t.duplicates}</th>
+                      <th className="num">{t.invalid}</th>
+                      <th>{c.labels.date}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {batches.map((batch) => (
                       <tr key={batch.id}>
-                        <td className="strong">{batch.filename ?? 'Manual import'}</td>
+                        <td className="strong">{batch.filename ?? t.manualImport}</td>
                         <td>
                           <StatusTag status={batch.status} />
                         </td>
@@ -373,7 +382,7 @@ export default async function AdminEnterpriseDetailPage({
                         <td className="num">{batch.inserted_rows}</td>
                         <td className="num">{batch.duplicate_rows}</td>
                         <td className="num">{batch.invalid_rows}</td>
-                        <td className="small muted">{formatDate(batch.created_at)}</td>
+                        <td className="small muted">{formatDate(batch.created_at, locale)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -385,21 +394,21 @@ export default async function AdminEnterpriseDetailPage({
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Team</h3>
+            <h3>{t.team}</h3>
             <Users size={16} />
           </div>
           <div className="panel-body flush">
             {members.length === 0 ? (
-              <div className="table-empty">No team members.</div>
+              <div className="table-empty">{t.noTeamMembers}</div>
             ) : (
               <div className="table-wrap">
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Member</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                      <th>Since</th>
+                      <th>{t.member}</th>
+                      <th>{t.role}</th>
+                      <th>{c.labels.status}</th>
+                      <th>{t.since}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -413,17 +422,17 @@ export default async function AdminEnterpriseDetailPage({
                                 {initials(profile?.full_name ?? profile?.email ?? '?')}
                               </span>
                               <span>
-                                <span className="strong">{profile?.full_name ?? 'Team member'}</span>
+                                <span className="strong">{profile?.full_name ?? t.teamMember}</span>
                                 <br />
                                 <span className="sub">{profile?.email ?? '—'}</span>
                               </span>
                             </span>
                           </td>
-                          <td>{titleCase(member.role)}</td>
+                          <td>{titleCase(member.role, locale)}</td>
                           <td>
                             <StatusTag status={member.active ? 'active' : 'suspended'} />
                           </td>
-                          <td className="small muted">{formatDate(member.created_at)}</td>
+                          <td className="small muted">{formatDate(member.created_at, locale)}</td>
                         </tr>
                       );
                     })}
@@ -437,23 +446,23 @@ export default async function AdminEnterpriseDetailPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Paid orders</h3>
-          <span className="small muted">{items.length} items</span>
+          <h3>{t.paidOrders}</h3>
+          <span className="small muted">{fill(t.itemsCount, { count: items.length })}</span>
         </div>
         <div className="panel-body flush">
           {items.length === 0 ? (
-            <div className="table-empty">No paid orders for this partner yet.</div>
+            <div className="table-empty">{t.noPaidOrders}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Order</th>
-                    <th>Product</th>
-                    <th>Recipient</th>
-                    <th className="num">Value</th>
-                    <th>Status</th>
-                    <th>Date</th>
+                    <th>{t.order}</th>
+                    <th>{t.product}</th>
+                    <th>{t.recipient}</th>
+                    <th className="num">{c.labels.value}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{c.labels.date}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -471,13 +480,13 @@ export default async function AdminEnterpriseDetailPage({
                             '—'
                           )}
                         </td>
-                        <td>{product?.name ?? 'Product'}</td>
+                        <td>{product?.name ?? t.product}</td>
                         <td>{order?.recipient_name ?? '—'}</td>
                         <td className="num">{formatMoney(Number(item.total_minor ?? 0))}</td>
                         <td>
                           <StatusTag status={order?.status ?? 'pending'} />
                         </td>
-                        <td className="small muted">{formatDate(item.created_at)}</td>
+                        <td className="small muted">{formatDate(item.created_at, locale)}</td>
                       </tr>
                     );
                   })}

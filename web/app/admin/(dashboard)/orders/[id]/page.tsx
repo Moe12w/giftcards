@@ -18,6 +18,10 @@ import { formatDate, formatDateTime, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { fulfilmentLabel } from '@/lib/catalog';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function AdminOrderDetailPage({
   params,
@@ -30,6 +34,9 @@ export default async function AdminOrderDetailPage({
   const query = await searchParams;
   const ctx = await requireAdmin();
   const supabase = ctx.supabase;
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).orderDetail;
+  const c = pick(common, locale);
 
   const { data: order, error: orderError } = await supabase
     .from('orders')
@@ -73,22 +80,22 @@ export default async function AdminOrderDetailPage({
   return (
     <div className="dash-content">
       <Link className="back-link" href="/admin/orders">
-        <ArrowLeft size={15} /> Back to orders
+        <ArrowLeft size={15} /> {t.backToOrders}
       </Link>
 
       <PageHead
-        eyebrow="Order"
+        eyebrow={t.eyebrow}
         title={order.order_ref}
-        description={`${formatDateTime(order.created_at)} · ${itemCount} ${itemCount === 1 ? 'item' : 'items'} · ${vouchers.length} ${vouchers.length === 1 ? 'voucher' : 'vouchers'}`}
+        description={`${formatDateTime(order.created_at, locale)} · ${itemCount} ${itemCount === 1 ? t.itemOne : t.items} · ${vouchers.length} ${vouchers.length === 1 ? t.voucherOne : t.vouchers}`}
         actions={
           <>
             <StatusTag status={order.status} />
-            <span className="tag neutral">{titleCase(order.payment_status ?? '—')}</span>
+            <span className="tag neutral">{titleCase(order.payment_status ?? '—', locale)}</span>
           </>
         }
       />
 
-      <Notice error={query.error ?? error?.message} success={query.saved === '1' ? 'Order updated.' : null} />
+      <Notice error={query.error ?? error?.message} success={query.saved === '1' ? t.saved : null} />
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -96,71 +103,71 @@ export default async function AdminOrderDetailPage({
             <CreditCard size={17} />
           </span>
           <strong>{formatMoney(Number(order.total_minor ?? 0))}</strong>
-          <span>Order total</span>
+          <span>{t.orderTotal}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <ShoppingBag size={17} />
           </span>
           <strong>{formatMoney(Number(order.subtotal_minor ?? 0))}</strong>
-          <span>Subtotal</span>
+          <span>{t.subtotal}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <Ticket size={17} />
           </span>
           <strong>{formatMoney(Number(order.discount_minor ?? 0))}</strong>
-          <span>Discount</span>
+          <span>{t.discount}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Truck size={17} />
           </span>
-          <strong>{titleCase(order.delivery_method ?? '—')}</strong>
-          <span>{order.scheduled_for ? formatDateTime(order.scheduled_for) : 'Immediate delivery'}</span>
+          <strong>{titleCase(order.delivery_method ?? '—', locale)}</strong>
+          <span>{order.scheduled_for ? formatDateTime(order.scheduled_for, locale) : t.immediateDelivery}</span>
         </div>
       </div>
 
       <div className="dash-grid">
         <section className="panel">
           <div className="panel-head">
-            <h3>Buyer & recipient</h3>
+            <h3>{t.buyerAndRecipient}</h3>
             <Mail size={16} />
           </div>
           <div className="panel-body">
             <div className="split-list">
               <div>
-                <span className="k">Buyer</span>
+                <span className="k">{t.buyer}</span>
                 <span className="v">
-                  {buyer?.full_name ?? order.sender_name ?? 'Guest'}
+                  {buyer?.full_name ?? order.sender_name ?? t.guest}
                   {buyer?.email ? <span className="small muted"> · {buyer.email}</span> : null}
                 </span>
               </div>
               <div>
                 <span className="k">
-                  <Phone size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Buyer phone
+                  <Phone size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.buyerPhone}
                 </span>
                 <span className="v small">{buyer?.phone ?? '—'}</span>
               </div>
               <div>
-                <span className="k">Recipient</span>
+                <span className="k">{t.recipient}</span>
                 <span className="v">{order.recipient_name ?? '—'}</span>
               </div>
               <div>
-                <span className="k">Recipient email</span>
+                <span className="k">{t.recipientEmail}</span>
                 <span className="v small">{order.recipient_email ?? '—'}</span>
               </div>
               <div>
-                <span className="k">Recipient phone</span>
+                <span className="k">{t.recipientPhone}</span>
                 <span className="v small">{order.recipient_phone ?? '—'}</span>
               </div>
               <div>
-                <span className="k">Payment reference</span>
+                <span className="k">{t.paymentReference}</span>
                 <span className="v small mono">{order.payment_reference ?? '—'}</span>
               </div>
               <div>
-                <span className="k">Paid at</span>
-                <span className="v small">{order.paid_at ? formatDateTime(order.paid_at) : 'Not paid'}</span>
+                <span className="k">{t.paidAt}</span>
+                <span className="v small">{order.paid_at ? formatDateTime(order.paid_at, locale) : t.notPaid}</span>
               </div>
             </div>
             {order.gift_message ? (
@@ -174,7 +181,7 @@ export default async function AdminOrderDetailPage({
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Order status</h3>
+            <h3>{t.orderStatus}</h3>
             <StatusTag status={order.status} />
           </div>
           <div className="panel-body">
@@ -182,20 +189,19 @@ export default async function AdminOrderDetailPage({
               <input type="hidden" name="order_id" value={order.id} />
               <input type="hidden" name="return_to" value={`/admin/orders/${order.id}`} />
               <div className="field">
-                <label htmlFor="status">Status</label>
+                <label htmlFor="status">{c.labels.status}</label>
                 <select id="status" name="status" defaultValue={order.status}>
-                  <option value="pending">Pending</option>
-                  <option value="paid">Paid</option>
-                  <option value="failed">Failed</option>
-                  <option value="refunded">Refunded</option>
+                  <option value="pending">{c.status.pending}</option>
+                  <option value="paid">{c.status.paid}</option>
+                  <option value="failed">{c.status.failed}</option>
+                  <option value="refunded">{t.refunded}</option>
                 </select>
               </div>
               <button className="btn primary" type="submit">
-                Save status
+                {t.saveStatus}
               </button>
               <p className="small muted">
-                Marking an order paid sets the payment status and paid date. Refunding records the
-                decision but does not move money — payments are handled outside this dashboard.
+                {t.markingPaidNote}
               </p>
             </form>
 
@@ -203,15 +209,15 @@ export default async function AdminOrderDetailPage({
 
             <div className="split-list">
               <div>
-                <span className="k">Order ID</span>
+                <span className="k">{t.orderId}</span>
                 <span className="v mono small">{order.id}</span>
               </div>
               <div>
-                <span className="k">Currency</span>
+                <span className="k">{t.currency}</span>
                 <span className="v">{order.currency ?? 'QAR'}</span>
               </div>
               <div>
-                <span className="k">Fee</span>
+                <span className="k">{t.fee}</span>
                 <span className="v">{formatMoney(Number(order.fee_minor ?? 0))}</span>
               </div>
             </div>
@@ -221,26 +227,26 @@ export default async function AdminOrderDetailPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Items</h3>
-          <span className="small muted">{items.length} line items</span>
+          <h3>{t.items}</h3>
+          <span className="small muted">{fill(t.lineItems, { count: items.length })}</span>
         </div>
         <div className="panel-body flush">
           {items.length === 0 ? (
-            <div className="table-empty">No line items on this order.</div>
+            <div className="table-empty">{t.noLineItems}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Gift</th>
-                    <th>Vendor</th>
-                    <th>Package</th>
-                    <th className="num">Qty</th>
-                    <th className="num">Unit price</th>
-                    <th className="num">Total</th>
-                    <th className="num">Commission</th>
-                    <th className="num">Vendor share</th>
-                    <th>Recipient</th>
+                    <th>{t.gift}</th>
+                    <th>{t.vendor}</th>
+                    <th>{t.package}</th>
+                    <th className="num">{t.qty}</th>
+                    <th className="num">{t.unitPrice}</th>
+                    <th className="num">{c.labels.total}</th>
+                    <th className="num">{t.commission}</th>
+                    <th className="num">{t.vendorShare}</th>
+                    <th>{t.recipient}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -254,16 +260,18 @@ export default async function AdminOrderDetailPage({
                     return (
                       <tr key={item.id}>
                         <td>
-                          <span className="strong">{product?.title ?? 'Gift'}</span>
+                          <span className="strong">{product?.title ?? t.gift}</span>
                           <br />
-                          <span className="sub">{fulfilmentLabel(product?.fulfilment_type ?? 'monetary')}</span>
+                          <span className="sub">{fulfilmentLabel(product?.fulfilment_type ?? 'monetary', locale)}</span>
                         </td>
                         <td className="small">{vendor?.name ?? 'Giftly'}</td>
                         <td className="small">
                           {variant ? (
                             <>
                               {variant.label}
-                              {variant.session_count ? <span className="sub"> · {variant.session_count} sessions</span> : null}
+                              {variant.session_count ? (
+                                <span className="sub"> · {fill(t.sessions, { count: variant.session_count })}</span>
+                              ) : null}
                             </>
                           ) : (
                             '—'
@@ -287,26 +295,26 @@ export default async function AdminOrderDetailPage({
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Vouchers</h3>
+          <h3>{t.vouchers}</h3>
           <Ticket size={16} />
         </div>
         <div className="panel-body flush">
           {vouchers.length === 0 ? (
-            <div className="table-empty">No vouchers issued for this order yet.</div>
+            <div className="table-empty">{t.noVouchersIssued}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Code</th>
-                    <th>Gift</th>
-                    <th>Type</th>
-                    <th>Recipient</th>
-                    <th className="num">Value</th>
-                    <th className="num">Remaining</th>
-                    <th className="num">Sessions</th>
-                    <th>Status</th>
-                    <th>Expires</th>
+                    <th>{c.labels.code}</th>
+                    <th>{t.gift}</th>
+                    <th>{t.type}</th>
+                    <th>{t.recipient}</th>
+                    <th className="num">{c.labels.value}</th>
+                    <th className="num">{t.remaining}</th>
+                    <th className="num">{t.sessionsCount}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{t.expires}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -315,9 +323,9 @@ export default async function AdminOrderDetailPage({
                     return (
                       <tr key={voucher.id}>
                         <td className="mono small strong">{voucher.voucher_code}</td>
-                        <td>{product?.title ?? 'Gift'}</td>
+                        <td>{product?.title ?? t.gift}</td>
                         <td>
-                          <span className="tag">{fulfilmentLabel(voucher.fulfilment_type)}</span>
+                          <span className="tag">{fulfilmentLabel(voucher.fulfilment_type, locale)}</span>
                         </td>
                         <td className="small">
                           {voucher.recipient_name ?? '—'}
@@ -338,7 +346,9 @@ export default async function AdminOrderDetailPage({
                         <td>
                           <StatusTag status={voucher.status} />
                         </td>
-                        <td className="small muted">{voucher.expires_at ? formatDate(voucher.expires_at) : 'No expiry'}</td>
+                        <td className="small muted">
+                          {voucher.expires_at ? formatDate(voucher.expires_at, locale) : t.noExpiry}
+                        </td>
                       </tr>
                     );
                   })}
@@ -352,7 +362,7 @@ export default async function AdminOrderDetailPage({
       {(redemptions ?? []).length > 0 ? (
         <section className="panel">
           <div className="panel-head">
-            <h3>Redemptions</h3>
+            <h3>{t.redemptions}</h3>
             <ScanLine size={16} />
           </div>
           <div className="panel-body flush">
@@ -360,14 +370,14 @@ export default async function AdminOrderDetailPage({
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Reference</th>
-                    <th>Voucher</th>
-                    <th>Kind</th>
-                    <th className="num">Amount</th>
-                    <th className="num">Sessions</th>
-                    <th>Service</th>
-                    <th>Status</th>
-                    <th>When</th>
+                    <th>{c.labels.reference}</th>
+                    <th>{t.voucher}</th>
+                    <th>{t.kind}</th>
+                    <th className="num">{c.labels.amount}</th>
+                    <th className="num">{t.sessionsCount}</th>
+                    <th>{t.service}</th>
+                    <th>{c.labels.status}</th>
+                    <th>{t.when}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -377,7 +387,7 @@ export default async function AdminOrderDetailPage({
                       <tr key={redemption.id}>
                         <td className="mono small strong">{redemption.reference}</td>
                         <td className="mono small">{voucher?.voucher_code ?? '—'}</td>
-                        <td>{titleCase(redemption.kind)}</td>
+                        <td>{titleCase(redemption.kind, locale)}</td>
                         <td className="num">
                           {redemption.amount_minor != null ? formatMoney(Number(redemption.amount_minor)) : '—'}
                         </td>
@@ -386,7 +396,7 @@ export default async function AdminOrderDetailPage({
                         <td>
                           <StatusTag status={redemption.status} />
                         </td>
-                        <td className="small muted">{formatDateTime(redemption.occurred_at)}</td>
+                        <td className="small muted">{formatDateTime(redemption.occurred_at, locale)}</td>
                       </tr>
                     );
                   })}
@@ -398,13 +408,13 @@ export default async function AdminOrderDetailPage({
       ) : null}
 
       <div className="callout info">
-        <Package size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Need the buyer record?{' '}
+        <Package size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> {t.needBuyer}{' '}
         {order.buyer_id ? (
           <Link href={`/admin/customers/${order.buyer_id}`} style={{ textDecoration: 'underline' }}>
-            Open the customer profile
+            {t.openCustomerProfile}
           </Link>
         ) : (
-          'This order has no linked buyer account.'
+          t.noLinkedBuyer
         )}
         .
       </div>

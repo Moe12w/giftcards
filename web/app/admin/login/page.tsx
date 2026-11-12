@@ -6,8 +6,14 @@ import { AuthShell } from '@/components/AuthShell';
 import { Notice } from '@/components/ui';
 import { adminSignIn } from '@/lib/actions/auth';
 import { createClient } from '@/lib/supabase/server';
+import { adminCopy } from '@/lib/i18n/admin';
+import { pick } from '@/lib/i18n';
+import { getLocale } from '@/lib/i18n/server';
 
-export const metadata: Metadata = { title: 'Admin sign in' };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: pick(adminCopy, locale).titles.login };
+}
 
 export default async function AdminLoginPage({
   searchParams,
@@ -15,6 +21,8 @@ export default async function AdminLoginPage({
   searchParams: Promise<{ error?: string; notice?: string }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const t = pick(adminCopy, locale).login;
   const supabase = await createClient();
   const {
     data: { user },
@@ -31,33 +39,29 @@ export default async function AdminLoginPage({
   return (
     <AuthShell
       tone="coral"
-      eyebrow="Platform admin"
-      title="The whole marketplace, one view."
-      description="Review applications, moderate offers, support customers and keep the ledger honest."
-      points={[
-        'Vendor approvals and commission control',
-        'Orders, vouchers and redemption oversight',
-        'Audit trail for every sensitive action',
-      ]}
+      eyebrow={t.eyebrow}
+      title={t.title}
+      description={t.description}
+      points={[t.point1, t.point2, t.point3]}
     >
       <span className="eyebrow coral">
-        <ShieldCheck size={14} /> Admin only
+        <ShieldCheck size={14} /> {t.adminOnly}
       </span>
-      <h1 style={{ marginTop: 14 }}>Sign in.</h1>
+      <h1 style={{ marginTop: 14 }}>{t.signIn}</h1>
       <p style={{ marginTop: 10 }}>
-        This portal is restricted to Giftly platform administrators.
+        {t.restricted}
       </p>
       <Notice
         error={params.error}
         success={
           params.notice === 'reset-sent'
-            ? 'If that email has an account, a reset link is on its way.'
+            ? t.resetSent
             : null
         }
       />
       <form action={adminSignIn} className="form" style={{ marginTop: 20 }}>
         <div className="field">
-          <label htmlFor="email">Admin email</label>
+          <label htmlFor="email">{t.adminEmail}</label>
           <input
             id="email"
             name="email"
@@ -68,7 +72,7 @@ export default async function AdminLoginPage({
           />
         </div>
         <div className="field">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">{t.password}</label>
           <input
             id="password"
             name="password"
@@ -79,15 +83,15 @@ export default async function AdminLoginPage({
           />
         </div>
         <button className="btn coral block" type="submit">
-          Sign in
+          {t.signInButton}
         </button>
       </form>
       <div className="auth-links" style={{ marginTop: 16 }}>
-        <Link href="/admin/forgot-password">Forgot your password?</Link>
+        <Link href="/admin/forgot-password">{t.forgotPassword}</Link>
       </div>
       <div className="auth-switch">
-        Not an admin? <Link href="/vendor/login">Vendor portal</Link> ·{' '}
-        <Link href="/enterprise/login">Enterprise portal</Link>
+        {t.notAdmin} <Link href="/vendor/login">{t.vendorPortal}</Link> ·{' '}
+        <Link href="/enterprise/login">{t.enterprisePortal}</Link>
       </div>
     </AuthShell>
   );

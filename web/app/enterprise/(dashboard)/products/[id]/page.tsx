@@ -7,6 +7,9 @@ import { EnterpriseProductForm } from '@/components/EnterpriseProductForm';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
 import { formatMoney } from '@/lib/money';
 import type { EnterpriseProduct } from '@/lib/types';
+import { pick } from '@/lib/i18n';
+import { enterpriseCopy } from '@/lib/i18n/enterprise';
+import { getLocale } from '@/lib/i18n/server';
 
 export default async function EditEnterpriseProductPage({
   params,
@@ -17,6 +20,8 @@ export default async function EditEnterpriseProductPage({
 }) {
   const { id } = await params;
   const query = await searchParams;
+  const locale = await getLocale();
+  const t = pick(enterpriseCopy, locale).productDetail;
   const ctx = await requireEnterprise();
 
   const { data } = await ctx.supabase
@@ -47,23 +52,23 @@ export default async function EditEnterpriseProductPage({
   return (
     <div className="dash-content">
       <Link className="back-link" href="/enterprise/products">
-        <ArrowLeft size={15} /> Back to products
+        <ArrowLeft size={15} /> {t.backToProducts}
       </Link>
       <PageHead
-        eyebrow="Reward product"
+        eyebrow={t.eyebrow}
         title={product.name}
-        description="Edit the commercial details. Existing codes keep the denomination they were imported with."
+        description={t.description}
         actions={
           <>
             <StatusTag status={product.is_active ? 'active' : 'draft'} />
             <Link className="btn sm" href={`/enterprise/inventory?product=${product.id}`}>
-              <Boxes size={14} /> Inventory
+              <Boxes size={14} /> {t.inventory}
             </Link>
           </>
         }
       />
 
-      <Notice error={query.error} success={query.saved === '1' ? 'Product saved.' : null} />
+      <Notice error={query.error} success={query.saved === '1' ? t.saved : null} />
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -71,34 +76,34 @@ export default async function EditEnterpriseProductPage({
             <Boxes size={17} />
           </span>
           <strong>{available}</strong>
-          <span>Available codes</span>
+          <span>{t.availableCodes}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <Boxes size={17} />
           </span>
           <strong>{allocated}</strong>
-          <span>Allocated codes</span>
+          <span>{t.allocatedCodes}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Boxes size={17} />
           </span>
           <strong>{redeemed}</strong>
-          <span>Redeemed codes</span>
+          <span>{t.redeemedCodes}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <Upload size={17} />
           </span>
           <strong>{formatMoney(availableValue)}</strong>
-          <span>Available face value</span>
+          <span>{t.availableFaceValue}</span>
         </div>
       </div>
 
       {ctx.role === 'analyst' ? (
         <div className="callout warn">
-          Your role is read-only. Ask an owner or manager on your team to edit this product.
+          {t.readOnly}
         </div>
       ) : (
         <EnterpriseProductForm action={saveEnterpriseProduct} product={product} />

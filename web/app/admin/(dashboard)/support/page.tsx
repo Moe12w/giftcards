@@ -4,6 +4,10 @@ import { requireAdmin } from '@/lib/auth';
 import { adminUpdateSupport } from '@/lib/actions/admin';
 import { formatDate, formatDateTime, initials, titleCase } from '@/lib/format';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
+import { fill, pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function AdminSupportPage({
   searchParams,
@@ -12,6 +16,9 @@ export default async function AdminSupportPage({
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(adminCopy, locale).support;
+  const c = pick(common, locale);
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
   const kind = params.kind ?? '';
@@ -43,12 +50,12 @@ export default async function AdminSupportPage({
   return (
     <div className="dash-content">
       <PageHead
-        eyebrow="Operations"
-        title="Support queue"
-        description="Customer and visitor messages, from contact form enquiries to account help. Newest first."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
       />
 
-      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? 'Request updated.' : null} />
+      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? t.saved : null} />
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -56,68 +63,68 @@ export default async function AdminSupportPage({
             <LifeBuoy size={17} />
           </span>
           <strong>{allRequests.length}</strong>
-          <span>All requests</span>
+          <span>{t.allRequests}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <LifeBuoy size={17} />
           </span>
           <strong>{open}</strong>
-          <span>Open</span>
+          <span>{t.open}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <LifeBuoy size={17} />
           </span>
           <strong>{inProgress}</strong>
-          <span>In progress</span>
+          <span>{t.inProgress}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <LifeBuoy size={17} />
           </span>
           <strong>{resolved}</strong>
-          <span>Resolved</span>
+          <span>{t.resolved}</span>
         </div>
       </div>
 
       <form className="toolbar" action="/admin/support" method="get">
         <div className="search-bar">
           <Search size={17} />
-          <input name="q" defaultValue={params.q ?? ''} placeholder="Subject, body, reference or customer…" aria-label="Search support requests" />
+          <input name="q" defaultValue={params.q ?? ''} placeholder={t.searchPlaceholder} aria-label={t.searchLabel} />
         </div>
-        <select name="kind" defaultValue={kind} aria-label="Request kind">
-          <option value="">All kinds</option>
+        <select name="kind" defaultValue={kind} aria-label={t.kindLabel}>
+          <option value="">{t.allKinds}</option>
           {kinds.map((value) => (
             <option key={value} value={value}>
-              {titleCase(value)}
+              {titleCase(value, locale)}
             </option>
           ))}
         </select>
-        <select name="status" defaultValue={status} aria-label="Request status">
-          <option value="">All statuses</option>
-          <option value="open">Open</option>
-          <option value="in_progress">In progress</option>
-          <option value="resolved">Resolved</option>
-          <option value="closed">Closed</option>
+        <select name="status" defaultValue={status} aria-label={t.statusLabel}>
+          <option value="">{t.allStatuses}</option>
+          <option value="open">{t.open}</option>
+          <option value="in_progress">{t.inProgress}</option>
+          <option value="resolved">{t.resolved}</option>
+          <option value="closed">{t.closed}</option>
         </select>
         <button className="btn sm" type="submit">
-          Filter
+          {c.actions.filter}
         </button>
         {q || status || kind ? (
           <Link className="btn sm ghost" href="/admin/support">
-            Clear
+            {c.actions.clear}
           </Link>
         ) : null}
       </form>
 
       {requests.length === 0 ? (
         <EmptyState
-          title={q || status || kind ? 'No requests match' : 'No support requests yet'}
+          title={q || status || kind ? t.noRequestsMatch : t.noRequestsYet}
           body={
             q || status || kind
-              ? 'Try a different search or clear the filters.'
-              : 'Messages from the contact form and customer app will appear here.'
+              ? t.tryDifferentSearch
+              : t.emptyBody
           }
         />
       ) : (
@@ -132,9 +139,9 @@ export default async function AdminSupportPage({
                       <LifeBuoy size={17} />
                     </span>
                     <div>
-                      <h3>{request.subject ?? 'Support request'}</h3>
+                      <h3>{request.subject ?? t.supportRequest}</h3>
                       <span className="small muted">
-                        {titleCase(request.kind)} · {formatDateTime(request.created_at)}
+                        {titleCase(request.kind, locale)} · {formatDateTime(request.created_at, locale)}
                       </span>
                     </div>
                   </div>
@@ -147,7 +154,7 @@ export default async function AdminSupportPage({
 
                   <div className="split-list" style={{ marginTop: 14 }}>
                     <div>
-                      <span className="k">From</span>
+                      <span className="k">{t.from}</span>
                       <span className="v small">
                         {profile ? (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -157,38 +164,38 @@ export default async function AdminSupportPage({
                             {profile.full_name ?? profile.email}
                             {request.customer_id ? (
                               <Link href={`/admin/customers/${request.customer_id}`} style={{ textDecoration: 'underline' }}>
-                                Profile
+                                {t.profile}
                               </Link>
                             ) : null}
                           </span>
                         ) : (
-                          'Website visitor'
+                          t.websiteVisitor
                         )}
                       </span>
                     </div>
                     <div>
-                      <span className="k">Reference</span>
+                      <span className="k">{c.labels.reference}</span>
                       <span className="v small mono">{request.reference ?? '—'}</span>
                     </div>
                     <div>
-                      <span className="k">Received</span>
-                      <span className="v small">{formatDate(request.created_at)}</span>
+                      <span className="k">{t.received}</span>
+                      <span className="v small">{formatDate(request.created_at, locale)}</span>
                     </div>
                   </div>
 
                   <form action={adminUpdateSupport} className="inline-form" style={{ marginTop: 16 }}>
                     <input type="hidden" name="request_id" value={request.id} />
                     <div className="field">
-                      <label htmlFor={`status-${request.id}`}>Update status</label>
+                      <label htmlFor={`status-${request.id}`}>{t.updateStatus}</label>
                       <select id={`status-${request.id}`} name="status" defaultValue={request.status}>
-                        <option value="open">Open</option>
-                        <option value="in_progress">In progress</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="closed">Closed</option>
+                        <option value="open">{t.open}</option>
+                        <option value="in_progress">{t.inProgress}</option>
+                        <option value="resolved">{t.resolved}</option>
+                        <option value="closed">{t.closed}</option>
                       </select>
                     </div>
                     <button className="btn sm primary" type="submit">
-                      Save
+                      {c.actions.save}
                     </button>
                   </form>
                 </div>

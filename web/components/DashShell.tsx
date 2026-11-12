@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useState, type ReactNode } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -17,8 +17,6 @@ import {
   LifeBuoy,
   Menu,
   Package,
-  PanelLeftClose,
-  PanelLeftOpen,
   Percent,
   ScanLine,
   ScrollText,
@@ -36,9 +34,11 @@ import {
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { TutorialProvider, useTutorial } from '@/components/TutorialProvider';
+import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { signOut } from '@/lib/actions/auth';
-import { setDashboardLanguage } from '@/lib/actions/tutorial';
 import { stepForPath, type TutorialScript } from '@/lib/tutorial';
+import { pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
 
 const icons: Record<string, typeof LayoutDashboard> = {
   dashboard: LayoutDashboard,
@@ -67,19 +67,18 @@ const icons: Record<string, typeof LayoutDashboard> = {
 
 export interface NavItem {
   href: string;
+  /** Already in the current language. */
   label: string;
-  labelAr?: string;
   icon: keyof typeof icons | string;
   /** Shown when the pointer or keyboard focus lands on the item. */
   hint?: string;
-  hintAr?: string;
 }
 
 export interface NavGroup {
   /** Position in the gift life cycle, shown as a number in the flow. */
   step?: number;
+  /** Already in the current language. */
   label: string;
-  labelAr?: string;
   items: NavItem[];
 }
 
@@ -92,8 +91,6 @@ const CHROME = {
     flow: 'Gift life cycle',
     howItWorks: 'How this works',
     language: 'Language',
-    collapseMenu: 'Collapse the menu',
-    expandMenu: 'Expand the menu',
   },
   ar: {
     tutorial: 'الدليل',
@@ -103,8 +100,6 @@ const CHROME = {
     flow: 'دورة حياة الهدية',
     howItWorks: 'كيف تعمل هذه الصفحة',
     language: 'اللغة',
-    collapseMenu: 'طيّ القائمة',
-    expandMenu: 'توسيع القائمة',
   },
 };
 
@@ -208,9 +203,9 @@ function DashShellInner({
   const pathname = usePathname();
   const { open } = useTutorial();
   const [navOpen, setNavOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
   const rtl = locale === 'ar';
   const chrome = CHROME[locale];
+  const commonCopy = pick(common, locale);
   const homeHref = `/${pathname.split('/').filter(Boolean)[0] ?? ''}`;
 
   function active(href: string) {
@@ -219,30 +214,8 @@ function DashShellInner({
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  // Remember the narrow menu between visits.
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem('giftly.dash.collapsed');
-      if (stored === '1') setCollapsed(true);
-    } catch {
-      /* storage is not available */
-    }
-  }, []);
-
-  function toggleCollapsed() {
-    setCollapsed((value) => {
-      const next = !value;
-      try {
-        window.localStorage.setItem('giftly.dash.collapsed', next ? '1' : '0');
-      } catch {
-        /* storage is not available */
-      }
-      return next;
-    });
-  }
-
   return (
-    <div className={`dash${rtl ? ' rtl' : ''}${navOpen ? ' nav-open' : ''}${collapsed ? ' collapsed' : ''}`}>
+    <div className={`dash${rtl ? ' rtl' : ''}${navOpen ? ' nav-open' : ''}`}>
       <button
         type="button"
         className="dash-scrim"
@@ -252,15 +225,6 @@ function DashShellInner({
       <aside className="dash-side">
         <div className="dash-side-top">
           <Logo href={homeHref} />
-          <button
-            type="button"
-            className="dash-collapse"
-            onClick={toggleCollapsed}
-            aria-label={collapsed ? chrome.expandMenu : chrome.collapseMenu}
-            title={collapsed ? chrome.expandMenu : chrome.collapseMenu}
-          >
-            {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-          </button>
         </div>
         <div className="dash-workspace">
           <span className="label">{portalLabel}</span>
@@ -287,25 +251,22 @@ function DashShellInner({
               ) : null}
               <span className="group-label">
                 {group.step ? <span className="group-step">{group.step}</span> : null}
-                {rtl ? (group.labelAr ?? group.label) : group.label}
+                {group.label}
               </span>
               {group.items.map((item) => {
                 const Icon = icons[item.icon] ?? LayoutDashboard;
-                const hint = rtl ? item.hintAr ?? item.hint : item.hint;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={`${active(item.href) ? 'active' : ''} ${active(item.href) ? accent : ''}`}
                     aria-current={active(item.href) ? 'page' : undefined}
-                    title={rtl ? item.labelAr ?? item.label : item.label}
+                    title={item.label}
                   >
                     <Icon size={17} />
                     <span className="nav-text">
-                      <span className="nav-label">
-                        {rtl ? item.labelAr ?? item.label : item.label}
-                      </span>
-                      {hint ? <span className="nav-hint">{hint}</span> : null}
+                      <span className="nav-label">{item.label}</span>
+                      {item.hint ? <span className="nav-hint">{item.hint}</span> : null}
                     </span>
                   </Link>
                 );
@@ -323,27 +284,7 @@ function DashShellInner({
               <span className="small muted">{chrome.tutorialHint}</span>
             </span>
           </button>
-          <form action={setDashboardLanguage} className="lang-switch">
-            <span className="small muted">{chrome.language}</span>
-            <button
-              type="submit"
-              name="locale"
-              value="en"
-              className={locale === 'en' ? 'active' : ''}
-              aria-pressed={locale === 'en'}
-            >
-              EN
-            </button>
-            <button
-              type="submit"
-              name="locale"
-              value="ar"
-              className={locale === 'ar' ? 'active' : ''}
-              aria-pressed={locale === 'ar'}
-            >
-              ع
-            </button>
-          </form>
+          <LanguageSwitch />
           <div className="who">
             <span className="avatar">{userInitials}</span>
             <div style={{ minWidth: 0 }}>
@@ -357,7 +298,7 @@ function DashShellInner({
           </div>
           <form action={signOut}>
             <button className="btn sm ghost block" type="submit">
-              Sign out
+              {commonCopy.actions.signOut}
             </button>
           </form>
         </div>
