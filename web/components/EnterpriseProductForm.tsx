@@ -16,6 +16,9 @@ export function EnterpriseProductForm({
 }) {
   const locale = useLocale();
   const t = pick(componentsCopy, locale).enterpriseProductForm;
+  const partnerCommission = product?.partner?.commission_bps
+    ? `${(product.partner.commission_bps / 100).toFixed(2)}`
+    : '10.00';
 
   return (
     <form action={action} className="card" style={{ display: 'grid', gap: 18 }}>
@@ -71,10 +74,14 @@ export function EnterpriseProductForm({
             id="commission_percent"
             name="commission_percent"
             inputMode="decimal"
-            defaultValue={product ? (product.commission_bps / 100).toString() : '10'}
-            placeholder="10"
+            defaultValue={partnerCommission}
+            placeholder="10.00"
+            readOnly
           />
-          <span className="hint">{t.hints.commission}</span>
+          <span className="hint">
+            {t.partnerCommission} {product?.partner?.name ?? ''}{' '}
+            {t.rateIsSetByAdmin}
+          </span>
         </div>
         <div className="field">
           <label htmlFor="expiry_days">{t.expiryDays}</label>

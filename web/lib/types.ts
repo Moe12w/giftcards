@@ -230,6 +230,7 @@ export interface EnterprisePartner {
   logo_url: string | null;
   banner_url: string | null;
   status: string;
+  commission_bps: number;
   created_at: string;
   updated_at: string;
 }
