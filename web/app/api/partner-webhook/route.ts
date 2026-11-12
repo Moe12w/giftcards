@@ -40,7 +40,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing API key' }, { status: 401 });
     }
 
-    const body = (await request.json()) as WebhookRequest;
+    let body: WebhookRequest;
+    try {
+      body = (await request.json()) as WebhookRequest;
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
     const code = body.code?.trim();
     if (!code) {
       return NextResponse.json({ error: 'code is required' }, { status: 400 });
