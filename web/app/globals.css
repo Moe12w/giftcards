@@ -2702,20 +2702,28 @@ table.data .sub {
     grid-template-columns: 1fr;
   }
 
+  .enterprise-art {
+    min-height: 420px;
+    margin-top: 14px;
+  }
+
   .enterprise-tile {
     width: 200px;
     padding: 16px;
   }
 
   .enterprise-tile.one {
+    top: 12px;
     left: -4px;
   }
 
   .enterprise-tile.two {
-    top: 120px;
+    top: 138px;
   }
 
   .enterprise-tile.three {
+    top: 264px;
+    bottom: auto;
     left: 10px;
   }
 }
