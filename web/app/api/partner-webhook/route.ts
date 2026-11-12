@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+// Partner systems can be slow to answer, so give the webhook room to finish.
+export const maxDuration = 60;
 
 interface WebhookRequest {
   partner_id?: string;
