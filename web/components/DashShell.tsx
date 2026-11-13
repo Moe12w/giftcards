@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -208,6 +208,11 @@ function DashShellInner({
   const commonCopy = pick(common, locale);
   const homeHref = `/${pathname.split('/').filter(Boolean)[0] ?? ''}`;
 
+  // Reset nav open state on route change (fixes iOS issue where menu stays open)
+  useEffect(() => {
+    setNavOpen(false);
+  }, [pathname]);
+
   function active(href: string) {
     const segments = href.split('/').filter(Boolean);
     if (segments.length <= 1) return pathname === href;
@@ -221,6 +226,7 @@ function DashShellInner({
         className="dash-scrim"
         aria-label={chrome.closeMenu}
         onClick={() => setNavOpen(false)}
+        onTouchEnd={() => setNavOpen(false)}
       />
       <aside className="dash-side">
         <div className="dash-side-top">

@@ -2923,6 +2923,11 @@ table.data .sub {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.22s ease;
+    -webkit-appearance: none;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: opacity;
+    transform: translateZ(0);
   }
 
   .dash.nav-open .dash-scrim {
