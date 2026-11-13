@@ -44,6 +44,7 @@ export interface WizardPlacement {
   rotation_mode: string;
   creative_width: number | null;
   creative_height: number | null;
+  allowed_pricing_models: string[];
   advertising_pricing: WizardPricing[];
 }
 

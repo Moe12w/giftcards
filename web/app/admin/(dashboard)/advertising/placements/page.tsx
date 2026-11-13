@@ -15,6 +15,7 @@ const KINDS = [
   'search_sponsored_result',
   'trending_placement',
   'discovery_placement',
+  'bulk_deals_ranking',
 ];
 
 const MODELS = ['fixed', 'cpc', 'cpm'];
@@ -153,6 +154,27 @@ export default async function AdminAdvertisingPlacementsPage({
                 <input type="checkbox" name="auction_enabled" defaultChecked={editing ? editing.auction_enabled : true} />
                 Auction ranking enabled
               </label>
+              <div className="field full">
+                <label>Allowed payment models</label>
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                  {['fixed', 'cpc', 'cpm'].map((model) => (
+                    <label key={model} className="checkbox-row" style={{ border: '1px solid var(--line)', borderRadius: 8, padding: '6px 12px' }}>
+                      <input
+                        type="checkbox"
+                        name="allowed_pricing_models"
+                        value={model}
+                        defaultChecked={
+                          editing?.allowed_pricing_models
+                            ? editing.allowed_pricing_models.includes(model)
+                            : true
+                        }
+                      />
+                      {model.toUpperCase()}
+                    </label>
+                  ))}
+                </div>
+                <span className="hint">Only checked models appear as choices when creating a campaign for this placement.</span>
+              </div>
               <button className="btn primary" type="submit">{editing ? 'Save placement' : 'Create placement'}</button>
             </form>
           </div>
@@ -258,6 +280,7 @@ export default async function AdminAdvertisingPlacementsPage({
                   <th className="num">Slots</th>
                   <th className="num">Max active</th>
                   <th>Rotation</th>
+                  <th>Models</th>
                   <th>Active</th>
                   <th style={{ textAlign: 'right' }} />
                 </tr>
@@ -273,6 +296,11 @@ export default async function AdminAdvertisingPlacementsPage({
                     <td className="num">{placement.slot_count || '—'}</td>
                     <td className="num">{placement.max_active_campaigns || 'rule'}</td>
                     <td className="small">{placement.rotation_mode}</td>
+                    <td className="small">
+                      {(placement.allowed_pricing_models ?? ['fixed', 'cpc', 'cpm'])
+                        .map((m: string) => m.toUpperCase())
+                        .join(', ')}
+                    </td>
                     <td><StatusTag status={placement.is_active ? 'active' : 'paused'} /></td>
                     <td style={{ textAlign: 'right' }}>
                       <Link className="btn sm ghost" href={`/admin/advertising/placements?edit=${placement.id}`}>Edit</Link>

@@ -459,6 +459,7 @@ export async function adminSaveAdvertisingPlacement(formData: FormData) {
     max_active_campaigns: intField(formData, 'max_active_campaigns') ?? 0,
     rotation_mode: str(formData, 'rotation_mode') || 'shared',
     auction_enabled: checkbox(formData, 'auction_enabled'),
+    allowed_pricing_models: formData.getAll('allowed_pricing_models').map(String).filter(Boolean),
     priority: intField(formData, 'priority') ?? 0,
     sort_order: intField(formData, 'sort_order') ?? 0,
     creative_width: intField(formData, 'creative_width'),
@@ -468,6 +469,7 @@ export async function adminSaveAdvertisingPlacement(formData: FormData) {
   };
 
   if (!payload.key || !payload.name) back('/admin/advertising/placements', 'Key and name are required.');
+  if (payload.allowed_pricing_models.length === 0) payload.allowed_pricing_models = ['fixed', 'cpc', 'cpm'];
 
   const { data, error } = id
     ? await ctx.supabase.from('advertising_placements').update(payload).eq('id', id).select('id').maybeSingle()

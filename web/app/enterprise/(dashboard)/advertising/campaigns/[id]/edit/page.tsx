@@ -47,7 +47,11 @@ export default async function EditAdvertisingCampaignPage({
 
   const placements = (placementsResult.data ?? []).map((placement: any) => ({
     ...placement,
-    advertising_pricing: (placement.advertising_pricing ?? []).filter((price: any) => price.is_active),
+    advertising_pricing: (placement.advertising_pricing ?? []).filter(
+      (price: any) =>
+        price.is_active &&
+        (placement.allowed_pricing_models ?? ['fixed', 'cpc', 'cpm']).includes(price.pricing_model),
+    ),
   }));
 
   return (
