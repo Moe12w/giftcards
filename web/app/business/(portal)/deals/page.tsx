@@ -40,6 +40,33 @@ export default async function BusinessDealsPage({
       .includes(q);
   });
 
+  // Sponsored ranking: campaigns on the bulk_deals_ranking placement that are
+  // paid, approved and inside their schedule boost the gift card they promote to
+  // the top of the bulk deals list.
+  const { data: boostedCampaigns } = await ctx.supabase
+    .from('advertising_campaigns')
+    .select('id, starts_at, ends_at, status, payment_status, creative:advertising_creatives!inner(destination_type, destination_id)')
+    .eq('placement_key', 'bulk_deals_ranking')
+    .in('status', ['approved', 'scheduled', 'active'])
+    .eq('payment_status', 'paid');
+
+  const boostedOfferIds = new Set<string>();
+  for (const campaign of boostedCampaigns ?? []) {
+    const within =
+      (!campaign.starts_at || new Date(campaign.starts_at) <= now) &&
+      (!campaign.ends_at || new Date(campaign.ends_at) >= now);
+    if (!within) continue;
+    const creative = (campaign as any).creative;
+    if (creative?.destination_type === 'gift_card' && creative.destination_id) {
+      boostedOfferIds.add(String(creative.destination_id));
+    }
+  }
+
+  const ranked = [...visible].sort(
+    (a: any, b: any) =>
+      Number(boostedOfferIds.has(String(b.id))) - Number(boostedOfferIds.has(String(a.id))),
+  );
+
   const vendorNames = new Map<string, string>();
   for (const offer of offers ?? []) {
     if (offer.vendor_id && offer.vendors?.name) vendorNames.set(offer.vendor_id, offer.vendors.name);
@@ -80,7 +107,7 @@ export default async function BusinessDealsPage({
         />
       ) : (
         <div className="grid-3" style={{ marginTop: 4 }}>
-          {visible.map((offer: any) => {
+          {ranked.map((offer: any) => {
             const face = Number(offer.face_value_minor);
             const base = Number(offer.base_unit_price_minor);
             const savingsPct = face > 0 ? Math.round(((face - base) / face) * 100) : 0;
@@ -97,6 +124,9 @@ export default async function BusinessDealsPage({
                     <p className="small muted" style={{ margin: 0 }}>{sellerName(offer)}</p>
                     <h3 style={{ margin: 0 }}>{offer.title}</h3>
                   </div>
+                  {boostedOfferIds.has(String(offer.id)) ? (
+                    <span className="tag lavender" style={{ marginInlineStart: 'auto' }}>{t.deals.sponsored}</span>
+                  ) : null}
                 </div>
 
                 <p className="small" style={{ margin: 0 }}>

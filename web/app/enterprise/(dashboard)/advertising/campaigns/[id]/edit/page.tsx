@@ -5,6 +5,7 @@ import { requireAdvertiser } from '@/lib/auth';
 import { PageHead } from '@/components/ui';
 import { CampaignWizard } from '@/components/CampaignWizard';
 import { updateAdvertisingCampaign } from '@/lib/actions/advertising';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function EditAdvertisingCampaignPage({
   params,
@@ -13,6 +14,7 @@ export default async function EditAdvertisingCampaignPage({
 }) {
   const { id } = await params;
   const ctx = await requireAdvertiser({ prefer: 'enterprise' });
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
 
   const { data: campaign } = await ctx.supabase
     .from('advertising_campaigns')
@@ -66,6 +68,7 @@ export default async function EditAdvertisingCampaignPage({
         vendorId={ctx.vendor.id}
         vendorName={ctx.vendor.name}
         home={ctx.home}
+        locale={locale}
         campaign={campaign as any}
       />
     </div>

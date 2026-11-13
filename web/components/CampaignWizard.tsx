@@ -15,6 +15,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { formatMoney } from '@/lib/money';
+import { AdvertisingCreativeImage } from '@/components/AdvertisingCreativeImage';
 
 export interface WizardPricing {
   id: string;
@@ -91,6 +92,7 @@ export function CampaignWizard({
   vendorId,
   vendorName,
   home,
+  locale = 'en',
   campaign,
 }: {
   action: (formData: FormData) => void | Promise<void>;
@@ -101,6 +103,7 @@ export function CampaignWizard({
   vendorName: string;
   /** Base path for the cancel link, derived from the signed-in advertiser context. */
   home?: string;
+  locale?: 'en' | 'ar';
   campaign?: WizardCampaign | null;
 }) {
   const creative = campaign?.advertising_creatives?.[0] ?? {};
@@ -155,6 +158,10 @@ export function CampaignWizard({
     setPlacementKey(next.key);
     setPricingId(next.advertising_pricing[0]?.id ?? '');
     setMessage(null);
+    // Gift-card placements should land their audience on a gift card, not the
+    // vendor's generic business page.
+    const wantsGiftCard = next.key === 'homepage_featured_gift_card' || next.key === 'marketplace_sponsored_card';
+    setDestinationType(wantsGiftCard ? 'gift_card' : 'business');
   }
 
   function nextStep() {
@@ -168,7 +175,7 @@ export function CampaignWizard({
         return;
       }
       if (needsImage && !imageUrl.trim()) {
-        setMessage('This placement needs a banner image URL.');
+        setMessage('This placement needs a banner image. Upload one to continue.');
         return;
       }
       if (destinationType === 'url') {
@@ -354,34 +361,28 @@ export function CampaignWizard({
               <label htmlFor="body_ar">Body (Arabic)</label>
               <textarea id="body_ar" name="body_ar" rows={3} dir="rtl" defaultValue={String(creative.body_ar ?? '')} />
             </div>
-            <div className="field">
-              <label htmlFor="image_url">Image URL {needsImage ? '(required)' : ''}</label>
-              <input
-                id="image_url"
-                name="image_url"
-                value={imageUrl}
-                onChange={(event) => setImageUrl(event.target.value)}
-                placeholder="https://…/banner.jpg"
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="mobile_image_url">Mobile image URL</label>
-              <input
-                id="mobile_image_url"
-                name="mobile_image_url"
-                value={mobileImageUrl}
-                onChange={(event) => setMobileImageUrl(event.target.value)}
-                placeholder="https://…/banner-mobile.jpg"
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="image_alt">Image alt text</label>
-              <input id="image_alt" name="image_alt" defaultValue={String(creative.image_alt ?? '')} />
-            </div>
-            <div className="field">
-              <label htmlFor="image_alt_ar">Image alt text (Arabic)</label>
-              <input id="image_alt_ar" name="image_alt_ar" dir="rtl" defaultValue={String(creative.image_alt_ar ?? '')} />
-            </div>
+            {needsImage ? (
+              <>
+                <div className="field full">
+                  <label>Creative image (required)</label>
+                  <AdvertisingCreativeImage kind="image" currentUrl={imageUrl || null} locale={locale} onUploaded={setImageUrl} />
+                </div>
+                <div className="field full">
+                  <label>Mobile image</label>
+                  <AdvertisingCreativeImage kind="mobile_image" currentUrl={mobileImageUrl || null} locale={locale} onUploaded={setMobileImageUrl} />
+                </div>
+                <div className="field">
+                  <label htmlFor="image_alt">Image alt text</label>
+                  <input id="image_alt" name="image_alt" defaultValue={String(creative.image_alt ?? '')} />
+                </div>
+                <div className="field">
+                  <label htmlFor="image_alt_ar">Image alt text (Arabic)</label>
+                  <input id="image_alt_ar" name="image_alt_ar" dir="rtl" defaultValue={String(creative.image_alt_ar ?? '')} />
+                </div>
+              </>
+            ) : null}
+            <input type="hidden" name="image_url" value={needsImage ? imageUrl : ''} />
+            <input type="hidden" name="mobile_image_url" value={mobileImageUrl} />
             <div className="field">
               <label htmlFor="cta_label">Button label</label>
               <input

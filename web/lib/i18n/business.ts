@@ -76,6 +76,7 @@ const en = {
     baseOnly: 'Flat price',
     viewOffer: 'View offer',
     conditions: 'Conditions',
+    sponsored: 'Sponsored',
   },
   offer: {
     backToDeals: 'Back to deals',
@@ -349,6 +350,7 @@ const ar: BusinessCopy = {
     baseOnly: 'سعر ثابت',
     viewOffer: 'عرض العرض',
     conditions: 'الشروط',
+    sponsored: 'مدعوم',
   },
   offer: {
     backToDeals: 'العودة إلى العروض',

@@ -244,6 +244,47 @@ export async function markAdvertisingNotificationRead(formData: FormData) {
   redirect(ctx.home);
 }
 
+export interface CreativeImageActionResult {
+  ok: boolean;
+  error?: string;
+  url?: string;
+}
+
+const AD_CREATIVE_MEDIA_BUCKET = 'vendor-media';
+
+/**
+ * Uploads a campaign creative image (banner / mobile) straight from the wizard.
+ * The file is resized client-side, then stored in the vendor-media bucket under
+ * the vendor id, and the public URL is returned so the creative can be saved.
+ */
+export async function uploadAdvertisingCreativeImage(formData: FormData): Promise<CreativeImageActionResult> {
+  const ctx = await requireAdvertiser();
+  const kind = str(formData, 'kind') === 'mobile_image' ? 'mobile_image' : 'image';
+  const file = formData.get('file');
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: 'Choose an image to upload.' };
+  }
+  if (!file.type.startsWith('image/')) {
+    return { ok: false, error: 'That file is not an image.' };
+  }
+  if (file.size > 4 * 1024 * 1024) {
+    return { ok: false, error: 'That image is too large. Keep it under 4 MB.' };
+  }
+
+  const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+  const path = `${ctx.vendor.id}/ad-creative-${kind}-${Date.now()}.${extension}`;
+
+  const { error } = await ctx.supabase.storage.from(AD_CREATIVE_MEDIA_BUCKET).upload(path, file, {
+    contentType: file.type,
+    upsert: true,
+  });
+  if (error) return { ok: false, error: error.message };
+
+  const { data } = ctx.supabase.storage.from(AD_CREATIVE_MEDIA_BUCKET).getPublicUrl(path);
+
+  return { ok: true, url: data.publicUrl };
+}
+
 // ---------------------------------------------------------------------------
 // Admin actions
 // ---------------------------------------------------------------------------

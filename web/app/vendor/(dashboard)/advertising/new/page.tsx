@@ -4,10 +4,12 @@ import { requireAdvertiser } from '@/lib/auth';
 import { PageHead } from '@/components/ui';
 import { CampaignWizard } from '@/components/CampaignWizard';
 import { createAdvertisingCampaign } from '@/lib/actions/advertising';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function NewAdvertisingCampaignPage() {
   const ctx = await requireAdvertiser();
   const vendor = ctx.vendor;
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
 
   const [placementsResult, offersResult, categoriesResult] = await Promise.all([
     ctx.supabase
@@ -54,6 +56,7 @@ export default async function NewAdvertisingCampaignPage() {
         vendorId={vendor.id}
         vendorName={vendor.name}
         home={ctx.home}
+        locale={locale}
       />
     </div>
   );
