@@ -2,6 +2,8 @@
 // Read/write helpers for the customer app. When Supabase is configured these
 // query the real database through RLS-protected tables. Before credentials are
 // added, they fall back to demo data so the UI can be built and tested.
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { hasSupabaseConfig } from './env';
 import {
   MOCK_CARDS,
@@ -33,6 +35,8 @@ import type {
   ProductVariant,
   Recipient,
   RedemptionEntry,
+  SponsoredAd,
+  SponsoredPlacement,
 } from './types';
 
 /** A ledger row as it is stored in the database. */
@@ -692,4 +696,98 @@ export async function closeEnterpriseCode(
   if (error) throw error;
   const result = (data ?? {}) as { status?: string; reference?: string };
   return { ok: result.status === 'redeemed', reference: result.reference };
+}
+/* -------------------------------------------------------------------------
+ * Advertising
+ *
+ * Delivery and tracking go through security-definer RPCs. Impressions are only
+ * written when the backend serves an ad, and clicks are deduplicated there.
+ * ---------------------------------------------------------------------- */
+
+const AD_VIEWER_KEY = 'giftly.advertising.viewer';
+const AD_SESSION_ID = `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+
+/** A stable anonymous key so frequency caps work between launches. */
+export async function getAdViewerKey(): Promise<string> {
+  const existing = await AsyncStorage.getItem(AD_VIEWER_KEY);
+  if (existing) return existing;
+  const key = `v_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
+  await AsyncStorage.setItem(AD_VIEWER_KEY, key);
+  return key;
+}
+
+/** Asks the backend for the ads in a placement and its admin-set config. */
+export async function listSponsoredAds(
+  placementKey: string,
+  limit = 5,
+): Promise<SponsoredPlacement> {
+  if (!hasSupabaseConfig) {
+    return { placement: placementKey, ads: [], config: {} };
+  }
+  const supabase = getSupabase();
+  const viewerKey = await getAdViewerKey();
+  const [delivery, placement] = await Promise.all([
+    supabase.rpc('advertising_deliver', {
+      p_placement_key: placementKey,
+      p_limit: limit,
+      p_viewer_key: viewerKey,
+      p_session_id: AD_SESSION_ID,
+      p_context: { platform: 'mobile' },
+    }),
+    supabase
+      .from('advertising_placements')
+      .select('config')
+      .eq('key', placementKey)
+      .maybeSingle(),
+  ]);
+  if (delivery.error) throw delivery.error;
+  const payload = (delivery.data ?? {}) as { ads?: SponsoredAd[] };
+  return {
+    placement: placementKey,
+    ads: payload.ads ?? [],
+    config: (placement.data?.config ?? {}) as Record<string, unknown>,
+  };
+}
+
+/** Records a click and returns the canonical destination from the database. */
+export async function trackSponsoredClick(
+  impressionId: string,
+): Promise<Partial<SponsoredAd> | null> {
+  if (!hasSupabaseConfig) return null;
+  const { data, error } = await getSupabase().rpc('advertising_track_click', {
+    p_impression_id: impressionId,
+    p_request_id: `click_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`,
+    p_viewer_key: await getAdViewerKey(),
+    p_session_id: AD_SESSION_ID,
+  });
+  if (error) return null;
+  return (data ?? null) as Partial<SponsoredAd> | null;
+}
+
+/** Attributes a purchase to the most recent touch inside the rule window. */
+export async function trackSponsoredConversion(
+  campaignId: string,
+  options: {
+    clickId?: string | null;
+    orderId?: string | null;
+    voucherId?: string | null;
+    valueMinor?: number;
+    requestId?: string;
+  } = {},
+): Promise<string | null> {
+  if (!hasSupabaseConfig) return null;
+  const { data, error } = await getSupabase().rpc('advertising_track_conversion', {
+    p_campaign_id: campaignId,
+    p_click_id: options.clickId ?? null,
+    p_order_id: options.orderId ?? null,
+    p_voucher_id: options.voucherId ?? null,
+    p_value_minor: options.valueMinor ?? 0,
+    p_conversion_type: 'purchase',
+    p_request_id:
+      options.requestId ??
+      `conv_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`,
+    p_metadata: { source: 'mobile' },
+  });
+  if (error) return null;
+  return typeof data === 'string' ? data : null;
 }

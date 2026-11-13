@@ -345,3 +345,48 @@ export interface GiftBasket {
   completed_at?: string | null;
   note?: string;
 }
+
+/* -------------------------------------------------------------------------
+ * Advertising
+ *
+ * Sponsored placements are delivered by the backend. The app never hardcodes
+ * an ad, a price or a schedule: it asks for a placement key and renders what
+ * the delivery function returns. An empty list means the section is hidden.
+ * ---------------------------------------------------------------------- */
+
+export type AdDestinationType = 'url' | 'business' | 'gift_card' | 'category' | 'internal';
+
+export interface SponsoredAd {
+  campaign_id: string;
+  creative_id: string;
+  impression_id: string;
+  placement_key: string;
+  campaign_name: string;
+  headline: string;
+  headline_ar: string | null;
+  body: string | null;
+  body_ar: string | null;
+  image_url: string | null;
+  mobile_image_url: string | null;
+  image_alt: string | null;
+  image_alt_ar: string | null;
+  cta_label: string | null;
+  cta_label_ar: string | null;
+  destination_type: AdDestinationType;
+  destination_id: string | null;
+  destination_url: string | null;
+  sponsored_label: string;
+  sponsored_label_ar: string | null;
+  vendor_id: string | null;
+  vendor_name: string | null;
+  vendor_name_ar: string | null;
+  vendor_logo: string | null;
+  pricing_model: 'fixed' | 'cpc' | 'cpm';
+  ends_at: string;
+}
+
+export interface SponsoredPlacement {
+  placement: string;
+  ads: SponsoredAd[];
+  config: Record<string, unknown>;
+}

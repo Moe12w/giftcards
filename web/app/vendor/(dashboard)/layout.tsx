@@ -57,6 +57,14 @@ export default async function VendorDashboardLayout({ children }: { children: Re
         { href: '/vendor/settings', label: t.settings, icon: 'settings', hint: t.settingsHint },
       ],
     },
+    {
+      step: 6,
+      label: t.group6,
+      items: [
+        { href: '/vendor/advertising', label: t.advertising, icon: 'promotions', hint: t.advertisingHint },
+        { href: '/vendor/advertising/new', label: t.advertisingNew, icon: 'reports', hint: t.advertisingNewHint },
+      ],
+    },
   ];
 
   const switcher =

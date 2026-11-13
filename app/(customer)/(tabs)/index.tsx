@@ -21,6 +21,7 @@ import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
 import { SectionHeader } from '@/src/components/SectionHeader';
+import { SponsoredCarousel, SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import {
   CategoryShortcut,
   CuratedCollectionCard,
@@ -174,6 +175,9 @@ export default function ExploreHomeScreen() {
           style={styles.search}
         />
 
+        {/* Sponsored hero carousel — hidden automatically when no campaign is live */}
+        <SponsoredCarousel placementKey="homepage_hero_carousel" limit={5} />
+
         {/* Featured businesses */}
         <SectionHeader
           title={t('discovery.featuredBusinesses')}
@@ -216,6 +220,9 @@ export default function ExploreHomeScreen() {
             ))}
           </ScrollView>
         )}
+
+        {/* Sponsored businesses */}
+        <SponsoredStrip placementKey="homepage_featured_business" variant="business" limit={3} />
 
         {/* Active basket strip */}
         {activeBasket ? (
@@ -324,6 +331,9 @@ export default function ExploreHomeScreen() {
             />
           ))}
         </ScrollView>
+
+        {/* Sponsored gift cards */}
+        <SponsoredStrip placementKey="homepage_featured_gift_card" variant="gift_card" limit={4} />
 
         {/* Trending */}
         <SectionHeader
