@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { requireVendor } from '@/lib/auth';
+import { requireAdvertiser } from '@/lib/auth';
 import { PageHead } from '@/components/ui';
 import { CampaignWizard } from '@/components/CampaignWizard';
 import { createAdvertisingCampaign } from '@/lib/actions/advertising';
 
 export default async function NewAdvertisingCampaignPage() {
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
   const vendor = ctx.vendor;
 
   const [placementsResult, offersResult, categoriesResult] = await Promise.all([
@@ -38,7 +38,7 @@ export default async function NewAdvertisingCampaignPage() {
 
   return (
     <div className="dash-content">
-      <Link className="back-link" href="/vendor/advertising">
+      <Link className="back-link" href={ctx.home}>
         <ArrowLeft size={15} /> Advertising
       </Link>
       <PageHead
@@ -53,6 +53,7 @@ export default async function NewAdvertisingCampaignPage() {
         categories={(categoriesResult.data ?? []) as { id: string; name: string }[]}
         vendorId={vendor.id}
         vendorName={vendor.name}
+        home={ctx.home}
       />
     </div>
   );

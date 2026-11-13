@@ -48,9 +48,9 @@ editable by admins. No advertising values are hardcoded in the app.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 0 | Architecture inspection + this handoff document | ✅ Done |
-| 1 | Database schema, enums, RLS, rules engine, lifecycle functions, seed data | ✅ Done (0044–0049) |
+| 1 | Database schema, enums, RLS, rules engine, lifecycle functions, seed data | ✅ Done (0044–0050) |
 | 2 | Admin advertising dashboard + server actions + i18n | ✅ Done |
-| 3 | Vendor Advertising & Promotions dashboard + 4-step creation + checkout | ✅ Done |
+| 3 | Vendor + enterprise (partner) Advertising & Promotions dashboards, 4-step creation + checkout | ✅ Done |
 | 4 | Customer app dynamic carousel and featured placements + tracking | ✅ Done |
 | 5 | End-to-end lifecycle tests, typecheck, production build | ✅ Done (21/21 lifecycle checks) |
 
@@ -61,7 +61,7 @@ cron. Manual admin verification and promotional credit work today.
 
 ---
 
-## 4. Database design (migrations 0044–0049)
+## 4. Database design (migrations 0044–0050)
 
 - `0044_advertising_system.sql` — enums, vendor advertising columns, all
   advertising tables, indexes, RLS, grants, 10 seeded placements, 30 seeded
@@ -78,6 +78,22 @@ cron. Manual admin verification and promotional credit work today.
   update / duplicate / renew / pause / resume campaign RPCs.
 - `0049_advertising_admin_operations.sql` — approval, admin overrides, credit
   grants, maintenance wrapper, function grants/revokes.
+- `0050_enterprise_advertising.sql` — partner → vendor advertising link:
+  `vendors.enterprise_partner_id`, `advertising_ensure_partner_vendor`,
+  `advertising_get_partner_vendor`, enterprise-aware
+  `advertising_can_manage_vendor` / `advertising_can_view_vendor`, and the
+  public `marketplace_businesses` view updated so linked shell vendors are not
+  double-listed.
+
+### Enterprise advertising (Option A)
+
+Enterprise partners run advertising through a lazily created vendor account
+that is linked to the partner (`enterprise_partner_id`). The vendor campaign
+lifecycle, charging, tracking, ledger and notifications are reused unchanged,
+so an enterprise partner gets the exact vendor flow: 4-step wizard, checkout,
+pause/resume/edit/duplicate/renew, admin overrides, credits. The web layer
+resolves `requireAdvertiser()` to either kind and points at
+`/vendor/advertising` or `/enterprise/advertising` accordingly.
 
 ### Tables
 
@@ -163,15 +179,20 @@ A frontend "success" flag is never trusted.
 - `web/app/admin/(dashboard)/advertising/*` — overview, campaigns list/detail,
   placements & pricing, advertisers, finance, rules.
 - `web/app/vendor/(dashboard)/advertising/*` — overview, new campaign wizard,
-  checkout, campaign detail, edit.
+  checkout, campaign detail, edit. Guarded by `requireAdvertiser`
+  (`kind: 'vendor'`, home `/vendor/advertising`).
+- `web/app/enterprise/(dashboard)/advertising/*` — the same screens for
+  enterprise partners, guarded by `requireAdvertiser({ prefer: 'enterprise' })`
+  and resolved through the partner → linked vendor flow (home
+  `/enterprise/advertising`).
 - `web/components/CampaignWizard.tsx` — 4-step placement → creative →
   schedule/budget → review, with quote preview and validation.
 - `web/lib/actions/advertising.ts` — all vendor and admin server actions.
 - `web/app/api/advertising/payment-webhook/route.ts` — signed gateway webhook.
 - `web/app/api/advertising/maintenance/route.ts` — lifecycle cron.
 - `web/lib/supabase/admin.ts` — service-role client for webhook/cron.
-- `web/lib/i18n/admin.ts`, `vendor.ts` — bilingual copy (Arabic typed against
-  English).
+- `web/lib/i18n/admin.ts`, `vendor.ts`, `enterprise.ts` — bilingual copy
+  (Arabic typed against English).
 
 ### Database
 - `supabase/migrations/0044_advertising_system.sql` through
@@ -290,6 +311,20 @@ Still worth covering manually or with added SQL:
   webhook reached the database (404 for a non-existent campaign), unsigned
   webhook was rejected (401), unauthenticated maintenance was rejected (401),
   and authenticated maintenance ran successfully (200, all counters zero).
+- 2026-11-13: applied `0050_enterprise_advertising.sql` (Option A: partner →
+  linked advertising vendor). Re-applied `0047` / `0048` so the campaign and
+  payment RPCs gate through the new `advertising_can_manage_vendor` helper.
+  Verified the helper returns true for the RetailPlus Rewards enterprise owner
+  and that a linked vendor row was created for the partner.
+- 2026-11-13: added `requireAdvertiser()` to `web/lib/auth.ts` (vendor member
+  or enterprise partner via `advertising_ensure_partner_vendor` /
+  `advertising_get_partner_vendor`) with `kind` and `home` on the context.
+  Refactored the vendor advertising actions and pages to use it and to resolve
+  redirect/revalidate targets from the context. Added the same advertising
+  screens under `/enterprise/(dashboard)/advertising/*` for partners, plus the
+  enterprise nav group and bilingual copy.
+- 2026-11-13: web typecheck, `next build` (including the new
+  `/enterprise/advertising/*` routes) and Expo typecheck all pass.
 
 ### Handoff notes
 
@@ -309,3 +344,18 @@ Still worth covering manually or with added SQL:
 - No advertising payment-gateway secret is configured. Manual admin
   verification is the working production path, and promotional-credit checkout
   is available for immediate activation.
+
+### Enterprise advertising handoff
+
+- Enterprise partner id: `96d72e91-21e8-47bd-8298-8f991a2ca84e`
+  (RetailPlus Rewards, status `active`).
+- Linked advertising vendor id: `045492f9-6693-4fbb-9ad5-0276d0b59f4e`, slug
+  `adv_retailplusrewards`, status `approved`.
+- Enterprise members: user `55555555-5555-4555-8555-555555555555` (owner) and
+  user `99999999-9999-4999-8999-999999999999` (owner/admin) for the same partner.
+- The partner surfaces live at `/enterprise/advertising`,
+  `/enterprise/advertising/new`,
+  `/enterprise/advertising/checkout/[id]`,
+  `/enterprise/advertising/campaigns/[id]`,
+  `/enterprise/advertising/campaigns/[id]/edit` and reuse the vendor campaign
+  actions and lifecycle RPCs unchanged.

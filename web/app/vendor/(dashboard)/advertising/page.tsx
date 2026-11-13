@@ -11,7 +11,7 @@ import {
   TrendingUp,
   Wallet,
 } from 'lucide-react';
-import { requireVendor } from '@/lib/auth';
+import { requireAdvertiser } from '@/lib/auth';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Kpi, Notice, PageHead, StatusTag } from '@/components/ui';
@@ -23,7 +23,7 @@ export default async function VendorAdvertisingPage({
   searchParams: Promise<{ error?: string; saved?: string; paused?: string; resumed?: string }>;
 }) {
   const params = await searchParams;
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
   const vendor = ctx.vendor;
 
   const [campaignsResult, statsResult, notificationsResult, creditsResult] = await Promise.all([
@@ -80,7 +80,7 @@ export default async function VendorAdvertisingPage({
                 <Wallet size={14} /> {formatMoney(availableCredit)} credit
               </span>
             ) : null}
-            <Link className="btn sm primary" href="/vendor/advertising/new">
+            <Link className="btn sm primary" href={`${ctx.home}/new`}>
               <Plus size={15} /> New campaign
             </Link>
           </>
@@ -174,7 +174,7 @@ export default async function VendorAdvertisingPage({
           title="No advertising campaigns yet"
           body="Create your first campaign to appear on the homepage carousel, featured business row or other placements."
           action={
-            <Link className="btn primary" href="/vendor/advertising/new">
+            <Link className="btn primary" href={`${ctx.home}/new`}>
               <Plus size={15} /> Create a campaign
             </Link>
           }
@@ -240,7 +240,7 @@ export default async function VendorAdvertisingPage({
                         </td>
                         <td>
                           <div className="row-actions" style={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                            <Link className="btn sm ghost" href={`/vendor/advertising/campaigns/${campaign.id}`}>
+                            <Link className="btn sm ghost" href={`${ctx.home}/campaigns/${campaign.id}`}>
                               Open
                             </Link>
                             {['active', 'scheduled', 'pending_approval'].includes(campaign.status) ? (
@@ -260,7 +260,7 @@ export default async function VendorAdvertisingPage({
                               </form>
                             ) : null}
                             {['draft', 'pending_payment', 'rejected'].includes(campaign.status) ? (
-                              <Link className="btn sm primary" href={`/vendor/advertising/checkout/${campaign.id}`}>
+                              <Link className="btn sm primary" href={`${ctx.home}/checkout/${campaign.id}`}>
                                 Checkout
                               </Link>
                             ) : null}

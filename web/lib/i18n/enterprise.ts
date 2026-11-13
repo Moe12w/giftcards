@@ -26,6 +26,11 @@ const en = {
     inventoryHint: 'Every code and where it is in its life.',
     reports: 'Reports',
     reportsHint: 'What to hand over to finance.',
+    advertisingGroup: 'Advertising',
+    advertising: 'Advertising & promotions',
+    advertisingHint: 'Promote your rewards with paid campaigns across the app.',
+    advertisingNew: 'New campaign',
+    advertisingNewHint: 'Four steps from placement to checkout.',
   },
   chrome: {
     portal: 'Enterprise portal',
@@ -379,6 +384,11 @@ const ar: EnterpriseCopy = {
     inventoryHint: 'كل رمز وأين هو في رحلته.',
     reports: 'التقارير',
     reportsHint: 'ما يُمرَّر إلى المحاسبة.',
+    advertisingGroup: 'الإعلانات',
+    advertising: 'الإعلانات والترويج',
+    advertisingHint: 'اجعل حملات مدفوعة تنشر مكافآتك في التطبيق.',
+    advertisingNew: 'حملة جديدة',
+    advertisingNewHint: 'أربع خطوات من اختيار الموضع إلى الدفع.',
   },
   chrome: {
     portal: 'بوابة الشركاء',

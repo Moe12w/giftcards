@@ -14,7 +14,7 @@ import {
   TrendingUp,
   Wallet,
 } from 'lucide-react';
-import { requireVendor } from '@/lib/auth';
+import { requireAdvertiser } from '@/lib/auth';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Notice, PageHead, ReadRow, StatusTag } from '@/components/ui';
@@ -36,7 +36,7 @@ export default async function VendorAdvertisingCampaignPage({
 }) {
   const { id } = await params;
   const query = await searchParams;
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
 
   const { data: campaign } = await ctx.supabase
     .from('advertising_campaigns')
@@ -82,7 +82,7 @@ export default async function VendorAdvertisingCampaignPage({
 
   return (
     <div className="dash-content">
-      <Link className="back-link" href="/vendor/advertising">
+      <Link className="back-link" href={ctx.home}>
         <ArrowLeft size={15} /> Advertising
       </Link>
       <PageHead
@@ -92,12 +92,12 @@ export default async function VendorAdvertisingCampaignPage({
         actions={
           <>
             {unpaid ? (
-              <Link className="btn sm primary" href={`/vendor/advertising/checkout/${campaign.id}`}>
+              <Link className="btn sm primary" href={`${ctx.home}/checkout/${campaign.id}`}>
                 Checkout
               </Link>
             ) : null}
             {editable ? (
-              <Link className="btn sm" href={`/vendor/advertising/campaigns/${campaign.id}/edit`}>
+              <Link className="btn sm" href={`${ctx.home}/campaigns/${campaign.id}/edit`}>
                 <Pencil size={15} /> Edit
               </Link>
             ) : null}
@@ -273,7 +273,7 @@ export default async function VendorAdvertisingCampaignPage({
                 </form>
               ) : null}
               {unpaid ? (
-                <Link className="btn sm primary" href={`/vendor/advertising/checkout/${campaign.id}`}>
+                <Link className="btn sm primary" href={`${ctx.home}/checkout/${campaign.id}`}>
                   <Receipt size={15} /> Go to checkout
                 </Link>
               ) : null}

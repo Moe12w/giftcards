@@ -415,7 +415,7 @@ begin
   if not found then
     raise exception 'campaign_not_found';
   end if;
-  if not public.can_manage_vendor(c.vendor_id) then
+  if not public.advertising_can_manage_vendor(c.vendor_id) then
     raise exception 'not_authorized';
   end if;
   if c.status not in ('draft', 'rejected') then
@@ -514,7 +514,7 @@ begin
   if not found then
     raise exception 'campaign_not_found';
   end if;
-  if not public.can_manage_vendor(c.vendor_id) then
+  if not public.advertising_can_manage_vendor(c.vendor_id) then
     raise exception 'not_authorized';
   end if;
   if c.payment_status = 'paid' then

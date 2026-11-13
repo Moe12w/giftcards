@@ -122,6 +122,107 @@ export async function requireVendor(): Promise<VendorContext> {
   };
 }
 
+interface AdvertiserContext {
+  supabase: SupabaseClient;
+  user: User;
+  profile: Profile | null;
+  memberships: VendorMember[];
+  vendor: Vendor;
+  role: VendorRole;
+  /** Which surface created this context: a vendor member or an enterprise partner. */
+  kind: 'vendor' | 'enterprise';
+  partner: EnterprisePartner | null;
+  home: '/vendor/advertising' | '/enterprise/advertising';
+}
+
+/**
+ * Guards the advertising surfaces. Resolves the advertiser from either a
+ * vendor membership (kind: 'vendor') or an enterprise partner that acts through
+ * its linked advertising vendor (kind: 'enterprise'). Enterprise partners reuse
+ * the vendor campaign lifecycle behind a partner -> vendor link, so they get the
+ * exact same wizard, checkout, lifecycle and tracking flows.
+ */
+export async function requireAdvertiser(options?: { prefer?: 'vendor' | 'enterprise' }): Promise<AdvertiserContext> {
+  const prefer = options?.prefer ?? 'vendor';
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect('/vendor/login');
+
+  const [{ data: membershipRows }, { data: enterpriseRows }, { data: profile }] = await Promise.all([
+    supabase
+      .from('vendor_members')
+      .select('vendor_id, user_id, role, active, created_at, vendors(*)')
+      .eq('user_id', user.id)
+      .eq('active', true)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('enterprise_members')
+      .select('partner_id, user_id, role, active, created_at, enterprise_partners(*)')
+      .eq('user_id', user.id)
+      .eq('active', true)
+      .order('created_at', { ascending: true }),
+    supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+  ]);
+
+  const memberships = (membershipRows ?? []) as unknown as VendorMember[];
+  const cookieStore = await cookies();
+  const selected = cookieStore.get(VENDOR_COOKIE)?.value;
+  const membership =
+    prefer === 'enterprise' ? undefined : memberships.find((item) => item.vendor_id === selected) ?? memberships[0];
+
+  const base = {
+    supabase,
+    user,
+    profile: (profile as Profile | null) ?? null,
+  };
+
+  if (membership?.vendors) {
+    const vendor = membership.vendors as Vendor;
+    return {
+      ...base,
+      memberships,
+      vendor,
+      role: membership.role,
+      kind: 'vendor',
+      partner: null,
+      home: '/vendor/advertising',
+    };
+  }
+
+  const enterpriseMemberships = (enterpriseRows ?? []) as unknown as (EnterpriseMember & {
+    enterprise_partners: EnterprisePartner | null;
+  })[];
+
+  const enterpriseMembership = enterpriseMemberships[0];
+  if (!enterpriseMembership?.enterprise_partners) redirect('/vendor/register?error=no-vendor');
+
+  const partner = enterpriseMembership.enterprise_partners;
+
+  const { data: vendorJson, error: vendorError } = await supabase.rpc('advertising_get_partner_vendor', {
+    p_partner_id: enterpriseMembership.partner_id,
+  });
+  const vendor = (vendorJson ?? null) as unknown as Vendor | null;
+  if (vendorError || !vendor) redirect('/vendor/register?error=no-vendor');
+
+  const { data: canManage, error: manageError } = await supabase.rpc('advertising_can_manage_vendor', {
+    p_vendor_id: vendor.id,
+  });
+  if (manageError || !canManage) redirect('/vendor/register?error=no-vendor');
+
+  return {
+    ...base,
+    memberships,
+    vendor,
+    role: enterpriseMembership.role as VendorRole,
+    kind: 'enterprise',
+    partner,
+    home: '/enterprise/advertising',
+  };
+}
+
 interface EnterpriseContext {
   supabase: SupabaseClient;
   user: User;

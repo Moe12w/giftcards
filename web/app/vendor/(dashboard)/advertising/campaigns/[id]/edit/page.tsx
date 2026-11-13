@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { requireVendor } from '@/lib/auth';
+import { requireAdvertiser } from '@/lib/auth';
 import { PageHead } from '@/components/ui';
 import { CampaignWizard } from '@/components/CampaignWizard';
 import { updateAdvertisingCampaign } from '@/lib/actions/advertising';
@@ -12,7 +12,7 @@ export default async function EditAdvertisingCampaignPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
 
   const { data: campaign } = await ctx.supabase
     .from('advertising_campaigns')
@@ -50,7 +50,7 @@ export default async function EditAdvertisingCampaignPage({
 
   return (
     <div className="dash-content">
-      <Link className="back-link" href={`/vendor/advertising/campaigns/${campaign.id}`}>
+      <Link className="back-link" href={`${ctx.home}/campaigns/${campaign.id}`}>
         <ArrowLeft size={15} /> Back to campaign
       </Link>
       <PageHead
@@ -65,6 +65,7 @@ export default async function EditAdvertisingCampaignPage({
         categories={(categoriesResult.data ?? []) as { id: string; name: string }[]}
         vendorId={ctx.vendor.id}
         vendorName={ctx.vendor.name}
+        home={ctx.home}
         campaign={campaign as any}
       />
     </div>

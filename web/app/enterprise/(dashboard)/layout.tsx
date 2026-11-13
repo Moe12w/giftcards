@@ -47,6 +47,14 @@ export default async function EnterpriseDashboardLayout({ children }: { children
         { href: '/enterprise/reports', label: t.reports, icon: 'reports', hint: t.reportsHint },
       ],
     },
+    {
+      step: 5,
+      label: t.advertisingGroup,
+      items: [
+        { href: '/enterprise/advertising', label: t.advertising, icon: 'promotions', hint: t.advertisingHint },
+        { href: '/enterprise/advertising/new', label: t.advertisingNew, icon: 'reports', hint: t.advertisingNewHint },
+      ],
+    },
   ];
 
   return (

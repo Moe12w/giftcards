@@ -93,7 +93,7 @@ declare
   v_starts timestamptz;
   v_ends timestamptz;
 begin
-  if not public.can_manage_vendor(p_vendor_id) then
+  if not public.advertising_can_manage_vendor(p_vendor_id) then
     raise exception 'not_authorized';
   end if;
 
@@ -242,7 +242,7 @@ begin
   if not found then
     raise exception 'campaign_not_found';
   end if;
-  if not (public.can_manage_vendor(c.vendor_id) or public.is_admin()) then
+  if not (public.advertising_can_manage_vendor(c.vendor_id) or public.is_admin()) then
     raise exception 'not_authorized';
   end if;
   if c.status not in ('draft', 'pending_payment', 'pending_approval', 'rejected', 'scheduled', 'paused') then
@@ -406,7 +406,7 @@ begin
   if not found then
     raise exception 'campaign_not_found';
   end if;
-  if not (public.can_manage_vendor(c.vendor_id) or public.is_admin()) then
+  if not (public.advertising_can_manage_vendor(c.vendor_id) or public.is_admin()) then
     raise exception 'not_authorized';
   end if;
 
@@ -498,7 +498,7 @@ begin
   if not found then
     raise exception 'campaign_not_found';
   end if;
-  if not (public.can_manage_vendor(c.vendor_id) or public.is_admin()) then
+  if not (public.advertising_can_manage_vendor(c.vendor_id) or public.is_admin()) then
     raise exception 'not_authorized';
   end if;
   if c.status not in ('active', 'scheduled', 'pending_approval') then
@@ -536,7 +536,7 @@ begin
   if not found then
     raise exception 'campaign_not_found';
   end if;
-  if not (public.can_manage_vendor(c.vendor_id) or public.is_admin()) then
+  if not (public.advertising_can_manage_vendor(c.vendor_id) or public.is_admin()) then
     raise exception 'not_authorized';
   end if;
   if c.status <> 'paused' then

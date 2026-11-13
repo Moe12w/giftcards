@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { requireAdmin, requireVendor } from '@/lib/auth';
+import { requireAdmin, requireAdvertiser } from '@/lib/auth';
 import { parseMoneyToMinor } from '@/lib/money';
 
 function str(formData: FormData, key: string): string {
@@ -72,12 +72,13 @@ function creativeFromForm(formData: FormData) {
   };
 }
 
-function refreshVendor(id?: string) {
-  revalidatePath('/vendor');
-  revalidatePath('/vendor/advertising');
+function refreshAdvertiser(kind: 'vendor' | 'enterprise', id?: string) {
+  const base = kind === 'enterprise' ? '/enterprise/advertising' : '/vendor/advertising';
+  revalidatePath(kind === 'enterprise' ? '/enterprise' : '/vendor');
+  revalidatePath(base);
   if (id) {
-    revalidatePath(`/vendor/advertising/campaigns/${id}`);
-    revalidatePath(`/vendor/advertising/checkout/${id}`);
+    revalidatePath(`${base}/campaigns/${id}`);
+    revalidatePath(`${base}/checkout/${id}`);
   }
 }
 
@@ -95,7 +96,7 @@ function refreshAdmin(id?: string) {
 // ---------------------------------------------------------------------------
 
 export async function createAdvertisingCampaign(formData: FormData) {
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
   const placementKey = str(formData, 'placement_key');
   const pricingId = str(formData, 'pricing_id');
   const name = str(formData, 'name');
@@ -104,8 +105,8 @@ export async function createAdvertisingCampaign(formData: FormData) {
   const totalBudget = moneyField(formData, 'total_budget');
   const dailyBudget = moneyField(formData, 'daily_budget') ?? 0;
 
-  if (!placementKey || !pricingId) back('/vendor/advertising/new', 'Choose a placement and pricing model.');
-  if (!startsAt || !endsAt) back('/vendor/advertising/new', 'Choose a start and end date.');
+  if (!placementKey || !pricingId) back(ctx.home, 'Choose a placement and pricing model.');
+  if (!startsAt || !endsAt) back(ctx.home, 'Choose a start and end date.');
 
   const { data, error } = await ctx.supabase.rpc('advertising_create_campaign', {
     p_vendor_id: ctx.vendor.id,
@@ -120,19 +121,19 @@ export async function createAdvertisingCampaign(formData: FormData) {
     p_creative: creativeFromForm(formData),
   });
 
-  if (error) back('/vendor/advertising/new', friendly(error.message));
+  if (error) back(ctx.home, friendly(error.message));
 
-  refreshVendor(data as string);
-  redirect(`/vendor/advertising/checkout/${data}`);
+  refreshAdvertiser(ctx.kind, data as string);
+  redirect(`${ctx.home}/checkout/${data}`);
 }
 
 export async function updateAdvertisingCampaign(formData: FormData) {
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
   const campaignId = str(formData, 'campaign_id');
   const startsAt = isoField(formData, 'starts_at');
   const endsAt = isoField(formData, 'ends_at');
-  if (!campaignId) back('/vendor/advertising', 'Missing campaign.');
-  if (!startsAt || !endsAt) back(`/vendor/advertising/campaigns/${campaignId}/edit`, 'Choose a start and end date.');
+  if (!campaignId) back(ctx.home, 'Missing campaign.');
+  if (!startsAt || !endsAt) back(`${ctx.home}/campaigns/${campaignId}/edit`, 'Choose a start and end date.');
 
   const { error } = await ctx.supabase.rpc('advertising_update_campaign', {
     p_campaign_id: campaignId,
@@ -145,93 +146,93 @@ export async function updateAdvertisingCampaign(formData: FormData) {
     p_creative: creativeFromForm(formData),
   });
 
-  if (error) back(`/vendor/advertising/campaigns/${campaignId}/edit`, friendly(error.message));
+  if (error) back(`${ctx.home}/campaigns/${campaignId}/edit`, friendly(error.message));
 
-  refreshVendor(campaignId);
-  redirect(`/vendor/advertising/campaigns/${campaignId}?saved=1`);
+  refreshAdvertiser(ctx.kind, campaignId);
+  redirect(`${ctx.home}/campaigns/${campaignId}?saved=1`);
 }
 
 export async function submitAdvertisingCampaign(formData: FormData) {
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
   const campaignId = str(formData, 'campaign_id');
-  if (!campaignId) back('/vendor/advertising', 'Missing campaign.');
+  if (!campaignId) back(ctx.home, 'Missing campaign.');
 
   const { error } = await ctx.supabase.rpc('advertising_submit_campaign', {
     p_campaign_id: campaignId,
   });
 
-  if (error) back(`/vendor/advertising/checkout/${campaignId}`, friendly(error.message));
+  if (error) back(`${ctx.home}/checkout/${campaignId}`, friendly(error.message));
 
-  refreshVendor(campaignId);
-  redirect(`/vendor/advertising/checkout/${campaignId}?submitted=1`);
+  refreshAdvertiser(ctx.kind, campaignId);
+  redirect(`${ctx.home}/checkout/${campaignId}?submitted=1`);
 }
 
 export async function payAdvertisingWithCredit(formData: FormData) {
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
   const campaignId = str(formData, 'campaign_id');
-  if (!campaignId) back('/vendor/advertising', 'Missing campaign.');
+  if (!campaignId) back(ctx.home, 'Missing campaign.');
 
   const { error } = await ctx.supabase.rpc('advertising_pay_with_credit', {
     p_campaign_id: campaignId,
   });
 
-  if (error) back(`/vendor/advertising/checkout/${campaignId}`, friendly(error.message));
+  if (error) back(`${ctx.home}/checkout/${campaignId}`, friendly(error.message));
 
-  refreshVendor(campaignId);
-  redirect(`/vendor/advertising/campaigns/${campaignId}?paid=1`);
+  refreshAdvertiser(ctx.kind, campaignId);
+  redirect(`${ctx.home}/campaigns/${campaignId}?paid=1`);
 }
 
 export async function pauseAdvertisingCampaign(formData: FormData) {
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
   const campaignId = str(formData, 'campaign_id');
-  if (!campaignId) back('/vendor/advertising', 'Missing campaign.');
+  if (!campaignId) back(ctx.home, 'Missing campaign.');
   const { error } = await ctx.supabase.rpc('advertising_pause_campaign', {
     p_campaign_id: campaignId,
     p_reason: 'vendor_paused',
   });
-  if (error) back(`/vendor/advertising/campaigns/${campaignId}`, friendly(error.message));
-  refreshVendor(campaignId);
-  redirect(`/vendor/advertising/campaigns/${campaignId}?paused=1`);
+  if (error) back(`${ctx.home}/campaigns/${campaignId}`, friendly(error.message));
+  refreshAdvertiser(ctx.kind, campaignId);
+  redirect(`${ctx.home}/campaigns/${campaignId}?paused=1`);
 }
 
 export async function resumeAdvertisingCampaign(formData: FormData) {
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
   const campaignId = str(formData, 'campaign_id');
-  if (!campaignId) back('/vendor/advertising', 'Missing campaign.');
+  if (!campaignId) back(ctx.home, 'Missing campaign.');
   const { error } = await ctx.supabase.rpc('advertising_resume_campaign', {
     p_campaign_id: campaignId,
   });
-  if (error) back(`/vendor/advertising/campaigns/${campaignId}`, friendly(error.message));
-  refreshVendor(campaignId);
-  redirect(`/vendor/advertising/campaigns/${campaignId}?resumed=1`);
+  if (error) back(`${ctx.home}/campaigns/${campaignId}`, friendly(error.message));
+  refreshAdvertiser(ctx.kind, campaignId);
+  redirect(`${ctx.home}/campaigns/${campaignId}?resumed=1`);
 }
 
 export async function duplicateAdvertisingCampaign(formData: FormData) {
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
   const campaignId = str(formData, 'campaign_id');
-  if (!campaignId) back('/vendor/advertising', 'Missing campaign.');
+  if (!campaignId) back(ctx.home, 'Missing campaign.');
   const { data, error } = await ctx.supabase.rpc('advertising_duplicate_campaign', {
     p_campaign_id: campaignId,
   });
-  if (error) back(`/vendor/advertising/campaigns/${campaignId}`, friendly(error.message));
-  refreshVendor(data as string);
-  redirect(`/vendor/advertising/campaigns/${data}/edit?copied=1`);
+  if (error) back(`${ctx.home}/campaigns/${campaignId}`, friendly(error.message));
+  refreshAdvertiser(ctx.kind, data as string);
+  redirect(`${ctx.home}/campaigns/${data}/edit?copied=1`);
 }
 
 export async function renewAdvertisingCampaign(formData: FormData) {
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
   const campaignId = str(formData, 'campaign_id');
-  if (!campaignId) back('/vendor/advertising', 'Missing campaign.');
+  if (!campaignId) back(ctx.home, 'Missing campaign.');
   const { data, error } = await ctx.supabase.rpc('advertising_renew_campaign', {
     p_campaign_id: campaignId,
   });
-  if (error) back(`/vendor/advertising/campaigns/${campaignId}`, friendly(error.message));
-  refreshVendor(data as string);
-  redirect(`/vendor/advertising/checkout/${data}`);
+  if (error) back(`${ctx.home}/campaigns/${campaignId}`, friendly(error.message));
+  refreshAdvertiser(ctx.kind, data as string);
+  redirect(`${ctx.home}/checkout/${data}`);
 }
 
 export async function markAdvertisingNotificationRead(formData: FormData) {
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
   const id = str(formData, 'notification_id');
   if (id) {
     await ctx.supabase
@@ -239,8 +240,8 @@ export async function markAdvertisingNotificationRead(formData: FormData) {
       .update({ read_at: new Date().toISOString() })
       .eq('id', id);
   }
-  refreshVendor();
-  redirect('/vendor/advertising');
+  refreshAdvertiser(ctx.kind);
+  redirect(ctx.home);
 }
 
 // ---------------------------------------------------------------------------

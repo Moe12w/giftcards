@@ -90,6 +90,7 @@ export function CampaignWizard({
   categories,
   vendorId,
   vendorName,
+  home,
   campaign,
 }: {
   action: (formData: FormData) => void | Promise<void>;
@@ -98,6 +99,8 @@ export function CampaignWizard({
   categories: { id: string; name: string }[];
   vendorId: string;
   vendorName: string;
+  /** Base path for the cancel link, derived from the signed-in advertiser context. */
+  home?: string;
   campaign?: WizardCampaign | null;
 }) {
   const creative = campaign?.advertising_creatives?.[0] ?? {};
@@ -631,7 +634,7 @@ export function CampaignWizard({
               <ArrowLeft size={15} /> Back
             </button>
           ) : (
-            <Link className="btn ghost" href="/vendor/advertising">
+            <Link className="btn ghost" href={home ?? '/vendor/advertising'}>
               Cancel
             </Link>
           )}

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, BadgeCheck, CreditCard, Receipt, ShieldCheck, Wallet } from 'lucide-react';
-import { requireVendor } from '@/lib/auth';
+import { requireAdvertiser } from '@/lib/auth';
 import { formatDateTime } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Notice, PageHead, ReadRow, StatusTag } from '@/components/ui';
@@ -16,7 +16,7 @@ export default async function AdvertisingCheckoutPage({
 }) {
   const { id } = await params;
   const query = await searchParams;
-  const ctx = await requireVendor();
+  const ctx = await requireAdvertiser();
 
   const { data: campaign } = await ctx.supabase
     .from('advertising_campaigns')
@@ -42,7 +42,7 @@ export default async function AdvertisingCheckoutPage({
 
   return (
     <div className="dash-content">
-      <Link className="back-link" href="/vendor/advertising">
+      <Link className="back-link" href={ctx.home}>
         <ArrowLeft size={15} /> Advertising
       </Link>
       <PageHead
@@ -51,7 +51,7 @@ export default async function AdvertisingCheckoutPage({
         description="Payment is verified on the server. A browser success flag can never activate a campaign."
         actions={
           paid ? (
-            <Link className="btn sm primary" href={`/vendor/advertising/campaigns/${campaign.id}`}>
+            <Link className="btn sm primary" href={`${ctx.home}/campaigns/${campaign.id}`}>
               Open campaign
             </Link>
           ) : null
