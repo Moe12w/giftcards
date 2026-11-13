@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -203,6 +203,7 @@ function DashShellInner({
   const pathname = usePathname();
   const { open } = useTutorial();
   const [navOpen, setNavOpen] = useState(false);
+  const scrimRef = useRef<HTMLButtonElement>(null);
   const rtl = locale === 'ar';
   const chrome = CHROME[locale];
   const commonCopy = pick(common, locale);
@@ -212,6 +213,50 @@ function DashShellInner({
   useEffect(() => {
     setNavOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (navOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.overscrollBehavior = 'none';
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.overscrollBehavior = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+      }
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.overscrollBehavior = '';
+    };
+  }, [navOpen]);
+
+  // Update scrim height on resize (iOS address bar show/hide)
+  useEffect(() => {
+    if (!navOpen) return;
+    const handleResize = () => {
+      if (scrimRef.current) {
+        scrimRef.current.style.height = `${window.innerHeight}px`;
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [navOpen]);
 
   function active(href: string) {
     const segments = href.split('/').filter(Boolean);
@@ -223,6 +268,7 @@ function DashShellInner({
     <div className={`dash${rtl ? ' rtl' : ''}${navOpen ? ' nav-open' : ''}`}>
       <button
         type="button"
+        ref={scrimRef}
         className="dash-scrim"
         aria-label={chrome.closeMenu}
         onClick={() => setNavOpen(false)}

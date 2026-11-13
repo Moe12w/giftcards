@@ -2915,23 +2915,24 @@ table.data .sub {
   .dash-scrim {
     display: block;
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
     z-index: 45;
     border: 0;
     padding: 0;
-    background: var(--ink);
+    background: rgba(28, 28, 28, 0.45);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.22s ease;
-    -webkit-appearance: none;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    will-change: opacity;
-    transform: translateZ(0);
+    -webkit-tap-highlight-color: transparent;
   }
 
   .dash.nav-open .dash-scrim {
-    opacity: 0.45;
+    opacity: 1;
     pointer-events: auto;
   }
 
@@ -2946,9 +2947,11 @@ table.data .sub {
     height: 100vh;
     height: 100dvh;
     padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
     transform: translateX(-102%);
     transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.3, 1);
     box-shadow: 6px 0 0 rgba(28, 28, 28, 0.12);
+    -webkit-overflow-scrolling: touch;
   }
 
   .dash.rtl .dash-side {
