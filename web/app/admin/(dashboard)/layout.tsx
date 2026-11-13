@@ -23,6 +23,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
       items: [
         { href: '/admin', label: t.overview, icon: 'dashboard', hint: t.overviewHint },
         { href: '/admin/vendors', label: t.vendors, icon: 'vendors', hint: t.vendorsHint },
+        { href: '/admin/enterprise/advertising', label: t.advertising, icon: 'promotions', hint: t.advertisingHint },
       ],
     },
     {
