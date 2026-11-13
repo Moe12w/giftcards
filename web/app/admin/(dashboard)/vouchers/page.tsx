@@ -40,7 +40,7 @@ export default async function AdminVouchersPage({
   const { data, error } = await ctx.supabase
     .from('vouchers')
     .select(
-      'id, voucher_code, status, fulfilment_type, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, recipient_name, recipient_email, expires_at, created_at, products(title, vendors(name)), orders(id, order_ref), profiles(full_name, email)',
+      'id, voucher_code, status, fulfilment_type, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, recipient_name, recipient_email, expires_at, created_at, products(title, vendors(name)), orders(id, order_ref), profiles!buyer_id(full_name, email)',
     )
     .order('created_at', { ascending: false })
     .limit(2000);
