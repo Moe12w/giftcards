@@ -2919,14 +2919,14 @@ table.data .sub {
     z-index: 45;
     border: 0;
     padding: 0;
-    background: rgba(28, 28, 28, 0.45);
+    background: var(--ink);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.22s ease;
   }
 
   .dash.nav-open .dash-scrim {
-    opacity: 1;
+    opacity: 0.45;
     pointer-events: auto;
   }
 
