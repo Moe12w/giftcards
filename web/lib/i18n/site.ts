@@ -279,6 +279,9 @@ const en = {
     cardSafeTitle: 'Approved and secure',
     cardSafeBody:
       'Business accounts are reviewed and approved by admins. Bulk offers and prices are enforced by backend permissions, not just the UI.',
+    cardSendTitle: 'Send every card automatically',
+    cardSendBody:
+      'Upload the list of people as a CSV. Each person is matched to one gift card and gets their own link by email, ready to open in the Giftly app.',
     eyebrowHow: 'How it works',
     titleHow: 'From registration to delivery in four steps.',
     bodyHow:
@@ -286,12 +289,12 @@ const en = {
     check1: 'Register as a Business / Bulk Buyer with your company details',
     check2: 'Wait for admin approval to unlock restricted bulk deals and pricing',
     check3: 'Browse offers, choose quantity, apply tier pricing automatically and place a bulk order',
-    check4: 'Track orders, download invoices/receipts and export/distribute gift cards (CSV/Excel)',
+    check4: 'Upload your recipient list as CSV and let Giftly email each person their own gift card link',
     timeline: [
       { title: 'Register', body: 'Create a business account with company and contact details.' },
       { title: 'Approval', body: 'Admin reviews and approves your bulk buyer access.' },
       { title: 'Bulk deals', body: 'Browse exclusive offers, volume tiers and place bulk orders.' },
-      { title: 'Distribute', body: 'View orders, invoices and export/assign gift cards to recipients.' },
+      { title: 'Distribute', body: 'Upload your list, and every gift card is emailed to its recipient.' },
     ],
     eyebrowUseCases: 'Use cases',
     titleUseCases: 'Built for teams and campaigns.',
@@ -779,6 +782,9 @@ const ar: SiteCopy = {
     cardSafeTitle: 'موافقة وأمان',
     cardSafeBody:
       'تتم مراجعة حسابات الأعمال واعتمادها من الإدارة. وتُطبَّق قيود الوصول إلى عروض وأسعار الجملة عبر صلاحيات الخادم، وليس الواجهة فقط.',
+    cardSendTitle: 'أرسل كل بطاقة تلقائياً',
+    cardSendBody:
+      'ارفع قائمة الأشخاص كملف CSV. يُطابَق كل شخص مع بطاقة هدية واحدة ويحصل على رابط خاص به عبر البريد، جاهزاً للفتح في تطبيق Giftly.',
     eyebrowHow: 'كيف تعمل',
     titleHow: 'من التسجيل إلى التوزيع في أربع خطوات.',
     bodyHow:
@@ -786,12 +792,12 @@ const ar: SiteCopy = {
     check1: 'سجّل كمشتري أعمال/جملة وأدخل بيانات شركتك',
     check2: 'انتظر موافقة الإدارة لفتح عروض وأسعار الجملة المقيدة',
     check3: 'تصفّح العروض، اختر الكمية، يُطبَّق تسعير الشرائح تلقائياً وأرسل طلب الجملة',
-    check4: 'تابع الطلبات، حمّل الفواتير/الإيصالات وصدّر/وزّع بطاقات الهدايا (CSV/Excel)',
+    check4: 'ارفع قائمة المستلمين كملف CSV، ويرسل Giftly لكل شخص رابط بطاقته بالبريد',
     timeline: [
       { title: 'التسجيل', body: 'أنشئ حساب أعمال مع بيانات الشركة وجهة الاتصال.' },
       { title: 'الموافقة', body: 'تراجع الإدارة طلبك وتعتمد وصول مشتري الجملة.' },
       { title: 'عروض الجملة', body: 'تصفّح العروض الحصرية وشرائح الأسعار وأرسل طلبات الجملة.' },
-      { title: 'التوزيع', body: 'اعرض الطلبات والفواتير وصدّر/عيّن بطاقات الهدايا للمستلمين.' },
+      { title: 'التوزيع', body: 'ارفع قائمتك، وتُرسل كل بطاقة هدية إلى مستلمها بالبريد.' },
     ],
     eyebrowUseCases: 'حالات الاستخدام',
     titleUseCases: 'مصمّمة للفرق والحملات.',

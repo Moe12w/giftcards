@@ -90,7 +90,7 @@ export default async function EnterprisePage({
             <h2>{t.titleWhy}</h2>
           </div>
         </div>
-        <div className="grid-3">
+        <div className="grid-2">
           <article className="card">
             <span className="icon-tile">
               <Building2 size={22} />
@@ -116,6 +116,15 @@ export default async function EnterprisePage({
             <h3 style={{ marginTop: 14 }}>{t.cardSafeTitle}</h3>
             <p className="small" style={{ marginTop: 8 }}>
               {t.cardSafeBody}
+            </p>
+          </article>
+          <article className="card">
+            <span className="icon-tile gold">
+              <Send size={22} />
+            </span>
+            <h3 style={{ marginTop: 14 }}>{t.cardSendTitle}</h3>
+            <p className="small" style={{ marginTop: 8 }}>
+              {t.cardSendBody}
             </p>
           </article>
         </div>

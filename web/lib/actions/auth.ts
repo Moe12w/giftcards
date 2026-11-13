@@ -291,10 +291,29 @@ export async function registerBusinessAccount(formData: FormData) {
 
   if (error) fail('/business/register', error.message);
 
-  await supabase.from('user_roles').upsert({
-    user_id: currentUser.id,
-    role: 'business_buyer',
-  });
+  // The platform role is only set when the account does not already have one,
+  // so a vendor owner or admin keeps their role.
+  const { data: existingRole } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', currentUser.id)
+    .maybeSingle();
+  if (!existingRole || existingRole.role === 'customer') {
+    await supabase.from('user_roles').upsert({
+      user_id: currentUser.id,
+      role: 'business_buyer',
+    });
+  }
+
+  // The platform can decide that new accounts skip the approval queue.
+  const { data: needsApproval } = await supabase.rpc('bulk_registration_requires_approval');
+  if (needsApproval === false) {
+    await supabase
+      .from('business_accounts')
+      .update({ status: 'approved', decided_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq('user_id', currentUser.id);
+    redirect('/business?approved=1');
+  }
 
   redirect('/business/status?status=pending_approval&submitted=1');
 }

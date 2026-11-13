@@ -6,6 +6,7 @@ import { requireEnterprise } from '@/lib/auth';
 import { parseMoneyToMinor } from '@/lib/money';
 import { slugify } from '@/lib/format';
 import { normalizeTone } from '@/lib/catalog';
+import { parseBulkTiers } from '@/lib/bulk';
 
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
@@ -364,4 +365,173 @@ export async function saveEnterpriseProfile(formData: FormData) {
   revalidatePath('/enterprise');
   revalidatePath('/enterprise/settings');
   redirect('/enterprise/settings?saved=1');
+}
+
+/* -------------------------------------------------------------------------
+ * Bulk products (corporate/bulk buyer offers)
+ *
+ * Partners publish their own bulk offers, linked to one of their catalogue
+ * products, with a bulk price and volume tiers. Business buyers only ever see
+ * these when the offer is active.
+ * ---------------------------------------------------------------------- */
+
+export async function createPartnerBulkOffer(formData: FormData) {
+  const ctx = await requireEnterprise();
+  if (ctx.role === 'analyst') {
+    back('/enterprise/bulk-products', 'Analysts have read-only access to bulk offers.');
+  }
+
+  const productId = str(formData, 'product_id');
+  const title = str(formData, 'title');
+  const faceValue = moneyField(formData, 'face_value');
+  const basePrice = moneyField(formData, 'base_unit_price');
+  const minQty = intField(formData, 'min_quantity') ?? 1;
+
+  if (!productId) back('/enterprise/bulk-products/new', 'Choose the product this offer is for.');
+  if (title.length < 2) back('/enterprise/bulk-products/new', 'Give the offer a title.');
+  if (!faceValue || faceValue <= 0) back('/enterprise/bulk-products/new', 'Enter the face value.');
+  if (basePrice === null || basePrice < 0) back('/enterprise/bulk-products/new', 'Enter the bulk selling price.');
+
+  const { data: product } = await ctx.supabase
+    .from('products')
+    .select('id, partner_id')
+    .eq('id', productId)
+    .maybeSingle();
+  if (!product || product.partner_id !== ctx.partner.id) {
+    back('/enterprise/bulk-products/new', 'That product does not belong to your partner account.');
+  }
+
+  const publish = checkbox(formData, 'publish');
+
+  const { data: offer, error } = await ctx.supabase
+    .from('bulk_offers')
+    .insert({
+      vendor_id: null,
+      partner_id: ctx.partner.id,
+      product_id: productId,
+      title,
+      description: optional(formData, 'description'),
+      image_url: optional(formData, 'image_url'),
+      face_value_minor: faceValue,
+      base_unit_price_minor: basePrice,
+      currency: 'QAR',
+      min_quantity: Math.max(1, minQty),
+      max_quantity: intField(formData, 'max_quantity'),
+      available_quantity: intField(formData, 'available_quantity'),
+      min_order_value_minor: moneyField(formData, 'min_order_value'),
+      max_order_value_minor: moneyField(formData, 'max_order_value'),
+      starts_at: optional(formData, 'starts_at'),
+      ends_at: optional(formData, 'ends_at'),
+      expires_at: optional(formData, 'expires_at'),
+      delivered_digitally: checkbox(formData, 'delivered_digitally'),
+      additional_conditions: optional(formData, 'additional_conditions'),
+      status: publish ? 'active' : 'draft',
+      enabled: publish,
+      updated_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single();
+
+  if (error || !offer) back('/enterprise/bulk-products/new', error?.message ?? 'Could not create the bulk offer.');
+
+  const tiers = parseBulkTiers(str(formData, 'tiers'));
+  if (tiers.length > 0) {
+    const { error: tierError } = await ctx.supabase.from('bulk_offer_price_tiers').insert(
+      tiers.map((tier, index) => ({
+        offer_id: offer.id,
+        min_quantity: tier.min,
+        max_quantity: tier.max,
+        unit_price_minor: tier.priceMinor,
+        sort_order: index,
+      })),
+    );
+    if (tierError) back(`/enterprise/bulk-products/${offer.id}`, tierError.message);
+  }
+
+  revalidatePath('/enterprise/bulk-products');
+  redirect(`/enterprise/bulk-products/${offer.id}?saved=1`);
+}
+
+export async function updatePartnerBulkOffer(formData: FormData) {
+  const ctx = await requireEnterprise();
+  if (ctx.role === 'analyst') {
+    back('/enterprise/bulk-products', 'Analysts have read-only access to bulk offers.');
+  }
+
+  const offerId = str(formData, 'offer_id');
+  const title = str(formData, 'title');
+  const faceValue = moneyField(formData, 'face_value');
+  const basePrice = moneyField(formData, 'base_unit_price');
+  const minQty = intField(formData, 'min_quantity') ?? 1;
+
+  if (!offerId) back('/enterprise/bulk-products', 'Missing offer.');
+  if (title.length < 2) back(`/enterprise/bulk-products/${offerId}`, 'Give the offer a title.');
+  if (!faceValue || faceValue <= 0) back(`/enterprise/bulk-products/${offerId}`, 'Enter the face value.');
+  if (basePrice === null || basePrice < 0) back(`/enterprise/bulk-products/${offerId}`, 'Enter the bulk selling price.');
+
+  const { error } = await ctx.supabase
+    .from('bulk_offers')
+    .update({
+      title,
+      description: optional(formData, 'description'),
+      image_url: optional(formData, 'image_url'),
+      face_value_minor: faceValue,
+      base_unit_price_minor: basePrice,
+      min_quantity: Math.max(1, minQty),
+      max_quantity: intField(formData, 'max_quantity'),
+      available_quantity: intField(formData, 'available_quantity'),
+      min_order_value_minor: moneyField(formData, 'min_order_value'),
+      max_order_value_minor: moneyField(formData, 'max_order_value'),
+      starts_at: optional(formData, 'starts_at'),
+      ends_at: optional(formData, 'ends_at'),
+      expires_at: optional(formData, 'expires_at'),
+      delivered_digitally: checkbox(formData, 'delivered_digitally'),
+      additional_conditions: optional(formData, 'additional_conditions'),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', offerId)
+    .eq('partner_id', ctx.partner.id);
+
+  if (error) back(`/enterprise/bulk-products/${offerId}`, error.message);
+
+  await ctx.supabase.from('bulk_offer_price_tiers').delete().eq('offer_id', offerId);
+  const tiers = parseBulkTiers(str(formData, 'tiers'));
+  if (tiers.length > 0) {
+    const { error: tierError } = await ctx.supabase.from('bulk_offer_price_tiers').insert(
+      tiers.map((tier, index) => ({
+        offer_id: offerId,
+        min_quantity: tier.min,
+        max_quantity: tier.max,
+        unit_price_minor: tier.priceMinor,
+        sort_order: index,
+      })),
+    );
+    if (tierError) back(`/enterprise/bulk-products/${offerId}`, tierError.message);
+  }
+
+  revalidatePath('/enterprise/bulk-products');
+  revalidatePath(`/enterprise/bulk-products/${offerId}`);
+  redirect(`/enterprise/bulk-products/${offerId}?saved=1`);
+}
+
+export async function setPartnerBulkOfferStatus(formData: FormData) {
+  const ctx = await requireEnterprise();
+  if (ctx.role === 'analyst') {
+    back('/enterprise/bulk-products', 'Analysts have read-only access to bulk offers.');
+  }
+  const offerId = str(formData, 'offer_id');
+  const status = str(formData, 'status') as 'draft' | 'active' | 'paused' | 'expired';
+  if (!['draft', 'active', 'paused', 'expired'].includes(status)) {
+    back('/enterprise/bulk-products', 'Choose a valid status.');
+  }
+
+  const { error } = await ctx.supabase
+    .from('bulk_offers')
+    .update({ status, enabled: status === 'active', updated_at: new Date().toISOString() })
+    .eq('id', offerId)
+    .eq('partner_id', ctx.partner.id);
+  if (error) back('/enterprise/bulk-products', error.message);
+
+  revalidatePath('/enterprise/bulk-products');
+  redirect('/enterprise/bulk-products?saved=1');
 }

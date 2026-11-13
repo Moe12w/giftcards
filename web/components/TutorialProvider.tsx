@@ -85,8 +85,8 @@ export function TutorialProvider({
 
   const copy = COPY[locale];
   const rtl = locale === 'ar';
-  const steps = script.steps;
-  const step: TutorialStep = steps[index];
+  const steps = script.steps ?? [];
+  const step: TutorialStep | undefined = steps[index];
   const isLast = index === steps.length - 1;
 
   const close = useCallback(() => {
@@ -179,15 +179,15 @@ export function TutorialProvider({
     [close, isOpen, locale, open],
   );
 
-  const stepTitle = rtl ? step.titleAr : step.title;
-  const stepBody = rtl ? step.bodyAr : step.body;
-  const stepTip = rtl ? step.tipAr : step.tip;
+  const stepTitle = step ? (rtl ? step.titleAr : step.title) : '';
+  const stepBody = step ? (rtl ? step.bodyAr : step.body) : '';
+  const stepTip = step ? (rtl ? step.tipAr : step.tip) : undefined;
 
   return (
     <TutorialContext.Provider value={contextValue}>
       {children}
 
-      {isOpen ? (
+      {isOpen && step ? (
         <div className="tut-overlay" role="dialog" aria-modal="true" aria-label={script.title}>
           <button
             type="button"

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { claimUrl } from '@/lib/email';
 
 function csvEscape(value: unknown) {
   const s = value == null ? '' : String(value);
@@ -29,10 +30,10 @@ export async function GET(
     .from('bulk_order_vouchers')
     .select('*')
     .eq('bulk_order_id', id)
-    .order('created_at', { ascending: true });
+    .order('assignment_index', { ascending: true });
 
   const header = [
-    'order_ref','company','vendor','offer','quantity','face_value_minor','unit_price_minor','total_face_value_minor','total_paid_minor','discount_minor','platform_fee_minor','vendor_payable_minor','currency','order_status','payment_status','allocation_index','voucher_code','voucher_id','recipient_name','recipient_email','delivery_status'
+    'order_ref','company','vendor','offer','quantity','face_value_minor','unit_price_minor','total_face_value_minor','total_paid_minor','discount_minor','platform_fee_minor','vendor_payable_minor','currency','order_status','payment_status','allocation_index','voucher_code','voucher_id','recipient_name','recipient_email','gift_message','delivery_status','claim_link',
   ];
   const rows = (vouchers && vouchers.length ? vouchers : [null]).map((v: any, i: number) => [
     order.order_ref,
@@ -55,7 +56,9 @@ export async function GET(
     v?.voucher_id ?? '',
     v?.recipient_name ?? '',
     v?.recipient_email ?? '',
+    v?.gift_message ?? '',
     v?.delivery_status ?? '',
+    v?.claim_token ? claimUrl(v.claim_token) : '',
   ]);
 
   const csv = [header, ...rows].map((r) => r.map(csvEscape).join(',')).join('\n');
@@ -63,6 +66,7 @@ export async function GET(
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': `attachment; filename="${order.order_ref}-bulk-order.csv"`,
+      'Cache-Control': 'no-store',
     },
   });
 }

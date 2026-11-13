@@ -30,6 +30,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
       label: t.group2,
       items: [
         { href: '/admin/products', label: t.products, icon: 'products', hint: t.productsHint },
+        { href: '/admin/bulk-products', label: t.bulkProducts ?? 'Bulk products', icon: 'catalogue', hint: t.bulkProductsHint ?? 'Bulk offers sold to business buyers.' },
         { href: '/admin/promotions', label: t.promotions, icon: 'promotions', hint: t.promotionsHint },
       ],
     },
@@ -38,6 +39,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
       label: t.group3,
       items: [
         { href: '/admin/orders', label: t.orders, icon: 'orders', hint: t.ordersHint },
+        { href: '/admin/bulk-orders', label: t.bulkOrders ?? 'Bulk orders', icon: 'finance', hint: t.bulkOrdersHint ?? 'Corporate orders and gift card issuance.' },
         { href: '/admin/vouchers', label: t.vouchers, icon: 'vouchers', hint: t.vouchersHint },
       ],
     },

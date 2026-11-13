@@ -3,7 +3,7 @@ import { Building2, Search } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
 import { formatDate, initials } from '@/lib/format';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
-import { adminSetBusinessAccountStatus } from '@/lib/actions/admin';
+import { adminSetBusinessAccountStatus, adminSetBulkRegistrationApproval } from '@/lib/actions/admin';
 import { common } from '@/lib/i18n/common';
 import { pick } from '@/lib/i18n';
 import { getUserLocale } from '@/lib/i18n/server';
@@ -27,6 +27,14 @@ export default async function AdminBusinessAccountsPage({
     .select('*')
     .order('created_at', { ascending: false })
     .limit(1000);
+
+  const { data: approvalSetting } = await ctx.supabase
+    .from('system_settings')
+    .select('value')
+    .eq('key', 'bulk_registration_requires_approval')
+    .maybeSingle();
+  const approvalRequired =
+    approvalSetting?.value === false || approvalSetting?.value === 'false' ? false : true;
 
   const userIds = (accounts ?? []).map((a) => a.user_id);
   const { data: profiles } = userIds.length
@@ -75,6 +83,24 @@ export default async function AdminBusinessAccountsPage({
           <span>Approved</span>
         </div>
       </div>
+
+      <section className="panel" style={{ marginBottom: 16 }}>
+        <div className="panel-head">
+          <h3>Approval required for new registrations</h3>
+        </div>
+        <div className="panel-body">
+          <p className="small muted">
+            When this is on, every new business account waits for approval before it can see bulk prices and buy bulk offers.
+            Turn it off and new registrations can buy straight away.
+          </p>
+          <form action={adminSetBulkRegistrationApproval} className="btn-row" style={{ marginTop: 12 }}>
+            <label className="checkbox-row">
+              <input type="checkbox" name="required" defaultChecked={approvalRequired} /> New registrations need approval
+            </label>
+            <button className="btn sm primary" type="submit">Save setting</button>
+          </form>
+        </div>
+      </section>
 
       <form className="toolbar" action="/admin/business-accounts" method="get">
         <div className="search-bar">

@@ -1,45 +1,70 @@
 import Link from 'next/link';
+import { ExternalLink, LifeBuoy } from 'lucide-react';
+import { DashShell, type NavGroup } from '@/components/DashShell';
 import { requireApprovedBusinessBuyer } from '@/lib/auth';
-import { signOut } from '@/lib/actions/auth';
-import { Logo } from '@/components/Logo';
+import { initials } from '@/lib/format';
+import { businessCopy } from '@/lib/i18n/business';
+import { BUSINESS_SCRIPT } from '@/lib/tutorial';
+import { pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function BusinessPortalLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireApprovedBusinessBuyer();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(businessCopy, locale);
+
+  const nav: NavGroup[] = [
+    {
+      step: 1,
+      label: t.nav.group1,
+      items: [
+        { href: '/business', label: t.nav.overview, icon: 'dashboard', hint: t.nav.overviewHint },
+        { href: '/business/deals', label: t.nav.deals, icon: 'products', hint: t.nav.dealsHint },
+      ],
+    },
+    {
+      step: 2,
+      label: t.nav.group2,
+      items: [
+        { href: '/business/orders', label: t.nav.orders, icon: 'orders', hint: t.nav.ordersHint },
+      ],
+    },
+    {
+      step: 3,
+      label: t.nav.group3,
+      items: [
+        { href: '/', label: t.nav.publicSite, icon: 'catalogue', hint: t.nav.accountHint },
+        { href: '/contact', label: t.nav.support, icon: 'support', hint: t.nav.accountHint },
+      ],
+    },
+  ];
 
   return (
-    <div className="dash-layout">
-      <aside className="dash-sidebar">
-        <div className="dash-brand">
-          <Logo href="/business" />
-          <div>
-            <p className="small strong">Business / Bulk Buyer</p>
-            <p className="small muted">{ctx.account.company_name}</p>
-          </div>
-        </div>
-        <nav className="dash-nav" aria-label="Business portal">
-          <Link href="/business">Bulk deals</Link>
-          <Link href="/business/orders">Orders & invoices</Link>
-          <Link href="/">Public site</Link>
-          <Link href="/contact">Support</Link>
-        </nav>
-        <div style={{ marginTop: 'auto', padding: 16 }}>
-          <form action={signOut}>
-            <button className="btn sm ghost" type="submit">Sign out</button>
-          </form>
-        </div>
-      </aside>
-      <main className="dash-main">
-        <header className="dash-topbar">
-          <div>
-            <p className="eyebrow lavender">Approved business account</p>
-            <h2 style={{ margin: 0, fontSize: '1rem' }}>{ctx.account.company_name}</h2>
-          </div>
-          <div className="btn-row">
-            <span className="tag success">Bulk pricing unlocked</span>
-          </div>
-        </header>
-        {children}
-      </main>
-    </div>
+    <DashShell
+      portalLabel={t.chrome.portal}
+      workspaceName={ctx.account.company_name}
+      workspaceMeta={t.chrome.bulkPricing}
+      userName={ctx.profile?.full_name ?? ctx.account.contact_name}
+      userEmail={ctx.account.business_email}
+      userInitials={initials(ctx.profile?.full_name ?? ctx.account.company_name)}
+      accent="lavender"
+      nav={nav}
+      tutorial={BUSINESS_SCRIPT}
+      locale={locale}
+      autoOpenTutorial={false}
+      topRight={
+        <>
+          <span className="tag lavender dash-role">{t.chrome.bulkPricing}</span>
+          <Link className="btn sm ghost" href="/" target="_blank">
+            <ExternalLink size={14} /> {t.nav.publicSite}
+          </Link>
+          <Link className="btn sm primary" href="/business/deals">
+            <LifeBuoy size={14} /> {t.nav.deals}
+          </Link>
+        </>
+      }
+    >
+      {children}
+    </DashShell>
   );
 }

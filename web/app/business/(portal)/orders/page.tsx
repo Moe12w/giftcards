@@ -3,6 +3,9 @@ import { requireApprovedBusinessBuyer } from '@/lib/auth';
 import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { businessCopy } from '@/lib/i18n/business';
+import { pick } from '@/lib/i18n';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function BusinessOrdersPage({
   searchParams,
@@ -11,6 +14,8 @@ export default async function BusinessOrdersPage({
 }) {
   const params = await searchParams;
   const ctx = await requireApprovedBusinessBuyer();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+  const t = pick(businessCopy, locale);
 
   const { data: orders, error } = await ctx.supabase
     .from('bulk_orders')
@@ -20,38 +25,34 @@ export default async function BusinessOrdersPage({
 
   return (
     <div className="dash-content">
-      <PageHead
-        eyebrow="Business portal"
-        title="Bulk orders & invoices"
-        description="Track your bulk purchases, payment status, pricing snapshots, and distribute purchased gift cards."
-      />
+      <PageHead eyebrow={t.orders.eyebrow} title={t.orders.title} description={t.orders.description} />
       <Notice error={params.error ?? error?.message} />
 
       {!orders || orders.length === 0 ? (
         <EmptyState
-          title="No bulk orders yet"
-          body="Browse corporate deals and place a bulk order to see it here."
-          action={<Link className="btn primary sm" href="/business">Browse bulk deals</Link>}
+          title={t.orders.emptyTitle}
+          body={t.orders.emptyBody}
+          action={<Link className="btn primary sm" href="/business/deals">{t.orders.browseDeals}</Link>}
         />
       ) : (
         <section className="panel">
           <div className="panel-head">
-            <h3>{orders.length} {orders.length === 1 ? 'order' : 'orders'}</h3>
+            <h3>{t.orders.orderCount.replace('{count}', String(orders.length))}</h3>
           </div>
           <div className="panel-body flush">
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Order ref</th>
-                    <th>Vendor / Offer</th>
-                    <th className="num">Qty</th>
-                    <th className="num">Unit paid</th>
-                    <th className="num">Total paid</th>
-                    <th className="num">Discount</th>
-                    <th>Status</th>
-                    <th>Placed</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th>{t.orders.ref}</th>
+                    <th>{t.orders.vendorOffer}</th>
+                    <th className="num">{t.orders.quantity}</th>
+                    <th className="num">{t.orders.unitPaid}</th>
+                    <th className="num">{t.orders.totalPaid}</th>
+                    <th className="num">{t.orders.discount}</th>
+                    <th>{t.orders.status}</th>
+                    <th>{t.orders.placed}</th>
+                    <th style={{ textAlign: 'right' }}>{t.orders.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -60,7 +61,7 @@ export default async function BusinessOrdersPage({
                       <td><span className="strong">{o.order_ref}</span></td>
                       <td>
                         <span className="small">{o.vendors?.name ?? '—'}</span><br />
-                        <span className="sub">{o.bulk_offers?.title ?? 'Bulk offer'}</span>
+                        <span className="sub">{o.bulk_offers?.title ?? '—'}</span>
                       </td>
                       <td className="num">{o.quantity}</td>
                       <td className="num">{formatMoney(o.unit_price_minor)}</td>
@@ -69,11 +70,15 @@ export default async function BusinessOrdersPage({
                       <td>
                         <div style={{ display: 'grid', gap: 4 }}>
                           <StatusTag status={o.status} />
-                          <span className="sub">Payment: {o.payment_status}</span>
+                          <span className="sub">{t.orders.payment}: {o.payment_status}</span>
                         </div>
                       </td>
-                      <td className="small muted">{formatDate(o.created_at)}</td>
-                      <td><div className="row-actions"><Link className="btn sm" href={`/business/orders/${o.id}`}>Open</Link></div></td>
+                      <td className="small muted">{formatDate(o.created_at, locale)}</td>
+                      <td>
+                        <div className="row-actions">
+                          <Link className="btn sm" href={`/business/orders/${o.id}`}>{t.orders.open}</Link>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

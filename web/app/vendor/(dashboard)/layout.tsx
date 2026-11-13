@@ -39,6 +39,7 @@ export default async function VendorDashboardLayout({ children }: { children: Re
       label: t.group3,
       items: [
         { href: '/vendor/orders', label: t.orders, icon: 'orders', hint: t.ordersHint },
+        { href: '/vendor/bulk-orders', label: t.bulkOrders ?? 'Bulk orders', icon: 'finance', hint: t.bulkOrdersHint ?? 'Corporate orders and what you earned.' },
         { href: '/vendor/vouchers', label: t.vouchers, icon: 'vouchers', hint: t.vouchersHint },
       ],
     },

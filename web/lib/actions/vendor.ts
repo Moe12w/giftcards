@@ -1,4 +1,4 @@
-'use server';
+﻿'use server';
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -8,6 +8,7 @@ import { requireVendor } from '@/lib/auth';
 import { slugify } from '@/lib/format';
 import { normalizeTone } from '@/lib/catalog';
 import { parseMoneyToMinor } from '@/lib/money';
+import { parseBulkTiers } from '@/lib/bulk';
 
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
@@ -250,7 +251,7 @@ export async function createProduct(formData: FormData) {
   if (fulfilmentType === 'experience') {
     packages = parsePackages(str(formData, 'packages'));
     if (packages.length === 0) {
-      back('/vendor/products/new', 'Add at least one package as “Label | sessions | price”.');
+      back('/vendor/products/new', 'Add at least one package as â€œLabel | sessions | priceâ€.');
     }
     minMinor = Math.min(...packages.map((item) => item.priceMinor));
     maxMinor = Math.max(...packages.map((item) => item.priceMinor));
@@ -391,7 +392,7 @@ export async function updateProduct(formData: FormData) {
 export async function setProductStatus(formData: FormData) {
   const ctx = await requireVendor();
   if (ctx.role === 'redemption_staff') {
-    back('/vendor/products', 'Only owners and managers can change a gift’s status.');
+    back('/vendor/products', 'Only owners and managers can change a giftâ€™s status.');
   }
 
   const id = str(formData, 'product_id');
@@ -956,43 +957,6 @@ export async function removeVendorImage(kind: 'logo' | 'banner'): Promise<ImageA
 /* -------------------------------------------------------------------------
  * Bulk products (corporate/bulk buyer offers)
  * ---------------------------------------------------------------------- */
-
-function parseBulkTiers(raw: string): Array<{ min: number; max: number | null; priceMinor: number }> {
-  return raw
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .flatMap((line) => {
-      // Formats: "10-49|90", "50+|85", "10|49|90"
-      const parts = line.split('|').map((p) => p.trim());
-      if (parts.length < 2) return [];
-      let min = 0;
-      let max: number | null = null;
-      let priceRaw = parts[parts.length - 1];
-      const range = parts[0];
-      if (parts.length === 3) {
-        min = Number.parseInt(parts[0], 10) || 0;
-        max = parts[1] ? Number.parseInt(parts[1], 10) || null : null;
-      } else if (range.includes('-')) {
-        const [a, b] = range.split('-').map((x) => x.trim());
-        min = Number.parseInt(a, 10) || 0;
-        max = b ? Number.parseInt(b, 10) || null : null;
-      } else if (range.endsWith('+')) {
-        min = Number.parseInt(range.slice(0, -1), 10) || 0;
-        max = null;
-      } else {
-        min = Number.parseInt(range, 10) || 0;
-      }
-      try {
-        const priceMinor = parseMoneyToMinor(priceRaw);
-        if (!priceMinor || priceMinor <= 0 || min <= 0) return [];
-        return [{ min, max, priceMinor }];
-      } catch {
-        return [];
-      }
-    })
-    .sort((a, b) => a.min - b.min);
-}
 
 export async function createBulkOffer(formData: FormData) {
   const ctx = await requireVendor();

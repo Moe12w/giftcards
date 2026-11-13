@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { parseMoneyToMinor } from '@/lib/money';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
@@ -343,4 +344,106 @@ export async function adminSetBusinessAccountStatus(formData: FormData) {
   await record(ctx.supabase, `business_account.status.${status}`, 'business_account', accountId, { status });
   revalidatePath('/admin/business-accounts');
   redirect(`${returnTo}?saved=1`);
+}
+
+/* -------------------------------------------------------------------------
+ * Bulk purchasing: fulfilment and moderation
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Confirms payment for a bulk order and issues one gift card per unit.
+ *
+ * The cards are issued by the database (reusing the normal gift card
+ * issuance), so every card has its own identifier, redemption value and
+ * claim link. The buyer then sends them to their recipients.
+ */
+export async function adminFulfilBulkOrder(formData: FormData) {
+  const ctx = await requireAdmin();
+  const orderId = str(formData, 'order_id');
+  if (!orderId) back('/admin/bulk-orders', 'Missing bulk order.');
+
+  const admin = createAdminClient();
+
+  const { data: order, error: orderError } = await admin
+    .from('bulk_orders')
+    .select('id, order_ref, quantity, status')
+    .eq('id', orderId)
+    .maybeSingle();
+  if (orderError || !order) back('/admin/bulk-orders', orderError?.message ?? 'Bulk order not found.');
+
+  const { error } = await admin.rpc('fulfill_bulk_order', {
+    p_bulk_order_id: orderId,
+  });
+  if (error) back('/admin/bulk-orders', error.message);
+
+  await record(ctx.supabase, 'bulk_order.fulfilled', 'bulk_order', orderId, { quantity: order.quantity });
+  revalidatePath('/admin/bulk-orders');
+  redirect(`/admin/bulk-orders?saved=1`);
+}
+
+/** Pauses, resumes or removes a bulk offer. */
+export async function adminSetBulkOfferStatus(formData: FormData) {
+  const ctx = await requireAdmin();
+  const offerId = str(formData, 'offer_id');
+  const status = str(formData, 'status');
+  const enabled = formData.get('enabled') === 'on' || formData.get('enabled') === 'true';
+  if (!offerId) back('/admin/bulk-products', 'Missing bulk offer.');
+  if (!['draft', 'active', 'paused', 'expired'].includes(status)) {
+    back('/admin/bulk-products', 'Choose a valid status.');
+  }
+
+  const { error } = await ctx.supabase
+    .from('bulk_offers')
+    .update({ status, enabled, updated_at: new Date().toISOString() })
+    .eq('id', offerId);
+  if (error) back('/admin/bulk-products', error.message);
+
+  await record(ctx.supabase, `bulk_offer.status.${status}`, 'bulk_offer', offerId, { enabled });
+  revalidatePath('/admin/bulk-products');
+  redirect('/admin/bulk-products?saved=1');
+}
+
+/** Cancels or refunds a bulk order. Issued cards stay valid for their holders. */
+export async function adminSetBulkOrderStatus(formData: FormData) {
+  const ctx = await requireAdmin();
+  const orderId = str(formData, 'order_id');
+  const status = str(formData, 'status');
+  const note = optional(formData, 'note');
+  if (!orderId) back('/admin/bulk-orders', 'Missing bulk order.');
+  if (!['cancelled', 'refunded', 'failed'].includes(status)) {
+    back('/admin/bulk-orders', 'Choose a valid status.');
+  }
+
+  const { error } = await ctx.supabase.rpc('admin_set_bulk_order_status', {
+    p_bulk_order_id: orderId,
+    p_status: status,
+    p_note: note,
+  });
+  if (error) back('/admin/bulk-orders', error.message);
+
+  await record(ctx.supabase, `bulk_order.status.${status}`, 'bulk_order', orderId, { status });
+  revalidatePath('/admin/bulk-orders');
+  redirect('/admin/bulk-orders?saved=1');
+}
+
+/**
+ * Turns the approval requirement for new business accounts on or off.
+ * When it is off, a new registration can buy bulk offers straight away.
+ */
+export async function adminSetBulkRegistrationApproval(formData: FormData) {
+  const ctx = await requireAdmin();
+  const required = formData.get('required') === 'on' || formData.get('required') === 'true';
+
+  const { error } = await ctx.supabase.from('system_settings').upsert({
+    key: 'bulk_registration_requires_approval',
+    value: required,
+    is_public: false,
+    updated_by: ctx.user.id,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) back('/admin/business-accounts', error.message);
+
+  await record(ctx.supabase, 'setting.bulk_registration_requires_approval', 'system_setting', 'bulk_registration_requires_approval', { required });
+  revalidatePath('/admin/business-accounts');
+  redirect('/admin/business-accounts?saved=1');
 }

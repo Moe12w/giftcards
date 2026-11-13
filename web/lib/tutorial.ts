@@ -40,13 +40,80 @@ export interface TutorialStep {
 }
 
 export interface TutorialScript {
-  id: 'vendor' | 'enterprise' | 'admin';
+  id: 'vendor' | 'enterprise' | 'admin' | 'business';
   title: string;
   titleAr: string;
   intro: string;
   introAr: string;
   steps: TutorialStep[];
 }
+
+/**
+ * The walkthrough for a business account buying gift cards in bulk.
+ */
+export const BUSINESS_SCRIPT: TutorialScript = {
+  id: 'business',
+  title: 'How bulk buying works for a business',
+  titleAr: 'كيف يعمل الشراء بالجملة للشركات',
+  intro:
+    'Four minutes, and you will know how to buy gift cards at corporate prices and get them to your people without a spreadsheet.',
+  introAr:
+    'أربع دقائق فقط، وستعرف كيف تشتري بطاقات الهدايا بأسعار الشركات وتوصلها إلى فريقك دون جداول بيانات.',
+  steps: [
+    {
+      id: 'lifecycle',
+      art: 'lifecycle',
+      title: 'One order, many gift cards',
+      titleAr: 'طلب واحد، وبطاقات كثيرة',
+      body:
+        'A bulk order is one purchase of many gift cards. Each card keeps its own face value, its own code and its own claim link, so you can send them to different people.',
+      bodyAr:
+        'طلب الجملة هو شراء واحد لعدد من بطاقات الهدايا. ولكل بطاقة قيمتها الاسمية ورمزها ورابط الاستلام الخاص، فترسلها إلى أشخاص مختلفين.',
+      tip: 'The discount is only on what you pay. Every card still redeems at face value.',
+      tipAr: 'الخصم على ما تدفعه فقط، أما كل بطاقة فتبقى تُسترد بالقيمة الاسمية.',
+      href: '/business',
+    },
+    {
+      id: 'types',
+      art: 'types',
+      title: 'Volume pricing, applied for you',
+      titleAr: 'تسعير الكميات يُطبَّق تلقائياً',
+      body:
+        'Vendors publish bulk offers with tiers: ten cards at one price, fifty at a lower one, five hundred at the best. Choose a quantity and the right tier is applied to the total automatically.',
+      bodyAr:
+        'ينشر البائعون عروض جملة بشرائح: عشر بطاقات بسعر، وخمسون بسعر أقل، وخمسمئة بالأفضل. اختر الكمية ويُطبَّق سعر الشريحة المناسب على الإجمالي تلقائياً.',
+      tip: 'Bulk prices are only visible to approved business accounts.',
+      tipAr: 'أسعار الجملة تظهر لحسابات الأعمال المعتمدة فقط.',
+      href: '/business/deals',
+    },
+    {
+      id: 'import',
+      art: 'import',
+      title: 'Upload the people who get them',
+      titleAr: 'ارفع قائمة الأشخاص',
+      body:
+        'Paste a CSV of names and emails, or upload the file. The first row is matched to card one, the second to card two, and so on. A message column is optional.',
+      bodyAr:
+        'الصق قائمة أسماء وبريد إلكتروني، أو ارفع الملف. السطر الأول يُطابَق مع البطاقة الأولى، والثاني مع الثانية، وهكذا. ورسالة اختيارية يمكن إضافتها.',
+      tip: 'One gift card is issued for every person on the list.',
+      tipAr: 'تُصدر بطاقة هدية واحدة لكل شخص في القائمة.',
+      href: '/business/orders',
+    },
+    {
+      id: 'claim',
+      art: 'claim',
+      title: 'Send every card in one go',
+      titleAr: 'أرسل كل البطاقات دفعة واحدة',
+      body:
+        'Once payment is confirmed, each gift card is issued and emailed to its recipient with a personal claim link, exactly like a normal gift. You can resend a single card or the whole batch.',
+      bodyAr:
+        'بعد تأكيد الدفع، تُصدر كل بطاقة هدية وتُرسل بالبريد إلى مستلمها برابط استلام خاص، تماماً كالهدية العادية. ويمكنك إعادة إرسال بطاقة واحدة أو المجموعة كاملة.',
+      tip: 'Download the order as CSV for your finance records.',
+      tipAr: 'حمّل الطلب كملف CSV لسجلاتك المالية.',
+      href: '/business/orders',
+    },
+  ],
+};
 
 const TYPES_STEP = (href: string): TutorialStep => ({
   id: 'types',

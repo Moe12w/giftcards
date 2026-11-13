@@ -29,7 +29,10 @@ export default async function EnterpriseDashboardLayout({ children }: { children
     {
       step: 2,
       label: t.group2,
-      items: [{ href: '/enterprise/products', label: t.products, icon: 'products', hint: t.productsHint }],
+      items: [
+        { href: '/enterprise/products', label: t.products, icon: 'products', hint: t.productsHint },
+        { href: '/enterprise/bulk-products', label: t.bulkProducts ?? 'Bulk products', icon: 'catalogue', hint: t.bulkProductsHint ?? 'Corporate pricing for business buyers.' },
+      ],
     },
     {
       step: 3,
