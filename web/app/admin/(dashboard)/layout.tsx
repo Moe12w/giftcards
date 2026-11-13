@@ -23,7 +23,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
       items: [
         { href: '/admin', label: t.overview, icon: 'dashboard', hint: t.overviewHint },
         { href: '/admin/vendors', label: t.vendors, icon: 'vendors', hint: t.vendorsHint },
-        { href: '/admin/enterprise/advertising', label: t.advertising, icon: 'promotions', hint: t.advertisingHint },
+        { href: '/admin/enterprise', label: t.enterprise, icon: 'enterprise', hint: t.enterpriseHint },
       ],
     },
     {
@@ -50,7 +50,6 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
       items: [
         { href: '/admin/customers', label: t.customers, icon: 'customers', hint: t.customersHint },
         { href: '/admin/business-accounts', label: t.businessAccounts ?? 'Business accounts', icon: 'customers', hint: t.businessAccountsHint ?? 'Bulk buyer registrations and approvals.' },
-        { href: '/admin/enterprise', label: t.enterprise, icon: 'enterprise', hint: t.enterpriseHint },
       ],
     },
     {
