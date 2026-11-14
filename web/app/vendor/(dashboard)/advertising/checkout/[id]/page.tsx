@@ -36,6 +36,12 @@ export default async function AdvertisingCheckoutPage({
 
   const availableCredit = (credits ?? []).reduce((sum: number, row: any) => sum + Number(row.remaining_minor ?? 0), 0);
   const creative = (campaign.advertising_creatives ?? [])[0];
+  const bookedPeriods = Math.max(
+    1,
+    Math.round(
+      (new Date(campaign.ends_at).getTime() - new Date(campaign.starts_at).getTime()) / (6 * 60 * 60 * 1000),
+    ),
+  );
   const paid = campaign.payment_status === 'paid';
   const canSubmit = ['draft', 'rejected'].includes(campaign.status);
   const canPayWithCredit = !paid && availableCredit >= Number(campaign.quote_amount_minor ?? 0);
@@ -105,6 +111,10 @@ export default async function AdvertisingCheckoutPage({
               />
               <ReadRow label="Starts" value={formatDateTime(campaign.starts_at)} />
               <ReadRow label="Ends" value={formatDateTime(campaign.ends_at)} />
+              <ReadRow
+                label="Booked"
+                value={`${bookedPeriods} × 6-hour period${bookedPeriods === 1 ? '' : 's'} (${bookedPeriods * 6} hours)`}
+              />
               <ReadRow label="Slot" value={campaign.slot_number ? `Slot ${campaign.slot_number}` : 'Shared placement'} />
               <ReadRow
                 label="Total budget"

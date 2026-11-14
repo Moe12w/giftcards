@@ -138,6 +138,12 @@ export function CampaignWizard({
     campaign?.pricing_id ?? firstPlacement?.advertising_pricing?.[0]?.id ?? '',
   );
   const [slotNumber, setSlotNumber] = useState(campaign?.slot_number ?? 1);
+  const [periods, setPeriods] = useState(() => {
+    if (!campaign) return 1;
+    const hours =
+      (new Date(campaign.ends_at).getTime() - new Date(campaign.starts_at).getTime()) / (60 * 60 * 1000);
+    return Math.max(1, Math.round(hours / 6));
+  });
   const [destinationType, setDestinationType] = useState(String(creative.destination_type ?? 'business'));
   const [headline, setHeadline] = useState(String(creative.headline ?? ''));
   const [body, setBody] = useState(String(creative.body ?? ''));
@@ -154,7 +160,9 @@ export function CampaignWizard({
   const slotPrice = slotBased
     ? placement?.slot_prices_minor?.[slotNumber - 1] ?? price?.fixed_price_minor ?? 0
     : price?.fixed_price_minor ?? 0;
-  const quoteMinor = slotPrice;
+  const quoteMinor = slotPrice * periods;
+  const PERIOD_CHOICES = [1, 2, 3, 4, 6, 8, 12];
+  const periodsLocked = Boolean(campaign && campaign.payment_status === 'paid');
   const needsImage = placement?.format === 'banner' || placement?.format === 'carousel';
   const visiblePlacements = placements.filter((row) => surfaceFor(row.key) === surface);
   const slots = placement ? slotsByPlacement[placement.key] ?? [] : [];
@@ -244,8 +252,16 @@ export function CampaignWizard({
       />
       <input
         type="hidden"
+        name="periods"
+        value={periods}
+      />
+      <input
+        type="hidden"
         name="ends_at"
-        value={campaign ? campaign.ends_at : new Date(nextSlotStart.getTime() + 6 * 60 * 60 * 1000).toISOString()}
+        value={new Date(
+          (campaign ? new Date(campaign.starts_at).getTime() : nextSlotStart.getTime()) +
+            periods * 6 * 60 * 60 * 1000,
+        ).toISOString()}
       />
       <input type="hidden" name="type" value="image" />
       <input type="hidden" name="sponsored_label" value="Sponsored" />
@@ -390,8 +406,30 @@ export function CampaignWizard({
                   : `The next available time for your ad in this slot is in ${hoursToNextSlot} hour${hoursToNextSlot === 1 ? '' : 's'} — ${nextSlotStart.toLocaleString()}.`}
               </div>
               <span className="hint">
-                Every booking runs for 6 hours and starts at the next free time in the slot. Slot 1 is seen first and
-                costs the most. No calendar to fill in.
+                Slot 1 is seen first and costs the most. No calendar to fill in — your ad takes the next free time in
+                the slot.
+              </span>
+            </div>
+          ) : null}
+          {slotBased ? (
+            <div className="field full" style={{ marginTop: 14 }}>
+              <label>How many 6-hour periods?</label>
+              <div className="btn-row" style={{ flexWrap: 'wrap' }}>
+                {PERIOD_CHOICES.map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    className={`btn sm${periods === count ? ' primary' : ' ghost'}`}
+                    onClick={() => setPeriods(count)}
+                    disabled={periodsLocked}
+                  >
+                    {count} × 6h{count === 1 ? '' : ` · ${(count * slotPrice) > 0 ? formatMoney(count * slotPrice) : ''}`}
+                  </button>
+                ))}
+              </div>
+              <span className="hint">
+                {periods} period{periods === 1 ? '' : 's'} = {periods * 6} hours at {formatMoney(slotPrice)} per period.
+                {campaign?.payment_status === 'paid' ? ' A paid campaign keeps the length it was bought for.' : ''}
               </span>
             </div>
           ) : null}
@@ -594,7 +632,18 @@ export function CampaignWizard({
               </div>
               <div>
                 <span className="k">Runs for</span>
-                <span className="v">6 hours</span>
+                <span className="v">
+                  {periods} × 6 hours ({periods * 6} hours)
+                </span>
+              </div>
+              <div>
+                <span className="k">Ends</span>
+                <span className="v">
+                  {new Date(
+                    (campaign ? new Date(campaign.starts_at).getTime() : nextSlotStart.getTime()) +
+                      periods * 6 * 60 * 60 * 1000,
+                  ).toLocaleString()}
+                </span>
               </div>
               {slotBased ? (
                 <div>

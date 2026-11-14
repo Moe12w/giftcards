@@ -133,6 +133,7 @@ export async function createAdvertisingCampaign(formData: FormData) {
     p_daily_budget_minor: dailyBudget,
     p_slot_number: intField(formData, 'slot_number') ?? 1,
     p_creative: creativeFromForm(formData),
+    p_periods: Math.min(Math.max(intField(formData, 'periods') ?? 1, 1), 120),
   });
 
   if (error) back(ctx.home, friendly(error.message));
