@@ -4,6 +4,7 @@ import { requireAdvertiser } from '@/lib/auth';
 import { PageHead } from '@/components/ui';
 import { CampaignWizard } from '@/components/CampaignWizard';
 import { createAdvertisingCampaign } from '@/lib/actions/advertising';
+import { loadAdvertisingSlotMap } from '@/lib/advertising-slots';
 import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function NewAdvertisingCampaignPage() {
@@ -11,7 +12,7 @@ export default async function NewAdvertisingCampaignPage() {
   const vendor = ctx.vendor;
   const locale = await getUserLocale(ctx.profile?.preferred_language);
 
-  const [placementsResult, offersResult, categoriesResult] = await Promise.all([
+  const [placementsResult, offersResult, categoriesResult, slotsByPlacement] = await Promise.all([
     ctx.supabase
       .from('advertising_placements')
       .select('*, advertising_pricing(*)')
@@ -21,7 +22,7 @@ export default async function NewAdvertisingCampaignPage() {
       .from('offers')
       .select('id, title')
       .eq('vendor_id', vendor.id)
-      .eq('status', 'published')
+      .eq('is_active', true)
       .order('title', { ascending: true })
       .limit(200),
     ctx.supabase
@@ -29,6 +30,7 @@ export default async function NewAdvertisingCampaignPage() {
       .select('id, name')
       .eq('active', true)
       .order('sort_order', { ascending: true }),
+    loadAdvertisingSlotMap(ctx.supabase),
   ]);
 
   const placements = (placementsResult.data ?? [])
@@ -61,6 +63,7 @@ export default async function NewAdvertisingCampaignPage() {
         vendorName={vendor.name}
         home={ctx.home}
         locale={locale}
+        slotsByPlacement={slotsByPlacement}
       />
     </div>
   );

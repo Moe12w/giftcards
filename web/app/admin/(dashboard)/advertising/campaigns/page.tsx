@@ -150,6 +150,7 @@ export default async function AdminAdvertisingCampaignsPage({
                       <td>
                         <span className="small">{campaign.advertising_placements?.name ?? campaign.placement_key}</span>
                         <div className="sub">
+                          {campaign.slot_number ? `Slot ${campaign.slot_number} · ` : ''}
                           {campaign.pricing_model.toUpperCase()}
                           {campaign.pricing_model === 'cpc' ? ` · ${formatMoney(campaign.cpc_rate_minor)}/click` : null}
                           {campaign.pricing_model === 'cpm' ? ` · ${formatMoney(campaign.cpm_rate_minor)}/1k` : null}

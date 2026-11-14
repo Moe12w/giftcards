@@ -208,12 +208,13 @@ export default async function AdminAdvertisingCampaignPage({
             <div className="split-list">
               <ReadRow label="Advertiser" value={campaign.vendors?.name ?? 'Platform'} />
               <ReadRow label="Placement" value={campaign.advertising_placements?.name ?? campaign.placement_key} />
+              <ReadRow label="Slot" value={campaign.slot_number ? `Slot ${campaign.slot_number}` : 'Not slotted'} />
               <ReadRow label="Pricing model" value={campaign.pricing_model.toUpperCase()} />
               <ReadRow
                 label="Rate"
                 value={
                   campaign.pricing_model === 'fixed'
-                    ? formatMoney(campaign.fixed_price_minor)
+                    ? formatMoney(campaign.quote_amount_minor)
                     : campaign.pricing_model === 'cpc'
                       ? `${formatMoney(campaign.cpc_rate_minor)} / click`
                       : `${formatMoney(campaign.cpm_rate_minor)} / 1,000 impressions`

@@ -515,6 +515,254 @@ export function tutorialScript(id: 'vendor' | 'enterprise' | 'admin'): TutorialS
 }
 
 /**
+ * The advertising walkthrough for a vendor or an enterprise partner.
+ *
+ * Both rent the same inventory, so the flow is identical: pick a placement and
+ * a numbered slot, upload a creative, request a 6-72 hour window, then pay.
+ * There is no auction, no auto-renew and no metered billing to explain.
+ */
+function advertisingAdvertiserScript(portal: 'vendor' | 'enterprise'): TutorialScript {
+  const enterprise = portal === 'enterprise';
+  return {
+    id: portal,
+    title: enterprise
+      ? 'How advertising works for a partner'
+      : 'How advertising works for a business',
+    titleAr: enterprise ? 'كيف يعمل الإعلان للشريك' : 'كيف يعمل الإعلان لنشاطك',
+    intro: enterprise
+      ? 'Six short steps: choose a placement and a numbered slot, upload the creative, pick a window, pay, and watch it go live across the app.'
+      : 'Six short steps: choose a placement and a numbered slot, upload the banner, pick a window, pay, and watch your business appear across the app.',
+    introAr: enterprise
+      ? 'ست خطوات قصيرة: اختر الموضع والرقم في الكاروسيل، وارفع التصميم، وحدد المدة، وادفع، ثم شاهده يظهر في التطبيق.'
+      : 'ست خطوات قصيرة: اختر الموضع والرقم في الكاروسيل، وارفع الصورة، وحدد المدة، وادفع، ثم شاهد نشاطك يظهر في التطبيق.',
+    steps: [
+      {
+        id: 'types',
+        art: 'types',
+        title: 'You are renting a numbered space',
+        titleAr: 'أنت تستأجر مساحة مرقّمة',
+        body:
+          'Every advertising position is a set of numbered slots. Slot 1 is the first thing a customer sees and costs the most; later slots are cheaper. Homepage, search, every category and every collection has its own carousel, so you choose the exact surface you want. When a carousel fills up, the spaces that are not rented stay empty — nothing is auctioned and nothing rotates on a timer.',
+        bodyAr:
+          'كل موضع إعلاني مجموعة من الأماكن المرقّمة. المكان الأول هو أول ما يراه العميل وهو الأغلى، والأماكن التالية أقل سعراً. ولكل فئة وكل مجموعة كاروسيلها الخاص، فتختار السطح الذي تريده بدقة. وعندما يمتلئ الكاروسيل، تبقى الأماكن غير المستأجرة فارغة: لا مزاد ولا تبديل بمؤقّت.',
+        tip: 'The same slot can be rented by someone else right after your window ends.',
+        tipAr: 'يمكن لغيرك استئجار المكان نفسه مباشرة بعد انتهاء مدتك.',
+        href: `/${portal}/advertising/new`,
+      },
+      {
+        id: 'packages',
+        art: 'packages',
+        title: 'Each slot has its own fixed price',
+        titleAr: 'لكل مكان سعر ثابت',
+        body:
+          'Prices are set by the platform, per placement and per slot, and they are shown before you pay. You rent for between 6 and 72 hours. There is no auto-renew: when your window ends, the slot is released for the next advertiser and you book again if you want it back.',
+        bodyAr:
+          'تحدد المنصة الأسعار لكل موضع ولكل مكان، وتظهر لك قبل الدفع. والمدة بين 6 و72 ساعة. لا يوجد تجديد تلقائي: عند انتهاء مدتك يُحرَّر المكان للإعلان التالي، وتحجز من جديد إن أردت العودة.',
+        tip: 'Book early if you want the same slot again — it goes to whoever books first.',
+        tipAr: 'احجز مبكراً إن أردت المكان نفسه مجدداً، فهو لمن يحجز أولاً.',
+        href: `/${portal}/advertising/new`,
+      },
+      {
+        id: 'create',
+        art: 'create',
+        title: 'Upload the creative',
+        titleAr: 'ارفع التصميم',
+        body:
+          'Upload the banner image (and a mobile version), then add a headline, an optional short body and a button label. Gift-card placements ask you to pick one of your own gift cards instead of an image, so the ad opens straight into the right card.',
+        bodyAr:
+          'ارفع صورة البانر (ونسخة للجوال)، ثم أضف عنواناً ونصاً قصيراً اختيارياً ونص الزر. أما مواضع بطاقات الهدايا فتطلب اختيار بطاقة من بطاقاتك بدلاً من الصورة، ليُفتح الإعلان على البطاقة المناسبة مباشرة.',
+        tip: 'Only upload images you own the rights to. The platform reviews every creative.',
+        tipAr: 'ارفع صوراً تملك حقوقها فقط. والمنصة تراجع كل تصميم.',
+        href: `/${portal}/advertising/new`,
+      },
+      {
+        id: 'publish',
+        art: 'publish',
+        title: 'Pick the slot and the window',
+        titleAr: 'اختر المكان والمدة',
+        body:
+          'Choose the slot number and the exact start and end time. If the slot is already rented, the form tells you the time it frees up and lets you start from there. Nothing is double-booked.',
+        bodyAr:
+          'اختر رقم المكان ووقت البداية والنهاية بدقة. وإذا كان المكان مستأجراً، يخبرك النموذج بالوقت الذي يتحرر فيه ويسمح لك بالبدء منه. فلا يُحجز المكان مرتين.',
+        tip: 'The minimum window is 6 hours and the maximum is 72 hours.',
+        tipAr: 'أقل مدة 6 ساعات وأقصاها 72 ساعة.',
+        href: `/${portal}/advertising/new`,
+      },
+      {
+        id: 'sell',
+        art: 'sell',
+        title: 'Pay once to lock the space',
+        titleAr: 'ادفع مرة واحدة لتثبيت المساحة',
+        body:
+          'Advertising is prepaid at a fixed price. You can pay with promotional credit if you have any, or submit the campaign and let the platform team verify a bank transfer. A browser success flag is never trusted — payment is confirmed on the server before anything activates.',
+        bodyAr:
+          'الإعلان مدفوع مقدماً بسعر ثابت. يمكنك الدفع من رصيدك الترويجي إن وُجد، أو إرسال الحملة ليتحقق فريق المنصة من التحويل البنكي. ولا يُعتمد أي إشارة نجاح من المتصفح: يُثبَّت الدفع في الخادم قبل التفعيل.',
+        href: `/${portal}/advertising`,
+      },
+      {
+        id: 'issue',
+        art: 'issue',
+        title: 'It goes live, or waits its turn',
+        titleAr: 'يظهر مباشرة أو ينتظر دوره',
+        body:
+          'A paid and approved campaign takes its slot at the start time and leaves at the end time. If the slot is still occupied, the campaign is queued and activates the moment it clears. You are notified at every step.',
+        bodyAr:
+          'الحملة المدفوعة والمعتمدة تأخذ مكانها في وقت البداية وتغادره في وقت النهاية. وإذا كان المكان مشغولاً، تنتظر الحملة دورها وتُفعَّل فور تحرّره. وتصلك إشعارات في كل خطوة.',
+        tip: 'Pausing a campaign does not free the slot. It stays yours until the window ends.',
+        tipAr: 'إيقاف الحملة مؤقتاً لا يحرر المكان، بل يبقى لك حتى نهاية المدة.',
+        href: `/${portal}/advertising`,
+      },
+      {
+        id: 'report',
+        art: 'report',
+        title: 'See exactly what it delivered',
+        titleAr: 'اعرف بالضبط ما حققه',
+        body:
+          'The overview counts impressions only when the ad is actually displayed, plus clicks, conversions inside the attribution window, and the money spent. Open any campaign for its daily delivery table and its approval history.',
+        bodyAr:
+          'تحتسب النظرة العامة الظهور فقط عندما يُعرض الإعلان فعلاً، إضافة إلى النقرات والتحويلات داخل نافذة الإسناد والمبلغ المنفق. وافتح أي حملة لترى جدول التسليم اليومي وسجل الموافقات.',
+        href: `/${portal}/advertising`,
+      },
+      {
+        id: 'ledger',
+        art: 'ledger',
+        title: 'Advertising money is kept separate',
+        titleAr: 'أموال الإعلانات منفصلة',
+        body:
+          'Advertising payments, charges and credits live in their own ledger. They never mix with gift-card sales, settlements or your wallet, so your advertising budget and your gift-card revenue stay easy to reconcile.',
+        bodyAr:
+          'مدفوعات الإعلانات ورسومها وأرصدتها في سجل مستقل. ولا تختلط أبداً بمبيعات بطاقات الهدايا أو التسويات أو محفظتك، فيبقى مطابقة ميزانية الإعلان وإيرادات البطاقات سهلة.',
+        href: `/${portal}/advertising`,
+      },
+    ],
+  };
+}
+
+export const ADVERTISING_VENDOR_SCRIPT: TutorialScript = advertisingAdvertiserScript('vendor');
+export const ADVERTISING_ENTERPRISE_SCRIPT: TutorialScript = advertisingAdvertiserScript('enterprise');
+
+/** The advertising walkthrough for the platform team. */
+export const ADVERTISING_ADMIN_SCRIPT: TutorialScript = {
+  id: 'admin',
+  title: 'How advertising is run from the platform side',
+  titleAr: 'كيف تُدار الإعلانات من جهة المنصة',
+  intro:
+    'Eight steps: the revenue view, the slot inventory, the prices you set, approvals, advertisers, rules, overrides and the separate ledger.',
+  introAr:
+    'ثماني خطوات: نظرة الإيرادات، ومخزون الأماكن، والأسعار التي تحددها، والموافقات، والمعلنون، والقواعد، والتجاوزات، والسجل المستقل.',
+  steps: [
+    {
+      id: 'report',
+      art: 'report',
+      title: 'Start with revenue',
+      titleAr: 'ابدأ بالإيرادات',
+      body:
+        'The advertising overview shows booked value, live campaigns, what is waiting for payment and what is waiting for review. Every placement and every pricing model is broken out, so you can see which space actually sells.',
+      bodyAr:
+        'تعرض النظرة العامة للإعلانات القيمة المحجوزة والحملات الحيّة وما ينتظر الدفع وما ينتظر المراجعة. وكل موضع وكل نموذج تسعير مفصّل، لترى أي مساحة تُباع فعلاً.',
+      tip: 'Revenue here is advertising revenue only. Gift-card sales are reported elsewhere.',
+      tipAr: 'الإيرادات هنا إيرادات إعلانات فقط، أما مبيعات بطاقات الهدايا فتُقرأ في مكان آخر.',
+      href: '/admin/advertising',
+    },
+    {
+      id: 'types',
+      art: 'types',
+      title: 'One placement, many numbered slots',
+      titleAr: 'موضع واحد وأماكن مرقّمة',
+      body:
+        'Each placement has a fixed number of slots and a price per slot. Slot 1 is the most expensive because it is seen first. Set how many slots a placement sells, and the app fills them in order. Every category and collection has its own placement; adding a category creates its carousel automatically.',
+      bodyAr:
+        'لكل موضع عدد ثابت من الأماكن وسعر لكل مكان. المكان الأول هو الأغلى لأنه يُرى أولاً. وحدد عدد الأماكن المتاحة لكل موضع، ويملؤها التطبيق بالترتيب. ولكل فئة ومجموعة موضعها الخاص، وإضافة فئة تنشئ كاروسيلها تلقائياً.',
+      tip: 'A placement can sell fewer slots than it has. Empty slots simply render nothing.',
+      tipAr: 'يمكن للموضع بيع أماكن أقل مما لديه، والأماكن الفارغة لا تعرض شيئاً.',
+      href: '/admin/advertising/placements',
+    },
+    {
+      id: 'packages',
+      art: 'packages',
+      title: 'You set the slot prices',
+      titleAr: 'أنت تحدد أسعار الأماكن',
+      body:
+        'Open a placement and give each slot its own price. The order is the product: slot 1 should cost more than slot 2, and so on. New prices apply only to new bookings — a campaign keeps the price it paid.',
+      bodyAr:
+        'افتح الموضع وحدد سعراً لكل مكان. الترتيب هو المنتج: سعر المكان الأول أعلى من الثاني وهكذا. والأسعار الجديدة تُطبَّق على الحجوزات الجديدة فقط، فتحتفظ كل حملة بسعرها المدفوع.',
+      tip: 'You also choose which payment models a placement accepts — fixed, CPC or CPM.',
+      tipAr: 'وأنت أيضاً تختار نماذج الدفع التي يقبلها الموضع: ثابت أو لكل نقرة أو لكل ألف ظهور.',
+      href: '/admin/advertising/placements',
+    },
+    {
+      id: 'approve',
+      art: 'approve',
+      title: 'Approve before anything shows',
+      titleAr: 'اعتمد قبل أن يظهر أي شيء',
+      body:
+        'A campaign can only activate after it is paid and approved. The review queue shows the creative, the destination and the slot. Approve it, reject it with a note, or leave it waiting — the vendor is notified either way.',
+      bodyAr:
+        'لا تُفعَّل الحملة إلا بعد الدفع والاعتماد. وتعرض قائمة المراجعة التصميم والوجهة والمكان. اعتمدها أو ارفضها مع ملاحظة أو اتركها منتظرة، ويُبلَّغ المعلن في كل حالة.',
+      tip: 'Approval is also where you catch a broken image or a link that leaves the marketplace.',
+      tipAr: 'المراجعة أيضاً مكان اكتشاف صورة معطوبة أو رابط يخرج من السوق.',
+      href: '/admin/advertising/campaigns',
+    },
+    {
+      id: 'support',
+      art: 'support',
+      title: 'Manage advertisers, not their whole account',
+      titleAr: 'أدر المعلنين لا حساباتهم كاملة',
+      body:
+        'The advertisers page lists every business with advertising privileges. You can suspend advertising for one of them without suspending their vendor account, and their live campaigns pause immediately. Grant promotional credit here too.',
+      bodyAr:
+        'تُدرج صفحة المعلنين كل نشاط لديه صلاحية الإعلان. ويمكنك تعليق الإعلان لنشاط دون تعليق حساب المتجر، فتتوقف حملاته الحيّة فوراً. وامنح الرصيد الترويجي من هنا أيضاً.',
+      tip: 'A suspended advertiser keeps selling gift cards. Only advertising stops.',
+      tipAr: 'المعلن المعلَّق يبقى يبيع بطاقات الهدايا، ويتوقف الإعلان فقط.',
+      href: '/admin/advertising/advertisers',
+    },
+    {
+      id: 'moderate',
+      art: 'moderate',
+      title: 'Tune the rules, not the code',
+      titleAr: 'اضبط القواعد لا الكود',
+      body:
+        'Approval requirements, payment windows, unpaid-campaign expiry and the reporting windows all live in advertising rules. Change a value and the next delivery or lifecycle run uses it. No release is needed.',
+      bodyAr:
+        'متطلبات الاعتماد ومهل الدفع وانتهاء الحملات غير المدفوعة ونوافذ التقارير كلها في قواعد الإعلان. غيّر القيمة فتستخدمها دورة التسليم التالية. دون إصدار جديد.',
+      tip: 'Rules are audited: every change records who changed it and what the value was.',
+      tipAr: 'القواعد مُدقَّقة: كل تغيير يسجل من غيّره وما كانت القيمة.',
+      href: '/admin/advertising/rules',
+    },
+    {
+      id: 'issue',
+      art: 'issue',
+      title: 'Override a campaign when needed',
+      titleAr: 'تجاوز حملة عند الحاجة',
+      body:
+        'On any campaign you can pause it, remove it, extend its end time, refund it, grant credit, or override capacity so it can take a slot that is reported full. Every override is written to the audit trail with your user.',
+      bodyAr:
+        'في أي حملة يمكنك إيقافها أو إزالتها أو تمديد نهايتها أو استردادها أو منح رصيد أو تجاوز السعة لتأخذ مكاناً يُبلّغ عنه أنه ممتلئ. وكل تجاوز يُكتب في سجل التدقيق باسمك.',
+      tip: 'A refund closes the campaign and reverses the ledger entry. Over-refunding is blocked.',
+      tipAr: 'الاسترداد يُغلق الحملة ويعكس قيد السجل، ويُمنع استرداد أكثر من المدفوع.',
+      href: '/admin/advertising/campaigns',
+    },
+    {
+      id: 'ledger',
+      art: 'ledger',
+      title: 'Reconcile the advertising ledger',
+      titleAr: 'طابق سجل الإعلانات',
+      body:
+        'Payments, charges, credits and refunds post to the advertising ledger only. It is deliberately separate from gift-card sales and settlements, so finance can reconcile advertising without touching marketplace revenue.',
+      bodyAr:
+        'تُقيَّد المدفوعات والرسوم والأرصدة والاستردادات في سجل الإعلانات وحده. وهو منفصل عمداً عن مبيعات بطاقات الهدايا وتسوياتها، لتطابق المالية الإعلانات دون المساس بإيرادات السوق.',
+      href: '/admin/advertising/finance',
+    },
+  ],
+};
+
+export function advertisingTutorialScript(portal: 'vendor' | 'enterprise' | 'admin'): TutorialScript {
+  if (portal === 'admin') return ADVERTISING_ADMIN_SCRIPT;
+  if (portal === 'enterprise') return ADVERTISING_ENTERPRISE_SCRIPT;
+  return ADVERTISING_VENDOR_SCRIPT;
+}
+
+/**
  * Maps the page you are on to the step that explains it, so the guide can
  * open in the right place instead of at the beginning.
  */

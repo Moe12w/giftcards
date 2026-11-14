@@ -3,7 +3,7 @@
 // campaign, a price or a schedule: the component asks for a placement key and
 // renders whatever the delivery function returns. An empty response hides the
 // whole section, so the customer app degrades cleanly when no campaign is live.
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Image,
   Linking,
@@ -20,7 +20,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
+import { router } from 'expo-router';
 import { ArrowRight, Megaphone } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -60,7 +60,7 @@ function aspectRatioFrom(config: Record<string, unknown> | undefined): number {
 
 function autoRotateSeconds(config: Record<string, unknown> | undefined): number {
   const value = Number(config?.auto_rotate_seconds);
-  if (!Number.isFinite(value) || value <= 0) return 6;
+  if (!Number.isFinite(value) || value <= 0) return 15;
   return Math.min(30, Math.max(3, Math.round(value)));
 }
 
@@ -134,22 +134,20 @@ export function SponsoredCarousel({
   const ratio = useMemo(() => aspectRatioFrom(placement?.config), [placement?.config]);
   const seconds = useMemo(() => autoRotateSeconds(placement?.config), [placement?.config]);
 
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      listSponsoredAds(placementKey, limit)
-        .then((next) => {
-          if (!active) return;
-          setPlacement(next);
-          setIndex(0);
-          indexRef.current = 0;
-        })
-        .catch(() => active && setPlacement(null));
-      return () => {
-        active = false;
-      };
-    }, [placementKey, limit]),
-  );
+  useEffect(() => {
+    let active = true;
+    listSponsoredAds(placementKey, limit)
+      .then((next) => {
+        if (!active) return;
+        setPlacement(next);
+        setIndex(0);
+        indexRef.current = 0;
+      })
+      .catch(() => active && setPlacement(null));
+    return () => {
+      active = false;
+    };
+  }, [placementKey, limit]);
 
   useEffect(() => {
     indexRef.current = index;
@@ -209,7 +207,17 @@ export function SponsoredCarousel({
     }, 10000);
   }
 
-  if (ads.length === 0) return null;
+  if (ads.length === 0) {
+    return (
+      <View style={[styles.carousel, style]}>
+        <Card padded={false} edgeColor={edges.ink}>
+          <View style={[styles.imageFallback, { aspectRatio: 2 }]}>
+            <Megaphone size={30} color={colors.ink} />
+          </View>
+        </Card>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.carousel, style]}>
@@ -316,23 +324,29 @@ export function SponsoredStrip({
   const { t, i18n } = useTranslation();
   const [placement, setPlacement] = useState<SponsoredPlacement | null>(null);
 
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      listSponsoredAds(placementKey, limit)
-        .then((next) => active && setPlacement(next))
-        .catch(() => active && setPlacement(null));
-      return () => {
-        active = false;
-      };
-    }, [placementKey, limit]),
-  );
+  useEffect(() => {
+    let active = true;
+    listSponsoredAds(placementKey, limit)
+      .then((next) => active && setPlacement(next))
+      .catch(() => active && setPlacement(null));
+    return () => {
+      active = false;
+    };
+  }, [placementKey, limit]);
 
   const ads = placement?.ads ?? [];
-  if (ads.length === 0) return null;
-
   const title =
     variant === 'business' ? t('discovery.sponsoredBusinesses') : t('discovery.sponsoredGiftCards');
+  if (ads.length === 0) {
+    return (
+      <View style={style}>
+        <SectionHeader title={title} />
+        <View style={styles.emptyStrip}>
+          <Text style={styles.emptyStripText}>No sponsored items</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={style}>
@@ -446,6 +460,8 @@ const styles = StyleSheet.create({
   // re-apply the gutter inside the content so cards line up with the page.
   hScrollOuter: { marginHorizontal: -spacing.gutter, marginTop: spacing.sm },
   hScroll: { gap: spacing.sm, paddingHorizontal: spacing.gutter },
+  emptyStrip: { padding: spacing.md, alignItems: 'center' },
+  emptyStripText: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted },
   nativeWrap: { width: 240 },
   nativeCard: { overflow: 'hidden' },
   nativeMedia: { position: 'relative', height: 116, backgroundColor: colors.skySoft },

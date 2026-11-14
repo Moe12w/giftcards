@@ -7,6 +7,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
+import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { offersForCollection } from '@/src/lib/catalog';
 import { listActiveOffers } from '@/src/lib/data';
 import type { Offer } from '@/src/lib/types';
@@ -37,6 +38,11 @@ export default function CollectionScreen() {
     <Screen>
       <FlowHeader title={title} subtitle={subtitle} onBack={() => router.back()} />
 
+      {/* Each collection rents its own carousel. Empty slots simply render nothing. */}
+      {slug ? (
+        <SponsoredStrip placementKey={`collection_${slug}`} variant="gift_card" limit={8} />
+      ) : null}
+
       {loading ? (
         <ActivityIndicator color={colors.teal} style={styles.loader} />
       ) : results.length === 0 ? (
@@ -47,16 +53,18 @@ export default function CollectionScreen() {
           tone="lavender"
         />
       ) : (
-        <View style={styles.list}>
-          {results.map((offer, index) => (
-            <OfferCard
-              key={offer.id}
-              offer={offer}
-              index={index}
-              onPress={() => router.push(`/(customer)/gift/${offer.id}`)}
-            />
-          ))}
-        </View>
+        <>
+          <View style={styles.list}>
+            {results.map((offer, index) => (
+              <OfferCard
+                key={offer.id}
+                offer={offer}
+                index={index}
+                onPress={() => router.push(`/(customer)/gift/${offer.id}`)}
+              />
+            ))}
+          </View>
+        </>
       )}
     </Screen>
   );

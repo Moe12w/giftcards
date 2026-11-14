@@ -35,6 +35,20 @@ function checkbox(formData: FormData, key: string): boolean {
   return formData.get(key) === 'on' || formData.get(key) === 'true';
 }
 
+/** Parses "1500, 1200, 1000" into [150000, 120000, 100000] minor units. */
+function parseSlotPrices(raw: string): number[] | null {
+  if (!raw.trim()) return null;
+  try {
+    return raw
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => parseMoneyToMinor(part));
+  } catch {
+    back('/admin/advertising/placements', 'Slot prices must be comma-separated amounts, for example 1500, 1200, 1000.');
+  }
+}
+
 function isoField(formData: FormData, key: string): string | null {
   const raw = str(formData, key);
   if (!raw) return null;
@@ -117,7 +131,7 @@ export async function createAdvertisingCampaign(formData: FormData) {
     p_ends_at: endsAt,
     p_total_budget_minor: totalBudget ?? 0,
     p_daily_budget_minor: dailyBudget,
-    p_auto_renew: checkbox(formData, 'auto_renew'),
+    p_slot_number: intField(formData, 'slot_number') ?? 1,
     p_creative: creativeFromForm(formData),
   });
 
@@ -142,7 +156,7 @@ export async function updateAdvertisingCampaign(formData: FormData) {
     p_ends_at: endsAt,
     p_total_budget_minor: moneyField(formData, 'total_budget'),
     p_daily_budget_minor: moneyField(formData, 'daily_budget'),
-    p_auto_renew: checkbox(formData, 'auto_renew'),
+    p_auto_renew: false,
     p_creative: creativeFromForm(formData),
   });
 
@@ -456,6 +470,7 @@ export async function adminSaveAdvertisingPlacement(formData: FormData) {
     is_active: checkbox(formData, 'is_active'),
     supports_carousel: checkbox(formData, 'supports_carousel'),
     slot_count: intField(formData, 'slot_count') ?? 0,
+    slot_prices_minor: parseSlotPrices(str(formData, 'slot_prices')),
     max_active_campaigns: intField(formData, 'max_active_campaigns') ?? 0,
     rotation_mode: str(formData, 'rotation_mode') || 'shared',
     auction_enabled: checkbox(formData, 'auction_enabled'),

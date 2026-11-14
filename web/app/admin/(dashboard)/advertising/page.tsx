@@ -14,7 +14,9 @@ import { requireAdmin } from '@/lib/auth';
 import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Kpi, Notice, PageHead, StatusTag } from '@/components/ui';
+import { AdvertisingTutorialButton } from '@/components/AdvertisingTutorialButton';
 import { adminRunAdvertisingMaintenance } from '@/lib/actions/advertising';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function AdminAdvertisingPage({
   searchParams,
@@ -23,6 +25,7 @@ export default async function AdminAdvertisingPage({
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
 
   const [campaignsResult, transactionsResult, statsResult, placementsResult, pendingResult] =
     await Promise.all([
@@ -102,6 +105,7 @@ export default async function AdminAdvertisingPage({
         description="Verified advertising revenue, delivery performance, pending approvals and placement health — separate from gift-card finance."
         actions={
           <>
+            <AdvertisingTutorialButton portal="admin" locale={locale} />
             <form action={adminRunAdvertisingMaintenance}>
               <button className="btn sm" type="submit">
                 <RefreshCw size={15} /> Run lifecycle

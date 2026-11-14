@@ -97,7 +97,7 @@ export default async function AdvertisingCheckoutPage({
                 label="Rate"
                 value={
                   campaign.pricing_model === 'fixed'
-                    ? formatMoney(campaign.fixed_price_minor)
+                    ? formatMoney(campaign.quote_amount_minor)
                     : campaign.pricing_model === 'cpc'
                       ? `${formatMoney(campaign.cpc_rate_minor)} / click`
                       : `${formatMoney(campaign.cpm_rate_minor)} / 1,000 impressions`
@@ -105,15 +105,16 @@ export default async function AdvertisingCheckoutPage({
               />
               <ReadRow label="Starts" value={formatDateTime(campaign.starts_at)} />
               <ReadRow label="Ends" value={formatDateTime(campaign.ends_at)} />
+              <ReadRow label="Slot" value={campaign.slot_number ? `Slot ${campaign.slot_number}` : 'Shared placement'} />
               <ReadRow
                 label="Total budget"
-                value={formatMoney(campaign.pricing_model === 'fixed' ? campaign.fixed_price_minor : campaign.total_budget_minor)}
+                value={formatMoney(campaign.pricing_model === 'fixed' ? campaign.quote_amount_minor : campaign.total_budget_minor)}
               />
               <ReadRow
                 label="Daily budget"
                 value={campaign.daily_budget_minor > 0 ? formatMoney(campaign.daily_budget_minor) : 'No daily cap'}
               />
-              <ReadRow label="Auto-renew" value={campaign.auto_renew ? 'Authorised' : 'Off'} />
+              <ReadRow label="Auto-renew" value="None — book again when the window ends" />
               <ReadRow label="Payment reference" value={<span className="mono">{campaign.payment_reference ?? 'Generated on submit'}</span>} />
             </div>
             <div className="divider" />

@@ -15,7 +15,9 @@ import { requireAdvertiser } from '@/lib/auth';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Kpi, Notice, PageHead, StatusTag } from '@/components/ui';
+import { AdvertisingTutorialButton } from '@/components/AdvertisingTutorialButton';
 import { pauseAdvertisingCampaign, resumeAdvertisingCampaign } from '@/lib/actions/advertising';
+import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function VendorAdvertisingPage({
   searchParams,
@@ -25,6 +27,7 @@ export default async function VendorAdvertisingPage({
   const params = await searchParams;
   const ctx = await requireAdvertiser({ prefer: 'enterprise' });
   const vendor = ctx.vendor;
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
 
   const [campaignsResult, statsResult, notificationsResult, creditsResult] = await Promise.all([
     ctx.supabase
@@ -75,6 +78,7 @@ export default async function VendorAdvertisingPage({
         description="Promote your business and gift cards across the marketplace. Every campaign is paid, approved and measured separately from your gift-card sales."
         actions={
           <>
+            <AdvertisingTutorialButton portal={ctx.kind === 'enterprise' ? 'enterprise' : 'vendor'} locale={locale} />
             {availableCredit > 0 ? (
               <span className="tag success">
                 <Wallet size={14} /> {formatMoney(availableCredit)} credit
@@ -172,7 +176,7 @@ export default async function VendorAdvertisingPage({
       {campaigns.length === 0 ? (
         <EmptyState
           title="No advertising campaigns yet"
-          body="Create your first campaign to appear on the homepage carousel, featured business row or other placements."
+          body="Create your first campaign to appear on the homepage carousel, a category or collection carousel, search and other placements."
           action={
             <Link className="btn primary" href={`${ctx.home}/new`}>
               <Plus size={15} /> Create a campaign
@@ -219,15 +223,14 @@ export default async function VendorAdvertisingPage({
                             {campaignImpressions.toLocaleString('en-QA')} views · {campaignClicks.toLocaleString('en-QA')} clicks
                           </div>
                         </td>
-                        <td className="small">{campaign.advertising_placements?.name ?? campaign.placement_key}</td>
+                        <td className="small">
+                          {campaign.advertising_placements?.name ?? campaign.placement_key}
+                          {campaign.slot_number ? <div className="sub">Slot {campaign.slot_number}</div> : null}
+                        </td>
                         <td>
                           <span className="tag neutral">{campaign.pricing_model.toUpperCase()}</span>
                         </td>
-                        <td className="num">
-                          {campaign.pricing_model === 'fixed'
-                            ? formatMoney(campaign.fixed_price_minor)
-                            : formatMoney(campaign.total_budget_minor)}
-                        </td>
+                        <td className="num">{formatMoney(campaign.quote_amount_minor)}</td>
                         <td>
                           <StatusTag status={campaign.status} />
                           <div className="sub">{campaign.payment_status}</div>

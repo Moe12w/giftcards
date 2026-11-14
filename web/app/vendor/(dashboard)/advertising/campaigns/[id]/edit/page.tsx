@@ -5,6 +5,7 @@ import { requireAdvertiser } from '@/lib/auth';
 import { PageHead } from '@/components/ui';
 import { CampaignWizard } from '@/components/CampaignWizard';
 import { updateAdvertisingCampaign } from '@/lib/actions/advertising';
+import { loadAdvertisingSlotMap } from '@/lib/advertising-slots';
 import { getUserLocale } from '@/lib/i18n/server';
 
 export default async function EditAdvertisingCampaignPage({
@@ -25,7 +26,7 @@ export default async function EditAdvertisingCampaignPage({
 
   if (!campaign) notFound();
 
-  const [placementsResult, offersResult, categoriesResult] = await Promise.all([
+  const [placementsResult, offersResult, categoriesResult, slotsByPlacement] = await Promise.all([
     ctx.supabase
       .from('advertising_placements')
       .select('*, advertising_pricing(*)')
@@ -35,7 +36,7 @@ export default async function EditAdvertisingCampaignPage({
       .from('offers')
       .select('id, title')
       .eq('vendor_id', ctx.vendor.id)
-      .eq('status', 'published')
+      .eq('is_active', true)
       .order('title', { ascending: true })
       .limit(200),
     ctx.supabase
@@ -43,6 +44,7 @@ export default async function EditAdvertisingCampaignPage({
       .select('id, name')
       .eq('active', true)
       .order('sort_order', { ascending: true }),
+    loadAdvertisingSlotMap(ctx.supabase),
   ]);
 
   const placements = (placementsResult.data ?? []).map((placement: any) => ({
@@ -74,6 +76,7 @@ export default async function EditAdvertisingCampaignPage({
         home={ctx.home}
         locale={locale}
         campaign={campaign as any}
+        slotsByPlacement={slotsByPlacement}
       />
     </div>
   );

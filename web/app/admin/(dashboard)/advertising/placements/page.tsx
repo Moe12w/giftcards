@@ -12,6 +12,8 @@ const KINDS = [
   'marketplace_sponsored_card',
   'marketplace_sponsored_business',
   'marketplace_category_position',
+  'category_carousel',
+  'collection_carousel',
   'search_sponsored_result',
   'trending_placement',
   'discovery_placement',
@@ -28,19 +30,30 @@ export default async function AdminAdvertisingPlacementsPage({
   const params = await searchParams;
   const ctx = await requireAdmin();
 
-  const [placementsResult, pricingResult] = await Promise.all([
+  const [placementsResult, pricingResult, slotMapResult] = await Promise.all([
     ctx.supabase.from('advertising_placements').select('*').order('sort_order', { ascending: true }),
     ctx.supabase
       .from('advertising_pricing')
       .select('*, advertising_placements(id,key,name)')
       .order('placement_id')
       .order('pricing_model'),
+    ctx.supabase.rpc('advertising_slot_map'),
   ]);
 
   const placements = placementsResult.data ?? [];
   const pricing = pricingResult.data ?? [];
+  const slotRows = (slotMapResult.data ?? []) as Array<Record<string, any>>;
   const editing = params.edit ? placements.find((row: any) => row.id === params.edit) : null;
   const editingPrice = params.pricing ? pricing.find((row: any) => row.id === params.pricing) : null;
+
+  const slotInventory = placements
+    .filter((placement: any) => Number(placement.slot_count ?? 0) > 0 && placement.is_active)
+    .map((placement: any) => ({
+      placement,
+      slots: slotRows
+        .filter((row) => row.placement_key === placement.key)
+        .sort((a, b) => Number(a.slot_number) - Number(b.slot_number)),
+    }));
 
   return (
     <div className="dash-content">
@@ -114,6 +127,21 @@ export default async function AdminAdvertisingPlacementsPage({
                   <label htmlFor="slot_count">Guaranteed slots</label>
                   <input id="slot_count" name="slot_count" type="number" min={0} defaultValue={editing?.slot_count ?? 0} />
                   <span className="hint">0 means shared capacity only.</span>
+                </div>
+                <div className="field full">
+                  <label htmlFor="slot_prices">Slot prices (QAR, slot 1 first)</label>
+                  <input
+                    id="slot_prices"
+                    name="slot_prices"
+                    defaultValue={(editing?.slot_prices_minor ?? [])
+                      .map((value: number) => minorToInput(value))
+                      .join(', ')}
+                    placeholder="1500, 1200, 1000, 800, 600, 500, 400, 300"
+                  />
+                  <span className="hint">
+                    Comma-separated, one price per numbered slot. Slot 1 is seen first and should cost the most. Leave
+                    empty to use the fixed price for every slot.
+                  </span>
                 </div>
                 <div className="field">
                   <label htmlFor="max_active_campaigns">Max active campaigns</label>
@@ -307,6 +335,58 @@ export default async function AdminAdvertisingPlacementsPage({
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h3>Slot inventory</h3>
+          <span className="small muted">Numbered slots, live occupancy and when each one frees up</span>
+        </div>
+        <div className="panel-body flush">
+          <div className="table-wrap">
+            <table className="data">
+              <thead>
+                <tr>
+                  <th>Placement</th>
+                  <th className="num">Slot</th>
+                  <th>State</th>
+                  <th>Filled until</th>
+                  <th>Queue clears</th>
+                </tr>
+              </thead>
+              <tbody>
+                {slotInventory.map(({ placement, slots }) =>
+                  slots.map((slot: any, index: number) => (
+                    <tr key={`${placement.id}-${slot.slot_number}`}>
+                      {index === 0 ? (
+                        <td rowSpan={slots.length}>
+                          <span className="strong">{placement.name}</span>
+                          <div className="sub mono">{placement.key}</div>
+                        </td>
+                      ) : null}
+                      <td className="num">{slot.slot_number}</td>
+                      <td>
+                        <span
+                          className={`tag ${
+                            slot.state === 'occupied' ? 'warning' : slot.state === 'reserved' ? 'neutral' : 'success'
+                          }`}
+                        >
+                          {slot.state}
+                        </span>
+                      </td>
+                      <td className="small">
+                        {slot.occupied_until ? new Date(slot.occupied_until).toLocaleString() : '—'}
+                      </td>
+                      <td className="small">
+                        {slot.next_free_at ? new Date(slot.next_free_at).toLocaleString() : '—'}
+                      </td>
+                    </tr>
+                  )),
+                )}
               </tbody>
             </table>
           </div>

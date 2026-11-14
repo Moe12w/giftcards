@@ -8,6 +8,7 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
+import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { listActiveOffers } from '@/src/lib/data';
 import { offerBusinessName, offerTitle } from '@/src/lib/catalog';
 import type { Offer } from '@/src/lib/types';
@@ -58,6 +59,9 @@ export default function SearchScreen() {
         placeholder={t('explore.searchPlaceholder')}
         accessibilityLabel={t('common.search')}
       />
+
+      {/* Sponsored search results */}
+      <SponsoredStrip placementKey="search_sponsored_result" variant="gift_card" limit={3} />
 
       {loading ? (
         <ActivityIndicator color={colors.teal} style={styles.loader} />

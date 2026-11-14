@@ -176,7 +176,7 @@ export default function ExploreHomeScreen() {
         />
 
         {/* Sponsored hero carousel — hidden automatically when no campaign is live */}
-        <SponsoredCarousel placementKey="homepage_hero_carousel" limit={5} />
+        <SponsoredCarousel placementKey="homepage_hero_carousel" limit={8} />
 
         {/* Featured businesses */}
         <SectionHeader
@@ -220,9 +220,6 @@ export default function ExploreHomeScreen() {
             ))}
           </ScrollView>
         )}
-
-        {/* Sponsored businesses */}
-        <SponsoredStrip placementKey="homepage_featured_business" variant="business" limit={3} />
 
         {/* Active basket strip */}
         {activeBasket ? (

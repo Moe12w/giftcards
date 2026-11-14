@@ -10,6 +10,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
+import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { listMarketplaceBusinesses } from '@/src/lib/data';
 import type { MarketplaceBusiness } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
@@ -53,8 +54,9 @@ export default function BusinessesScreen() {
           tone="lavender"
         />
       ) : (
-        <View style={styles.list}>
-          {businesses.map((business, index) => {
+        <>
+          <View style={styles.list}>
+            {businesses.map((business, index) => {
             const tone = TONES[index % TONES.length];
             const location = business.area ?? business.city;
             const isPartner = business.business_kind === 'partner';
@@ -108,6 +110,8 @@ export default function BusinessesScreen() {
             );
           })}
         </View>
+        <SponsoredStrip placementKey="marketplace_sponsored_business" variant="business" limit={3} />
+      </>
       )}
     </Screen>
   );

@@ -40,6 +40,7 @@ export interface WizardPlacement {
   format: string;
   supports_carousel: boolean;
   slot_count: number;
+  slot_prices_minor: number[] | null;
   max_active_campaigns: number;
   rotation_mode: string;
   creative_width: number | null;
@@ -54,6 +55,7 @@ export interface WizardCampaign {
   placement_key: string;
   pricing_id: string | null;
   pricing_model: string;
+  slot_number: number | null;
   starts_at: string;
   ends_at: string;
   total_budget_minor: number;
@@ -62,6 +64,34 @@ export interface WizardCampaign {
   payment_status: string;
   status: string;
   advertising_creatives?: Array<Record<string, any>>;
+}
+
+export interface WizardSlot {
+  slot_number: number;
+  state: 'free' | 'occupied' | 'reserved';
+  occupied_until: string | null;
+  next_free_at: string | null;
+}
+
+/** Groups placements by the surface they run on, so the list stays readable. */
+export type PlacementSurface = 'homepage' | 'categories' | 'collections' | 'search' | 'marketplace' | 'other';
+
+const SURFACES: { id: PlacementSurface; label: string }[] = [
+  { id: 'homepage', label: 'Homepage' },
+  { id: 'categories', label: 'Categories' },
+  { id: 'collections', label: 'Collections' },
+  { id: 'search', label: 'Search' },
+  { id: 'marketplace', label: 'Marketplace' },
+  { id: 'other', label: 'Other' },
+];
+
+export function surfaceFor(key: string): PlacementSurface {
+  if (key.startsWith('homepage')) return 'homepage';
+  if (key.startsWith('category')) return 'categories';
+  if (key.startsWith('collection')) return 'collections';
+  if (key.startsWith('search')) return 'search';
+  if (key.startsWith('marketplace')) return 'marketplace';
+  return 'other';
 }
 
 function localInput(value: string | Date): string {
@@ -75,6 +105,13 @@ function addDays(value: string, days: number): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   date.setDate(date.getDate() + days);
+  return localInput(date);
+}
+
+function addHours(value: string, hours: number): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  date.setHours(date.getHours() + hours);
   return localInput(date);
 }
 
@@ -95,6 +132,7 @@ export function CampaignWizard({
   home,
   locale = 'en',
   campaign,
+  slotsByPlacement = {},
 }: {
   action: (formData: FormData) => void | Promise<void>;
   placements: WizardPlacement[];
@@ -106,23 +144,30 @@ export function CampaignWizard({
   home?: string;
   locale?: 'en' | 'ar';
   campaign?: WizardCampaign | null;
+  /** Slot states keyed by placement, loaded once on the server. */
+  slotsByPlacement?: Record<string, WizardSlot[]>;
 }) {
   const creative = campaign?.advertising_creatives?.[0] ?? {};
   const firstPlacement =
     placements.find((placement) => placement.key === campaign?.placement_key) ?? placements[0] ?? null;
+  const firstSlotBased = Boolean(firstPlacement && firstPlacement.slot_count > 0);
 
   const [step, setStep] = useState(0);
+  const [surface, setSurface] = useState<PlacementSurface>(
+    surfaceFor(campaign?.placement_key ?? firstPlacement?.key ?? ''),
+  );
   const [placementKey, setPlacementKey] = useState(firstPlacement?.key ?? '');
   const [pricingId, setPricingId] = useState(
     campaign?.pricing_id ?? firstPlacement?.advertising_pricing?.[0]?.id ?? '',
   );
+  const [slotNumber, setSlotNumber] = useState(campaign?.slot_number ?? 1);
   const [startsAt, setStartsAt] = useState(
     campaign ? localInput(campaign.starts_at) : localInput(new Date()),
   );
   const [endsAt, setEndsAt] = useState(
     campaign
       ? localInput(campaign.ends_at)
-      : localInput(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
+      : localInput(new Date(Date.now() + (firstSlotBased ? 24 : 30 * 24) * 60 * 60 * 1000)),
   );
   const [totalBudget, setTotalBudget] = useState(
     campaign ? String((campaign.total_budget_minor ?? 0) / 100) : '',
@@ -130,7 +175,6 @@ export function CampaignWizard({
   const [dailyBudget, setDailyBudget] = useState(
     campaign ? String((campaign.daily_budget_minor ?? 0) / 100) : '',
   );
-  const [autoRenew, setAutoRenew] = useState(Boolean(campaign?.auto_renew));
   const [destinationType, setDestinationType] = useState(String(creative.destination_type ?? 'business'));
   const [headline, setHeadline] = useState(String(creative.headline ?? ''));
   const [body, setBody] = useState(String(creative.body ?? ''));
@@ -142,11 +186,20 @@ export function CampaignWizard({
   const placement = placements.find((row) => row.key === placementKey) ?? null;
   const price = placement?.advertising_pricing.find((row) => row.id === pricingId) ?? null;
   const isFixed = price?.pricing_model === 'fixed';
+  const slotBased = Boolean(placement && placement.slot_count > 0);
+  const slotCount = slotBased ? placement!.slot_count : 0;
+  const slotPrice = slotBased
+    ? placement?.slot_prices_minor?.[slotNumber - 1] ?? price?.fixed_price_minor ?? 0
+    : 0;
   const quoteMinor = isFixed
-    ? price?.fixed_price_minor ?? 0
+    ? slotBased
+      ? slotPrice
+      : price?.fixed_price_minor ?? 0
     : Math.round((Number(totalBudget) || 0) * 100);
   const budgetLocked = campaign?.payment_status === 'paid';
   const needsImage = placement?.format === 'banner' || placement?.format === 'carousel';
+  const visiblePlacements = placements.filter((row) => surfaceFor(row.key) === surface);
+  const slots = placement ? slotsByPlacement[placement.key] ?? [] : [];
 
   const days = useMemo(() => {
     const start = new Date(startsAt).getTime();
@@ -155,14 +208,51 @@ export function CampaignWizard({
     return Math.ceil((end - start) / (24 * 60 * 60 * 1000));
   }, [startsAt, endsAt]);
 
+  const hours = useMemo(() => {
+    const start = new Date(startsAt).getTime();
+    const end = new Date(endsAt).getTime();
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
+    return (end - start) / (60 * 60 * 1000);
+  }, [startsAt, endsAt]);
+
   function choosePlacement(next: WizardPlacement) {
     setPlacementKey(next.key);
     setPricingId(next.advertising_pricing[0]?.id ?? '');
+    setSlotNumber(1);
     setMessage(null);
-    // Gift-card placements should land their audience on a gift card, not the
-    // vendor's generic business page.
-    const wantsGiftCard = next.key === 'homepage_featured_gift_card' || next.key === 'marketplace_sponsored_card';
+    // A slot rental is 6-72 hours, so start with a 24-hour window. Other
+    // placements keep the longer default.
+    if (next.slot_count > 0) {
+      setEndsAt(addHours(startsAt, 24));
+    }
+    // Gift-card surfaces should land their audience on a gift card, not the
+    // vendor's generic business page. Category and collection carousels render
+    // gift cards too, so they default to a gift-card destination.
+    const giftCardSurfaces = new Set([
+      'homepage_featured_gift_card',
+      'marketplace_sponsored_card',
+      'search_sponsored_result',
+      'bulk_deals_ranking',
+    ]);
+    const wantsGiftCard =
+      giftCardSurfaces.has(next.key) ||
+      next.kind === 'category_carousel' ||
+      next.kind === 'collection_carousel';
     setDestinationType(wantsGiftCard ? 'gift_card' : 'business');
+  }
+
+  function chooseSlot(slot: number) {
+    setSlotNumber(slot);
+    const info = slots.find((row) => row.slot_number === slot);
+    // An occupied slot can still be booked for a later window; move the start
+    // to the moment it frees up so the advertiser does not hit a validation
+    // error on save.
+    if (info?.state === 'occupied' && info.occupied_until) {
+      const nextStart = localInput(info.occupied_until);
+      setStartsAt(nextStart);
+      setEndsAt(addHours(nextStart, 24));
+    }
+    setMessage(null);
   }
 
   function nextStep() {
@@ -192,7 +282,16 @@ export function CampaignWizard({
         setMessage('The end date must be after the start date.');
         return;
       }
-      if (price) {
+      if (slotBased) {
+        if (hours < 6 || hours > 72) {
+          setMessage('A slot is rented for between 6 and 72 hours. Adjust the end time.');
+          return;
+        }
+        if (!slotNumber || slotNumber < 1 || slotNumber > slotCount) {
+          setMessage('Choose the slot you want to rent.');
+          return;
+        }
+      } else if (price) {
         const min = Math.max(price.min_duration_days, 1);
         const max = Math.min(price.max_duration_days, 365);
         if (days < min || days > max) {
@@ -225,6 +324,7 @@ export function CampaignWizard({
       {campaign ? <input type="hidden" name="campaign_id" value={campaign.id} /> : null}
       <input type="hidden" name="placement_key" value={placementKey} />
       <input type="hidden" name="pricing_id" value={pricingId} />
+      <input type="hidden" name="slot_number" value={slotNumber} />
       <input type="hidden" name="type" value="image" />
       <input type="hidden" name="sponsored_label" value="Sponsored" />
       <input type="hidden" name="sponsored_label_ar" value="إعلان مدفوع" />
@@ -253,8 +353,24 @@ export function CampaignWizard({
           <span className="small muted">Prices are set by the platform and frozen at purchase.</span>
         </div>
         <div className="panel-body">
+          <div className="btn-row" style={{ flexWrap: 'wrap', marginBottom: 12 }}>
+            {SURFACES.filter((entry) => placements.some((row) => surfaceFor(row.key) === entry.id)).map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                className={`btn sm${surface === entry.id ? ' primary' : ' ghost'}`}
+                onClick={() => {
+                  setSurface(entry.id);
+                  const first = placements.find((row) => surfaceFor(row.key) === entry.id);
+                  if (first) choosePlacement(first);
+                }}
+              >
+                {entry.label}
+              </button>
+            ))}
+          </div>
           <div className="offer-grid">
-            {placements.map((row) => {
+            {visiblePlacements.map((row) => {
               const selected = row.key === placementKey;
               return (
                 <button
@@ -300,7 +416,9 @@ export function CampaignWizard({
                                   ? `${formatMoney(model.cpc_rate_minor)} / click`
                                   : `${formatMoney(model.cpm_rate_minor)} / 1,000 views`}
                               <span className="sub">
-                                {model.min_duration_days}–{model.max_duration_days} days
+                                {row.slot_count > 0
+                                  ? '6–72 hour rental · one fixed price per slot'
+                                  : `${model.min_duration_days}–${model.max_duration_days} days`}
                                 {model.pricing_model !== 'fixed'
                                   ? ` · min budget ${formatMoney(model.min_budget_minor)}`
                                   : ''}
@@ -475,12 +593,56 @@ export function CampaignWizard({
           </h3>
           {price ? (
             <span className="small muted">
-              {price.pricing_model.toUpperCase()} · {price.min_duration_days}–{price.max_duration_days} days
+              {slotBased ? 'Fixed rental · 6–72 hours' : `${price.pricing_model.toUpperCase()} · ${price.min_duration_days}–${price.max_duration_days} days`}
             </span>
           ) : null}
         </div>
         <div className="panel-body">
           <div className="form-grid">
+            {slotBased ? (
+              <div className="field full">
+                <label>Slot</label>
+                <div className="btn-row" style={{ flexWrap: 'wrap' }}>
+                  {Array.from({ length: slotCount }, (_, index) => index + 1).map((slot) => {
+                    const slotPriceMinor = placement?.slot_prices_minor?.[slot - 1] ?? price?.fixed_price_minor ?? 0;
+                    const chosen = slotNumber === slot;
+                    const info = slots.find((row) => row.slot_number === slot);
+                    const occupied = info?.state === 'occupied';
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        className={`btn sm${chosen ? ' primary' : ' ghost'}`}
+                        onClick={() => chooseSlot(slot)}
+                        disabled={Boolean(campaign)}
+                        title={`Slot ${slot} — ${formatMoney(slotPriceMinor)}`}
+                        style={{
+                          display: 'grid',
+                          gap: 2,
+                          textAlign: 'center',
+                          opacity: occupied && !chosen ? 0.65 : 1,
+                        }}
+                      >
+                        <span>{slot === 1 ? 'Slot 1 · first' : `Slot ${slot}`}</span>
+                        <span className="small" style={{ opacity: 0.8 }}>{formatMoney(slotPriceMinor)}</span>
+                        <span className="small" style={{ opacity: 0.8 }}>
+                          {occupied && info?.occupied_until
+                            ? `Filled until ${new Date(info.occupied_until).toLocaleString()}`
+                            : info?.state === 'reserved'
+                              ? 'Free now · booked later'
+                              : 'Available'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="hint">
+                  Slot 1 is seen first and costs the most. Picking a filled slot moves your start time to the moment it
+                  frees up; availability is checked again when you save.
+                </span>
+              </div>
+            ) : null}
+
             <div className="field">
               <label htmlFor="starts_at">Starts</label>
               <input
@@ -502,16 +664,21 @@ export function CampaignWizard({
                 value={endsAt}
                 onChange={(event) => setEndsAt(event.target.value)}
               />
-              <span className="hint">{days > 0 ? `${days} days` : 'Choose an end date'}</span>
+              <span className="hint">
+                {hours > 0 ? `${hours.toFixed(1)} hours` : 'Choose an end date'}
+                {slotBased ? ' · 6–72 hours allowed' : days > 0 ? ` · ${days} days` : ''}
+              </span>
             </div>
 
             {isFixed ? (
               <div className="field full">
-                <label>Fixed price</label>
+                <label>{slotBased ? 'Slot price' : 'Fixed price'}</label>
                 <div className="card flat">
-                  <strong style={{ fontSize: 22 }}>{formatMoney(price?.fixed_price_minor ?? 0)}</strong>
+                  <strong style={{ fontSize: 22 }}>{formatMoney(quoteMinor)}</strong>
                   <span className="small muted">
-                    One payment for the whole schedule. Delivery is not metered.
+                    {slotBased
+                      ? 'One payment for the whole window. No automatic renewal: book again when it ends.'
+                      : 'One payment for the whole schedule. Delivery is not metered.'}
                   </span>
                 </div>
               </div>
@@ -548,18 +715,10 @@ export function CampaignWizard({
             )}
 
             <div className="field full">
-              <label className="checkbox-row">
-                <input
-                  type="checkbox"
-                  name="auto_renew"
-                  checked={autoRenew}
-                  onChange={(event) => setAutoRenew(event.target.checked)}
-                />
-                Authorise automatic renewal
-              </label>
               <span className="hint">
-                Off by default. When on, a renewal campaign is created at the end date and still needs payment and
-                approval. You can turn it off before then.
+                {slotBased
+                  ? 'No automatic renewal. When your window ends the slot is released for the next advertiser — book again if you want it back.'
+                  : 'No automatic renewal. Renew manually from the campaign page when this run ends.'}
               </span>
             </div>
           </div>
@@ -610,15 +769,21 @@ export function CampaignWizard({
               </div>
               <div>
                 <span className="k">Duration</span>
-                <span className="v">{days} days</span>
+                <span className="v">{slotBased ? `${hours.toFixed(1)} hours` : `${days} days`}</span>
               </div>
+              {slotBased ? (
+                <div>
+                  <span className="k">Slot</span>
+                  <span className="v">{slotNumber === 1 ? 'Slot 1 · first position' : `Slot ${slotNumber}`}</span>
+                </div>
+              ) : null}
               <div>
                 <span className="k">Total</span>
                 <span className="v strong" style={{ fontSize: 20 }}>{formatMoney(quoteMinor)}</span>
               </div>
               <div>
                 <span className="k">Auto-renew</span>
-                <span className="v">{autoRenew ? 'Authorised' : 'Off'}</span>
+                <span className="v">None</span>
               </div>
             </div>
           </div>

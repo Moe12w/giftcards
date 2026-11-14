@@ -7,6 +7,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
+import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { CATEGORIES, offersForCategory } from '@/src/lib/catalog';
 import { listActiveOffers } from '@/src/lib/data';
 import type { CategoryId, Offer } from '@/src/lib/types';
@@ -39,6 +40,11 @@ export default function CategoryScreen() {
         onBack={() => router.back()}
       />
 
+      {/* Each category rents its own carousel. Empty slots simply render nothing. */}
+      {slug ? (
+        <SponsoredStrip placementKey={`category_${slug}`} variant="gift_card" limit={8} />
+      ) : null}
+
       {loading ? (
         <ActivityIndicator color={colors.teal} style={styles.loader} />
       ) : results.length === 0 ? (
@@ -49,16 +55,18 @@ export default function CategoryScreen() {
           tone="teal"
         />
       ) : (
-        <View style={styles.list}>
-          {results.map((offer, index) => (
-            <OfferCard
-              key={offer.id}
-              offer={offer}
-              index={index}
-              onPress={() => router.push(`/(customer)/gift/${offer.id}`)}
-            />
-          ))}
-        </View>
+        <>
+          <View style={styles.list}>
+            {results.map((offer, index) => (
+              <OfferCard
+                key={offer.id}
+                offer={offer}
+                index={index}
+                onPress={() => router.push(`/(customer)/gift/${offer.id}`)}
+              />
+            ))}
+          </View>
+        </>
       )}
     </Screen>
   );
