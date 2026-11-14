@@ -1053,6 +1053,13 @@
     "noRequests": "No requests yet. Anything you send reaches our team.",
     "sendFailed": "We couldn't send your request. Check your connection and try again.",
     "chatSent": "Sent to the support team. Replies arrive by email.",
+    "thread": "Conversation",
+    "reply": "Reply",
+    "replyPlaceholder": "Add more detail or answer the team.",
+    "sendReply": "Send reply",
+    "noReplies": "No replies yet. The team will answer here.",
+    "supportTeam": "Giftly support",
+    "replyFailed": "We couldn't send your reply. Check your connection and try again.",
     "status": {
       "open": "Open",
       "in_progress": "In progress",

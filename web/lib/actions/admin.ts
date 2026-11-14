@@ -258,6 +258,46 @@ export async function adminUpdateSupport(formData: FormData) {
   redirect('/admin/support?saved=1');
 }
 
+/**
+ * Answers a support ticket from the admin inbox.
+ *
+ * The reply is stored in the shared thread the requester reads in the app or
+ * their dashboard, and an open ticket moves to "in progress" so the queue
+ * reflects that somebody has picked it up.
+ */
+export async function adminReplySupport(formData: FormData) {
+  const ctx = await requireAdmin();
+  const id = str(formData, 'request_id');
+  const body = str(formData, 'body');
+  if (!id) back('/admin/support', 'Missing request.');
+  if (!body) back('/admin/support', 'Write a reply before sending.');
+
+  const { error } = await ctx.supabase.from('support_ticket_messages').insert({
+    request_id: id,
+    author_id: ctx.user.id,
+    author_role: 'admin',
+    author_name: ctx.profile?.full_name ?? 'Giftly support',
+    body,
+  });
+  if (error) back('/admin/support', error.message);
+
+  const { data: ticket } = await ctx.supabase
+    .from('support_requests')
+    .select('status')
+    .eq('id', id)
+    .maybeSingle();
+  if (ticket?.status === 'open') {
+    await ctx.supabase.from('support_requests').update({ status: 'in_progress' }).eq('id', id);
+  }
+
+  await record(ctx.supabase, 'support.reply', 'support_request', id, {});
+  revalidatePath('/admin/support');
+  revalidatePath('/vendor/support');
+  revalidatePath('/enterprise/support');
+  revalidatePath('/business/support');
+  redirect('/admin/support?saved=1');
+}
+
 export async function adminUpdatePartner(formData: FormData) {
   const ctx = await requireAdmin();
   const partnerId = str(formData, 'partner_id');

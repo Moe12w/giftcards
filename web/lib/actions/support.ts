@@ -78,3 +78,63 @@ export async function submitSupportTicket(formData: FormData) {
   revalidatePath('/admin/support');
   redirect(`${returnTo}?sent=1`);
 }
+
+/**
+ * Appends a reply to a ticket the signed-in user owns.
+ *
+ * The ticket is re-read with the user's own id in the filter, so a forged
+ * request id cannot write into somebody else's thread. RLS enforces the same
+ * rule at the database level.
+ */
+export async function replyToSupportTicket(formData: FormData) {
+  const audience = str(formData, 'audience') as SupportAudience;
+  const returnTo = str(formData, 'return_to') || '/vendor/support';
+  const requestId = str(formData, 'request_id');
+  const body = str(formData, 'body');
+
+  if (!requestId || !body) {
+    back(returnTo, 'Write a message before sending.');
+  }
+
+  let supabase;
+  let userId: string;
+  let authorName: string;
+
+  if (audience === 'enterprise') {
+    const ctx = await requireEnterprise();
+    supabase = ctx.supabase;
+    userId = ctx.user.id;
+    authorName = ctx.profile?.full_name ?? ctx.user.email ?? 'Requester';
+  } else if (audience === 'business') {
+    const ctx = await requireApprovedBusinessBuyer();
+    supabase = ctx.supabase;
+    userId = ctx.user.id;
+    authorName = ctx.profile?.full_name ?? ctx.user.email ?? 'Requester';
+  } else {
+    const ctx = await requireVendor();
+    supabase = ctx.supabase;
+    userId = ctx.user.id;
+    authorName = ctx.profile?.full_name ?? ctx.user.email ?? 'Requester';
+  }
+
+  const { data: ticket, error: ticketError } = await supabase
+    .from('support_requests')
+    .select('id')
+    .eq('id', requestId)
+    .eq('customer_id', userId)
+    .maybeSingle();
+  if (ticketError || !ticket) back(returnTo, 'That request is not available.');
+
+  const { error } = await supabase.from('support_ticket_messages').insert({
+    request_id: requestId,
+    author_id: userId,
+    author_role: 'requester',
+    author_name: authorName,
+    body,
+  });
+  if (error) back(returnTo, error.message);
+
+  revalidatePath(returnTo);
+  revalidatePath('/admin/support');
+  redirect(`${returnTo}?sent=1`);
+}

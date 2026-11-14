@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -96,7 +96,17 @@ export default function SupportScreen() {
           <Text style={styles.note}>{t('supportTickets.noRequests')}</Text>
         ) : (
           requests.map((request) => (
-            <View key={request.id} style={styles.ticketRow}>
+            <Pressable
+              key={request.id}
+              style={styles.ticketRow}
+              accessibilityRole="button"
+              onPress={() =>
+                router.push({
+                  pathname: '/(customer)/support/ticket/[id]',
+                  params: { id: request.id },
+                })
+              }
+            >
               <View style={styles.ticketCopy}>
                 <Text style={styles.ticketTitle} numberOfLines={1}>
                   {request.subject || t('support.title')}
@@ -109,7 +119,7 @@ export default function SupportScreen() {
                 label={t(`supportTickets.status.${request.status}`)}
                 tone={STATUS_TONE[request.status] ?? 'neutral'}
               />
-            </View>
+            </Pressable>
           ))
         )}
       </Card>

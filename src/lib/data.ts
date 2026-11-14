@@ -629,6 +629,58 @@ export async function listSupportRequests(): Promise<SupportRequest[]> {
   return (data ?? []) as SupportRequest[];
 }
 
+/** One support request, scoped by RLS to the signed-in customer. */
+export async function getSupportRequest(id: string): Promise<SupportRequest | null> {
+  if (!hasSupabaseConfig) return null;
+  const { data, error } = await getSupabase()
+    .from('support_requests')
+    .select('id, kind, subject, body, reference, status, created_at')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as SupportRequest | null) ?? null;
+}
+
+/** A reply on a support ticket, from the customer or from the team. */
+export interface SupportMessage {
+  id: string;
+  request_id: string;
+  author_role: 'requester' | 'admin';
+  author_name: string;
+  body: string;
+  created_at: string;
+}
+
+/** The full conversation on one of the customer's own tickets. */
+export async function listSupportMessages(requestId: string): Promise<SupportMessage[]> {
+  if (!hasSupabaseConfig) return [];
+  const { data, error } = await getSupabase()
+    .from('support_ticket_messages')
+    .select('id, request_id, author_role, author_name, body, created_at')
+    .eq('request_id', requestId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as SupportMessage[];
+}
+
+/** Adds the customer's reply to one of their own tickets. */
+export async function replyToSupportRequest(requestId: string, body: string): Promise<void> {
+  if (!hasSupabaseConfig) return;
+  const {
+    data: { user },
+  } = await getSupabase().auth.getUser();
+  const authorName =
+    (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? 'Requester';
+  const { error } = await getSupabase().from('support_ticket_messages').insert({
+    request_id: requestId,
+    author_id: user?.id ?? null,
+    author_role: 'requester',
+    author_name: authorName,
+    body,
+  });
+  if (error) throw error;
+}
+
 /** Checks a promo code and returns the discount it gives. */
 export async function validatePromoCode(
   code: string,

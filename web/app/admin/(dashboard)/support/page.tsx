@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { LifeBuoy, Search } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
-import { adminUpdateSupport } from '@/lib/actions/admin';
+import { adminReplySupport, adminUpdateSupport } from '@/lib/actions/admin';
 import { formatDate, formatDateTime, initials, titleCase } from '@/lib/format';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
 import { adminCopy } from '@/lib/i18n/admin';
@@ -25,8 +25,11 @@ export default async function AdminSupportPage({
 
   const { data, error } = await ctx.supabase
     .from('support_requests')
-    .select('*, profiles(full_name, email, phone)')
+    .select(
+      '*, profiles(full_name, email, phone), messages:support_ticket_messages(id, author_role, author_name, body, created_at)',
+    )
     .order('created_at', { ascending: false })
+    .order('created_at', { referencedTable: 'support_ticket_messages', ascending: true })
     .limit(500);
 
   const allRequests = data ?? [];
@@ -204,6 +207,72 @@ export default async function AdminSupportPage({
                     </div>
                     <button className="btn sm primary" type="submit">
                       {c.actions.save}
+                    </button>
+                  </form>
+
+                  <div style={{ marginTop: 18 }}>
+                    <span className="k">{t.thread}</span>
+                    {(() => {
+                      const messages = (request.messages ?? []) as {
+                        id: string;
+                        author_role: string;
+                        author_name: string;
+                        body: string;
+                        created_at: string;
+                      }[];
+                      if (messages.length === 0) {
+                        return (
+                          <p className="small muted" style={{ margin: '6px 0 0' }}>
+                            {t.noReplies}
+                          </p>
+                        );
+                      }
+                      return (
+                        <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
+                          {messages.map((message) => (
+                            <div
+                              key={message.id}
+                              style={{
+                                background:
+                                  message.author_role === 'admin'
+                                    ? 'var(--lavender-soft)'
+                                    : 'var(--surface-alt, #f5f6f8)',
+                                borderRadius: 10,
+                                padding: 10,
+                                display: 'grid',
+                                gap: 4,
+                              }}
+                            >
+                              <span className="small muted">
+                                {message.author_role === 'admin'
+                                  ? t.supportTeam
+                                  : message.author_name}{' '}
+                                · {formatDateTime(message.created_at, locale)}
+                              </span>
+                              <p className="small" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+                                {message.body}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  <form action={adminReplySupport} className="inline-form" style={{ marginTop: 16 }}>
+                    <input type="hidden" name="request_id" value={request.id} />
+                    <div className="field" style={{ flex: 1 }}>
+                      <label htmlFor={`reply-${request.id}`}>{t.reply}</label>
+                      <textarea
+                        id={`reply-${request.id}`}
+                        name="body"
+                        rows={3}
+                        required
+                        placeholder={t.replyPlaceholder}
+                      />
+                    </div>
+                    <button className="btn sm primary" type="submit">
+                      {t.sendReply}
                     </button>
                   </form>
                 </div>

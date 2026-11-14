@@ -21,6 +21,11 @@ const en = {
   sentOn: 'Sent',
   missing: 'Add a subject and a message before sending.',
   replyNote: 'We reply by email within one business day.',
+  reply: 'Reply',
+  replyPlaceholder: 'Add more detail or answer the team.',
+  sendReply: 'Send reply',
+  noReplies: 'No replies yet. The team will answer here.',
+  supportTeam: 'Giftly support',
 };
 
 const ar: typeof en = {
@@ -42,6 +47,11 @@ const ar: typeof en = {
   sentOn: 'أُرسل',
   missing: 'أضف موضوعاً ورسالة قبل الإرسال.',
   replyNote: 'نرد بالبريد الإلكتروني خلال يوم عمل واحد.',
+  reply: 'الرد',
+  replyPlaceholder: 'أضف تفاصيل أكثر أو أجب الفريق.',
+  sendReply: 'إرسال الرد',
+  noReplies: 'لا توجد ردود بعد. سيجيب الفريق هنا.',
+  supportTeam: 'دعم غيفتلي',
 };
 
 export const supportCopy: Copy<typeof en> = { en, ar };
