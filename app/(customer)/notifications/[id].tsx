@@ -21,6 +21,7 @@ const KIND_ICON: Record<NotificationKind, string> = {
   redeemed: 'check',
   expiry: 'clock',
   promo: 'justBecause',
+  support: 'message',
 };
 
 const KIND_TONE: Record<NotificationKind, IconTileTone> = {
@@ -30,6 +31,7 @@ const KIND_TONE: Record<NotificationKind, IconTileTone> = {
   redeemed: 'teal',
   expiry: 'gold',
   promo: 'lavender',
+  support: 'teal',
 };
 
 export default function NotificationDetailScreen() {
@@ -103,6 +105,17 @@ export default function NotificationDetailScreen() {
         <Button
           label={t('notifications.viewGift')}
           onPress={() => router.push(`/(customer)/card/${item.gift_id}`)}
+        />
+      ) : null}
+      {item.support_request_id ? (
+        <Button
+          label={t('notifications.viewTicket')}
+          onPress={() =>
+            router.push({
+              pathname: '/(customer)/support/ticket/[id]',
+              params: { id: item.support_request_id as string },
+            })
+          }
         />
       ) : null}
       <Button label={t('common.back')} variant="secondary" onPress={() => router.back()} />

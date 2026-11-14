@@ -460,6 +460,8 @@ export async function listNotifications(): Promise<AppNotification[]> {
     created_at: row.created_at,
     read: Boolean(row.read_at),
     gift_id: (row.payload as { gift_id?: string } | null)?.gift_id,
+    support_request_id: (row.payload as { support_request_id?: string } | null)
+      ?.support_request_id,
   }));
 }
 

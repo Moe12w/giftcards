@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { parseMoneyToMinor } from '@/lib/money';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { emailProviderReady, sendSupportReplyEmail } from '@/lib/email';
 
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
@@ -283,11 +284,32 @@ export async function adminReplySupport(formData: FormData) {
 
   const { data: ticket } = await ctx.supabase
     .from('support_requests')
-    .select('status')
+    .select('status, customer_id, subject')
     .eq('id', id)
     .maybeSingle();
   if (ticket?.status === 'open') {
     await ctx.supabase.from('support_requests').update({ status: 'in_progress' }).eq('id', id);
+  }
+
+  // The in-app notification is written by a database trigger, so it is always
+  // there. The email is best effort: a missing provider or a bad address must
+  // never lose the reply that was already stored.
+  if (ticket?.customer_id && emailProviderReady()) {
+    const { data: requester } = await ctx.supabase
+      .from('profiles')
+      .select('email, full_name, preferred_language')
+      .eq('id', ticket.customer_id)
+      .maybeSingle();
+
+    if (requester?.email) {
+      await sendSupportReplyEmail({
+        to: requester.email,
+        name: requester.full_name,
+        ticketSubject: ticket.subject ?? 'Support request',
+        reply: body,
+        locale: requester.preferred_language === 'ar' ? 'ar' : 'en',
+      }).catch(() => undefined);
+    }
   }
 
   await record(ctx.supabase, 'support.reply', 'support_request', id, {});

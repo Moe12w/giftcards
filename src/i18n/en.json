@@ -566,7 +566,11 @@
     "openedBody": "{{name}} opened the gift you sent.",
     "redeemedBody": "{{name}} redeemed a gift card.",
     "expiryBody": "A gift card is expiring soon. Use it before it's gone.",
-    "promoBody": "New offers are waiting for you in Explore."
+    "promoBody": "New offers are waiting for you in Explore.",
+    "support": "Support reply",
+    "supportReply": "Support replied to your ticket",
+    "supportReplyBody": "The Giftly team answered your request. Open it to read the reply and continue the conversation.",
+    "viewTicket": "View ticket"
   },
   "account": {
     "title": "Account",

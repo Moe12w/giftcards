@@ -206,7 +206,8 @@ export type NotificationKind =
   | 'opened'
   | 'redeemed'
   | 'expiry'
-  | 'promo';
+  | 'promo'
+  | 'support';
 
 export interface AppNotification {
   id: string;
@@ -216,6 +217,8 @@ export interface AppNotification {
   created_at: string;
   read: boolean;
   gift_id?: string;
+  /** Set when support answered a ticket — opens the thread in the app. */
+  support_request_id?: string;
 }
 
 export interface PaymentMethod {

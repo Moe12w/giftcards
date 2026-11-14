@@ -22,6 +22,7 @@ const KIND_ICON: Record<NotificationKind, string> = {
   redeemed: 'check',
   expiry: 'clock',
   promo: 'justBecause',
+  support: 'message',
 };
 
 const KIND_TONE: Record<NotificationKind, IconTileTone> = {
@@ -31,6 +32,7 @@ const KIND_TONE: Record<NotificationKind, IconTileTone> = {
   redeemed: 'teal',
   expiry: 'gold',
   promo: 'lavender',
+  support: 'teal',
 };
 
 export default function NotificationsScreen() {
