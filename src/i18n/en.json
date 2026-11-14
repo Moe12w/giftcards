@@ -421,7 +421,7 @@
     "successBody": "We'll let you know when {{name}} opens it.",
     "sendWhatsappCta": "Send on WhatsApp",
     "whatsappSuccessBody": "Tap below to send the gift to {{name}} on WhatsApp.",
-    "whatsappMessage": "Hi {{name}}, I sent you a Giftly gift card worth {{amount}}. Open Giftly to claim it.",
+    "whatsappMessage": "🎁🎉✨ *OPEN YOUR GIFT!* ✨🎉🎁\n\n{{name}}, something bright just landed for you 💛\nA Giftly gift card worth *{{amount}}* is waiting to be unwrapped!\n\n🎊 Tap into Giftly, claim it, and go treat yourself 🎊\n🛍️💫✨",
     "whatsappOpened": "WhatsApp opened — send the message to finish.",
     "whatsappError": "Couldn't open WhatsApp. Check the number and try again.",
     "whatsappNoPhone": "Add a recipient phone number to send on WhatsApp.",
@@ -1036,7 +1036,7 @@
     "sendWhatsappBody": "We will send the gift box to this number on WhatsApp.",
     "whatsappNumber": "Enter a WhatsApp number with the country code.",
     "whatsappNumberLabel": "WhatsApp number",
-    "whatsappMessage": "Hi {{name}}, here is your gift box: {{link}}",
+    "whatsappMessage": "🎁🎉✨ *SURPRISE!* A gift box is being built for you ✨🎉🎁\n\nHey {{name}}, your people are putting something special together 💛\nTap in and add your gift card to the pile:\n{{link}}\n\n🎊✨💫",
     "whatsappError": "Couldn't open WhatsApp. Check the number and try again."
   },
   "sessions": {
