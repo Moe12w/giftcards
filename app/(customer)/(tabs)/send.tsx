@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, BackHandler } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -38,6 +38,16 @@ export default function SendScreen() {
       active = false;
     };
   }, []);
+
+  // Prevent swipe-back from navigating to checkout flow;
+  // instead redirect to home so users stay on the giftsent/complete screen destination.
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      router.push('/(customer)/(tabs)/index');
+      return true;
+    });
+    return () => backHandler.remove();
+  }, [router]);
 
   const draftOffer = offers.find((offer) => offer.id === draft.offerId) ?? null;
 

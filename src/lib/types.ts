@@ -393,3 +393,58 @@ export interface SponsoredPlacement {
   ads: SponsoredAd[];
   config: Record<string, unknown>;
 }
+
+/* -------------------------------------------------------------------------
+ * Statements
+ * ------------------------------------------------------------------------- */
+
+/** Period for a statement export */
+export type StatementPeriod = 'daily' | 'weekly' | 'monthly';
+
+/** Format for a statement export */
+export type StatementFormat = 'csv' | 'json';
+
+/** A single entry in a statement export */
+export interface StatementEntry {
+  date: string; // Formatted YYYY-MM-DD
+  type: 'sale' | 'payout' | 'refund';
+  amount: number; // In major currency units
+  currency: string;
+  platform_fee: number;
+  vendor_share: number;
+  status: string;
+  order_id: string;
+  customer_name: string | null;
+}
+
+/** Metadata summary for a statement */
+export interface StatementMetadata {
+  total_transactions: number;
+  total_amount: number;
+  total_fee: number;
+  total_vendor_earnings: number;
+  total_net_payout: number;
+}
+
+/** Summary totals for a generated statement */
+export interface StatementSummary {
+  statement_id: string;
+  period: StatementPeriod;
+  format: StatementFormat;
+  transaction_count: number;
+  total_amount: number;
+  total_fee: number;
+  total_vendor_earnings: number;
+  total_net_payout: number;
+  generated_at: string;
+}
+
+/** Response from generating a statement */
+export interface GenerateStatementResponse {
+  statement_id: string;
+  status: 'generating' | 'completed' | 'failed';
+  message: string;
+  download_url?: string;
+  format: StatementFormat;
+  metadata: StatementMetadata;
+}
