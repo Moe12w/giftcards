@@ -2878,18 +2878,8 @@ table.data .sub {
 
 .dash-menu-button,
 .dash-menu-close,
-.dash-scrim,
-.dash-side-close {
+.dash-scrim {
   display: none;
-}
-
-/* The page behind the drawer stops scrolling, without pinning the body.
-   Pinning it with `position: fixed` is what left some iPhones dimmed and
-   offset until the page was reloaded. */
-html.nav-locked,
-html.nav-locked body {
-  overflow: hidden;
-  overscroll-behavior: none;
 }
 
 .help-btn {
@@ -2935,33 +2925,15 @@ html.nav-locked body {
     border: 0;
     padding: 0;
     background: rgba(28, 28, 28, 0.45);
-    opacity: 1;
-    pointer-events: auto;
+    opacity: 0;
+    pointer-events: none;
     transition: opacity 0.22s ease;
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Belt and braces: even if a transition is interrupted, the scrim is only
-     painted while the drawer is actually open. */
-  .dash:not(.nav-open) .dash-scrim {
-    display: none;
-  }
-
-  .dash-side-top {
-    justify-content: space-between;
-  }
-
-  .dash-side-close {
-    display: inline-grid;
-    place-items: center;
-    width: 38px;
-    height: 38px;
-    flex: 0 0 auto;
-    border: 2px solid var(--ink);
-    border-radius: 11px;
-    background: var(--surface);
-    color: var(--ink);
-    box-shadow: 0 2px 0 var(--ink);
+  .dash.nav-open .dash-scrim {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .dash-side {
@@ -2976,12 +2948,6 @@ html.nav-locked body {
     height: 100dvh;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
-    max-height: 100vh;
-    max-height: 100dvh;
-    /* The menu can be taller than a phone screen (the admin one is), so it
-       scrolls inside the drawer instead of running under Safari's bar. */
-    overflow-y: auto;
-    overscroll-behavior: contain;
     transform: translateX(-102%);
     transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.3, 1);
     box-shadow: 6px 0 0 rgba(28, 28, 28, 0.12);
