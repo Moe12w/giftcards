@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, LifeBuoy } from 'lucide-react';
 import { DashShell, type NavGroup } from '@/components/DashShell';
 import { requireEnterprise } from '@/lib/auth';
 import { initials, titleCase } from '@/lib/format';
@@ -74,6 +74,9 @@ export default async function EnterpriseDashboardLayout({ children }: { children
       topRight={
         <>
           <span className="tag lavender dash-role">{titleCase(ctx.role, locale)}</span>
+          <Link className="btn sm ghost" href="/enterprise/support">
+            <LifeBuoy size={15} /> {t.support}
+          </Link>
           <Link className="btn sm ghost" href="/corporate#enquiry" target="_blank">
             <ExternalLink size={14} /> {chrome.corporateSite}
           </Link>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ScanLine } from 'lucide-react';
+import { LifeBuoy, ScanLine } from 'lucide-react';
 import { DashShell, type NavGroup } from '@/components/DashShell';
 import { requireVendor } from '@/lib/auth';
 import { switchVendor } from '@/lib/actions/vendor';
@@ -102,6 +102,9 @@ export default async function VendorDashboardLayout({ children }: { children: Re
       topRight={
         <>
           <span className="tag mint dash-role">{titleCase(ctx.role, locale)}</span>
+          <Link className="btn sm ghost" href="/vendor/support">
+            <LifeBuoy size={15} /> {t.support}
+          </Link>
           <Link className="btn sm ghost" href={`/vendors/${vendor.slug ?? vendor.id}`} target="_blank">
             {chrome.viewPublicPage}
           </Link>

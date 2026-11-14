@@ -55,6 +55,9 @@ export default async function BusinessPortalLayout({ children }: { children: Rea
       topRight={
         <>
           <span className="tag lavender dash-role">{t.chrome.bulkPricing}</span>
+          <Link className="btn sm ghost" href="/business/support">
+            <LifeBuoy size={15} /> {t.nav.support}
+          </Link>
           <Link className="btn sm ghost" href="/" target="_blank">
             <ExternalLink size={14} /> {t.nav.publicSite}
           </Link>
