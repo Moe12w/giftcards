@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -203,7 +203,6 @@ function DashShellInner({
   const pathname = usePathname();
   const { open } = useTutorial();
   const [navOpen, setNavOpen] = useState(false);
-  const scrimRef = useRef<HTMLButtonElement>(null);
   const rtl = locale === 'ar';
   const chrome = CHROME[locale];
   const commonCopy = pick(common, locale);
@@ -214,49 +213,32 @@ function DashShellInner({
     setNavOpen(false);
   }, [pathname]);
 
+  /**
+   * Lock the page behind the drawer.
+   *
+   * Earlier this pinned the body with `position: fixed`, which iOS Safari does
+   * not always unwind (the page then stayed offset and dimmed until a reload).
+   * A class that only disables overflow is enough and is always reversible.
+   */
   useEffect(() => {
-    if (navOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.documentElement.style.overflow = 'hidden';
-      document.documentElement.style.overscrollBehavior = 'none';
-    } else {
-      const scrollY = document.body.style.top;
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.overscrollBehavior = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
-      }
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.overscrollBehavior = '';
-    };
+    const root = document.documentElement;
+    root.classList.toggle('nav-locked', navOpen);
+    return () => root.classList.remove('nav-locked');
   }, [navOpen]);
 
-  // Update scrim height on resize (iOS address bar show/hide)
+  // Escape closes the drawer, and so does any route change (above).
   useEffect(() => {
     if (!navOpen) return;
-    const handleResize = () => {
-      if (scrimRef.current) {
-        scrimRef.current.style.height = `${window.innerHeight}px`;
-      }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setNavOpen(false);
     };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [navOpen]);
+
+  // The overlay is only in the DOM while the drawer is open, so a stale scrim
+  // can never grey out the page after it closes.
+  const closeNav = () => setNavOpen(false);
 
   function active(href: string) {
     const segments = href.split('/').filter(Boolean);
@@ -266,17 +248,26 @@ function DashShellInner({
 
   return (
     <div className={`dash${rtl ? ' rtl' : ''}${navOpen ? ' nav-open' : ''}`}>
-      <button
-        type="button"
-        ref={scrimRef}
-        className="dash-scrim"
-        aria-label={chrome.closeMenu}
-        onClick={() => setNavOpen(false)}
-        onTouchEnd={() => setNavOpen(false)}
-      />
+      {navOpen ? (
+        <button
+          type="button"
+          className="dash-scrim"
+          aria-label={chrome.closeMenu}
+          onClick={closeNav}
+          onTouchEnd={closeNav}
+        />
+      ) : null}
       <aside className="dash-side">
         <div className="dash-side-top">
           <Logo href={homeHref} />
+          <button
+            type="button"
+            className="dash-side-close"
+            aria-label={chrome.closeMenu}
+            onClick={closeNav}
+          >
+            <X size={18} />
+          </button>
         </div>
         <div className="dash-workspace">
           <span className="label">{portalLabel}</span>
@@ -314,6 +305,7 @@ function DashShellInner({
                     className={`${active(item.href) ? 'active' : ''} ${active(item.href) ? accent : ''}`}
                     aria-current={active(item.href) ? 'page' : undefined}
                     title={item.label}
+                    onClick={closeNav}
                   >
                     <Icon size={17} />
                     <span className="nav-text">
