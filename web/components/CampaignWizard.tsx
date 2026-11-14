@@ -191,11 +191,6 @@ export function CampaignWizard({
   const slotPrice = slotBased
     ? placement?.slot_prices_minor?.[slotNumber - 1] ?? price?.fixed_price_minor ?? 0
     : 0;
-  const quoteMinor = isFixed
-    ? slotBased
-      ? slotPrice
-      : price?.fixed_price_minor ?? 0
-    : Math.round((Number(totalBudget) || 0) * 100);
   const budgetLocked = campaign?.payment_status === 'paid';
   const needsImage = placement?.format === 'banner' || placement?.format === 'carousel';
   const visiblePlacements = placements.filter((row) => surfaceFor(row.key) === surface);
@@ -214,6 +209,18 @@ export function CampaignWizard({
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
     return (end - start) / (60 * 60 * 1000);
   }, [startsAt, endsAt]);
+
+  // A slot price is the price of a 24-hour block. Shorter and longer bookings
+  // are charged pro-rata to the hour, so 6 hours costs a quarter of the slot
+  // price and 72 hours costs three times it.
+  const slotQuoteMinor = Math.max(1, Math.round((slotPrice * hours) / 24));
+  const quoteMinor = isFixed
+    ? slotBased
+      ? hours > 0
+        ? slotQuoteMinor
+        : slotPrice
+      : price?.fixed_price_minor ?? 0
+    : Math.round((Number(totalBudget) || 0) * 100);
 
   function choosePlacement(next: WizardPlacement) {
     setPlacementKey(next.key);
@@ -411,13 +418,17 @@ export function CampaignWizard({
                             <span>
                               <strong>{model.pricing_model.toUpperCase()}</strong>{' '}
                               {model.pricing_model === 'fixed'
-                                ? formatMoney(model.fixed_price_minor)
+                                ? formatMoney(
+                                    row.slot_count > 0
+                                      ? row.slot_prices_minor?.[0] ?? model.fixed_price_minor
+                                      : model.fixed_price_minor,
+                                  )
                                 : model.pricing_model === 'cpc'
                                   ? `${formatMoney(model.cpc_rate_minor)} / click`
                                   : `${formatMoney(model.cpm_rate_minor)} / 1,000 views`}
                               <span className="sub">
                                 {row.slot_count > 0
-                                  ? '6–72 hour rental · one fixed price per slot'
+                                  ? '6–72 hour rental · slot price per 24 hours'
                                   : `${model.min_duration_days}–${model.max_duration_days} days`}
                                 {model.pricing_model !== 'fixed'
                                   ? ` · min budget ${formatMoney(model.min_budget_minor)}`
@@ -593,7 +604,9 @@ export function CampaignWizard({
           </h3>
           {price ? (
             <span className="small muted">
-              {slotBased ? 'Fixed rental · 6–72 hours' : `${price.pricing_model.toUpperCase()} · ${price.min_duration_days}–${price.max_duration_days} days`}
+              {slotBased
+                ? 'Slot price per 24 hours · 6–72 hour booking'
+                : `${price.pricing_model.toUpperCase()} · ${price.min_duration_days}–${price.max_duration_days} days`}
             </span>
           ) : null}
         </div>
@@ -615,7 +628,7 @@ export function CampaignWizard({
                         className={`btn sm${chosen ? ' primary' : ' ghost'}`}
                         onClick={() => chooseSlot(slot)}
                         disabled={Boolean(campaign)}
-                        title={`Slot ${slot} — ${formatMoney(slotPriceMinor)}`}
+                        title={`Slot ${slot} — ${formatMoney(slotPriceMinor)} per 24 hours`}
                         style={{
                           display: 'grid',
                           gap: 2,
@@ -624,7 +637,7 @@ export function CampaignWizard({
                         }}
                       >
                         <span>{slot === 1 ? 'Slot 1 · first' : `Slot ${slot}`}</span>
-                        <span className="small" style={{ opacity: 0.8 }}>{formatMoney(slotPriceMinor)}</span>
+                        <span className="small" style={{ opacity: 0.8 }}>{formatMoney(slotPriceMinor)} / 24h</span>
                         <span className="small" style={{ opacity: 0.8 }}>
                           {occupied && info?.occupied_until
                             ? `Filled until ${new Date(info.occupied_until).toLocaleString()}`
@@ -637,8 +650,9 @@ export function CampaignWizard({
                   })}
                 </div>
                 <span className="hint">
-                  Slot 1 is seen first and costs the most. Picking a filled slot moves your start time to the moment it
-                  frees up; availability is checked again when you save.
+                  Slot 1 is seen first and costs the most. Prices are per 24 hours and are charged pro-rata to the hour,
+                  so 6 hours costs a quarter and 72 hours costs three times the slot price. Picking a filled slot moves
+                  your start time to the moment it frees up; availability is checked again when you save.
                 </span>
               </div>
             ) : null}
@@ -650,6 +664,7 @@ export function CampaignWizard({
                 name="starts_at"
                 type="datetime-local"
                 required
+                disabled={budgetLocked && slotBased}
                 value={startsAt}
                 onChange={(event) => setStartsAt(event.target.value)}
               />
@@ -661,23 +676,25 @@ export function CampaignWizard({
                 name="ends_at"
                 type="datetime-local"
                 required
+                disabled={budgetLocked && slotBased}
                 value={endsAt}
                 onChange={(event) => setEndsAt(event.target.value)}
               />
               <span className="hint">
                 {hours > 0 ? `${hours.toFixed(1)} hours` : 'Choose an end date'}
                 {slotBased ? ' · 6–72 hours allowed' : days > 0 ? ` · ${days} days` : ''}
+                {budgetLocked && slotBased ? ' · paid rentals cannot change length' : ''}
               </span>
             </div>
 
             {isFixed ? (
               <div className="field full">
-                <label>{slotBased ? 'Slot price' : 'Fixed price'}</label>
+                <label>{slotBased ? 'Booking total' : 'Fixed price'}</label>
                 <div className="card flat">
                   <strong style={{ fontSize: 22 }}>{formatMoney(quoteMinor)}</strong>
                   <span className="small muted">
                     {slotBased
-                      ? 'One payment for the whole window. No automatic renewal: book again when it ends.'
+                      ? `${formatMoney(slotPrice)} per 24 hours · ${hours > 0 ? hours.toFixed(1) : 0} hours booked. One payment for the whole window, no automatic renewal.`
                       : 'One payment for the whole schedule. Delivery is not metered.'}
                   </span>
                 </div>

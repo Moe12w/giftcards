@@ -139,7 +139,8 @@ export default async function AdminAdvertisingPlacementsPage({
                     placeholder="1500, 1200, 1000, 800, 600, 500, 400, 300"
                   />
                   <span className="hint">
-                    Comma-separated, one price per numbered slot. Slot 1 is seen first and should cost the most. Leave
+                    Comma-separated, one price per numbered slot, each the price of a 24-hour booking. Slot 1 is seen
+                    first and should cost the most. Shorter and longer bookings are charged pro-rata to the hour. Leave
                     empty to use the fixed price for every slot.
                   </span>
                 </div>
