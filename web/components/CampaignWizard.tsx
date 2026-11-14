@@ -94,6 +94,7 @@ export function surfaceFor(key: string): PlacementSurface {
 const STEPS = [
   { title: 'Placement', hint: 'Where the ad appears' },
   { title: 'Creative', hint: 'What the customer sees' },
+  { title: 'Checkout', hint: 'Confirm and pay' },
 ];
 
 export function CampaignWizard({

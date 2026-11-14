@@ -13,7 +13,6 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { ListRow } from '@/src/components/ListRow';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
-import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import {
   offerBusinessId,
   offerBusinessLogo,
@@ -154,7 +153,6 @@ export default function GiftDetailScreen() {
         </View>
       </Card>
 
-      <SponsoredStrip placementKey="marketplace_sponsored_card" variant="gift_card" limit={3} />
 
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>{t('gift.about')}</Text>
