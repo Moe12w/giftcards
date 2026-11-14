@@ -169,6 +169,9 @@ const EMPTY_SCRIPT: TutorialScript = {
   steps: [],
 };
 
+/** The mobile drawer exists only while it is opening, open or closing. */
+type DrawerPhase = 'closed' | 'opening' | 'open' | 'closing';
+
 function DashShellInner({
   portalLabel,
   workspaceName,
@@ -202,17 +205,99 @@ function DashShellInner({
 }) {
   const pathname = usePathname();
   const { open } = useTutorial();
-  const [navOpen, setNavOpen] = useState(false);
+  const [drawerPhase, setDrawerPhase] = useState<DrawerPhase>('closed');
   const scrimRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
   const rtl = locale === 'ar';
   const chrome = CHROME[locale];
   const commonCopy = pick(common, locale);
   const homeHref = `/${pathname.split('/').filter(Boolean)[0] ?? ''}`;
+  const drawerMounted = drawerPhase !== 'closed';
+  const navOpen = drawerPhase === 'open';
 
-  // Reset nav open state on route change (fixes iOS issue where menu stays open)
+  function openNav() {
+    setDrawerPhase((current) => {
+      if (current === 'closed') return 'opening';
+      if (current === 'closing') return 'open';
+      return current;
+    });
+  }
+
+  function closeNav() {
+    setDrawerPhase((current) => {
+      if (current === 'open') return 'closing';
+      if (current === 'opening') return 'closed';
+      return current;
+    });
+  }
+
+  function closeNavNow() {
+    setDrawerPhase('closed');
+  }
+
+  // A route change always ends with the drawer gone. Unmount it immediately
+  // instead of animating: the new page must not inherit a fixed element at
+  // the bottom edge (see the closing effect below).
   useEffect(() => {
-    setNavOpen(false);
+    setDrawerPhase('closed');
   }, [pathname]);
+
+  // The drawer has to exist in the box tree for one painted frame with its
+  // off-screen transform before the open class can animate it in.
+  useEffect(() => {
+    if (drawerPhase !== 'opening') return;
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => {
+        setDrawerPhase((current) => (current === 'opening' ? 'open' : current));
+      });
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, [drawerPhase]);
+
+  // iOS 26 Safari tints its bottom URL bar by sampling fixed elements that
+  // touch the viewport edge. A drawer translated off-screen still counts, and
+  // background transparency does not help; only `display: none` unregisters
+  // it. Keep the drawer mounted through the slide-out, then remove it from
+  // the box tree so the bar goes back to translucent without a refresh.
+  useEffect(() => {
+    if (drawerPhase !== 'closing') return;
+    const drawer = drawerRef.current;
+    if (!drawer) {
+      setDrawerPhase('closed');
+      return;
+    }
+    let finished = false;
+    function finish() {
+      if (finished) return;
+      finished = true;
+      setDrawerPhase((current) => (current === 'closing' ? 'closed' : current));
+    }
+    function onTransitionEnd(event: TransitionEvent) {
+      if (event.target === drawer && event.propertyName === 'transform') finish();
+    }
+    drawer.addEventListener('transitionend', onTransitionEnd);
+    // Reduced motion or a breakpoint change can skip the transition.
+    const fallback = window.setTimeout(finish, 400);
+    return () => {
+      drawer.removeEventListener('transitionend', onTransitionEnd);
+      window.clearTimeout(fallback);
+    };
+  }, [drawerPhase]);
+
+  // The mobile drawer is a different animal from the desktop sidebar; never
+  // carry its open state across the breakpoint.
+  useEffect(() => {
+    const wide = window.matchMedia('(min-width: 901px)');
+    function onChange(event: MediaQueryListEvent) {
+      if (event.matches) setDrawerPhase('closed');
+    }
+    wide.addEventListener('change', onChange);
+    return () => wide.removeEventListener('change', onChange);
+  }, []);
 
   // Keep the page behind the drawer still without touching body/html styles.
   // On iOS Safari, `position: fixed` or `overflow: hidden` on the body makes
@@ -238,16 +323,18 @@ function DashShellInner({
   }
 
   return (
-    <div className={`dash${rtl ? ' rtl' : ''}${navOpen ? ' nav-open' : ''}`}>
+    <div
+      className={`dash${rtl ? ' rtl' : ''}${drawerMounted ? ' nav-mounted' : ''}${navOpen ? ' nav-open' : ''}`}
+    >
       <button
         type="button"
         ref={scrimRef}
         className="dash-scrim"
         aria-label={chrome.closeMenu}
-        onClick={() => setNavOpen(false)}
-        onTouchEnd={() => setNavOpen(false)}
+        onClick={closeNav}
+        onTouchEnd={closeNav}
       />
-      <aside className="dash-side">
+      <aside className="dash-side" ref={drawerRef}>
         <div className="dash-side-top">
           <Logo href={homeHref} />
         </div>
@@ -287,6 +374,7 @@ function DashShellInner({
                     className={`${active(item.href) ? 'active' : ''} ${active(item.href) ? accent : ''}`}
                     aria-current={active(item.href) ? 'page' : undefined}
                     title={item.label}
+                    onClick={closeNav}
                   >
                     <Icon size={17} />
                     <span className="nav-text">
@@ -300,7 +388,16 @@ function DashShellInner({
           ))}
         </nav>
         <div className="dash-user">
-          <button type="button" className="tut-launch" onClick={() => open()}>
+          <button
+            type="button"
+            className="tut-launch"
+            onClick={() => {
+              // A fullscreen overlay latches Safari's bottom-bar sample, so
+              // the drawer must leave the box tree in the same commit.
+              closeNavNow();
+              open();
+            }}
+          >
             <span className="tut-launch-icon">
               <BookOpen size={16} />
             </span>
@@ -321,7 +418,7 @@ function DashShellInner({
               </span>
             </div>
           </div>
-          <form action={signOut}>
+          <form action={signOut} onSubmit={closeNavNow}>
             <button className="btn sm ghost block" type="submit">
               {commonCopy.actions.signOut}
             </button>
@@ -334,8 +431,8 @@ function DashShellInner({
             type="button"
             className="dash-menu-button"
             aria-label={chrome.menu}
-            aria-expanded={navOpen}
-            onClick={() => setNavOpen(true)}
+            aria-expanded={navOpen || drawerPhase === 'opening'}
+            onClick={openNav}
           >
             <Menu size={20} />
           </button>
@@ -363,7 +460,7 @@ function DashShellInner({
             type="button"
             className="dash-menu-close"
             aria-label={chrome.closeMenu}
-            onClick={() => setNavOpen(false)}
+            onClick={closeNav}
           >
             <X size={18} />
           </button>
