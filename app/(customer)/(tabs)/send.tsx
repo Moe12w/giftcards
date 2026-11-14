@@ -43,7 +43,7 @@ export default function SendScreen() {
   // instead redirect to home so users stay on the giftsent/complete screen destination.
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('/(customer)/(tabs)/index');
+      router.push('/(customer)/(tabs)');
       return true;
     });
     return () => backHandler.remove();
