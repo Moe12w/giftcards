@@ -137,6 +137,12 @@ export default function ProfileScreen() {
           last
           onPress={() => router.push('/(customer)/profile/addresses')}
         />
+        <ListRow
+          icon="clipboard"
+          tone="gold"
+          title={t('statements')}  // Added statements title
+          onPress={() => router.push('/(customer)/profile/statements')}
+        />
       </Card>
 
       <Card>
