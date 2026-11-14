@@ -1,7 +1,7 @@
 // src/components/EmptyState.tsx
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, fontSizes, spacing } from '../theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '../theme';
 import { IconTile, type IconTileTone } from './IconTile';
 
 interface EmptyStateProps {
@@ -22,7 +22,7 @@ export function EmptyState({ title, body, icon = 'gift', tone = 'lilac' }: Empty
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   wrapper: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -43,4 +43,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-});
+}));

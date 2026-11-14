@@ -15,9 +15,10 @@ import { Money } from '@/src/components/Money';
 import { ParticipantStack } from '@/src/components/ParticipantStack';
 import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
 import type { AccentTone } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 /**
  * Invite landing page. A shared link (giftly://invite/CODE or /invite/CODE)
@@ -25,6 +26,7 @@ import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
  * already inside and who is contributing, then join in one tap.
  */
 export default function InviteScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { code } = useLocalSearchParams<{ code?: string }>();
   const { user } = useAuth();
@@ -194,7 +196,7 @@ export default function InviteScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   hero: { alignItems: 'center', gap: spacing.xs },
   heroTop: {
@@ -271,4 +273,4 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   altText: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
-});
+}));

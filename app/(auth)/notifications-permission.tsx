@@ -1,3 +1,4 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
@@ -5,10 +6,11 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
 export default function NotificationsPermissionScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
 
   function finish() {
@@ -38,7 +40,7 @@ export default function NotificationsPermissionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   content: { flex: 1, paddingTop: spacing.lg, paddingBottom: spacing.xl },
   illustration: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   blob: {
@@ -76,4 +78,4 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   footer: { gap: spacing.sm },
-});
+}));

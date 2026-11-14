@@ -9,11 +9,13 @@ import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { formatMoney } from '@/src/lib/money';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { isUsablePhone, shareOnWhatsapp } from '@/src/lib/whatsapp';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
 export default function CheckoutSuccessScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { draft, reset } = useGiftDraft();
   const scheduled = Boolean(draft.deliveryDate);
@@ -112,7 +114,7 @@ export default function CheckoutSuccessScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   content: { flex: 1, justifyContent: 'space-between' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
   blob: {
@@ -165,4 +167,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   footer: { gap: spacing.sm },
-});
+}));

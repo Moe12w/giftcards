@@ -12,10 +12,12 @@ import { ListRow } from '@/src/components/ListRow';
 import { Screen } from '@/src/components/Screen';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { useRecipients } from '@/src/lib/recipients';
+import { useThemeRefresh } from '@/src/lib/theme';
 import type { Recipient } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function SendRecipientScreen() {
+  useThemeRefresh();
   const { recipients } = useRecipients();
   const { t } = useTranslation();
   const { draft, update } = useGiftDraft();
@@ -94,7 +96,7 @@ export default function SendRecipientScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   selected: { gap: 2 },
   selectedLabel: {
     fontFamily: fonts.medium,
@@ -128,4 +130,4 @@ const styles = StyleSheet.create({
   chevron: { fontSize: 24, color: colors.textMuted },
   actions: { paddingVertical: 0 },
   pressed: { opacity: 0.85 },
-});
+}));

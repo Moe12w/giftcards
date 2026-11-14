@@ -10,10 +10,12 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { addRecipient, listRecipients, removeRecipient } from '@/src/lib/data';
+import { useThemeRefresh } from '@/src/lib/theme';
 import type { Recipient } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function RecipientsScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
 
@@ -89,7 +91,7 @@ export default function RecipientsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   list: { gap: spacing.sm },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   copy: { flex: 1, gap: 1 },
@@ -97,4 +99,4 @@ const styles = StyleSheet.create({
   meta: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted },
   remove: { fontFamily: fonts.bold, fontSize: fontSizes.xs, color: colors.danger },
   pressed: { opacity: 0.88 },
-});
+}));

@@ -1,7 +1,7 @@
 // src/components/Chip.tsx
 import React from 'react';
 import { Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
-import { colors, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 
 interface ChipProps {
   label: string;
@@ -31,7 +31,7 @@ export function Chip({ label, active = false, onPress, style, accessibilityLabel
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   chip: {
     borderRadius: radii.pill,
     borderWidth: 2,
@@ -48,4 +48,4 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   labelActive: { color: colors.textOnAccent },
-});
+}));

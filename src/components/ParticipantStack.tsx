@@ -3,7 +3,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { BasketParticipant } from '../lib/types';
-import { colors, fonts, fontSizes, radii } from '../theme';
+import { colors, fonts, fontSizes, radii, themedStyles } from '../theme';
 import { Avatar } from './Avatar';
 
 interface ParticipantStackProps {
@@ -46,7 +46,7 @@ export function ParticipantStack({ participants, size = 30, max = 4 }: Participa
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   row: { flexDirection: 'row', alignItems: 'center' },
   item: {},
   more: {
@@ -58,4 +58,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   moreText: { fontFamily: fonts.extrabold, fontSize: fontSizes.xs, color: colors.ink },
-});
+}));

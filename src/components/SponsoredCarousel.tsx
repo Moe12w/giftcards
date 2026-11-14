@@ -26,7 +26,7 @@ import { useTranslation } from 'react-i18next';
 
 import { listSponsoredAds, trackSponsoredClick } from '../lib/data';
 import type { SponsoredAd, SponsoredPlacement } from '../lib/types';
-import { colors, edges, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, edges, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Card } from './Card';
 import { SectionHeader } from './SectionHeader';
 
@@ -409,7 +409,7 @@ export function SponsoredStrip({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   carousel: { gap: spacing.sm },
   slide: { backgroundColor: colors.surface },
   pressed: { opacity: 0.92 },
@@ -476,4 +476,4 @@ const styles = StyleSheet.create({
   nativeBody: { padding: spacing.sm + 2, gap: 2 },
   vendor: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
   nativeHeadline: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
-});
+}));

@@ -1,7 +1,7 @@
 // src/components/ProgressDots.tsx
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, themedStyles } from '../theme';
 
 interface ProgressDotsProps {
   count: number;
@@ -21,9 +21,9 @@ export function ProgressDots({ count, active }: ProgressDotsProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   dot: { height: 8, borderRadius: radii.pill },
   dotActive: { width: 26, backgroundColor: colors.teal },
   dotIdle: { width: 8, backgroundColor: colors.borderSoft },
-});
+}));

@@ -9,7 +9,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { colors, edges, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, edges, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -21,7 +21,7 @@ interface VariantStyle {
   spinner: string;
 }
 
-const variants: Record<Variant, VariantStyle> = {
+const variants = (): Record<Variant, VariantStyle> => ({
   primary: {
     background: colors.teal,
     edge: edges.teal,
@@ -50,7 +50,7 @@ const variants: Record<Variant, VariantStyle> = {
     label: colors.ink,
     spinner: colors.ink,
   },
-};
+});;
 
 interface ButtonProps {
   label: string;
@@ -74,7 +74,7 @@ export function Button({
   testID,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
-  const palette = variants[variant];
+  const palette = variants()[variant];
 
   return (
     <View
@@ -114,7 +114,7 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   edge: {
     borderRadius: radii.pill,
     borderColor: colors.ink,
@@ -135,4 +135,4 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.92, transform: [{ translateY: 3 }] },
   disabled: { opacity: 0.45 },
-});
+}));

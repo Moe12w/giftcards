@@ -7,10 +7,12 @@ import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
 export default function SignUpScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { signUp } = useAuth();
   const [fullName, setFullName] = useState('');
@@ -121,7 +123,7 @@ export default function SignUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   hero: { gap: spacing.xs, marginTop: spacing.xl, marginBottom: spacing.md },
   title: {
     fontFamily: fonts.extrabold,
@@ -163,4 +165,4 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.md,
     color: colors.tealDark,
   },
-});
+}));

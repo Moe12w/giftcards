@@ -1,3 +1,4 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { ColorValue } from 'react-native';
@@ -5,7 +6,7 @@ import { Tabs } from 'expo-router';
 import { Compass, Gift, User, Wallet, type LucideIcon } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
-import { colors, edges, fonts, fontSizes, radii } from '@/src/theme';
+import { colors, edges, fonts, fontSizes, radii, themedStyles } from '@/src/theme';
 
 const TAB_ICONS = {
   explore: Compass,
@@ -29,6 +30,7 @@ function renderTabIcon(icon: LucideIcon) {
 }
 
 export default function CustomerTabsLayout() {
+  useThemeRefresh();
   const { t } = useTranslation();
 
   const exploreIcon = renderTabIcon(TAB_ICONS.explore);
@@ -87,7 +89,7 @@ export default function CustomerTabsLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   tabBar: {
     position: 'absolute',
     left: 16,
@@ -131,4 +133,4 @@ const styles = StyleSheet.create({
     borderBottomWidth: 4,
     borderBottomColor: edges.teal,
   },
-});
+}));

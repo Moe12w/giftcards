@@ -2,7 +2,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing } from '../theme';
+import { colors, spacing, themedStyles } from '../theme';
 
 interface ScreenProps {
   children: React.ReactNode;
@@ -45,7 +45,7 @@ export function Screen({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   safe: { flex: 1, backgroundColor: colors.background },
   content: {
     paddingHorizontal: spacing.gutter,
@@ -74,4 +74,4 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     backgroundColor: 'rgba(114, 194, 184, 0.18)',
   },
-});
+}));

@@ -1,3 +1,4 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
@@ -9,11 +10,12 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useGiftDraft } from '@/src/lib/gift-draft';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const SUGGESTIONS = ['birthday', 'thankYou', 'congrats', 'justBecause'] as const;
 
 export default function MessageScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { draft, update } = useGiftDraft();
   const [message, setMessage] = useState(draft.message);
@@ -71,7 +73,7 @@ export default function MessageScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   input: { minHeight: 120, textAlignVertical: 'top' },
   label: {
     fontFamily: fonts.bold,
@@ -88,4 +90,4 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   pressed: { opacity: 0.85 },
-});
+}));

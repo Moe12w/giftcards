@@ -13,10 +13,11 @@ import { QRCode } from '@/src/components/QRCode';
 import { Screen } from '@/src/components/Screen';
 import { SessionMeter } from '@/src/components/SessionMeter';
 import { useCards } from '@/src/lib/cards';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { formatMoney } from '@/src/lib/money';
 import { isSessionCard } from '@/src/lib/sessions';
 import type { CardStatus, GiftCard } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const statusTone: Record<CardStatus, BadgeTone> = {
   issued: 'warning',
@@ -27,6 +28,7 @@ const statusTone: Record<CardStatus, BadgeTone> = {
 };
 
 export default function CardDetailScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { ready, getCard, sessionsLeft, valueLeft, canRedeem, revealPartnerCode, markPartnerCodeUsed } =
@@ -211,7 +213,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   title: { fontSize: fontSizes.xxl, fontWeight: '700', color: colors.text },
   hero: { gap: spacing.xs, alignItems: 'center' },
@@ -250,4 +252,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: spacing.sm,
   },
-});
+}));

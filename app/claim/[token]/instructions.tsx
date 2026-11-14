@@ -1,3 +1,4 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -6,9 +7,10 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Screen } from '@/src/components/Screen';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function ClaimInstructionsScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
 
@@ -31,7 +33,7 @@ export default function ClaimInstructionsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   title: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.xxl,
@@ -44,4 +46,4 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 22,
   },
-});
+}));

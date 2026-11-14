@@ -1,3 +1,4 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
@@ -9,12 +10,13 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { Glyph } from '@/src/components/Glyph';
 import { Screen } from '@/src/components/Screen';
 import { useGiftDraft } from '@/src/lib/gift-draft';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 const THEMES = ['confetti', 'floral', 'stars', 'minimal'] as const;
 const WRAPPINGS = ['ribbon', 'box', 'envelope', 'none'] as const;
 
 export default function WrappingScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { draft, update } = useGiftDraft();
 
@@ -92,7 +94,7 @@ export default function WrappingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   label: {
     fontFamily: fonts.bold,
     fontSize: fontSizes.md,
@@ -128,4 +130,4 @@ const styles = StyleSheet.create({
   },
   wrapLabelActive: { color: colors.textOnAccent },
   pressed: { opacity: 0.88 },
-});
+}));

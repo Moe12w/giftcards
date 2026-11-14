@@ -7,10 +7,12 @@ import { Button } from '@/src/components/Button';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { createSupportRequest } from '@/src/lib/data';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { TextField } from '@/src/components/TextField';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function ReportProblemScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -62,9 +64,9 @@ export default function ReportProblemScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   body: { fontFamily: fonts.regular, fontSize: fontSizes.md, color: colors.textMuted, lineHeight: 21 },
   input: { minHeight: 120, textAlignVertical: 'top' },
   submitted: { fontFamily: fonts.bold, fontSize: fontSizes.lg, color: colors.success, textAlign: 'center', marginTop: spacing.xl },
   error: { fontFamily: fonts.medium, fontSize: fontSizes.sm, color: colors.danger, textAlign: 'center' },
-});
+}));

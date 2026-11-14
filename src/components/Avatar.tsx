@@ -1,7 +1,7 @@
 // src/components/Avatar.tsx
 import React from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { colors, fonts, radii } from '../theme';
+import { colors, fonts, radii, themedStyles } from '../theme';
 import { Glyph } from './Glyph';
 
 interface AvatarProps {
@@ -12,10 +12,10 @@ interface AvatarProps {
 }
 
 const tones = {
-  teal: colors.teal,
-  pink: colors.pink,
-  lavender: colors.lavender,
-  gold: colors.gold,
+  get teal() { return colors.teal; },
+  get pink() { return colors.pink; },
+  get lavender() { return colors.lavender; },
+  get gold() { return colors.gold; },
 } as const;
 
 export function Avatar({ name, size = 48, tone = 'lavender', style }: AvatarProps) {
@@ -42,7 +42,7 @@ export function Avatar({ name, size = 48, tone = 'lavender', style }: AvatarProp
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   avatar: {
     borderWidth: 2,
     borderColor: colors.ink,
@@ -50,4 +50,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   initial: { fontFamily: fonts.extrabold, color: colors.ink },
-});
+}));

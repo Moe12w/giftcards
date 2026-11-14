@@ -1,7 +1,7 @@
 // src/components/Card.tsx
 import React from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { colors, edgeHeight, edges, radii, spacing } from '../theme';
+import { colors, edgeHeight, edges, radii, spacing, themedStyles } from '../theme';
 
 export type CardTone = 'surface' | 'teal' | 'pink' | 'lavender' | 'gold' | 'sky';
 
@@ -11,12 +11,12 @@ interface ToneStyle {
 }
 
 const tones: Record<CardTone, ToneStyle> = {
-  surface: { background: colors.surface, edge: edges.ink },
-  teal: { background: colors.tealTint, edge: edges.teal },
-  pink: { background: colors.pinkTint, edge: edges.pink },
-  lavender: { background: colors.lavenderTint, edge: edges.lavender },
-  gold: { background: colors.creamSoft, edge: edges.gold },
-  sky: { background: colors.skySoft, edge: edges.ink },
+  get surface() { return { background: colors.surface, edge: edges.ink }; },
+  get teal() { return { background: colors.tealTint, edge: edges.teal }; },
+  get pink() { return { background: colors.pinkTint, edge: edges.pink }; },
+  get lavender() { return { background: colors.lavenderTint, edge: edges.lavender }; },
+  get gold() { return { background: colors.creamSoft, edge: edges.gold }; },
+  get sky() { return { background: colors.skySoft, edge: edges.ink }; },
 };
 
 interface CardProps {
@@ -44,7 +44,7 @@ export function Card({ children, style, padded = true, tone = 'surface', edgeCol
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   edge: {
     borderRadius: radii.lg,
     borderWidth: 2,
@@ -56,4 +56,4 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   padded: { padding: spacing.md },
-});
+}));

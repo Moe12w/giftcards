@@ -16,25 +16,25 @@ import {
 } from '../lib/catalog';
 import { glyphIcon } from '../lib/glyphs';
 import type { AccentTone, MarketplaceBusiness, Offer } from '../lib/types';
-import { colors, edges, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, edges, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Card, type CardTone } from './Card';
 import { IconTile, type IconTileTone } from './IconTile';
 import { Money } from './Money';
 
 const BACKGROUNDS: Record<AccentTone, string> = {
-  teal: colors.tealTint,
-  pink: colors.pinkTint,
-  lavender: colors.lavenderTint,
-  gold: colors.creamSoft,
-  sky: colors.skySoft,
+  get teal() { return colors.tealTint; },
+  get pink() { return colors.pinkTint; },
+  get lavender() { return colors.lavenderTint; },
+  get gold() { return colors.creamSoft; },
+  get sky() { return colors.skySoft; },
 };
 
 const EDGES: Record<AccentTone, string> = {
-  teal: edges.teal,
-  pink: edges.pink,
-  lavender: edges.lavender,
-  gold: edges.gold,
-  sky: edges.ink,
+  get teal() { return edges.teal; },
+  get pink() { return edges.pink; },
+  get lavender() { return edges.lavender; },
+  get gold() { return edges.gold; },
+  get sky() { return edges.ink; },
 };
 
 const CARD_TONES: Record<AccentTone, CardTone> = {
@@ -321,7 +321,7 @@ export function RecommendationRow({ offer, reason, onPress }: RecommendationRowP
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   edge: {
     borderRadius: radii.md,
     borderWidth: 2,
@@ -533,4 +533,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dot: { color: colors.textMuted, fontSize: fontSizes.xs },
-});
+}));

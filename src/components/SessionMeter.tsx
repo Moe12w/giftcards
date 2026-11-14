@@ -4,7 +4,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { colors, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 
 interface SessionMeterProps {
   /** Sessions still available. */
@@ -16,11 +16,11 @@ interface SessionMeterProps {
 }
 
 const TONE_FILL: Record<string, string> = {
-  teal: colors.teal,
-  pink: colors.pink,
-  lavender: colors.lavender,
-  gold: colors.gold,
-  sky: colors.sky,
+  get teal() { return colors.teal; },
+  get pink() { return colors.pink; },
+  get lavender() { return colors.lavender; },
+  get gold() { return colors.gold; },
+  get sky() { return colors.sky; },
 };
 
 export function SessionMeter({
@@ -61,7 +61,7 @@ export function SessionMeter({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   wrapper: { gap: 6 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   label: {
@@ -86,4 +86,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
   },
-});
+}));

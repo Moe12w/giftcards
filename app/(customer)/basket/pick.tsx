@@ -22,15 +22,17 @@ import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
 import { CATEGORIES, offerBusinessLogo, offerBusinessName, offerIsFixedAmount, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { listActiveOffers } from '@/src/lib/data';
 import { formatMoney } from '@/src/lib/money';
 import type { AccentTone, CategoryId, OccasionId, Offer } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
 type Selection = Record<string, number>;
 
 export default function PickGiftsScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const params = useLocalSearchParams<{
     name?: string;
@@ -380,7 +382,7 @@ export default function PickGiftsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   context: {},
   contextRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   contextIcon: {
@@ -469,4 +471,4 @@ const styles = StyleSheet.create({
   barButton: { paddingHorizontal: spacing.md },
   barSpacer: { height: spacing.sm },
   pressed: { opacity: 0.85, transform: [{ translateY: 2 }] },
-});
+}));

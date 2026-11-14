@@ -26,12 +26,14 @@ import {
   offerTone,
 } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { isSessionOffer } from '@/src/lib/sessions';
 import type { AccentTone, Offer } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 export default function GiftDetailScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { update } = useGiftDraft();
@@ -211,7 +213,7 @@ export default function GiftDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   heroTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   heroCopy: { flex: 1, gap: 2 },
@@ -267,4 +269,4 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   amount: { fontSize: fontSizes.lg, color: colors.text },
-});
+}));

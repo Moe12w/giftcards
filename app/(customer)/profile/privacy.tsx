@@ -9,9 +9,11 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { ListRow } from '@/src/components/ListRow';
 import { Screen } from '@/src/components/Screen';
 import { getPreferences, savePreferences } from '@/src/lib/data';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function PrivacyScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const [profileVisible, setProfileVisible] = useState(true);
   const [analytics, setAnalytics] = useState(true);
@@ -85,7 +87,7 @@ export default function PrivacyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -94,4 +96,4 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   label: { flex: 1, fontFamily: fonts.semibold, fontSize: fontSizes.md, color: colors.text },
-});
+}));

@@ -9,9 +9,10 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { listMyCards } from '@/src/lib/data';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { formatMoney } from '@/src/lib/money';
 import type { CardStatus, GiftCard } from '@/src/lib/types';
-import { colors, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 const statusTone: Record<CardStatus, BadgeTone> = {
   issued: 'warning',
@@ -22,6 +23,7 @@ const statusTone: Record<CardStatus, BadgeTone> = {
 };
 
 export default function CardsScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const [cards, setCards] = useState<GiftCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ export default function CardsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   header: { gap: spacing.xs, marginTop: spacing.sm },
   title: { fontSize: fontSizes.display, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: fontSizes.md, color: colors.textMuted },
@@ -101,4 +103,4 @@ const styles = StyleSheet.create({
   original: { fontSize: fontSizes.xs, color: colors.textMuted },
   details: { fontSize: fontSizes.xs, color: colors.primary, fontWeight: '600' },
   pressed: { opacity: 0.9 },
-});
+}));

@@ -10,9 +10,10 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
 import { listNotifications, markNotificationRead } from '@/src/lib/data';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import type { AppNotification, NotificationKind } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const KIND_ICON: Record<NotificationKind, string> = {
   received: 'gift',
@@ -35,6 +36,7 @@ const KIND_TONE: Record<NotificationKind, IconTileTone> = {
 };
 
 export default function NotificationDetailScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [item, setItem] = useState<AppNotification | null>(null);
@@ -123,7 +125,7 @@ export default function NotificationDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   card: { alignItems: 'center', gap: spacing.xs },
   title: {
     fontFamily: fonts.extrabold,
@@ -141,4 +143,4 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: spacing.xs,
   },
-});
+}));

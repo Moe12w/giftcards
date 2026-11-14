@@ -30,13 +30,15 @@ import {
   TrendingGiftCard,
 } from '@/src/components/DiscoveryCards';
 import { CATEGORIES, CURATED_COLLECTIONS, offerStartingPriceMinor, offerTitle, offersForCollection } from '@/src/lib/catalog';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { countUnreadNotifications, listActiveOffers, listMarketplaceBusinesses } from '@/src/lib/data';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
 import { useAuth } from '@/src/lib/auth';
 import type { MarketplaceBusiness, Offer } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 export default function ExploreHomeScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { activeBasket, baskets } = useBaskets();
@@ -393,7 +395,7 @@ export default function ExploreHomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   root: { flex: 1 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   greetingWrap: { flex: 1, gap: 2 },
@@ -547,4 +549,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   pressed: { opacity: 0.9, transform: [{ translateY: 2 }] },
-});
+}));

@@ -1,3 +1,4 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -24,6 +25,7 @@ const SLUGS = [
 ] as const;
 
 export default function StateScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const key = SLUGS.includes(slug as (typeof SLUGS)[number]) ? slug : 'error';

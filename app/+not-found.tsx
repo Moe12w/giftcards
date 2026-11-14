@@ -1,11 +1,13 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
 import { Link, Stack } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { colors, fontSizes, spacing } from '@/src/theme';
+import { colors, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function NotFoundScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   return (
     <>
@@ -20,7 +22,7 @@ export default function NotFoundScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: {
     flex: 1,
     alignItems: 'center',
@@ -31,4 +33,4 @@ const styles = StyleSheet.create({
   title: { fontSize: fontSizes.xl, fontWeight: '700', color: colors.text },
   link: { marginTop: spacing.md, paddingVertical: spacing.sm },
   linkText: { fontSize: fontSizes.md, color: colors.primary, fontWeight: '600' },
-});
+}));

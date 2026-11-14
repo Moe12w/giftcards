@@ -9,11 +9,13 @@ import { IconTile } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { fetchClaimGift, type ClaimGift } from '@/src/lib/claim';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
 export default function ClaimRevealScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
   const [gift, setGift] = useState<ClaimGift | null>(null);
@@ -66,7 +68,7 @@ export default function ClaimRevealScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   hero: { alignItems: 'center', marginTop: spacing.md },
   heroTitle: {
     fontFamily: fonts.extrabold,
@@ -98,4 +100,4 @@ const styles = StyleSheet.create({
   },
   message: { fontFamily: fonts.regular, fontSize: fontSizes.md, color: colors.text, lineHeight: 21 },
   expires: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
-});
+}));

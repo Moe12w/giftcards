@@ -10,12 +10,14 @@ import { ListRow } from '@/src/components/ListRow';
 import { PageHeader } from '@/src/components/PageHeader';
 import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { listMyCards, listMyOrders } from '@/src/lib/data';
 import { setLanguage, type Language } from '@/src/i18n';
 import type { GiftCard, Order } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function ProfileScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { user, signOut, isDemo } = useAuth();
   const [cards, setCards] = useState<GiftCard[]>([]);
@@ -222,7 +224,7 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   identity: { gap: spacing.md },
   identityRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   identityCopy: { flex: 1, gap: 2 },
@@ -255,4 +257,4 @@ const styles = StyleSheet.create({
   },
   languageRow: { flexDirection: 'row', gap: spacing.sm },
   languageButton: { flex: 1 },
-});
+}));

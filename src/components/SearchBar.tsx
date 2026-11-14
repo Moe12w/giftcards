@@ -2,7 +2,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Search } from 'lucide-react-native';
-import { colors, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 
 interface SearchBarProps {
   value: string;
@@ -55,7 +55,7 @@ export function SearchBar({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   wrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -77,4 +77,4 @@ const styles = StyleSheet.create({
   },
   placeholder: { color: colors.textMuted },
   pressed: { opacity: 0.85 },
-});
+}));

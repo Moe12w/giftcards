@@ -8,9 +8,11 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function EditProfileScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { user, updateProfile } = useAuth();
   const [name, setName] = useState((user?.user_metadata?.full_name as string | undefined) ?? '');
@@ -63,10 +65,10 @@ export default function EditProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   saved: {
     fontFamily: fonts.semibold,
     fontSize: fontSizes.sm,
     color: colors.success,
   },
-});
+}));

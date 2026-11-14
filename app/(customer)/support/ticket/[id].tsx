@@ -17,8 +17,9 @@ import {
   type SupportMessage,
 } from '@/src/lib/data';
 import { formatDate, formatDateTime } from '@/src/lib/time';
+import { useThemeRefresh } from '@/src/lib/theme';
 import type { SupportRequest } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const STATUS_TONE: Record<SupportRequest['status'], BadgeTone> = {
   open: 'warning',
@@ -28,6 +29,7 @@ const STATUS_TONE: Record<SupportRequest['status'], BadgeTone> = {
 };
 
 export default function SupportTicketScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [request, setRequest] = useState<SupportRequest | null>(null);
@@ -166,7 +168,7 @@ export default function SupportTicketScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginVertical: spacing.lg },
   ticketHead: { gap: spacing.sm, alignItems: 'flex-start' },
   ticketBody: { fontFamily: fonts.regular, fontSize: fontSizes.md, color: colors.text, lineHeight: 22 },
@@ -196,4 +198,4 @@ const styles = StyleSheet.create({
     color: colors.danger,
     textAlign: 'center',
   },
-});
+}));

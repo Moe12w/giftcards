@@ -12,14 +12,16 @@ import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { offerBusinessName, offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { getOffer, validatePromoCode } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import type { AccentTone, Offer } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const SERVICE_FEE_MINOR = 0;
 
 export default function CheckoutSummaryScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { draft } = useGiftDraft();
   const [offer, setOffer] = useState<Offer | null>(null);
@@ -141,7 +143,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   offerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   offerCopy: { flex: 1, gap: 1 },
@@ -158,4 +160,4 @@ const styles = StyleSheet.create({
   promoCard: { gap: spacing.sm },
   promoOk: { fontFamily: fonts.semibold, fontSize: fontSizes.sm, color: colors.success },
   promoBad: { fontFamily: fonts.semibold, fontSize: fontSizes.sm, color: colors.danger },
-});
+}));

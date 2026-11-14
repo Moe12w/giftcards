@@ -12,12 +12,14 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
 import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { listMarketplaceBusinesses } from '@/src/lib/data';
+import { useThemeRefresh } from '@/src/lib/theme';
 import type { MarketplaceBusiness } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 const TONES: IconTileTone[] = ['teal', 'gold', 'pink', 'lavender', 'sky'];
 
 export default function BusinessesScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const [businesses, setBusinesses] = useState<MarketplaceBusiness[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +119,7 @@ export default function BusinessesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   list: { gap: spacing.sm },
   pressed: { opacity: 0.9 },
@@ -144,4 +146,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+}));

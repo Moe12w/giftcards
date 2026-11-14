@@ -8,11 +8,13 @@ import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { getSupabase } from '@/src/lib/supabase';
 import { hasSupabaseConfig } from '@/src/lib/env';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function VerifyEmailScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { email = 'you@example.com', name = '' } = useLocalSearchParams<{
     email?: string;
@@ -104,7 +106,7 @@ export default function VerifyEmailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs },
   title: {
     flex: 1,
@@ -130,4 +132,4 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.sm,
     color: colors.text,
   },
-});
+}));

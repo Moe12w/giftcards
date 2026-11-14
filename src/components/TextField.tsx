@@ -7,7 +7,7 @@ import {
   View,
   type TextInputProps,
 } from 'react-native';
-import { colors, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 
 interface TextFieldProps extends TextInputProps {
   label?: string;
@@ -48,7 +48,7 @@ export function TextField({ label, error, hint, style, onFocus, onBlur, ...input
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   wrapper: { gap: spacing.xs, alignSelf: 'stretch' },
   label: {
     fontFamily: fonts.semibold,
@@ -73,4 +73,4 @@ const styles = StyleSheet.create({
   inputError: { borderColor: colors.danger },
   error: { fontFamily: fonts.medium, fontSize: fontSizes.sm, color: colors.danger },
   hint: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted },
-});
+}));

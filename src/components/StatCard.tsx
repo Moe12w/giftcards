@@ -1,7 +1,7 @@
 // src/components/StatCard.tsx
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 
 interface StatCardProps {
   label: string;
@@ -19,7 +19,7 @@ export function StatCard({ label, value, hint }: StatCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   card: {
     flex: 1,
     minWidth: 120,
@@ -33,4 +33,4 @@ const styles = StyleSheet.create({
   label: { fontFamily: fonts.medium, fontSize: fontSizes.sm, color: colors.textMuted },
   value: { fontFamily: fonts.extrabold, fontSize: fontSizes.xl, color: colors.text },
   hint: { fontFamily: fonts.regular, fontSize: fontSizes.xs, color: colors.textMuted },
-});
+}));

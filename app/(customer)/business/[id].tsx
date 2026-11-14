@@ -14,11 +14,13 @@ import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { offerBusinessId, offerTone } from '@/src/lib/catalog';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { getBusiness, listActiveOffers, listVendorLocations } from '@/src/lib/data';
 import type { AccentTone, BusinessLocation, MarketplaceBusiness, Offer } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function BusinessScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -192,7 +194,7 @@ export default function BusinessScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   heroCopy: { flex: 1, gap: 3 },
@@ -216,4 +218,4 @@ const styles = StyleSheet.create({
   locationLink: { fontFamily: fonts.semibold, fontSize: fontSizes.sm, color: colors.tealDark, marginTop: spacing.xs },
   banner: { padding: 0, overflow: 'hidden', height: 150 },
   bannerImage: { width: '100%', height: '100%' },
-});
+}));

@@ -40,11 +40,12 @@ import { ParticipantStack } from '@/src/components/ParticipantStack';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { useAuth } from '@/src/lib/auth';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { basketProgress, basketTotal, participantTotals, useBaskets } from '@/src/lib/baskets';
 import { formatMoney } from '@/src/lib/money';
 import { timeAgo } from '@/src/lib/time';
 import type { BasketActivityKind, BasketItem, BasketStatus, GiftBasket } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 const STATUS_TONE: Record<BasketStatus, BadgeTone> = {
   open: 'success',
@@ -53,6 +54,7 @@ const STATUS_TONE: Record<BasketStatus, BadgeTone> = {
 };
 
 export default function BasketDetailScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const params = useLocalSearchParams<{
     id: string;
@@ -555,7 +557,7 @@ function activityText(
   }
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   root: { flex: 1 },
   loader: { marginTop: spacing.xxl },
   celebration: {},
@@ -754,4 +756,4 @@ const styles = StyleSheet.create({
   modalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
   modalLabel: { fontFamily: fonts.medium, fontSize: fontSizes.sm, color: colors.textMuted },
   modalValue: { fontFamily: fonts.semibold, fontSize: fontSizes.sm, color: colors.text },
-});
+}));

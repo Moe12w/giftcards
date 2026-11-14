@@ -1,7 +1,7 @@
 // src/components/SectionHeader.tsx
 import React from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { colors, fonts, fontSizes } from '../theme';
+import { colors, fonts, fontSizes, themedStyles } from '../theme';
 
 interface SectionHeaderProps {
   title: string;
@@ -23,7 +23,7 @@ export function SectionHeader({ title, actionLabel, onAction, style }: SectionHe
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -41,4 +41,4 @@ const styles = StyleSheet.create({
     color: colors.text,
     textDecorationLine: 'underline',
   },
-});
+}));

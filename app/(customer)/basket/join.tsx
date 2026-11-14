@@ -10,10 +10,12 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useBaskets } from '@/src/lib/baskets';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 /** Join a collaborative basket with an invite code or shared link. */
 export default function JoinBasketScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { code } = useLocalSearchParams<{ code?: string }>();
   const { joinBasket, ready } = useBaskets();
@@ -103,7 +105,7 @@ export default function JoinBasketScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   hero: {},
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   heroIcon: {
@@ -152,4 +154,4 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     lineHeight: 16,
   },
-});
+}));

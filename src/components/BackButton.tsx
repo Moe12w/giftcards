@@ -3,7 +3,7 @@ import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { ArrowLeft, ArrowRight } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, radii } from '../theme';
+import { colors, radii, themedStyles } from '../theme';
 
 interface BackButtonProps {
   onPress: () => void;
@@ -28,7 +28,7 @@ export function BackButton({ onPress, accessibilityLabel }: BackButtonProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   button: {
     width: 46,
     height: 46,
@@ -40,4 +40,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pressed: { opacity: 0.85, transform: [{ translateY: 1 }] },
-});
+}));

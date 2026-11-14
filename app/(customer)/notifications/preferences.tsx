@@ -7,7 +7,8 @@ import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { getPreferences, savePreferences } from '@/src/lib/data';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 interface ToggleRowProps {
   label: string;
@@ -31,6 +32,7 @@ function ToggleRow({ label, value, onValueChange }: ToggleRowProps) {
 }
 
 export default function NotificationPreferencesScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const [giftUpdates, setGiftUpdates] = useState(true);
   const [promotions, setPromotions] = useState(false);
@@ -117,7 +119,7 @@ export default function NotificationPreferencesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -131,4 +133,4 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.md,
     color: colors.text,
   },
-});
+}));

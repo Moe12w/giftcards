@@ -12,14 +12,16 @@ import { PageHeader } from '@/src/components/PageHeader';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { OCCASIONS, offerTitle } from '@/src/lib/catalog';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { listActiveOffers } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { useRecipients } from '@/src/lib/recipients';
 import type { Offer, Recipient } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
 export default function SendScreen() {
+  useThemeRefresh();
   const { recipients } = useRecipients();
   const { t, i18n } = useTranslation();
   const { draft, update } = useGiftDraft();
@@ -176,7 +178,7 @@ export default function SendScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   hero: { gap: spacing.md },
   heroTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   heroCircle: {
@@ -259,4 +261,4 @@ const styles = StyleSheet.create({
   basketBannerLabel: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
   basketBannerCode: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
   pressed: { opacity: 0.85 },
-});
+}));

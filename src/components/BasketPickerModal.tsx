@@ -8,7 +8,7 @@ import { Check, Gift, Plus, X } from 'lucide-react-native';
 
 import { basketTotal } from '../lib/baskets';
 import type { GiftBasket } from '../lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Button } from './Button';
 import { Money } from './Money';
 
@@ -113,7 +113,7 @@ export function BasketPickerModal({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   backdrop: { flex: 1, backgroundColor: 'rgba(28, 28, 28, 0.45)', justifyContent: 'flex-end' },
   backdropTap: { flex: 1 },
   sheet: {
@@ -176,4 +176,4 @@ const styles = StyleSheet.create({
   rowRight: { alignItems: 'flex-end', gap: 2 },
   rowAmount: { fontSize: fontSizes.sm, color: colors.text },
   pressed: { opacity: 0.9 },
-});
+}));

@@ -1,3 +1,4 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -7,9 +8,10 @@ import { BackButton } from '@/src/components/BackButton';
 import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function VerifyPhoneScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { phone = '+974 5555 0000' } = useLocalSearchParams<{ phone?: string }>();
   const [code, setCode] = useState('');
@@ -52,7 +54,7 @@ export default function VerifyPhoneScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs },
   title: {
     flex: 1,
@@ -66,4 +68,4 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     lineHeight: 21,
   },
-});
+}));

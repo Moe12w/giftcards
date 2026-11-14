@@ -8,10 +8,12 @@ import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
 export default function DeleteAccountScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { signOut } = useAuth();
   const [confirming, setConfirming] = useState(false);
@@ -51,7 +53,7 @@ export default function DeleteAccountScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   body: {
     fontFamily: fonts.regular,
     fontSize: fontSizes.md,
@@ -60,4 +62,4 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: spacing.sm,
   },
-});
+}));
