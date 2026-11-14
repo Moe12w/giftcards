@@ -214,48 +214,21 @@ function DashShellInner({
     setNavOpen(false);
   }, [pathname]);
 
-  useEffect(() => {
-    if (navOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.documentElement.style.overflow = 'hidden';
-      document.documentElement.style.overscrollBehavior = 'none';
-    } else {
-      const scrollY = document.body.style.top;
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.overscrollBehavior = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
-      }
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.overscrollBehavior = '';
-    };
-  }, [navOpen]);
-
-  // Update scrim height on resize (iOS address bar show/hide)
+  // Keep the page behind the drawer still without touching body/html styles.
+  // On iOS Safari, `position: fixed` or `overflow: hidden` on the body makes
+  // the bottom URL bar paint a solid cream block and it stays that way until
+  // the page is refreshed. Blocking the scrim's own gestures avoids that.
   useEffect(() => {
     if (!navOpen) return;
-    const handleResize = () => {
-      if (scrimRef.current) {
-        scrimRef.current.style.height = `${window.innerHeight}px`;
-      }
+    const scrim = scrimRef.current;
+    if (!scrim) return;
+    const block = (event: Event) => event.preventDefault();
+    scrim.addEventListener('touchmove', block, { passive: false });
+    scrim.addEventListener('wheel', block, { passive: false });
+    return () => {
+      scrim.removeEventListener('touchmove', block);
+      scrim.removeEventListener('wheel', block);
     };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, [navOpen]);
 
   function active(href: string) {
