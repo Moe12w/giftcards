@@ -2977,8 +2977,11 @@ table.data .sub {
     position: fixed;
     inset: 0;
     width: 100%;
+    /* The large viewport, not the dynamic one: the scrim has to reach into
+       the zone behind Safari's bottom URL bar. Ending at 100dvh left the bar
+       sampling the scrim at the edge, which painted a solid rectangle. */
     height: 100vh;
-    height: 100dvh;
+    height: 100lvh;
     z-index: 45;
     border: 0;
     padding: 0;
@@ -3007,10 +3010,12 @@ table.data .sub {
     z-index: 50;
     width: 282px;
     max-width: 86vw;
-    /* The dynamic height leaves room for the Safari bar, so the top of the
-       drawer is not hidden behind the browser's address bar. */
+    /* The large viewport keeps the menu running behind Safari's bottom URL
+       bar instead of stopping short at its top edge, so the glass bar stays
+       translucent over the menu. The top anchoring is what keeps the drawer
+       below the address bar; the height does not affect it. */
     height: 100vh;
-    height: 100dvh;
+    height: 100lvh;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     transform: translateX(-102%);
