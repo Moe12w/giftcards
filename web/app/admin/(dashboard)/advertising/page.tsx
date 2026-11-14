@@ -161,7 +161,7 @@ export default async function AdminAdvertisingPage({
         <Kpi
           label="Clicks"
           value={clicks.toLocaleString('en-QA')}
-          hint="Deduplicated, charged once on CPC"
+          hint="Deduplicated per person, 24 hours"
           tone="sky"
           icon={<MousePointerClick size={17} />}
         />

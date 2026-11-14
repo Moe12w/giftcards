@@ -484,7 +484,7 @@ export async function adminSaveAdvertisingPlacement(formData: FormData) {
   };
 
   if (!payload.key || !payload.name) back('/admin/advertising/placements', 'Key and name are required.');
-  if (payload.allowed_pricing_models.length === 0) payload.allowed_pricing_models = ['fixed', 'cpc', 'cpm'];
+  if (payload.allowed_pricing_models.length === 0) payload.allowed_pricing_models = ['fixed'];
 
   const { data, error } = id
     ? await ctx.supabase.from('advertising_placements').update(payload).eq('id', id).select('id').maybeSingle()

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   ArrowLeft,
   ArrowRight,
-  CalendarRange,
+  Clock,
   Check,
   Eye,
   Image as ImageIcon,
@@ -94,31 +94,9 @@ export function surfaceFor(key: string): PlacementSurface {
   return 'other';
 }
 
-function localInput(value: string | Date): string {
-  const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) return '';
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function addDays(value: string, days: number): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  date.setDate(date.getDate() + days);
-  return localInput(date);
-}
-
-function addHours(value: string, hours: number): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  date.setHours(date.getHours() + hours);
-  return localInput(date);
-}
-
 const STEPS = [
   { title: 'Placement', hint: 'Where the ad appears' },
   { title: 'Creative', hint: 'What the customer sees' },
-  { title: 'Schedule & budget', hint: 'When and how much' },
   { title: 'Review & checkout', hint: 'Confirm and pay' },
 ];
 
@@ -150,7 +128,6 @@ export function CampaignWizard({
   const creative = campaign?.advertising_creatives?.[0] ?? {};
   const firstPlacement =
     placements.find((placement) => placement.key === campaign?.placement_key) ?? placements[0] ?? null;
-  const firstSlotBased = Boolean(firstPlacement && firstPlacement.slot_count > 0);
 
   const [step, setStep] = useState(0);
   const [surface, setSurface] = useState<PlacementSurface>(
@@ -161,20 +138,6 @@ export function CampaignWizard({
     campaign?.pricing_id ?? firstPlacement?.advertising_pricing?.[0]?.id ?? '',
   );
   const [slotNumber, setSlotNumber] = useState(campaign?.slot_number ?? 1);
-  const [startsAt, setStartsAt] = useState(
-    campaign ? localInput(campaign.starts_at) : localInput(new Date()),
-  );
-  const [endsAt, setEndsAt] = useState(
-    campaign
-      ? localInput(campaign.ends_at)
-      : localInput(new Date(Date.now() + (firstSlotBased ? 24 : 30 * 24) * 60 * 60 * 1000)),
-  );
-  const [totalBudget, setTotalBudget] = useState(
-    campaign ? String((campaign.total_budget_minor ?? 0) / 100) : '',
-  );
-  const [dailyBudget, setDailyBudget] = useState(
-    campaign ? String((campaign.daily_budget_minor ?? 0) / 100) : '',
-  );
   const [destinationType, setDestinationType] = useState(String(creative.destination_type ?? 'business'));
   const [headline, setHeadline] = useState(String(creative.headline ?? ''));
   const [body, setBody] = useState(String(creative.body ?? ''));
@@ -183,55 +146,40 @@ export function CampaignWizard({
   const [ctaLabel, setCtaLabel] = useState(String(creative.cta_label ?? 'Learn more'));
   const [message, setMessage] = useState<string | null>(null);
 
+
   const placement = placements.find((row) => row.key === placementKey) ?? null;
   const price = placement?.advertising_pricing.find((row) => row.id === pricingId) ?? null;
-  const isFixed = price?.pricing_model === 'fixed';
   const slotBased = Boolean(placement && placement.slot_count > 0);
   const slotCount = slotBased ? placement!.slot_count : 0;
   const slotPrice = slotBased
     ? placement?.slot_prices_minor?.[slotNumber - 1] ?? price?.fixed_price_minor ?? 0
-    : 0;
-  const budgetLocked = campaign?.payment_status === 'paid';
+    : price?.fixed_price_minor ?? 0;
+  const quoteMinor = slotPrice;
   const needsImage = placement?.format === 'banner' || placement?.format === 'carousel';
   const visiblePlacements = placements.filter((row) => surfaceFor(row.key) === surface);
   const slots = placement ? slotsByPlacement[placement.key] ?? [] : [];
 
-  const days = useMemo(() => {
-    const start = new Date(startsAt).getTime();
-    const end = new Date(endsAt).getTime();
-    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
-    return Math.ceil((end - start) / (24 * 60 * 60 * 1000));
-  }, [startsAt, endsAt]);
-
-  const hours = useMemo(() => {
-    const start = new Date(startsAt).getTime();
-    const end = new Date(endsAt).getTime();
-    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
-    return (end - start) / (60 * 60 * 1000);
-  }, [startsAt, endsAt]);
-
-  // A slot price is the price of a 24-hour block. Shorter and longer bookings
-  // are charged pro-rata to the hour, so 6 hours costs a quarter of the slot
-  // price and 72 hours costs three times it.
-  const slotQuoteMinor = Math.max(1, Math.round((slotPrice * hours) / 24));
-  const quoteMinor = isFixed
-    ? slotBased
-      ? hours > 0
-        ? slotQuoteMinor
-        : slotPrice
-      : price?.fixed_price_minor ?? 0
-    : Math.round((Number(totalBudget) || 0) * 100);
+  // A booking is a single six-hour window. The server picks the first free one,
+  // so the wizard only shows when that is.
+  const nextSlotStart = useMemo(() => {
+    const info = slots.find((row) => row.slot_number === slotNumber);
+    const occupiedUntil = info?.occupied_until ? new Date(info.occupied_until).getTime() : 0;
+    return new Date(Math.max(Date.now(), Number.isFinite(occupiedUntil) ? occupiedUntil : 0));
+  }, [slots, slotNumber]);
+  const hoursToNextSlot = Math.max(
+    0,
+    Math.ceil((nextSlotStart.getTime() - Date.now()) / (60 * 60 * 1000)),
+  );
 
   function choosePlacement(next: WizardPlacement) {
     setPlacementKey(next.key);
-    setPricingId(next.advertising_pricing[0]?.id ?? '');
+    setPricingId(
+      next.advertising_pricing.find((row) => row.pricing_model === 'fixed')?.id ??
+        next.advertising_pricing[0]?.id ??
+        '',
+    );
     setSlotNumber(1);
     setMessage(null);
-    // A slot rental is 6-72 hours, so start with a 24-hour window. Other
-    // placements keep the longer default.
-    if (next.slot_count > 0) {
-      setEndsAt(addHours(startsAt, 24));
-    }
     // Gift-card surfaces should land their audience on a gift card, not the
     // vendor's generic business page. Category and collection carousels render
     // gift cards too, so they default to a gift-card destination.
@@ -250,15 +198,6 @@ export function CampaignWizard({
 
   function chooseSlot(slot: number) {
     setSlotNumber(slot);
-    const info = slots.find((row) => row.slot_number === slot);
-    // An occupied slot can still be booked for a later window; move the start
-    // to the moment it frees up so the advertiser does not hit a validation
-    // error on save.
-    if (info?.state === 'occupied' && info.occupied_until) {
-      const nextStart = localInput(info.occupied_until);
-      setStartsAt(nextStart);
-      setEndsAt(addHours(nextStart, 24));
-    }
     setMessage(null);
   }
 
@@ -284,46 +223,12 @@ export function CampaignWizard({
         }
       }
     }
-    if (step === 2) {
-      if (!startsAt || !endsAt || new Date(endsAt) <= new Date(startsAt)) {
-        setMessage('The end date must be after the start date.');
-        return;
-      }
-      if (slotBased) {
-        if (hours < 6 || hours > 72) {
-          setMessage('A slot is rented for between 6 and 72 hours. Adjust the end time.');
-          return;
-        }
-        if (!slotNumber || slotNumber < 1 || slotNumber > slotCount) {
-          setMessage('Choose the slot you want to rent.');
-          return;
-        }
-      } else if (price) {
-        const min = Math.max(price.min_duration_days, 1);
-        const max = Math.min(price.max_duration_days, 365);
-        if (days < min || days > max) {
-          setMessage(`This placement runs between ${min} and ${max} days.`);
-          return;
-        }
-        if (!isFixed) {
-          const budget = Math.round((Number(totalBudget) || 0) * 100);
-          if (budget < price.min_budget_minor) {
-            setMessage(`The minimum budget for this placement is ${formatMoney(price.min_budget_minor)}.`);
-            return;
-          }
-          if (price.max_budget_minor != null && budget > price.max_budget_minor) {
-            setMessage(`The maximum budget for this placement is ${formatMoney(price.max_budget_minor)}.`);
-            return;
-          }
-          if (Number(dailyBudget) > 0 && Number(dailyBudget) * 100 > budget) {
-            setMessage('The daily budget cannot be higher than the total budget.');
-            return;
-          }
-        }
-      }
+    if (step === 0 && slotBased && (!slotNumber || slotNumber < 1 || slotNumber > slotCount)) {
+      setMessage('Choose the slot you want to rent.');
+      return;
     }
     setMessage(null);
-    setStep((current) => Math.min(3, current + 1));
+    setStep((current) => Math.min(2, current + 1));
   }
 
   return (
@@ -332,6 +237,16 @@ export function CampaignWizard({
       <input type="hidden" name="placement_key" value={placementKey} />
       <input type="hidden" name="pricing_id" value={pricingId} />
       <input type="hidden" name="slot_number" value={slotNumber} />
+      <input
+        type="hidden"
+        name="starts_at"
+        value={campaign ? campaign.starts_at : nextSlotStart.toISOString()}
+      />
+      <input
+        type="hidden"
+        name="ends_at"
+        value={campaign ? campaign.ends_at : new Date(nextSlotStart.getTime() + 6 * 60 * 60 * 1000).toISOString()}
+      />
       <input type="hidden" name="type" value="image" />
       <input type="hidden" name="sponsored_label" value="Sponsored" />
       <input type="hidden" name="sponsored_label_ar" value="إعلان مدفوع" />
@@ -417,23 +332,12 @@ export function CampaignWizard({
                             />
                             <span>
                               <strong>{model.pricing_model.toUpperCase()}</strong>{' '}
-                              {model.pricing_model === 'fixed'
-                                ? formatMoney(
-                                    row.slot_count > 0
-                                      ? row.slot_prices_minor?.[0] ?? model.fixed_price_minor
-                                      : model.fixed_price_minor,
-                                  )
-                                : model.pricing_model === 'cpc'
-                                  ? `${formatMoney(model.cpc_rate_minor)} / click`
-                                  : `${formatMoney(model.cpm_rate_minor)} / 1,000 views`}
-                              <span className="sub">
-                                {row.slot_count > 0
-                                  ? '6–72 hour rental · slot price per 24 hours'
-                                  : `${model.min_duration_days}–${model.max_duration_days} days`}
-                                {model.pricing_model !== 'fixed'
-                                  ? ` · min budget ${formatMoney(model.min_budget_minor)}`
-                                  : ''}
-                              </span>
+                              {formatMoney(
+                                row.slot_count > 0
+                                  ? row.slot_prices_minor?.[0] ?? model.fixed_price_minor
+                                  : model.fixed_price_minor,
+                              )}
+                              <span className="sub">Per 6-hour booking</span>
                             </span>
                           </label>
                         ))}
@@ -444,6 +348,53 @@ export function CampaignWizard({
               );
             })}
           </div>
+          {slotBased ? (
+            <div className="field full" style={{ marginTop: 14 }}>
+              <label>Slot</label>
+              <div className="btn-row" style={{ flexWrap: 'wrap' }}>
+                {Array.from({ length: slotCount }, (_, index) => index + 1).map((slot) => {
+                  const slotPriceMinor = placement?.slot_prices_minor?.[slot - 1] ?? price?.fixed_price_minor ?? 0;
+                  const chosen = slotNumber === slot;
+                  const info = slots.find((row) => row.slot_number === slot);
+                  const occupied = info?.state === 'occupied';
+                  const freeIn = info?.occupied_until
+                    ? Math.max(1, Math.ceil((new Date(info.occupied_until).getTime() - Date.now()) / (60 * 60 * 1000)))
+                    : 0;
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      className={`btn sm${chosen ? ' primary' : ' ghost'}`}
+                      onClick={() => chooseSlot(slot)}
+                      disabled={Boolean(campaign)}
+                      title={`Slot ${slot} — ${formatMoney(slotPriceMinor)} per 6 hours`}
+                      style={{ display: 'grid', gap: 2, textAlign: 'center', opacity: occupied && !chosen ? 0.65 : 1 }}
+                    >
+                      <span>{slot === 1 ? 'Slot 1 · first' : `Slot ${slot}`}</span>
+                      <span className="small" style={{ opacity: 0.8 }}>{formatMoney(slotPriceMinor)} / 6h</span>
+                      <span className="small" style={{ opacity: 0.8 }}>
+                        {occupied && info?.occupied_until
+                          ? `Free in ${freeIn}h`
+                          : info?.state === 'reserved'
+                            ? 'Free now · booked later'
+                            : 'Available now'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="callout info" style={{ marginTop: 10 }}>
+                <Clock size={16} />{' '}
+                {hoursToNextSlot <= 0
+                  ? 'This slot is free now, so your ad starts as soon as it is paid and approved.'
+                  : `The next available time for your ad in this slot is in ${hoursToNextSlot} hour${hoursToNextSlot === 1 ? '' : 's'} — ${nextSlotStart.toLocaleString()}.`}
+              </div>
+              <span className="hint">
+                Every booking runs for 6 hours and starts at the next free time in the slot. Slot 1 is seen first and
+                costs the most. No calendar to fill in.
+              </span>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -597,151 +548,6 @@ export function CampaignWizard({
         </div>
       </section>
 
-      <section className="panel" style={{ display: step === 2 ? undefined : 'none' }}>
-        <div className="panel-head">
-          <h3>
-            <CalendarRange size={17} /> Schedule &amp; budget
-          </h3>
-          {price ? (
-            <span className="small muted">
-              {slotBased
-                ? 'Slot price per 24 hours · 6–72 hour booking'
-                : `${price.pricing_model.toUpperCase()} · ${price.min_duration_days}–${price.max_duration_days} days`}
-            </span>
-          ) : null}
-        </div>
-        <div className="panel-body">
-          <div className="form-grid">
-            {slotBased ? (
-              <div className="field full">
-                <label>Slot</label>
-                <div className="btn-row" style={{ flexWrap: 'wrap' }}>
-                  {Array.from({ length: slotCount }, (_, index) => index + 1).map((slot) => {
-                    const slotPriceMinor = placement?.slot_prices_minor?.[slot - 1] ?? price?.fixed_price_minor ?? 0;
-                    const chosen = slotNumber === slot;
-                    const info = slots.find((row) => row.slot_number === slot);
-                    const occupied = info?.state === 'occupied';
-                    return (
-                      <button
-                        key={slot}
-                        type="button"
-                        className={`btn sm${chosen ? ' primary' : ' ghost'}`}
-                        onClick={() => chooseSlot(slot)}
-                        disabled={Boolean(campaign)}
-                        title={`Slot ${slot} — ${formatMoney(slotPriceMinor)} per 24 hours`}
-                        style={{
-                          display: 'grid',
-                          gap: 2,
-                          textAlign: 'center',
-                          opacity: occupied && !chosen ? 0.65 : 1,
-                        }}
-                      >
-                        <span>{slot === 1 ? 'Slot 1 · first' : `Slot ${slot}`}</span>
-                        <span className="small" style={{ opacity: 0.8 }}>{formatMoney(slotPriceMinor)} / 24h</span>
-                        <span className="small" style={{ opacity: 0.8 }}>
-                          {occupied && info?.occupied_until
-                            ? `Filled until ${new Date(info.occupied_until).toLocaleString()}`
-                            : info?.state === 'reserved'
-                              ? 'Free now · booked later'
-                              : 'Available'}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <span className="hint">
-                  Slot 1 is seen first and costs the most. Prices are per 24 hours and are charged pro-rata to the hour,
-                  so 6 hours costs a quarter and 72 hours costs three times the slot price. Picking a filled slot moves
-                  your start time to the moment it frees up; availability is checked again when you save.
-                </span>
-              </div>
-            ) : null}
-
-            <div className="field">
-              <label htmlFor="starts_at">Starts</label>
-              <input
-                id="starts_at"
-                name="starts_at"
-                type="datetime-local"
-                required
-                disabled={budgetLocked && slotBased}
-                value={startsAt}
-                onChange={(event) => setStartsAt(event.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="ends_at">Ends</label>
-              <input
-                id="ends_at"
-                name="ends_at"
-                type="datetime-local"
-                required
-                disabled={budgetLocked && slotBased}
-                value={endsAt}
-                onChange={(event) => setEndsAt(event.target.value)}
-              />
-              <span className="hint">
-                {hours > 0 ? `${hours.toFixed(1)} hours` : 'Choose an end date'}
-                {slotBased ? ' · 6–72 hours allowed' : days > 0 ? ` · ${days} days` : ''}
-                {budgetLocked && slotBased ? ' · paid rentals cannot change length' : ''}
-              </span>
-            </div>
-
-            {isFixed ? (
-              <div className="field full">
-                <label>{slotBased ? 'Booking total' : 'Fixed price'}</label>
-                <div className="card flat">
-                  <strong style={{ fontSize: 22 }}>{formatMoney(quoteMinor)}</strong>
-                  <span className="small muted">
-                    {slotBased
-                      ? `${formatMoney(slotPrice)} per 24 hours · ${hours > 0 ? hours.toFixed(1) : 0} hours booked. One payment for the whole window, no automatic renewal.`
-                      : 'One payment for the whole schedule. Delivery is not metered.'}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="field">
-                  <label htmlFor="total_budget">Total budget (QAR)</label>
-                  <input
-                    id="total_budget"
-                    name="total_budget"
-                    inputMode="decimal"
-                    required
-                    disabled={budgetLocked}
-                    value={totalBudget}
-                    onChange={(event) => setTotalBudget(event.target.value)}
-                  />
-                  <span className="hint">
-                    Minimum {formatMoney(price?.min_budget_minor ?? 0)}. Spend stops at this amount.
-                  </span>
-                </div>
-                <div className="field">
-                  <label htmlFor="daily_budget">Daily budget (QAR)</label>
-                  <input
-                    id="daily_budget"
-                    name="daily_budget"
-                    inputMode="decimal"
-                    disabled={budgetLocked}
-                    value={dailyBudget}
-                    onChange={(event) => setDailyBudget(event.target.value)}
-                  />
-                  <span className="hint">Optional. 0 means no daily cap.</span>
-                </div>
-              </>
-            )}
-
-            <div className="field full">
-              <span className="hint">
-                {slotBased
-                  ? 'No automatic renewal. When your window ends the slot is released for the next advertiser — book again if you want it back.'
-                  : 'No automatic renewal. Renew manually from the campaign page when this run ends.'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="panel" style={{ display: step === 3 ? undefined : 'none' }}>
         <div className="panel-head">
           <h3>
@@ -775,18 +581,20 @@ export function CampaignWizard({
                 <span className="v">{placement?.name ?? '—'}</span>
               </div>
               <div>
-                <span className="k">Pricing model</span>
-                <span className="v">{price?.pricing_model.toUpperCase() ?? '—'}</span>
+                <span className="k">Pricing</span>
+                <span className="v">Fixed · {formatMoney(quoteMinor)} per 6 hours</span>
               </div>
               <div>
-                <span className="k">Schedule</span>
+                <span className="k">Starts</span>
                 <span className="v">
-                  {startsAt ? new Date(startsAt).toLocaleString() : '—'} → {endsAt ? new Date(endsAt).toLocaleString() : '—'}
+                  {hoursToNextSlot <= 0
+                    ? 'At the next free time in the slot'
+                    : `In ${hoursToNextSlot} hour${hoursToNextSlot === 1 ? '' : 's'} — ${nextSlotStart.toLocaleString()}`}
                 </span>
               </div>
               <div>
-                <span className="k">Duration</span>
-                <span className="v">{slotBased ? `${hours.toFixed(1)} hours` : `${days} days`}</span>
+                <span className="k">Runs for</span>
+                <span className="v">6 hours</span>
               </div>
               {slotBased ? (
                 <div>
@@ -824,7 +632,7 @@ export function CampaignWizard({
           )}
         </div>
         <div className="btn-row">
-          {step < 3 ? (
+          {step < 2 ? (
             <button className="btn primary" type="button" onClick={nextStep}>
               Continue <ArrowRight size={15} />
             </button>

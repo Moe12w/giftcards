@@ -19,7 +19,7 @@ const en = {
     advertisingCampaigns: 'Campaigns',
     advertisingCampaignsHint: 'Approvals, activation, budgets and overrides.',
     advertisingPlacements: 'Placements & pricing',
-    advertisingPlacementsHint: 'Sellable positions and their fixed, CPC and CPM prices.',
+    advertisingPlacementsHint: 'Sellable positions and their fixed price per 6-hour booking.',
     advertisers: 'Advertisers',
     advertisersHint: 'Ad privileges, spend and account standing.',
     advertisingFinance: 'Advertising finance',

@@ -20,7 +20,6 @@ const KINDS = [
   'bulk_deals_ranking',
 ];
 
-const MODELS = ['fixed', 'cpc', 'cpm'];
 
 export default async function AdminAdvertisingPlacementsPage({
   searchParams,
@@ -60,7 +59,7 @@ export default async function AdminAdvertisingPlacementsPage({
       <PageHead
         eyebrow="Advertising & promotions"
         title="Placements & pricing"
-        description="Every sellable advertising position and its fixed, CPC and CPM prices. New prices only apply to new purchases — existing campaigns keep their snapshot."
+        description="Every sellable advertising position and its fixed price per 6-hour booking. New prices only apply to new bookings — existing campaigns keep their snapshot."
       />
       <Notice error={params.error} success={params.saved === '1' ? 'Saved.' : null} />
 
@@ -184,25 +183,12 @@ export default async function AdminAdvertisingPlacementsPage({
                 Auction ranking enabled
               </label>
               <div className="field full">
-                <label>Allowed payment models</label>
-                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                  {['fixed', 'cpc', 'cpm'].map((model) => (
-                    <label key={model} className="checkbox-row" style={{ border: '1px solid var(--line)', borderRadius: 8, padding: '6px 12px' }}>
-                      <input
-                        type="checkbox"
-                        name="allowed_pricing_models"
-                        value={model}
-                        defaultChecked={
-                          editing?.allowed_pricing_models
-                            ? editing.allowed_pricing_models.includes(model)
-                            : true
-                        }
-                      />
-                      {model.toUpperCase()}
-                    </label>
-                  ))}
+                <label>Pricing model</label>
+                <input type="hidden" name="allowed_pricing_models" value="fixed" />
+                <div className="card flat" style={{ padding: '8px 12px' }}>
+                  <strong>Fixed price only</strong>
+                  <span className="sub">Every booking is a 6-hour slot at the price set below.</span>
                 </div>
-                <span className="hint">Only checked models appear as choices when creating a campaign for this placement.</span>
               </div>
               <button className="btn primary" type="submit">{editing ? 'Save placement' : 'Create placement'}</button>
             </form>
@@ -231,41 +217,15 @@ export default async function AdminAdvertisingPlacementsPage({
                     ))}
                   </select>
                 </div>
+                <input type="hidden" name="pricing_model" value="fixed" />
                 <div className="field">
-                  <label htmlFor="pricing_model">Model</label>
-                  <select id="pricing_model" name="pricing_model" defaultValue={editingPrice?.pricing_model ?? 'fixed'} required>
-                    {MODELS.map((model) => (
-                      <option key={model} value={model}>{model.toUpperCase()}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label htmlFor="fixed_price">Fixed price (QAR)</label>
+                  <label htmlFor="fixed_price">Price per 6-hour booking (QAR)</label>
                   <input id="fixed_price" name="fixed_price" inputMode="decimal" defaultValue={minorToInput(editingPrice?.fixed_price_minor ?? 0)} />
-                </div>
-                <div className="field">
-                  <label htmlFor="cpc_rate">CPC rate (QAR)</label>
-                  <input id="cpc_rate" name="cpc_rate" inputMode="decimal" defaultValue={minorToInput(editingPrice?.cpc_rate_minor ?? 0)} />
-                </div>
-                <div className="field">
-                  <label htmlFor="cpm_rate">CPM rate (QAR per 1,000)</label>
-                  <input id="cpm_rate" name="cpm_rate" inputMode="decimal" defaultValue={minorToInput(editingPrice?.cpm_rate_minor ?? 0)} />
+                  <span className="hint">Charged once per booking. The slot price list on the placement overrides it per slot.</span>
                 </div>
                 <div className="field">
                   <label htmlFor="currency">Currency</label>
                   <input id="currency" name="currency" defaultValue={editingPrice?.currency ?? 'QAR'} />
-                </div>
-                <div className="field">
-                  <label htmlFor="min_duration_days">Min duration (days)</label>
-                  <input id="min_duration_days" name="min_duration_days" type="number" min={1} defaultValue={editingPrice?.min_duration_days ?? 1} />
-                </div>
-                <div className="field">
-                  <label htmlFor="max_duration_days">Max duration (days)</label>
-                  <input id="max_duration_days" name="max_duration_days" type="number" min={1} defaultValue={editingPrice?.max_duration_days ?? 365} />
-                </div>
-                <div className="field">
-                  <label htmlFor="default_duration_days">Default duration (days)</label>
-                  <input id="default_duration_days" name="default_duration_days" type="number" min={1} defaultValue={editingPrice?.default_duration_days ?? 30} />
                 </div>
                 <div className="field">
                   <label htmlFor="min_budget">Minimum budget (QAR)</label>
@@ -326,7 +286,7 @@ export default async function AdminAdvertisingPlacementsPage({
                     <td className="num">{placement.max_active_campaigns || 'rule'}</td>
                     <td className="small">{placement.rotation_mode}</td>
                     <td className="small">
-                      {(placement.allowed_pricing_models ?? ['fixed', 'cpc', 'cpm'])
+                      {(placement.allowed_pricing_models ?? ['fixed'])
                         .map((m: string) => m.toUpperCase())
                         .join(', ')}
                     </td>
@@ -397,7 +357,7 @@ export default async function AdminAdvertisingPlacementsPage({
       <section className="panel">
         <div className="panel-head">
           <h3>Pricing</h3>
-          <span className="small muted">Only one active price per placement and model</span>
+          <span className="small muted">One fixed price per placement, charged per 6-hour booking</span>
         </div>
         <div className="panel-body flush">
           <div className="table-wrap">
@@ -405,12 +365,7 @@ export default async function AdminAdvertisingPlacementsPage({
               <thead>
                 <tr>
                   <th>Placement</th>
-                  <th>Model</th>
-                  <th className="num">Fixed</th>
-                  <th className="num">CPC</th>
-                  <th className="num">CPM</th>
-                  <th className="num">Min / max days</th>
-                  <th className="num">Min budget</th>
+                  <th className="num">Per 6 hours</th>
                   <th>Version</th>
                   <th>Status</th>
                   <th style={{ textAlign: 'right' }} />
@@ -420,12 +375,7 @@ export default async function AdminAdvertisingPlacementsPage({
                 {pricing.map((price: any) => (
                   <tr key={price.id}>
                     <td>{price.advertising_placements?.name ?? '—'}</td>
-                    <td><span className="tag neutral">{price.pricing_model.toUpperCase()}</span></td>
                     <td className="num">{price.fixed_price_minor ? formatMoney(price.fixed_price_minor) : '—'}</td>
-                    <td className="num">{price.cpc_rate_minor ? formatMoney(price.cpc_rate_minor) : '—'}</td>
-                    <td className="num">{price.cpm_rate_minor ? formatMoney(price.cpm_rate_minor) : '—'}</td>
-                    <td className="num">{price.min_duration_days} / {price.max_duration_days}</td>
-                    <td className="num">{formatMoney(price.min_budget_minor)}</td>
                     <td className="small">v{price.version}</td>
                     <td><StatusTag status={price.is_active ? 'active' : 'archived'} /></td>
                     <td style={{ textAlign: 'right' }}>

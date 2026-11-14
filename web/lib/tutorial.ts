@@ -518,7 +518,7 @@ export function tutorialScript(id: 'vendor' | 'enterprise' | 'admin'): TutorialS
  * The advertising walkthrough for a vendor or an enterprise partner.
  *
  * Both rent the same inventory, so the flow is identical: pick a placement and
- * a numbered slot, upload a creative, request a 6-72 hour window, then pay.
+ * a numbered slot, upload a creative, then pay for its 6-hour window.
  * There is no auction, no auto-renew and no metered billing to explain.
  */
 function advertisingAdvertiserScript(portal: 'vendor' | 'enterprise'): TutorialScript {
@@ -686,8 +686,8 @@ export const ADVERTISING_ADMIN_SCRIPT: TutorialScript = {
         'Open a placement and give each slot its own price. The order is the product: slot 1 should cost more than slot 2, and so on. New prices apply only to new bookings — a campaign keeps the price it paid.',
       bodyAr:
         'افتح الموضع وحدد سعراً لكل مكان. الترتيب هو المنتج: سعر المكان الأول أعلى من الثاني وهكذا. والأسعار الجديدة تُطبَّق على الحجوزات الجديدة فقط، فتحتفظ كل حملة بسعرها المدفوع.',
-      tip: 'You also choose which payment models a placement accepts — fixed, CPC or CPM.',
-      tipAr: 'وأنت أيضاً تختار نماذج الدفع التي يقبلها الموضع: ثابت أو لكل نقرة أو لكل ألف ظهور.',
+      tip: 'Every booking is a fixed price for a 6-hour window, starting at the next free time in that slot.',
+      tipAr: 'كل حجز بسعر ثابت لنافذة من 6 ساعات، يبدأ عند أول وقت متاح في ذلك المكان.',
       href: '/admin/advertising/placements',
     },
     {
