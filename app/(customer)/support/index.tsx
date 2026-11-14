@@ -57,12 +57,8 @@ export default function SupportScreen() {
           title={t('support.contact')}
           onPress={() => router.push('/(customer)/support/contact')}
         />
-        <ListRow
-          icon="help"
-          tone="lavender"
-          title={t('support.chat')}
-          onPress={() => router.push('/(customer)/support/chat')}
-        />
+        {/* Live chat is not live yet, so it stays out of the menu until it is.
+            The screen itself is still at support/chat for when it ships. */}
         <ListRow
           icon="warning"
           tone="gold"
