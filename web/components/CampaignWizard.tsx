@@ -7,10 +7,7 @@ import {
   ArrowRight,
   Clock,
   Check,
-  Eye,
-  Image as ImageIcon,
   Megaphone,
-  ShieldCheck,
   Sparkles,
   Wallet,
 } from 'lucide-react';
@@ -97,7 +94,6 @@ export function surfaceFor(key: string): PlacementSurface {
 const STEPS = [
   { title: 'Placement', hint: 'Where the ad appears' },
   { title: 'Creative', hint: 'What the customer sees' },
-  { title: 'Review & checkout', hint: 'Confirm and pay' },
 ];
 
 export function CampaignWizard({
@@ -236,7 +232,7 @@ export function CampaignWizard({
       return;
     }
     setMessage(null);
-    setStep((current) => Math.min(2, current + 1));
+    setStep((current) => Math.min(1, current + 1));
   }
 
   return (
@@ -428,7 +424,8 @@ export function CampaignWizard({
                 ))}
               </div>
               <span className="hint">
-                {periods} period{periods === 1 ? '' : 's'} = {periods * 6} hours at {formatMoney(slotPrice)} per period.
+                {periods} period{periods === 1 ? '' : 's'} = {periods * 6} hours. Total{' '}
+                <strong>{formatMoney(quoteMinor)}</strong> at {formatMoney(slotPrice)} per period.
                 {campaign?.payment_status === 'paid' ? ' A paid campaign keeps the length it was bought for.' : ''}
               </span>
             </div>
@@ -586,88 +583,6 @@ export function CampaignWizard({
         </div>
       </section>
 
-      <section className="panel" style={{ display: step === 3 ? undefined : 'none' }}>
-        <div className="panel-head">
-          <h3>
-            <Eye size={17} /> Review
-          </h3>
-          <span className="small muted">Nothing is charged until you confirm on the next screen.</span>
-        </div>
-        <div className="panel-body">
-          <div className="dash-grid">
-            <div className="card flat" style={{ display: 'grid', gap: 8 }}>
-              <span className="tag lavender">Sponsored</span>
-              {imageUrl ? (
-                <img
-                  src={mobileImageUrl || imageUrl}
-                  alt=""
-                  style={{ width: '100%', borderRadius: 12, aspectRatio: '2 / 1', objectFit: 'cover' }}
-                />
-              ) : (
-                <div className="image-preview banner">
-                  <ImageIcon size={22} />
-                </div>
-              )}
-              <strong style={{ fontSize: 18 }}>{headline || 'Your headline'}</strong>
-              {body ? <p className="small">{body}</p> : null}
-              <span className="btn sm primary" style={{ width: 'fit-content' }}>{ctaLabel || 'Learn more'}</span>
-              <span className="small muted">{vendorName}</span>
-            </div>
-            <div className="split-list">
-              <div>
-                <span className="k">Placement</span>
-                <span className="v">{placement?.name ?? '—'}</span>
-              </div>
-              <div>
-                <span className="k">Pricing</span>
-                <span className="v">Fixed · {formatMoney(quoteMinor)} per 6 hours</span>
-              </div>
-              <div>
-                <span className="k">Starts</span>
-                <span className="v">
-                  {hoursToNextSlot <= 0
-                    ? 'At the next free time in the slot'
-                    : `In ${hoursToNextSlot} hour${hoursToNextSlot === 1 ? '' : 's'} — ${nextSlotStart.toLocaleString()}`}
-                </span>
-              </div>
-              <div>
-                <span className="k">Runs for</span>
-                <span className="v">
-                  {periods} × 6 hours ({periods * 6} hours)
-                </span>
-              </div>
-              <div>
-                <span className="k">Ends</span>
-                <span className="v">
-                  {new Date(
-                    (campaign ? new Date(campaign.starts_at).getTime() : nextSlotStart.getTime()) +
-                      periods * 6 * 60 * 60 * 1000,
-                  ).toLocaleString()}
-                </span>
-              </div>
-              {slotBased ? (
-                <div>
-                  <span className="k">Slot</span>
-                  <span className="v">{slotNumber === 1 ? 'Slot 1 · first position' : `Slot ${slotNumber}`}</span>
-                </div>
-              ) : null}
-              <div>
-                <span className="k">Total</span>
-                <span className="v strong" style={{ fontSize: 20 }}>{formatMoney(quoteMinor)}</span>
-              </div>
-              <div>
-                <span className="k">Auto-renew</span>
-                <span className="v">None</span>
-              </div>
-            </div>
-          </div>
-          <div className="callout info" style={{ marginTop: 14 }}>
-            <ShieldCheck size={16} /> Payment is verified on the server. The campaign only activates after payment,
-            approval, eligibility and capacity checks pass.
-          </div>
-        </div>
-      </section>
-
       <div className="btn-row" style={{ justifyContent: 'space-between' }}>
         <div>
           {step > 0 ? (
@@ -681,7 +596,7 @@ export function CampaignWizard({
           )}
         </div>
         <div className="btn-row">
-          {step < 2 ? (
+          {step < 1 ? (
             <button className="btn primary" type="button" onClick={nextStep}>
               Continue <ArrowRight size={15} />
             </button>

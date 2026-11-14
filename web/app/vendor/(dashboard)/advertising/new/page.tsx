@@ -52,7 +52,7 @@ export default async function NewAdvertisingCampaignPage() {
       <PageHead
         eyebrow="Advertising & promotions"
         title="New campaign"
-        description="Four steps: placement, creative, schedule and budget, then server-verified checkout."
+        description="Two steps: placement and creative, then server-verified checkout."
       />
       <CampaignWizard
         action={createAdvertisingCampaign}
