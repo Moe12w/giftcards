@@ -40,6 +40,8 @@ const en = {
     teamHint: 'Who can redeem, and who can manage.',
     settings: 'Business settings',
     settingsHint: 'Your storefront, locations and documents.',
+    support: 'Support',
+    supportHint: 'Open a ticket and follow it with the Giftly team.',
   },
   chrome: {
     portal: 'Vendor dashboard',
@@ -591,6 +593,8 @@ const ar: VendorCopy = {
     teamHint: 'من يستبدل ومن يدير.',
     settings: 'إعدادات النشاط',
     settingsHint: 'واجهتك ومواقعك ووثائقك.',
+    support: 'الدعم',
+    supportHint: 'افتح تذكرة وتابعها مع فريق غيفتلي.',
   },
   chrome: {
     portal: 'لوحة المتجر',

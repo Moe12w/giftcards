@@ -1047,5 +1047,17 @@
     "howItWorks": "This is an experience card. There is no money balance — every visit uses one session, and the card is finished with the last session.",
     "privacy": "One scan per visit. The card keeps track of the sessions left.",
     "offerNote": "Includes {{count}} sessions — each visit uses one."
+  },
+  "supportTickets": {
+    "yourRequests": "Your requests",
+    "noRequests": "No requests yet. Anything you send reaches our team.",
+    "sendFailed": "We couldn't send your request. Check your connection and try again.",
+    "chatSent": "Sent to the support team. Replies arrive by email.",
+    "status": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    }
   }
 }

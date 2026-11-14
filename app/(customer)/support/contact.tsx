@@ -15,6 +15,8 @@ export default function ContactScreen() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <Screen>
@@ -33,17 +35,26 @@ export default function ContactScreen() {
             multiline
             style={styles.input}
           />
+          {error ? <Text style={styles.error}>{error}</Text> : null}
           <Button
             label={t('support.send')}
             onPress={async () => {
-              await createSupportRequest({
-                kind: 'contact',
-                subject: subject.trim() || null,
-                body: message.trim(),
-              }).catch(() => undefined);
-              setSubmitted(true);
+              setError(null);
+              setSending(true);
+              try {
+                await createSupportRequest({
+                  kind: 'contact',
+                  subject: subject.trim() || null,
+                  body: message.trim(),
+                });
+                setSubmitted(true);
+              } catch {
+                setError(t('supportTickets.sendFailed'));
+              } finally {
+                setSending(false);
+              }
             }}
-            disabled={!subject.trim() || !message.trim()}
+            disabled={!subject.trim() || !message.trim() || sending}
           />
         </>
       )}
@@ -55,4 +66,5 @@ const styles = StyleSheet.create({
   body: { fontFamily: fonts.regular, fontSize: fontSizes.md, color: colors.textMuted, lineHeight: 21 },
   input: { minHeight: 120, textAlignVertical: 'top' },
   submitted: { fontFamily: fonts.bold, fontSize: fontSizes.lg, color: colors.success, textAlign: 'center', marginTop: spacing.xl },
+  error: { fontFamily: fonts.medium, fontSize: fontSizes.sm, color: colors.danger, textAlign: 'center' },
 });

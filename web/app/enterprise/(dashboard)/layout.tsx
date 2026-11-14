@@ -24,6 +24,7 @@ export default async function EnterpriseDashboardLayout({ children }: { children
       items: [
         { href: '/enterprise', label: t.overview, icon: 'dashboard', hint: t.overviewHint },
         { href: '/enterprise/settings', label: t.settings, icon: 'settings', hint: t.settingsHint },
+        { href: '/enterprise/support', label: t.support, icon: 'support', hint: t.supportHint },
       ],
     },
     {

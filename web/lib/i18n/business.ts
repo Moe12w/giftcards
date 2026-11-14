@@ -21,6 +21,7 @@ const en = {
     accountHint: 'Your details and approval status.',
     publicSite: 'Public site',
     support: 'Support',
+    supportHint: 'Open a ticket about an order, delivery or invoice.',
   },
   chrome: {
     portal: 'Business portal',
@@ -296,6 +297,7 @@ const ar: BusinessCopy = {
     accountHint: 'بياناتك وحالة الموافقة.',
     publicSite: 'الموقع العام',
     support: 'الدعم',
+    supportHint: 'افتح تذكرة بخصوص طلب أو تسليم أو فاتورة.',
   },
   chrome: {
     portal: 'بوابة الأعمال',

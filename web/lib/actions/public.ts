@@ -23,6 +23,7 @@ export async function submitContact(formData: FormData) {
 
   const { error } = await supabase.from('support_requests').insert({
     customer_id: user?.id ?? null,
+    requester_kind: user ? 'customer' : 'visitor',
     kind: 'contact',
     subject: subject || `Website contact from ${name}`,
     body: `From: ${name} <${email}>\n\n${message}`,
@@ -47,6 +48,8 @@ export async function submitEnterpriseEnquiry(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase.from('support_requests').insert({
     customer_id: null,
+    requester_kind: 'visitor',
+    organization_name: company,
     kind: 'enterprise_enquiry',
     subject: `Enterprise enquiry — ${company}`,
     body: [
@@ -74,6 +77,7 @@ export async function joinLaunchList(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase.from('support_requests').insert({
     customer_id: null,
+    requester_kind: 'visitor',
     kind: 'launch_list',
     subject: 'App launch list',
     body: `Please tell me when the Giftly app is available: ${email}`,

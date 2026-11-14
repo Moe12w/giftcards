@@ -34,7 +34,7 @@ export default async function BusinessPortalLayout({ children }: { children: Rea
       label: t.nav.group3,
       items: [
         { href: '/', label: t.nav.publicSite, icon: 'catalogue', hint: t.nav.accountHint },
-        { href: '/contact', label: t.nav.support, icon: 'support', hint: t.nav.accountHint },
+        { href: '/business/support', label: t.nav.support, icon: 'support', hint: t.nav.supportHint },
       ],
     },
   ];

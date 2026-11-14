@@ -141,7 +141,9 @@ export default async function AdminSupportPage({
                     <div>
                       <h3>{request.subject ?? t.supportRequest}</h3>
                       <span className="small muted">
-                        {titleCase(request.kind, locale)} · {formatDateTime(request.created_at, locale)}
+                        {titleCase(request.kind, locale)} ·{' '}
+                        {titleCase(request.requester_kind ?? 'customer', locale)} ·{' '}
+                        {formatDateTime(request.created_at, locale)}
                       </span>
                     </div>
                   </div>
@@ -177,6 +179,12 @@ export default async function AdminSupportPage({
                       <span className="k">{c.labels.reference}</span>
                       <span className="v small mono">{request.reference ?? '—'}</span>
                     </div>
+                    {request.organization_name ? (
+                      <div>
+                        <span className="k">{titleCase(request.requester_kind ?? 'customer', locale)}</span>
+                        <span className="v small">{request.organization_name}</span>
+                      </div>
+                    ) : null}
                     <div>
                       <span className="k">{t.received}</span>
                       <span className="v small">{formatDate(request.created_at, locale)}</span>

@@ -3,10 +3,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
+import { createSupportRequest } from '@/src/lib/data';
 import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 interface ChatMessage {
@@ -21,20 +21,41 @@ export default function ChatScreen() {
     { id: '1', from: 'agent', text: t('support.chatBody') },
   ]);
   const [draft, setDraft] = useState('');
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function send() {
-    if (!draft.trim()) return;
-    setMessages((current) => [
-      ...current,
-      { id: `u-${Date.now()}`, from: 'user', text: draft.trim() },
-    ]);
+  /**
+   * Live chat is stored as a support ticket, so the conversation reaches the
+   * admin inbox even when no agent is online. The whole thread is sent with
+   * each message and the admin reads it in the support queue.
+   */
+  async function send() {
+    const text = draft.trim();
+    if (!text) return;
+
+    const nextMessages: ChatMessage[] = [
+      ...messages,
+      { id: `u-${Date.now()}`, from: 'user', text },
+    ];
+    setMessages(nextMessages);
     setDraft('');
-    setTimeout(() => {
-      setMessages((current) => [
-        ...current,
-        { id: `a-${Date.now()}`, from: 'agent', text: t('support.submitted') },
-      ]);
-    }, 600);
+    setError(null);
+
+    const transcript = nextMessages
+      .filter((message) => message.from === 'user')
+      .map((message) => message.text)
+      .join('\n\n');
+
+    try {
+      await createSupportRequest({
+        kind: 'chat',
+        subject: t('support.chatTitle'),
+        body: transcript,
+      });
+      setSent(true);
+    } catch {
+      setError(t('supportTickets.sendFailed'));
+    }
   }
 
   return (
@@ -60,6 +81,8 @@ export default function ChatScreen() {
             </Text>
           </View>
         ))}
+        {sent ? <Text style={styles.sent}>{t('supportTickets.chatSent')}</Text> : null}
+        {error ? <Text style={styles.error}>{error}</Text> : null}
       </View>
 
       <View style={styles.composer}>
@@ -90,6 +113,8 @@ const styles = StyleSheet.create({
   agentBubble: { alignSelf: 'flex-start', backgroundColor: colors.surface },
   bubbleText: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.text },
   userText: { color: colors.textOnAccent },
+  sent: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.success },
+  error: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.danger },
   composer: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   input: { flex: 1 },
   sendButton: {

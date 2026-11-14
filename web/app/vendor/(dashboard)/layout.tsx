@@ -55,6 +55,7 @@ export default async function VendorDashboardLayout({ children }: { children: Re
         { href: '/vendor/analytics', label: t.analytics, icon: 'analytics', hint: t.analyticsHint },
         { href: '/vendor/staff', label: t.team, icon: 'staff', hint: t.teamHint },
         { href: '/vendor/settings', label: t.settings, icon: 'settings', hint: t.settingsHint },
+        { href: '/vendor/support', label: t.support, icon: 'support', hint: t.supportHint },
       ],
     },
     {
