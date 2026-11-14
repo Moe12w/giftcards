@@ -776,6 +776,61 @@ p {
   align-content: start;
 }
 
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stepper .step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.stepper .step strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.stepper .step .sub {
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.stepper .step:not(.active):not(.done) {
+  opacity: 0.65;
+}
+
+.stepper .step-number {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  font-size: 13px;
+}
+
+@media (min-width: 720px) {
+  .stepper {
+    gap: 14px;
+  }
+
+  .stepper .step strong {
+    font-size: 14px;
+  }
+
+  .stepper .step .sub {
+    font-size: 12px;
+  }
+
+  .stepper .step-number {
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+  }
+}
+
 .step-number {
   width: 42px;
   height: 42px;
