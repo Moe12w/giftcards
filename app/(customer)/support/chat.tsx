@@ -7,7 +7,8 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { createSupportRequest } from '@/src/lib/data';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 interface ChatMessage {
   id: string;
@@ -16,6 +17,7 @@ interface ChatMessage {
 }
 
 export default function ChatScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([
     { id: '1', from: 'agent', text: t('support.chatBody') },
@@ -100,7 +102,7 @@ export default function ChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   thread: { flex: 1, gap: spacing.sm },
   bubble: {
     maxWidth: '80%',
@@ -126,4 +128,4 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   sendText: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.textOnAccent },
-});
+}));

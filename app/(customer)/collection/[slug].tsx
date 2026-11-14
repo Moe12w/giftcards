@@ -9,11 +9,13 @@ import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
 import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { offersForCollection } from '@/src/lib/catalog';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { listActiveOffers } from '@/src/lib/data';
 import type { Offer } from '@/src/lib/types';
-import { colors, spacing } from '@/src/theme';
+import { colors, spacing, themedStyles } from '@/src/theme';
 
 export default function CollectionScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -70,7 +72,7 @@ export default function CollectionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   list: { gap: spacing.sm },
-});
+}));

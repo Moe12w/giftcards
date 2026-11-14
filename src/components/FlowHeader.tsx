@@ -1,7 +1,7 @@
 // src/components/FlowHeader.tsx
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, fontSizes, spacing } from '../theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '../theme';
 import { BackButton } from './BackButton';
 import { ProgressDots } from './ProgressDots';
 
@@ -31,7 +31,7 @@ export function FlowHeader({ title, subtitle, step, total, onBack }: FlowHeaderP
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   wrapper: { gap: spacing.sm, marginTop: spacing.xs },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   text: { flex: 1, gap: 2 },
@@ -46,4 +46,4 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.sm,
     color: colors.textMuted,
   },
-});
+}));

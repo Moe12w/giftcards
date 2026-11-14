@@ -7,10 +7,12 @@ import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
 export default function ClaimLoginScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
   const { signIn } = useAuth();
@@ -72,7 +74,7 @@ export default function ClaimLoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   hero: { gap: spacing.xs, marginTop: spacing.xl, marginBottom: spacing.sm },
   title: {
     fontFamily: fonts.extrabold,
@@ -82,4 +84,4 @@ const styles = StyleSheet.create({
   },
   body: { fontFamily: fonts.regular, fontSize: fontSizes.md, color: colors.textMuted, lineHeight: 21 },
   formError: { fontFamily: fonts.medium, fontSize: fontSizes.sm, color: colors.danger },
-});
+}));

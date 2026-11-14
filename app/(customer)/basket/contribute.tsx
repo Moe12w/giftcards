@@ -13,11 +13,12 @@ import { Money } from '@/src/components/Money';
 import { PaymentMethods } from '@/src/components/PaymentMethods';
 import { Screen } from '@/src/components/Screen';
 import { useBaskets } from '@/src/lib/baskets';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { offerBusinessLogo, offerBusinessName, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
 import { formatMoney } from '@/src/lib/money';
 import type { AccentTone, Offer, OccasionId } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 interface PendingItem {
   offerId: string;
@@ -42,6 +43,7 @@ function parsePending(raw: string | undefined): PendingItem[] {
 }
 
 export default function ContributeScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const params = useLocalSearchParams<{
     basketId?: string;
@@ -250,7 +252,7 @@ export default function ContributeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   context: { gap: 1 },
   contextLabel: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
@@ -285,4 +287,4 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 18,
   },
-});
+}));

@@ -9,9 +9,11 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { ListRow } from '@/src/components/ListRow';
 import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function PersonalInfoScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -53,11 +55,11 @@ export default function PersonalInfoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   body: {
     fontFamily: fonts.regular,
     fontSize: fontSizes.sm,
     color: colors.text,
     lineHeight: 20,
   },
-});
+}));

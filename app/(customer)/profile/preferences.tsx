@@ -8,19 +8,17 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { ListRow } from '@/src/components/ListRow';
 import { Screen } from '@/src/components/Screen';
 import { getPreferences, savePreferences } from '@/src/lib/data';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { useTheme } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function PreferencesScreen() {
   const { t } = useTranslation();
-  const [darkMode, setDarkMode] = useState(false);
+  const { isDark, setMode } = useTheme();
   const [biometrics, setBiometrics] = useState(true);
 
   useEffect(() => {
     getPreferences()
-      .then((rows) => {
-        setDarkMode(rows.dark_mode);
-        setBiometrics(rows.biometrics);
-      })
+      .then((rows) => setBiometrics(rows.biometrics))
       .catch(() => undefined);
   }, []);
 
@@ -40,9 +38,9 @@ export default function PreferencesScreen() {
         <View style={styles.row}>
           <Text style={styles.label}>{t('profile.darkMode')}</Text>
           <Switch
-            value={darkMode}
+            value={isDark}
             onValueChange={(value) => {
-              setDarkMode(value);
+              setMode(value ? 'dark' : 'light');
               update({ dark_mode: value });
             }}
             trackColor={{ false: colors.borderSoft, true: colors.teal }}
@@ -82,7 +80,7 @@ export default function PreferencesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -91,4 +89,4 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   label: { flex: 1, fontFamily: fonts.semibold, fontSize: fontSizes.md, color: colors.text },
-});
+}));

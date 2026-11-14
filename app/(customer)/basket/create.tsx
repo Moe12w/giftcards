@@ -12,13 +12,15 @@ import { Glyph } from '@/src/components/Glyph';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { OCCASIONS } from '@/src/lib/catalog';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { formatMoney } from '@/src/lib/money';
 import type { OccasionId } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 const GOALS = [0, 25000, 50000, 100000, 150000];
 
 export default function CreateBasketScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const [name, setName] = useState('');
   const [recipient, setRecipient] = useState('');
@@ -148,7 +150,7 @@ export default function CreateBasketScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   intro: {},
   introRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   introIcon: {
@@ -207,4 +209,4 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   pressed: { opacity: 0.85 },
-});
+}));

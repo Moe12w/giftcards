@@ -11,9 +11,10 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
 import { listNotifications, markAllNotificationsRead, markNotificationRead } from '@/src/lib/data';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import type { AppNotification, NotificationKind } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const KIND_ICON: Record<NotificationKind, string> = {
   received: 'gift',
@@ -36,6 +37,7 @@ const KIND_TONE: Record<NotificationKind, IconTileTone> = {
 };
 
 export default function NotificationsScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,7 +148,7 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   list: { gap: spacing.sm },
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
@@ -163,4 +165,4 @@ const styles = StyleSheet.create({
     borderColor: colors.ink,
   },
   pressed: { opacity: 0.88 },
-});
+}));

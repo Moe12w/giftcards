@@ -1,7 +1,7 @@
 // src/components/PageHeader.tsx
 import React from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { colors, fonts, fontSizes, spacing } from '../theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '../theme';
 import { BackButton } from './BackButton';
 
 interface PageHeaderProps {
@@ -35,7 +35,7 @@ export function PageHeader({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   wrapper: { gap: spacing.xs, marginTop: spacing.xs },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   text: { flex: 1, gap: 2 },
@@ -52,4 +52,4 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   right: { marginStart: spacing.sm },
-});
+}));

@@ -3,7 +3,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { AccentTone } from '../lib/types';
-import { colors, fonts, fontSizes, spacing } from '../theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '../theme';
 import { Badge, type BadgeTone } from './Badge';
 import { Card, type CardTone } from './Card';
 import { IconTile, type IconTileTone } from './IconTile';
@@ -109,7 +109,7 @@ export function GiftCardVisual({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   titleWrap: { flex: 1, gap: 1 },
   title: {
@@ -138,4 +138,4 @@ const styles = StyleSheet.create({
   },
   compact: { padding: spacing.sm + 2 },
   pressed: { opacity: 0.9 },
-});
+}));

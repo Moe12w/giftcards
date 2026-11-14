@@ -8,10 +8,12 @@ import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { TextField } from '@/src/components/TextField';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function SecurityScreen() {
+  useThemeRefresh();
   const { updatePassword } = useAuth();
   const { t } = useTranslation();
   const [current, setCurrent] = useState('');
@@ -91,7 +93,7 @@ export default function SecurityScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   saved: { fontFamily: fonts.semibold, fontSize: fontSizes.sm, color: colors.success },
   form: { gap: spacing.sm },
   sectionTitle: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
@@ -102,4 +104,4 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   label: { flex: 1, fontFamily: fonts.semibold, fontSize: fontSizes.md, color: colors.text },
-});
+}));

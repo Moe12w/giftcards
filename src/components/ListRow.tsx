@@ -2,7 +2,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
-import { colors, fonts, fontSizes, spacing } from '../theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '../theme';
 import { IconTile, type IconTileTone } from './IconTile';
 
 interface ListRowProps {
@@ -52,7 +52,7 @@ export function ListRow({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -80,4 +80,4 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   pressed: { opacity: 0.7 },
-});
+}));

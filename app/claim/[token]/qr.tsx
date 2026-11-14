@@ -7,9 +7,11 @@ import { Button } from '@/src/components/Button';
 import { QRCode } from '@/src/components/QRCode';
 import { Screen } from '@/src/components/Screen';
 import { fetchClaimGift, type ClaimGift } from '@/src/lib/claim';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function ClaimQrScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
   const [gift, setGift] = useState<ClaimGift | null>(null);
@@ -51,7 +53,7 @@ export default function ClaimQrScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   title: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.xxl,
@@ -72,4 +74,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
   },
-});
+}));

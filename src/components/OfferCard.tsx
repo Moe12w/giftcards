@@ -14,7 +14,7 @@ import {
   offerTone,
 } from '../lib/catalog';
 import type { AccentTone, Offer } from '../lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Card, type CardTone } from './Card';
 import { IconTile, type IconTileTone } from './IconTile';
 import { Money } from './Money';
@@ -137,7 +137,7 @@ export function OfferTile({ offer, index = 0, onPress }: OfferCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   body: { flex: 1, gap: 2 },
   title: {
@@ -196,4 +196,4 @@ const styles = StyleSheet.create({
   },
   tileAmount: { fontSize: fontSizes.md, color: colors.text },
   pressed: { opacity: 0.9 },
-});
+}));

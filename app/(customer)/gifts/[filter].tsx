@@ -10,9 +10,10 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { Screen } from '@/src/components/Screen';
 import { useCards } from '@/src/lib/cards';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { isSessionCard } from '@/src/lib/sessions';
 import type { CardStatus, GiftCard } from '@/src/lib/types';
-import { colors, spacing } from '@/src/theme';
+import { colors, spacing, themedStyles } from '@/src/theme';
 
 const statusTone: Record<CardStatus, BadgeTone> = {
   issued: 'warning',
@@ -27,6 +28,7 @@ type Filter = 'all' | 'received' | 'sent';
 const FILTERS: Filter[] = ['all', 'received', 'sent'];
 
 export default function GiftFilterScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { filter: rawFilter } = useLocalSearchParams<{ filter: string }>();
   const { ready, cards, receivedCards, sentCards, sessionsLeft, valueLeft } = useCards();
@@ -102,9 +104,9 @@ export default function GiftFilterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   filterScrollOuter: { marginHorizontal: -spacing.gutter },
   filterScroll: { gap: spacing.sm, paddingHorizontal: spacing.gutter },
   loader: { marginVertical: spacing.lg },
   list: { gap: spacing.sm },
-});
+}));

@@ -15,6 +15,7 @@ import {
 import { AuthProvider } from '@/src/lib/auth';
 import { CardProvider } from '@/src/lib/cards';
 import { initI18n } from '@/src/i18n';
+import { ThemeProvider, useTheme } from '@/src/lib/theme';
 import { colors } from '@/src/theme';
 
 export { ErrorBoundary } from 'expo-router';
@@ -44,20 +45,34 @@ export default function RootLayout() {
       .finally(() => setI18nReady(true));
   }, []);
 
+  return (
+    <ThemeProvider>
+      <AppShell loaded={loaded} i18nReady={i18nReady} />
+    </ThemeProvider>
+  );
+}
+
+/**
+ * The app itself. It lives under the theme provider so the navigation
+ * background, the status bar and every screen follow the theme switch.
+ */
+function AppShell({ loaded, i18nReady }: { loaded: boolean; i18nReady: boolean }) {
+  const { isDark, ready } = useTheme();
+
   useEffect(() => {
-    if (loaded && i18nReady) {
+    if (loaded && i18nReady && ready) {
       SplashScreen.hideAsync();
     }
-  }, [loaded, i18nReady]);
+  }, [loaded, i18nReady, ready]);
 
-  if (!loaded || !i18nReady) {
+  if (!loaded || !i18nReady || !ready) {
     return null;
   }
 
   return (
     <AuthProvider>
       <CardProvider>
-        <StatusBar style="dark" />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <Stack
           screenOptions={{
             headerShown: false,

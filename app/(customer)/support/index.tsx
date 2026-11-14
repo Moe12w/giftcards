@@ -9,9 +9,10 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { ListRow } from '@/src/components/ListRow';
 import { Screen } from '@/src/components/Screen';
 import { listSupportRequests } from '@/src/lib/data';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import type { SupportRequest } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const STATUS_TONE: Record<SupportRequest['status'], BadgeTone> = {
   open: 'warning',
@@ -21,6 +22,7 @@ const STATUS_TONE: Record<SupportRequest['status'], BadgeTone> = {
 };
 
 export default function SupportScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const [requests, setRequests] = useState<SupportRequest[]>([]);
 
@@ -125,7 +127,7 @@ export default function SupportScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   note: {
     fontFamily: fonts.regular,
     fontSize: fontSizes.sm,
@@ -147,4 +149,4 @@ const styles = StyleSheet.create({
   ticketCopy: { flex: 1, gap: 1 },
   ticketTitle: { fontFamily: fonts.semibold, fontSize: fontSizes.sm, color: colors.text },
   ticketMeta: { fontFamily: fonts.regular, fontSize: fontSizes.xs, color: colors.textMuted },
-});
+}));

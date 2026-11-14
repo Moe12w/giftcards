@@ -9,11 +9,13 @@ import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 const AVATAR_TONES = ['teal', 'pink', 'lavender', 'gold'] as const;
 
 export default function ProfileSetupScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { name = '', email = '' } = useLocalSearchParams<{ name?: string; email?: string }>();
   const { updateProfile } = useAuth();
@@ -86,7 +88,7 @@ export default function ProfileSetupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs },
   title: {
     flex: 1,
@@ -119,4 +121,4 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
   },
-});
+}));

@@ -1,3 +1,4 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
@@ -6,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const FAQS = [
   { q: 'support.faqQ1', a: 'support.faqA1' },
@@ -17,6 +18,7 @@ const FAQS = [
 ];
 
 export default function FaqScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
 
   return (
@@ -35,9 +37,9 @@ export default function FaqScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   list: { gap: spacing.sm },
   card: { gap: spacing.xs },
   question: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
   answer: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted, lineHeight: 20 },
-});
+}));

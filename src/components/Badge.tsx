@@ -1,7 +1,7 @@
 // src/components/Badge.tsx
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 
 export type BadgeTone = 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'primary';
 
@@ -11,12 +11,12 @@ interface BadgeProps {
 }
 
 const tones: Record<BadgeTone, string> = {
-  neutral: colors.surface,
-  success: colors.tealTint,
-  warning: colors.creamSoft,
-  danger: colors.pinkTint,
-  info: colors.skySoft,
-  primary: colors.lavenderTint,
+  get neutral() { return colors.surface; },
+  get success() { return colors.tealTint; },
+  get warning() { return colors.creamSoft; },
+  get danger() { return colors.pinkTint; },
+  get info() { return colors.skySoft; },
+  get primary() { return colors.lavenderTint; },
 };
 
 export function Badge({ label, tone = 'neutral' }: BadgeProps) {
@@ -27,7 +27,7 @@ export function Badge({ label, tone = 'neutral' }: BadgeProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   badge: {
     alignSelf: 'flex-start',
     borderRadius: radii.pill,
@@ -41,4 +41,4 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.xs,
     color: colors.ink,
   },
-});
+}));

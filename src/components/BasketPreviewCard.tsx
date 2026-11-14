@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, Users } from 'lucide-react-native';
 
 import { basketProgress, basketTotal } from '../lib/baskets';
 import type { BasketStatus, GiftBasket } from '../lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Badge, type BadgeTone } from './Badge';
 import { Card } from './Card';
 import { GiftBox3D } from './GiftBox3D';
@@ -100,7 +100,7 @@ export function BasketPreviewCard({ basket, onPress, compact = false }: BasketPr
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   card: { padding: spacing.sm + 2 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   boxWrap: { alignItems: 'center', justifyContent: 'center' },
@@ -164,4 +164,4 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   pressed: { opacity: 0.9, transform: [{ translateY: 2 }] },
-});
+}));

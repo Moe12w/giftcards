@@ -1,3 +1,4 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
@@ -8,9 +9,10 @@ import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { setLanguage, type Language } from '@/src/i18n';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function LanguageScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
 
   async function choose(language: Language) {
@@ -43,7 +45,7 @@ export default function LanguageScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   body: { fontFamily: fonts.regular, fontSize: fontSizes.md, color: colors.textMuted, lineHeight: 21 },
   options: { gap: spacing.sm },
   hintBox: {
@@ -54,4 +56,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
   },
   hint: { fontFamily: fonts.regular, fontSize: fontSizes.xs, color: colors.textMuted, lineHeight: 17 },
-});
+}));

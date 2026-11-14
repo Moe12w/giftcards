@@ -22,7 +22,7 @@ import { Star } from 'lucide-react-native';
 import type { AccentTone, BasketItem, GiftBasket } from '../lib/types';
 import { resolveTone } from '../lib/tone';
 import { basketTotal } from '../lib/baskets';
-import { colors, edges, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, edges, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Glyph } from './Glyph';
 import { Money } from './Money';
 
@@ -36,13 +36,19 @@ interface GiftBox3DProps {
   idle?: boolean;
 }
 
-const PALETTE: Record<AccentTone, { face: string; edge: string; ribbon: string }> = {
+interface BoxPalette {
+  face: string;
+  edge: string;
+  ribbon: string;
+}
+
+const PALETTE = (): Record<AccentTone, BoxPalette> => ({
   teal: { face: colors.teal, edge: edges.teal, ribbon: colors.pink },
   pink: { face: colors.pink, edge: edges.pink, ribbon: colors.lavender },
   lavender: { face: colors.lavender, edge: edges.lavender, ribbon: colors.gold },
   gold: { face: colors.gold, edge: edges.gold, ribbon: colors.pink },
   sky: { face: colors.sky, edge: edges.ink, ribbon: colors.teal },
-};
+});
 
 function newestItem(basket: GiftBasket): BasketItem | null {
   return basket.items[basket.items.length - 1] ?? null;
@@ -61,7 +67,7 @@ function MiniGiftCard({
   icon?: string | null;
   size?: number;
 }) {
-  const palette = PALETTE[tone] ?? PALETTE.lavender;
+  const palette = PALETTE()[tone] ?? PALETTE().lavender;
   return (
     <View
       style={[
@@ -95,7 +101,7 @@ export function GiftBox3D({
   const loopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   const tone = resolveTone(basket.items[0]?.tone);
-  const palette = PALETTE[tone] ?? PALETTE.lavender;
+  const palette = PALETTE()[tone] ?? PALETTE().lavender;
   const completed = basket.status !== 'open';
   const total = basketTotal(basket);
   const latest = newestItem(basket);
@@ -412,7 +418,7 @@ const CONFETTI = [
   { left: 84, top: 72, color: colors.gold, rotate: -16 },
 ];
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   wrapper: { alignItems: 'center' },
   stage: { alignItems: 'center', justifyContent: 'flex-end' },
   floorShadow: {
@@ -685,4 +691,4 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.ink,
   },
-});
+}));

@@ -10,10 +10,12 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { addPaymentMethod, listPaymentMethods, removePaymentMethod } from '@/src/lib/data';
+import { useThemeRefresh } from '@/src/lib/theme';
 import type { PaymentMethod } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 export default function PaymentMethodsScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [added, setAdded] = useState(false);
@@ -86,7 +88,7 @@ export default function PaymentMethodsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   saved: { fontFamily: fonts.semibold, fontSize: fontSizes.sm, color: colors.success },
   list: { gap: spacing.sm },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
@@ -105,4 +107,4 @@ const styles = StyleSheet.create({
   title: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.text },
   meta: { fontFamily: fonts.regular, fontSize: fontSizes.xs, color: colors.textMuted },
   remove: { fontFamily: fonts.bold, fontSize: fontSizes.xs, color: colors.danger },
-});
+}));

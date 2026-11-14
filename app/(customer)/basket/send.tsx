@@ -16,15 +16,17 @@ import { ParticipantStack } from '@/src/components/ParticipantStack';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
 import { formatMoney } from '@/src/lib/money';
 import type { DeliveryMethod } from '@/src/lib/gift-draft';
 import { isUsablePhone, shareOnWhatsapp } from '@/src/lib/whatsapp';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const METHODS: DeliveryMethod[] = ['email', 'sms', 'whatsapp', 'link'];
 
 export default function SendBasketScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
@@ -292,7 +294,7 @@ export default function SendBasketScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   hero: { gap: spacing.sm, alignItems: 'stretch' },
   heroStats: {
@@ -336,4 +338,4 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'right',
   },
-});
+}));

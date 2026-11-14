@@ -3,6 +3,7 @@ import { ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { Screen } from '@/src/components/Screen';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { colors } from '@/src/theme';
 
 /**
@@ -12,6 +13,7 @@ import { colors } from '@/src/theme';
  * picker.
  */
 export default function GiftAmountScreen() {
+  useThemeRefresh();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   useEffect(() => {

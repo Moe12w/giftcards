@@ -4,7 +4,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import QRCodeSvg from 'react-native-qrcode-svg';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, themedStyles } from '../theme';
 
 interface QRCodeProps {
   value: string;
@@ -19,7 +19,7 @@ export function QRCode({ value, size = 220 }: QRCodeProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   wrapper: {
     backgroundColor: colors.qrBackground,
     padding: spacing.md,
@@ -29,4 +29,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+}));

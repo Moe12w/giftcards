@@ -1,3 +1,4 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
@@ -11,11 +12,12 @@ import { Glyph } from '@/src/components/Glyph';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useGiftDraft, type DeliveryMethod } from '@/src/lib/gift-draft';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 const METHODS: DeliveryMethod[] = ['email', 'sms', 'whatsapp', 'link'];
 
 export default function DeliveryScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { draft, update } = useGiftDraft();
   const [mode, setMode] = useState<'now' | 'schedule'>(
@@ -124,7 +126,7 @@ export default function DeliveryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   methods: { flexDirection: 'row', gap: spacing.sm },
   methodWrap: { flex: 1 },
   method: { alignItems: 'center', gap: 4, paddingVertical: spacing.sm + 2 },
@@ -142,4 +144,4 @@ const styles = StyleSheet.create({
   },
   modeRow: { flexDirection: 'row', gap: spacing.sm },
   pressed: { opacity: 0.9 },
-});
+}));

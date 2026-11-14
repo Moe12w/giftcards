@@ -10,10 +10,12 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { addAddress, listAddresses, removeAddress } from '@/src/lib/data';
+import { useThemeRefresh } from '@/src/lib/theme';
 import type { CustomerAddress } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function AddressesScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
   const [adding, setAdding] = useState(false);
@@ -95,11 +97,11 @@ export default function AddressesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   list: { gap: spacing.sm },
   card: { gap: 2 },
   label: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
   line: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.text },
   meta: { fontFamily: fonts.regular, fontSize: fontSizes.xs, color: colors.textMuted },
   form: { gap: spacing.sm },
-});
+}));

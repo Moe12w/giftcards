@@ -1,7 +1,7 @@
 // src/components/OnboardingSlide.tsx
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Button } from './Button';
 import { ProgressDots } from './ProgressDots';
 import { Screen } from './Screen';
@@ -23,19 +23,19 @@ interface OnboardingSlideProps {
 }
 
 const backgrounds: Record<AccentTone, string> = {
-  teal: colors.tealTint,
-  pink: colors.pinkTint,
-  lavender: colors.lavenderTint,
-  gold: colors.creamSoft,
-  sky: colors.skySoft,
+  get teal() { return colors.tealTint; },
+  get pink() { return colors.pinkTint; },
+  get lavender() { return colors.lavenderTint; },
+  get gold() { return colors.creamSoft; },
+  get sky() { return colors.skySoft; },
 };
 
 const blobs: Record<AccentTone, string> = {
-  teal: colors.teal,
-  pink: colors.pink,
-  lavender: colors.lavender,
-  gold: colors.gold,
-  sky: colors.sky,
+  get teal() { return colors.teal; },
+  get pink() { return colors.pink; },
+  get lavender() { return colors.lavender; },
+  get gold() { return colors.gold; },
+  get sky() { return colors.sky; },
 };
 
 export function OnboardingSlide({
@@ -84,7 +84,7 @@ export function OnboardingSlide({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   content: {
     flex: 1,
     paddingTop: spacing.md,
@@ -150,4 +150,4 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   footer: { gap: spacing.lg },
-});
+}));

@@ -8,8 +8,9 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { listMyOrders } from '@/src/lib/data';
+import { useThemeRefresh } from '@/src/lib/theme';
 import type { Order, OrderStatus } from '@/src/lib/types';
-import { colors, fontSizes, spacing } from '@/src/theme';
+import { colors, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const statusTone: Record<OrderStatus, BadgeTone> = {
   pending: 'warning',
@@ -19,6 +20,7 @@ const statusTone: Record<OrderStatus, BadgeTone> = {
 };
 
 export default function OrdersScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +75,7 @@ export default function OrdersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   header: { gap: spacing.xs, marginTop: spacing.sm },
   title: { fontSize: fontSizes.display, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: fontSizes.md, color: colors.textMuted },
@@ -84,4 +86,4 @@ const styles = StyleSheet.create({
   orderNumber: { fontSize: fontSizes.md, fontWeight: '700', color: colors.text },
   muted: { fontSize: fontSizes.sm, color: colors.textMuted },
   total: { fontSize: fontSizes.lg, fontWeight: '700', color: colors.text },
-});
+}));

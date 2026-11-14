@@ -11,13 +11,15 @@ import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { PaymentMethods } from '@/src/components/PaymentMethods';
 import { Screen } from '@/src/components/Screen';
 import { offerBusinessLogo, offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { formatMoney } from '@/src/lib/money';
 import type { Offer } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function PaymentScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { draft } = useGiftDraft();
   const [offer, setOffer] = useState<Offer | null>(null);
@@ -148,7 +150,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   summary: { gap: spacing.sm },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
@@ -165,4 +167,4 @@ const styles = StyleSheet.create({
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   totalLabel: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
   totalValue: { fontFamily: fonts.extrabold, fontSize: fontSizes.xl, color: colors.text },
-});
+}));

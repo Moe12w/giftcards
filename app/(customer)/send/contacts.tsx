@@ -9,10 +9,12 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { useRecipients } from '@/src/lib/recipients';
+import { useThemeRefresh } from '@/src/lib/theme';
 import type { Recipient } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function ContactsScreen() {
+  useThemeRefresh();
   const { recipients } = useRecipients();
   const { t } = useTranslation();
   const { update } = useGiftDraft();
@@ -52,7 +54,7 @@ export default function ContactsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   list: { gap: spacing.sm },
   row: { borderRadius: 20 },
   rowCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
@@ -61,4 +63,4 @@ const styles = StyleSheet.create({
   meta: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted },
   add: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.tealDark },
   pressed: { opacity: 0.85 },
-});
+}));

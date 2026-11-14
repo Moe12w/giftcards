@@ -1,3 +1,4 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -7,10 +8,11 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
 export default function GiftTermsScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -44,7 +46,7 @@ export default function GiftTermsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   body: {
     fontFamily: fonts.regular,
     fontSize: fontSizes.md,
@@ -58,4 +60,4 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.sm,
     color: colors.text,
   },
-});
+}));

@@ -14,13 +14,14 @@ import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { offerBusinessLogo, offerIcon, offerIsFixedAmount, offerPackages, offerTitle, offerTone } from '@/src/lib/catalog';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft, type DeliveryMethod } from '@/src/lib/gift-draft';
 import { isUsablePhone } from '@/src/lib/whatsapp';
 import { formatMoney, toMinorUnits } from '@/src/lib/money';
 import { useRecipients } from '@/src/lib/recipients';
 import type { Offer, ProductVariant } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 const DESIGNS = [
   { id: 'classic', background: colors.surface, edge: colors.ink, text: colors.ink, icon: 'gift' },
@@ -33,6 +34,7 @@ const DELIVERY_METHODS: DeliveryMethod[] = ['email', 'sms', 'whatsapp', 'link'];
 const SUGGESTIONS = ['birthday', 'thankYou', 'congrats', 'justBecause'] as const;
 
 export default function GiftComposeScreen() {
+  useThemeRefresh();
   const { recipients } = useRecipients();
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -555,7 +557,7 @@ export default function GiftComposeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   section: { gap: spacing.sm },
   sectionTitle: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
@@ -651,4 +653,4 @@ const styles = StyleSheet.create({
   },
   messageInput: { minHeight: 96, textAlignVertical: 'top' },
   pressed: { opacity: 0.9 },
-});
+}));

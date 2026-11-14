@@ -10,11 +10,13 @@ import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
 import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { listActiveOffers } from '@/src/lib/data';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { offerBusinessName, offerTitle } from '@/src/lib/catalog';
 import type { Offer } from '@/src/lib/types';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function SearchScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const params = useLocalSearchParams<{ q?: string }>();
   const [query, setQuery] = useState(params.q ?? '');
@@ -91,8 +93,8 @@ export default function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   count: { fontFamily: fonts.medium, fontSize: fontSizes.sm, color: colors.textMuted },
   list: { gap: spacing.sm },
-});
+}));

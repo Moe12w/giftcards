@@ -10,10 +10,12 @@ import { ListRow } from '@/src/components/ListRow';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { fetchClaimGift, type ClaimGift } from '@/src/lib/claim';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function ClaimDetailsScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
   const [gift, setGift] = useState<ClaimGift | null>(null);
@@ -85,7 +87,7 @@ export default function ClaimDetailsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   title: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.xxl,
@@ -117,4 +119,4 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     marginTop: spacing.xs,
   },
-});
+}));

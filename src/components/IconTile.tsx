@@ -3,18 +3,18 @@ import React from 'react';
 import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { glyphIcon } from '../lib/glyphs';
-import { colors, radii } from '../theme';
+import { colors, radii, themedStyles } from '../theme';
 
 export type IconTileTone = 'lilac' | 'lavender' | 'teal' | 'pink' | 'gold' | 'sky' | 'surface';
 
 const tones: Record<IconTileTone, string> = {
-  lilac: colors.lavender,
-  lavender: colors.lavender,
-  teal: colors.teal,
-  pink: colors.pink,
-  gold: colors.gold,
-  sky: colors.sky,
-  surface: colors.surface,
+  get lilac() { return colors.lavender; },
+  get lavender() { return colors.lavender; },
+  get teal() { return colors.teal; },
+  get pink() { return colors.pink; },
+  get gold() { return colors.gold; },
+  get sky() { return colors.sky; },
+  get surface() { return colors.surface; },
 };
 
 interface IconTileProps {
@@ -52,7 +52,7 @@ export function IconTile({ icon, imageUrl, size = 64, tone = 'lavender', style }
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   tile: {
     borderWidth: 2,
     borderColor: colors.ink,
@@ -60,4 +60,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   image: { width: 44, height: 44 },
-});
+}));

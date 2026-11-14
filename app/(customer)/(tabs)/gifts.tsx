@@ -14,9 +14,10 @@ import { PageHeader } from '@/src/components/PageHeader';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { useCards } from '@/src/lib/cards';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { isSessionCard } from '@/src/lib/sessions';
 import type { CardStatus, GiftCard } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 const statusTone: Record<CardStatus, BadgeTone> = {
   issued: 'warning',
@@ -31,6 +32,7 @@ type Filter = 'all' | 'received' | 'sent';
 const FILTERS: Filter[] = ['all', 'received', 'sent'];
 
 export default function GiftsScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { ready, cards, receivedCards, sentCards, usableCards, entries, sessionsLeft, valueLeft } =
     useCards();
@@ -183,7 +185,7 @@ export default function GiftsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   summary: { gap: spacing.md },
   summaryTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   summaryCopy: { flex: 1, gap: 2 },
@@ -236,4 +238,4 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.sm,
     color: colors.textMuted,
   },
-});
+}));

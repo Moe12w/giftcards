@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { formatMoney } from '../lib/money';
 import { addPaymentMethod, listPaymentMethods } from '../lib/data';
 import type { PaymentMethod } from '../lib/types';
-import { colors, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Button } from './Button';
 import { Card } from './Card';
 import { TextField } from './TextField';
@@ -186,7 +186,7 @@ export function PaymentMethods({ amountMinor, onPay, payLabel, paying = false }:
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   wrapper: { gap: spacing.sm },
   methods: { gap: spacing.sm },
   method: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
@@ -220,4 +220,4 @@ const styles = StyleSheet.create({
   walletRow: { flexDirection: 'row', gap: spacing.sm },
   walletButton: { flex: 1 },
   pressed: { opacity: 0.9 },
-});
+}));

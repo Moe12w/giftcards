@@ -8,9 +8,11 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { CATEGORIES, OCCASIONS } from '@/src/lib/catalog';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function CategoriesScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
 
   return (
@@ -50,7 +52,7 @@ export default function CategoriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -65,4 +67,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.sm,
   },
-});
+}));

@@ -7,10 +7,12 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { setLanguage, type Language } from '@/src/i18n';
-import { colors, fontSizes, radii, spacing } from '@/src/theme';
+import { colors, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 export default function AccountScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { user, signOut, isDemo } = useAuth();
   const current = (i18n.language === 'ar' ? 'ar' : 'en') as Language;
@@ -110,7 +112,7 @@ function LangButton({ label, active, onPress }: { label: string; active: boolean
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   header: { gap: spacing.xs, marginTop: spacing.sm },
   title: { fontSize: fontSizes.display, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: fontSizes.md, color: colors.textMuted },
@@ -135,4 +137,4 @@ const styles = StyleSheet.create({
   langTextActive: { color: colors.primaryDark, fontWeight: '700' },
   dangerCard: { borderColor: colors.danger },
   dangerBody: { fontSize: fontSizes.sm, color: colors.textMuted, lineHeight: 20 },
-});
+}));

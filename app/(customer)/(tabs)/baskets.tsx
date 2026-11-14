@@ -16,9 +16,11 @@ import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { TextField } from '@/src/components/TextField';
 import { basketProgress, basketTotal, useBaskets } from '@/src/lib/baskets';
-import { colors, fonts, fontSizes, radii, spacing } from '@/src/theme';
+import { useThemeRefresh } from '@/src/lib/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 export default function GiftBasketHubScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { baskets, ready, activeBasket, completedBaskets, joinBasket } = useBaskets();
   const [code, setCode] = useState('');
@@ -227,7 +229,7 @@ export default function GiftBasketHubScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
   pressed: { opacity: 0.92, transform: [{ translateY: 2 }] },
   featured: { gap: spacing.sm },
@@ -378,4 +380,4 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 18,
   },
-});
+}));

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, edges, fonts, fontSizes, radii, spacing } from '../theme';
+import { colors, edges, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { glyphIcon } from '../lib/glyphs';
 import type { AccentTone } from '../lib/types';
 
@@ -57,7 +57,7 @@ const edgeColors: Record<AccentTone, string> = {
   sky: edges.ink,
 };
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   edge: {
     flex: 1,
     minWidth: 0,
@@ -85,4 +85,4 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   pressed: { opacity: 0.85, transform: [{ translateY: 2 }] },
-});
+}));

@@ -1,3 +1,4 @@
+import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -8,7 +9,7 @@ import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { IconTile } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const STEPS = [
   { icon: 'link', key: 'open' },
@@ -17,6 +18,7 @@ const STEPS = [
 ] as const;
 
 export default function GiftRedemptionScreen() {
+  useThemeRefresh();
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -48,7 +50,7 @@ export default function GiftRedemptionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   body: {
     fontFamily: fonts.regular,
     fontSize: fontSizes.md,
@@ -68,4 +70,4 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.md,
     color: colors.text,
   },
-});
+}));

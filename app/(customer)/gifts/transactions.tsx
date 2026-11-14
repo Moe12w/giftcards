@@ -10,11 +10,13 @@ import { Glyph } from '@/src/components/Glyph';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { useCards } from '@/src/lib/cards';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { formatMoney } from '@/src/lib/money';
 import { timeAgo } from '@/src/lib/time';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function GiftTransactionsScreen() {
+  useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { entries, getCard } = useCards();
 
@@ -83,7 +85,7 @@ export default function GiftTransactionsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   list: { gap: spacing.sm },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   icon: {
@@ -101,4 +103,4 @@ const styles = StyleSheet.create({
   meta: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted },
   date: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
   amount: { fontSize: fontSizes.md, color: colors.text },
-});
+}));
