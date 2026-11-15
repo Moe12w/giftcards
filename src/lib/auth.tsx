@@ -7,6 +7,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { handleAuthUrl, passwordResetLink } from './auth-link';
 import { hasSupabaseConfig } from './env';
 import { getSupabase } from './supabase';
+import { registerPushToken } from './push';
 
 interface AuthState {
   user: User | null;
@@ -73,6 +74,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       linkSub.remove();
     };
   }, []);
+
+  // Register this device for push notifications whenever a real user signs in.
+  // Best-effort: never blocks auth, and needs a dev build + EAS project id to
+  // actually receive pushes in production.
+  useEffect(() => {
+    if (!user?.id || !hasSupabaseConfig) return;
+    registerPushToken(user.id);
+  }, [user?.id]);
 
   const value = useMemo<AuthState>(
     () => ({

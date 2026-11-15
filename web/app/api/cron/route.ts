@@ -58,6 +58,47 @@ async function run(request: Request) {
 
     const ok = !gifts.error && !advertising.error;
 
+    // Best-effort push nudge for buyers with a gift due today. A gift that has
+    // to be sent by hand (WhatsApp, SMS or a link) only reaches the recipient
+    // if the buyer presses send, so poke them off-app as well as in-app.
+    try {
+      const since = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+      const { data: due } = await admin
+        .from('notifications')
+        .select('user_id')
+        .eq('kind', 'due')
+        .is('read_at', null)
+        .gte('created_at', since);
+
+      const userIds = [...new Set((due ?? []).map((row: { user_id: string }) => row.user_id))];
+      if (userIds.length > 0) {
+        const { data: tokenRows } = await admin
+          .from('push_tokens')
+          .select('token')
+          .in('user_id', userIds);
+
+        const messages = (tokenRows ?? [])
+          .map((row: { token: string }) => row.token)
+          .filter(Boolean)
+          .map((to: string) => ({
+            to,
+            title: 'Gift due today',
+            body: 'A scheduled gift is ready to send.',
+            sound: 'default',
+          }));
+
+        if (messages.length > 0) {
+          await fetch('https://exp.host/--/api/v2/push/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify(messages),
+          });
+        }
+      }
+    } catch (pushError) {
+      console.error('Push nudge failed', pushError);
+    }
+
     return NextResponse.json(
       {
         ok,
