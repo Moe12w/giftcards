@@ -45,7 +45,7 @@ export default async function BusinessOrderDetailPage({
   const sentCount = rows.filter((r) => r.delivery_status === 'sent').length;
   const queuedCount = rows.filter((r) => r.delivery_status === 'queued').length;
   const failedCount = rows.filter((r) => r.delivery_status === 'failed').length;
-  const providerReady = emailProviderReady();
+  const providerReady = await emailProviderReady();
   const isIssued = ['fulfilled', 'partially_fulfilled'].includes(order.status);
 
   const success =

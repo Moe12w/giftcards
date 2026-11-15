@@ -466,7 +466,11 @@
     "partnerCodeHint": "Type this code in the {{partner}} app to spend the credit.",
     "partnerCodeUsed": "I have used this",
     "partnerCodeClosed": "Used. This code is closed.",
-    "partnerCodeMissing": "We could not read the code. Try again."
+    "partnerCodeMissing": "We could not read the code. Try again.",
+    "scheduled": "Scheduled",
+    "scheduledTitle": "Scheduled gift",
+    "scheduledBody": "This gift arrives on {{date}}. You can use it from then.",
+    "scheduledSoon": "This gift has not arrived yet. It will appear here once it does."
   },
   "gifts": {
     "title": "My gifts",
@@ -514,6 +518,7 @@
     "toUse": "To use",
     "used": "Used up",
     "yourCards": "Your gift cards",
+    "waitingSection": "Scheduled gifts",
     "pastCards": "Past gift cards",
     "transactionsTitle": "Transactions",
     "transactionsSubtitle": "Everything that was redeemed",
@@ -563,6 +568,11 @@
     "detailTitle": "Notification",
     "receivedBody": "{{name}} sent you a gift card.",
     "deliveredBody": "Your gift to {{name}} has been delivered.",
+    "due": "Gift due today",
+    "dueBody": "This gift was scheduled for today. Send the claim link so they can open it.",
+    "sendNow": "Send the gift",
+    "shareMessage": "🎁 Your gift is waiting! Open it here: {{link}}",
+    "shareFailed": "We could not create the link. Please try again.",
     "openedBody": "{{name}} opened the gift you sent.",
     "redeemedBody": "{{name}} redeemed a gift card.",
     "expiryBody": "A gift card is expiring soon. Use it before it's gone.",

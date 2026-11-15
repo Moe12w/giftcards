@@ -466,7 +466,11 @@
     "partnerCodeHint": "اكتب هذا الرمز في تطبيق {{partner}} لاستخدام الرصيد.",
     "partnerCodeUsed": "استخدمت هذا الرمز",
     "partnerCodeClosed": "تم الاستخدام. هذا الرمز مغلق.",
-    "partnerCodeMissing": "تعذر قراءة الرمز. حاول مرة أخرى."
+    "partnerCodeMissing": "تعذر قراءة الرمز. حاول مرة أخرى.",
+    "scheduled": "مجدولة",
+    "scheduledTitle": "هدية مجدولة",
+    "scheduledBody": "تصل هذه الهدية في {{date}}. يمكنك استخدامها من ذلك الحين.",
+    "scheduledSoon": "لم تصل هذه الهدية بعد. ستظهر هنا عند وصولها."
   },
   "gifts": {
     "title": "هداياي",
@@ -514,6 +518,7 @@
     "toUse": "قابلة للاستخدام",
     "used": "مستهلكة",
     "yourCards": "بطاقات هديتك",
+    "waitingSection": "هدايا مجدولة",
     "pastCards": "بطاقات مستهلكة",
     "transactionsTitle": "المعاملات",
     "transactionsSubtitle": "كل ما تم استرداده",
@@ -563,6 +568,11 @@
     "detailTitle": "إشعار",
     "receivedBody": "أرسل لك {{name}} بطاقة هدايا.",
     "deliveredBody": "تم تسليم هديتك إلى {{name}}.",
+    "due": "هديتك مستحقة اليوم",
+    "dueBody": "كانت هذه الهدية مجدولة لهذا اليوم. أرسل رابط المطالبة ليتمكن المستلم من فتحها.",
+    "sendNow": "أرسل الهدية",
+    "shareMessage": "🎁 هديتك بانتظارك! افتحها من هنا: {{link}}",
+    "shareFailed": "تعذر إنشاء الرابط. حاول مرة أخرى.",
     "openedBody": "فتح {{name}} الهدية التي أرسلتها.",
     "redeemedBody": "استبدل {{name}} بطاقة هدايا.",
     "expiryBody": "بطاقة هدايا ستنتهي قريباً. استخدمها قبل فوات الأوان.",

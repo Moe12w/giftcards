@@ -12,7 +12,14 @@ import { getUserLocale } from '@/lib/i18n/server';
 export default async function AdminSupportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; kind?: string; saved?: string; error?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    status?: string;
+    kind?: string;
+    saved?: string;
+    error?: string;
+    warn?: string;
+  }>;
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
@@ -59,6 +66,8 @@ export default async function AdminSupportPage({
       />
 
       <Notice error={params.error ?? error?.message} success={params.saved === '1' ? t.saved : null} />
+
+      {params.warn === 'email-not-sent' ? <div className="callout warn">{t.emailNotSent}</div> : null}
 
       <div className="kpi-grid">
         <div className="kpi">

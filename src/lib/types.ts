@@ -203,6 +203,7 @@ export interface Recipient {
 export type NotificationKind =
   | 'received'
   | 'delivered'
+  | 'due'
   | 'opened'
   | 'redeemed'
   | 'expiry'

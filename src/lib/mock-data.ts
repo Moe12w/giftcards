@@ -1674,6 +1674,15 @@ export const MOCK_NOTIFICATIONS: AppNotification[] = [
     gift_id: 'card-2',
   },
   {
+    id: 'notification-7',
+    kind: 'due',
+    titleKey: 'notifications.due',
+    bodyKey: 'notifications.dueBody',
+    created_at: daysFromNow(0),
+    read: false,
+    gift_id: 'card-5',
+  },
+  {
     id: 'notification-5',
     kind: 'promo',
     titleKey: 'notifications.promo',

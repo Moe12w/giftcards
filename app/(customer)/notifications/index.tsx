@@ -19,6 +19,7 @@ import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 const KIND_ICON: Record<NotificationKind, string> = {
   received: 'gift',
   delivered: 'mail',
+  due: 'send',
   opened: 'eye',
   redeemed: 'check',
   expiry: 'clock',
@@ -29,6 +30,7 @@ const KIND_ICON: Record<NotificationKind, string> = {
 const KIND_TONE: Record<NotificationKind, IconTileTone> = {
   received: 'pink',
   delivered: 'teal',
+  due: 'pink',
   opened: 'lavender',
   redeemed: 'teal',
   expiry: 'gold',

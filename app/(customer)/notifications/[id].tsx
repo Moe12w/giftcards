@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, Share, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -9,7 +9,8 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
-import { listNotifications, markNotificationRead } from '@/src/lib/data';
+import { claimShareUrl } from '@/src/lib/claim-link';
+import { buyerClaimLink, listNotifications, markNotificationRead } from '@/src/lib/data';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import type { AppNotification, NotificationKind } from '@/src/lib/types';
@@ -18,6 +19,7 @@ import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 const KIND_ICON: Record<NotificationKind, string> = {
   received: 'gift',
   delivered: 'mail',
+  due: 'send',
   opened: 'eye',
   redeemed: 'check',
   expiry: 'clock',
@@ -28,6 +30,7 @@ const KIND_ICON: Record<NotificationKind, string> = {
 const KIND_TONE: Record<NotificationKind, IconTileTone> = {
   received: 'pink',
   delivered: 'teal',
+  due: 'pink',
   opened: 'lavender',
   redeemed: 'teal',
   expiry: 'gold',
@@ -41,6 +44,7 @@ export default function NotificationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [item, setItem] = useState<AppNotification | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sharing, setSharing] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) {
@@ -65,6 +69,24 @@ export default function NotificationDetailScreen() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // The gift is due and the recipient has not opened it: the buyer sends the
+  // link themselves, so the app mints a fresh one and hands it to the share
+  // sheet (WhatsApp, Messages, mail — whatever they use).
+  async function sendGift() {
+    if (!item?.gift_id) return;
+    setSharing(true);
+    try {
+      const token = await buyerClaimLink(item.gift_id);
+      await Share.share({
+        message: t('notifications.shareMessage', { link: claimShareUrl(token) }),
+      });
+    } catch {
+      Alert.alert(t('common.errorGeneric'), t('notifications.shareFailed'));
+    } finally {
+      setSharing(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -102,6 +124,10 @@ export default function NotificationDetailScreen() {
         <Text style={styles.date}>{formatDate(item.created_at, i18n.language)}</Text>
         <Text style={styles.body}>{t(item.bodyKey)}</Text>
       </Card>
+
+      {item.kind === 'due' && item.gift_id ? (
+        <Button label={t('notifications.sendNow')} onPress={sendGift} disabled={sharing} />
+      ) : null}
 
       {item.gift_id ? (
         <Button

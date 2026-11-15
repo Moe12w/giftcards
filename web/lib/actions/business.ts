@@ -324,7 +324,7 @@ export async function sendBulkGiftLinks(formData: FormData) {
 
 /** Whether a real email provider is configured (used by the UI). */
 export async function isEmailProviderReady() {
-  return emailProviderReady();
+  return await emailProviderReady();
 }
 
 /**

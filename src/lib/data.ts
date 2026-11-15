@@ -465,6 +465,20 @@ export async function listNotifications(): Promise<AppNotification[]> {
   }));
 }
 
+/**
+ * Mints a fresh claim link for a gift the customer bought, so it can be sent
+ * again. Only the hash of a claim token is stored, so this is the only way back
+ * to a link that can be put in a WhatsApp message.
+ */
+export async function buyerClaimLink(voucherId: string): Promise<string> {
+  const { data, error } = await getSupabase().rpc('buyer_claim_link', {
+    p_voucher_id: voucherId,
+  });
+  if (error) throw error;
+  if (!data) throw new Error('No claim link was created.');
+  return String(data);
+}
+
 /** Marks one notification as read. */
 export async function markNotificationRead(id: string): Promise<void> {
   if (!hasSupabaseConfig) return;

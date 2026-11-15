@@ -14,7 +14,9 @@ import { PageHeader } from '@/src/components/PageHeader';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { useCards } from '@/src/lib/cards';
+import { isGiftWaiting } from '@/src/lib/delivery';
 import { useThemeRefresh } from '@/src/lib/theme';
+import { formatDate } from '@/src/lib/time';
 import { isSessionCard } from '@/src/lib/sessions';
 import type { CardStatus, GiftCard } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
@@ -61,7 +63,14 @@ export default function GiftsScreen() {
     [visible, usedCards],
   );
 
+  // Gifts bought for a future date are in the wallet but not spendable yet, so
+  // they sit in their own section instead of counting as ready to use.
+  const waitingGifts = useMemo(() => usable.filter((card) => isGiftWaiting(card)), [usable]);
+  const readyGifts = useMemo(() => usable.filter((card) => !isGiftWaiting(card)), [usable]);
+  const readyCount = usableCards.filter((card) => !isGiftWaiting(card)).length;
+
   function renderCard(card: GiftCard) {
+    const isWaiting = isGiftWaiting(card);
     return (
       <GiftCardVisual
         key={card.id}
@@ -73,13 +82,19 @@ export default function GiftsScreen() {
         sessionsRemaining={isSessionCard(card) ? sessionsLeft(card) : undefined}
         message={card.message ?? undefined}
         meta={
-          card.expires_at
-            ? t('gifts.expiresOn', {
-                date: new Date(card.expires_at).toLocaleDateString(lang === 'ar' ? 'ar-QA' : 'en-QA'),
-              })
-            : t('cards.noExpiry')
+          isWaiting && card.scheduled_for
+            ? t('gifts.scheduledFor', { date: formatDate(card.scheduled_for, lang) })
+            : card.expires_at
+              ? t('gifts.expiresOn', {
+                  date: new Date(card.expires_at).toLocaleDateString(lang === 'ar' ? 'ar-QA' : 'en-QA'),
+                })
+              : t('cards.noExpiry')
         }
-        badge={{ label: t(`cards.${card.status}`), tone: statusTone[card.status] }}
+        badge={
+          isWaiting
+            ? { label: t('gifts.scheduled'), tone: 'warning' as BadgeTone }
+            : { label: t(`cards.${card.status}`), tone: statusTone[card.status] }
+        }
         onPress={() => router.push(`/(customer)/card/${card.id}`)}
       />
     );
@@ -105,7 +120,7 @@ export default function GiftsScreen() {
             </View>
             <View style={styles.summaryStats}>
               <View style={styles.stat}>
-                <Text style={styles.statValue}>{usableCards.length}</Text>
+                <Text style={styles.statValue}>{readyCount}</Text>
                 <Text style={styles.statLabel}>{t('gifts.toUse')}</Text>
               </View>
               <View style={styles.statDivider} />
@@ -137,10 +152,17 @@ export default function GiftsScreen() {
             ))}
           </ScrollView>
 
-          {usable.length > 0 ? (
+          {waitingGifts.length > 0 ? (
+            <>
+              <SectionHeader title={t('gifts.waitingSection')} />
+              <View style={styles.list}>{waitingGifts.map(renderCard)}</View>
+            </>
+          ) : null}
+
+          {readyGifts.length > 0 ? (
             <>
               <SectionHeader title={t('gifts.yourCards')} />
-              <View style={styles.list}>{usable.map(renderCard)}</View>
+              <View style={styles.list}>{readyGifts.map(renderCard)}</View>
             </>
           ) : null}
 

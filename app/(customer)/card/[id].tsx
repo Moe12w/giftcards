@@ -13,6 +13,8 @@ import { QRCode } from '@/src/components/QRCode';
 import { Screen } from '@/src/components/Screen';
 import { SessionMeter } from '@/src/components/SessionMeter';
 import { useCards } from '@/src/lib/cards';
+import { isGiftWaiting } from '@/src/lib/delivery';
+import { formatDate } from '@/src/lib/time';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatMoney } from '@/src/lib/money';
 import { isSessionCard } from '@/src/lib/sessions';
@@ -73,7 +75,9 @@ export default function CardDetailScreen() {
   const sessionCard = useMemo(() => (card ? isSessionCard(card) : false), [card]);
   const remaining = card ? sessionsLeft(card) : 0;
   const balance = card ? valueLeft(card) : 0;
-  const redeemable = card ? canRedeem(card) : false;
+  // A gift bought for a future date is in the wallet but must not be spendable yet.
+  const waiting = card ? isGiftWaiting(card) : false;
+  const redeemable = card && !waiting ? canRedeem(card) : false;
   const redeemValue = `giftly:card:${card?.id ?? ''}`;
 
   function walletUnavailable() {
@@ -104,7 +108,11 @@ export default function CardDetailScreen() {
       <Card style={styles.hero}>
         <View style={styles.heroTop}>
           <Text style={styles.vendor}>{card.partner_name ?? card.vendor_name ?? card.offer_title ?? 'Gift card'}</Text>
-          <Badge label={t(`cards.${card.status}`)} tone={statusTone[card.status]} />
+          {waiting ? (
+            <Badge label={t('cards.scheduled')} tone="warning" />
+          ) : (
+            <Badge label={t(`cards.${card.status}`)} tone={statusTone[card.status]} />
+          )}
         </View>
 
         {sessionCard ? (
@@ -135,7 +143,17 @@ export default function CardDetailScreen() {
         </Text>
       </Card>
 
-      {isPartnerCode ? (
+      {waiting ? (
+        <Card tone="sky" style={styles.qrCard}>
+          <Glyph name="clock" size={18} />
+          <Text style={styles.qrTitle}>{t('cards.scheduledTitle')}</Text>
+          <Text style={styles.qrHint}>
+            {card.scheduled_for
+              ? t('cards.scheduledBody', { date: formatDate(card.scheduled_for, lang) })
+              : t('cards.scheduledSoon')}
+          </Text>
+        </Card>
+      ) : isPartnerCode ? (
         <Card style={styles.qrCard}>
           <Text style={styles.qrTitle}>{t('cards.partnerCodeTitle')}</Text>
           {partnerCode ? (
@@ -196,8 +214,12 @@ export default function CardDetailScreen() {
         </Card>
       ) : null}
 
-      <Button label={t('cards.appleWallet')} variant="secondary" onPress={walletUnavailable} />
-      <Button label={t('cards.googleWallet')} variant="secondary" onPress={walletUnavailable} />
+      {waiting ? null : (
+        <>
+          <Button label={t('cards.appleWallet')} variant="secondary" onPress={walletUnavailable} />
+          <Button label={t('cards.googleWallet')} variant="secondary" onPress={walletUnavailable} />
+        </>
+      )}
 
       <Text style={styles.privacy}>{sessionCard ? t('sessions.privacy') : t('cards.codeOnce')}</Text>
     </Screen>

@@ -1,16 +1,10 @@
-import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { cronSecret, cronSecretFromRequest, cronSecretMatches } from '@/lib/cron';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const maxDuration = 60;
-
-function tokenMatches(provided: string, expected: string): boolean {
-  const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
 
 /**
  * Advertising lifecycle cron.
@@ -24,7 +18,7 @@ function tokenMatches(provided: string, expected: string): boolean {
  * uses CRON_SECRET automatically, so either name works) or `x-cron-secret`.
  */
 async function run(request: Request) {
-  const expected = process.env.ADVERTISING_MAINTENANCE_SECRET ?? process.env.CRON_SECRET;
+  const expected = cronSecret();
   if (!expected) {
     return NextResponse.json(
       { error: 'Advertising maintenance is not configured' },
@@ -32,9 +26,8 @@ async function run(request: Request) {
     );
   }
 
-  const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
-  const provided = bearer || request.headers.get('x-cron-secret') || '';
-  if (!provided || !tokenMatches(provided, expected)) {
+  const provided = cronSecretFromRequest(request);
+  if (!provided || !cronSecretMatches(provided, expected)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

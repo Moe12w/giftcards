@@ -1,7 +1,13 @@
 import Link from 'next/link';
-import { Search, Ticket } from 'lucide-react';
+import { headers } from 'next/headers';
+import { Mail, Plus, Search, Ticket } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
-import { adminSetVoucherStatus } from '@/lib/actions/admin';
+import {
+  adminEmailClaimLink,
+  adminIssueManualVoucher,
+  adminSetVoucherStatus,
+} from '@/lib/actions/admin';
+import { CopyField } from '@/components/CopyField';
 import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { fulfilmentLabel } from '@/lib/catalog';
@@ -26,12 +32,26 @@ const STATUSES = [
 export default async function AdminVouchersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; type?: string; saved?: string; error?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    status?: string;
+    type?: string;
+    saved?: string;
+    error?: string;
+    issued?: string;
+    claim?: string;
+    emailed?: string;
+  }>;
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
   const locale = await getUserLocale(ctx.profile?.preferred_language);
   const t = pick(adminCopy, locale).vouchers;
+  const headerStore = await headers();
+  const host = headerStore.get('x-forwarded-host') ?? headerStore.get('host') ?? 'localhost:3000';
+  const proto =
+    headerStore.get('x-forwarded-proto') ?? (host.startsWith('localhost') ? 'http' : 'https');
+  const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? `${proto}://${host}`;
   const c = pick(common, locale);
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
@@ -40,12 +60,22 @@ export default async function AdminVouchersPage({
   const { data, error } = await ctx.supabase
     .from('vouchers')
     .select(
-      'id, voucher_code, status, fulfilment_type, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, recipient_name, recipient_email, expires_at, created_at, products(title, vendors(name)), orders(id, order_ref), profiles!buyer_id(full_name, email)',
+      'id, voucher_code, status, fulfilment_type, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, recipient_name, recipient_email, claimed_by, expires_at, created_at, products(title, vendors(name)), orders(id, order_ref), profiles!buyer_id(full_name, email)',
     )
     .order('created_at', { ascending: false })
     .limit(2000);
 
   const allVouchers = data ?? [];
+
+  // Only products that a voucher can be invented for: partner codes come out
+  // of an enterprise inventory batch instead.
+  const { data: productRows } = await ctx.supabase
+    .from('products')
+    .select('id, title, fulfilment_type, vendors(name)')
+    .eq('is_active', true)
+    .in('fulfilment_type', ['monetary', 'experience'])
+    .order('title');
+  const issuableProducts = productRows ?? [];
   const vouchers = allVouchers.filter((voucher) => {
     if (status === 'active' && !ACTIVE.includes(voucher.status)) return false;
     if (status && status !== 'active' && voucher.status !== status) return false;
@@ -76,7 +106,28 @@ export default async function AdminVouchersPage({
         description={t.description}
       />
 
-      <Notice error={params.error ?? error?.message} success={params.saved === '1' ? t.saved : null} />
+      <Notice
+        error={params.error ?? error?.message}
+        success={
+          params.issued
+            ? fill(t.manualCreated, { code: params.issued })
+            : params.emailed
+              ? fill(t.emailed, { email: params.emailed })
+              : params.saved === '1'
+                ? t.saved
+                : null
+        }
+      />
+
+      {params.claim ? (
+        <div className="callout">
+          <strong>{t.manualClaimTitle}</strong>
+          <p className="small" style={{ marginTop: 6 }}>
+            {t.manualClaimBody}
+          </p>
+          <CopyField value={`${origin}/claim/${params.claim}`} />
+        </div>
+      ) : null}
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -108,6 +159,90 @@ export default async function AdminVouchersPage({
           <span>{fill(t.expiredCount, { count: expired })}</span>
         </div>
       </div>
+
+      <details className="panel" style={{ marginBottom: 18 }}>
+        <summary className="panel-head" style={{ cursor: 'pointer' }}>
+          <h3>
+            <Plus size={16} /> {t.manualTitle}
+          </h3>
+          <span className="small muted">{t.manualSubtitle}</span>
+        </summary>
+        <div className="panel-body">
+          <p className="small muted">{t.manualBody}</p>
+          <form action={adminIssueManualVoucher} style={{ display: 'grid', gap: 12, marginTop: 12 }}>
+            <div className="field">
+              <label htmlFor="manual_product">{t.manualProduct}</label>
+              <select id="manual_product" name="product_id" required defaultValue="">
+                <option value="" disabled>
+                  {t.manualProductPlaceholder}
+                </option>
+                {issuableProducts.map((product) => {
+                  const vendorRelation = product.vendors;
+                  const vendor = Array.isArray(vendorRelation) ? vendorRelation[0] : vendorRelation;
+                  return (
+                    <option key={product.id} value={product.id}>
+                      {product.title}
+                      {vendor?.name ? ` · ${vendor.name}` : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: 12,
+              }}
+            >
+              <div className="field">
+                <label htmlFor="manual_amount">{t.manualAmount}</label>
+                <input
+                  id="manual_amount"
+                  name="amount"
+                  inputMode="decimal"
+                  placeholder={t.manualAmountPlaceholder}
+                />
+                <span className="small muted">{t.manualAmountHint}</span>
+              </div>
+              <div className="field">
+                <label htmlFor="manual_expires">{t.manualExpires}</label>
+                <input id="manual_expires" name="expires_on" type="date" />
+                <span className="small muted">{t.manualExpiresHint}</span>
+              </div>
+            </div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: 12,
+              }}
+            >
+              <div className="field">
+                <label htmlFor="manual_name">{t.manualRecipient}</label>
+                <input id="manual_name" name="recipient_name" />
+              </div>
+              <div className="field">
+                <label htmlFor="manual_email">{t.manualEmail}</label>
+                <input id="manual_email" name="recipient_email" type="email" />
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="manual_message">{t.manualMessage}</label>
+              <textarea id="manual_message" name="gift_message" rows={2} />
+            </div>
+            <div className="field">
+              <label htmlFor="manual_note">{t.manualNote}</label>
+              <input id="manual_note" name="note" placeholder={t.manualNotePlaceholder} />
+            </div>
+            <div className="btn-row">
+              <button className="btn sm primary" type="submit" disabled={issuableProducts.length === 0}>
+                <Plus size={15} /> {t.manualSubmit}
+              </button>
+            </div>
+          </form>
+        </div>
+      </details>
 
       <form className="toolbar" action="/admin/vouchers" method="get">
         <div className="search-bar">
@@ -227,17 +362,32 @@ export default async function AdminVouchersPage({
                           {['void', 'expired', 'redeemed', 'cancelled'].includes(voucher.status) ? (
                             <span className="small muted">{t.closed}</span>
                           ) : (
-                            <form action={adminSetVoucherStatus} className="inline-role" style={{ justifyContent: 'flex-end' }}>
-                              <input type="hidden" name="voucher_id" value={voucher.id} />
-                              <input type="hidden" name="return_to" value="/admin/vouchers" />
-                              <select name="status" defaultValue="void" aria-label={fill(t.actionFor, { code: voucher.voucher_code })}>
-                                <option value="void">{t.void}</option>
-                                <option value="expired">{t.expire}</option>
-                              </select>
-                              <button className="btn sm ghost" type="submit">
-                                {c.actions.apply}
-                              </button>
-                            </form>
+                            <div style={{ display: 'grid', gap: 6, justifyItems: 'end' }}>
+                              {voucher.recipient_email && !voucher.claimed_by ? (
+                                <form action={adminEmailClaimLink}>
+                                  <input type="hidden" name="voucher_id" value={voucher.id} />
+                                  <input type="hidden" name="return_to" value="/admin/vouchers" />
+                                  <button
+                                    className="btn sm ghost"
+                                    type="submit"
+                                    title={fill(t.emailHint, { email: voucher.recipient_email })}
+                                  >
+                                    <Mail size={14} /> {t.emailLink}
+                                  </button>
+                                </form>
+                              ) : null}
+                              <form action={adminSetVoucherStatus} className="inline-role" style={{ justifyContent: 'flex-end' }}>
+                                <input type="hidden" name="voucher_id" value={voucher.id} />
+                                <input type="hidden" name="return_to" value="/admin/vouchers" />
+                                <select name="status" defaultValue="void" aria-label={fill(t.actionFor, { code: voucher.voucher_code })}>
+                                  <option value="void">{t.void}</option>
+                                  <option value="expired">{t.expire}</option>
+                                </select>
+                                <button className="btn sm ghost" type="submit">
+                                  {c.actions.apply}
+                                </button>
+                              </form>
+                            </div>
                           )}
                         </td>
                       </tr>
