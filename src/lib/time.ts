@@ -7,7 +7,9 @@ export function daysFromNow(days: number): string {
 
 export function formatDate(iso: string | null | undefined, locale: string): string {
   if (!iso) return '';
-  return new Date(iso).toLocaleDateString(locale === 'ar' ? 'ar-QA' : 'en-QA');
+  return new Date(iso).toLocaleDateString(locale === 'ar' ? 'ar-QA' : 'en-QA', {
+    numberingSystem: 'latn',
+  });
 }
 
 /** Date and time, used by support threads where both matter. */
@@ -16,6 +18,7 @@ export function formatDateTime(iso: string | null | undefined, locale: string): 
   return new Date(iso).toLocaleString(locale === 'ar' ? 'ar-QA' : 'en-QA', {
     dateStyle: 'medium',
     timeStyle: 'short',
+    numberingSystem: 'latn',
   });
 }
 

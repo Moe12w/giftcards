@@ -14,7 +14,6 @@ import {
   Plug,
   Search,
   ShieldCheck,
-  Sparkles,
   Store,
   Wallet,
 } from 'lucide-react';
@@ -197,7 +196,7 @@ export default async function AiGiftCardsPage() {
                 <p className="ai-chat-bubble user">{t.hero.chatUser}</p>
                 <p className="ai-chat-bubble assistant">{t.hero.chatAssistant}</p>
                 <div className="ai-chat-result">
-                  <Sparkles size={16} /> {t.hero.chatResult}
+                  <Check size={16} /> {t.hero.chatResult}
                 </div>
               </div>
             </div>
@@ -246,7 +245,7 @@ export default async function AiGiftCardsPage() {
 
         <div className="grid-2">
           {t.why.benefits.map((benefit, index) => {
-            const Icon = benefitIcons[index] ?? Sparkles;
+            const Icon = benefitIcons[index] ?? Gift;
             return (
               <article className="card ai-benefit" key={benefit.title}>
                 <span className={`icon-tile ${index % 2 === 0 ? '' : 'lavender'}`}>

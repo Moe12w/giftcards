@@ -10,7 +10,6 @@ import {
   HeartHandshake,
   Send,
   ShieldCheck,
-  Sparkles,
   Users,
 } from 'lucide-react';
 import { submitEnterpriseEnquiry } from '@/lib/actions/public';
@@ -264,7 +263,7 @@ export default async function EnterprisePage({
       <section className="container section">
         <div className="cta-band">
           <span className="eyebrow gold">
-            <Sparkles size={14} /> {t.eyebrowCta}
+            <Gift size={14} /> {t.eyebrowCta}
           </span>
           <h2>{t.titleCta}</h2>
           <p>{t.bodyCta}</p>

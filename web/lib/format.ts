@@ -19,6 +19,7 @@ export function formatDate(
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    numberingSystem: 'latn',
   }).format(date);
 }
 
@@ -35,6 +36,7 @@ export function formatDateTime(
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    numberingSystem: 'latn',
   }).format(date);
 }
 

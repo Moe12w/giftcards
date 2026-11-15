@@ -8,7 +8,6 @@ import {
   Plus,
   ScanLine,
   ShoppingBag,
-  Sparkles,
   Ticket,
   TrendingUp,
   Users,
@@ -404,7 +403,7 @@ export default async function VendorOverviewPage() {
               </Link>
             </div>
             <div className="callout info" style={{ marginTop: 16 }}>
-              <Sparkles size={15} style={{ display: 'inline', verticalAlign: '-2px' }} />{' '}
+              <CheckCircle2 size={15} style={{ display: 'inline', verticalAlign: '-2px' }} />{' '}
               {t.experienceNote}
             </div>
           </div>

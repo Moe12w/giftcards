@@ -181,6 +181,7 @@ export default async function VendorReportsPage({
                     {
                       month: 'short',
                       year: 'numeric',
+                      numberingSystem: 'latn',
                     },
                   );
                   return (

@@ -189,6 +189,7 @@ export default async function VendorAnalyticsPage({
                     {
                       month: 'short',
                       year: 'numeric',
+                      numberingSystem: 'latn',
                     },
                   );
                   return (

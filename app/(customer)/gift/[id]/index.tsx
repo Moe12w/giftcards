@@ -182,6 +182,7 @@ export default function GiftDetailScreen() {
               ? t('gift.validUntil', {
                   date: new Date(offer.valid_until).toLocaleDateString(
                     i18n.language === 'ar' ? 'ar-QA' : 'en-QA',
+                    { numberingSystem: 'latn' },
                   ),
                 })
               : t('gift.noExpiry')

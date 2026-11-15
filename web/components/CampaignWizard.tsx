@@ -8,7 +8,6 @@ import {
   Clock,
   Check,
   Megaphone,
-  Sparkles,
   Wallet,
 } from 'lucide-react';
 import { formatMoney } from '@/lib/money';
@@ -400,7 +399,7 @@ export function CampaignWizard({
                 <Clock size={16} />{' '}
                 {hoursToNextSlot <= 0
                   ? 'This slot is free now, so your ad starts as soon as it is paid and approved.'
-                  : `The next available time for your ad in this slot is in ${hoursToNextSlot} hour${hoursToNextSlot === 1 ? '' : 's'} — ${nextSlotStart.toLocaleString()}.`}
+                  : `The next available time for your ad in this slot is in ${hoursToNextSlot} hour${hoursToNextSlot === 1 ? '' : 's'} — ${nextSlotStart.toLocaleString(locale === 'ar' ? 'ar-QA' : 'en-QA', { numberingSystem: 'latn' })}.`}
               </div>
               <span className="hint">
                 Slot 1 is seen first and costs the most. No calendar to fill in — your ad takes the next free time in
@@ -437,7 +436,7 @@ export function CampaignWizard({
       <section className="panel" style={{ display: step === 1 ? undefined : 'none' }}>
         <div className="panel-head">
           <h3>
-            <Sparkles size={17} /> Creative
+            <Check size={17} /> Creative
           </h3>
           <span className="small muted">Bilingual copy is optional but recommended.</span>
         </div>

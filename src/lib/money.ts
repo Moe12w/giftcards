@@ -30,6 +30,7 @@ export function formatMoney(minor: number, locale: 'en' | 'ar' = 'en'): string {
     const formatted = new Intl.NumberFormat('ar-QA', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
+      numberingSystem: 'latn',
     }).format(major);
     return `${sign}${formatted} ر.ق`;
   }

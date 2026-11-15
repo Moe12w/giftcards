@@ -290,7 +290,7 @@ export async function createProduct(formData: FormData) {
       multi_session_per_visit: checkbox(formData, 'multi_session_per_visit'),
       is_active: status === 'published',
       status,
-      icon: str(formData, 'icon') || (fulfilmentType === 'experience' ? 'sparkles' : 'gift'),
+      icon: str(formData, 'icon') || 'gift',
       tone: normalizeTone(
         str(formData, 'tone'),
         fulfilmentType === 'experience' ? 'lavender' : 'teal',

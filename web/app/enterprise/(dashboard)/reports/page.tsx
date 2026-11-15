@@ -276,6 +276,7 @@ export default async function EnterpriseReportsPage({
                     {
                       month: 'short',
                       year: 'numeric',
+                      numberingSystem: 'latn',
                     },
                   );
                   return (

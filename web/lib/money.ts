@@ -6,6 +6,7 @@ export function formatMoney(minor: number | null | undefined, lang: 'en' | 'ar' 
     currency: 'QAR',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+    numberingSystem: 'latn',
   }).format(value);
 }
 
