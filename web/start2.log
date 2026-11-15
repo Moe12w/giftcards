@@ -1,0 +1,39 @@
+▲ Next.js 16.4.6
+- Local:         http://localhost:3100
+- Network:       http://192.168.18.4:3100
+✓ Ready in 2.2s
+⚠ Warning: Next.js ignored package-lock.json in C:\Users\User because it is outside the current Git repository (C:\Users\User\Desktop\gift-card-marketplace).
+ To use this directory, set `outputFileTracingRoot` in your Next.js config.
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\User\Desktop\gift-card-marketplace\package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * C:\Users\User\Desktop\gift-card-marketplace\web\package-lock.json
+
+✓ Running next.config.ts took 425ms
+⨯ Error: Could not find the module "[project]/web/node_modules/next/dist/esm/lib/framework/boundary-components.js#ViewportBoundary" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at ignore-listed frames {
+  digest: '2605998940'
+}
+⨯ Error: Could not find the module "[project]/web/node_modules/next/dist/esm/lib/framework/boundary-components.js#MetadataBoundary" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at ignore-listed frames {
+  digest: '130740316'
+}
+⨯ Error: Could not find the module "[project]/web/node_modules/next/dist/esm/lib/framework/boundary-components.js#ViewportBoundary" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at ignore-listed frames {
+  digest: '2605998940'
+}
+⨯ Error: Could not find the module "[project]/web/node_modules/next/dist/esm/lib/framework/boundary-components.js#MetadataBoundary" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at ignore-listed frames {
+  digest: '130740316'
+}
+⨯ Error: Could not find the module "[project]/web/node_modules/next/dist/esm/lib/framework/boundary-components.js#ViewportBoundary" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at ignore-listed frames {
+  digest: '2605998940'
+}
+⨯ Error: Could not find the module "[project]/web/node_modules/next/dist/esm/lib/framework/boundary-components.js#MetadataBoundary" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at ignore-listed frames {
+  digest: '130740316'
+}

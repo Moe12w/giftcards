@@ -132,6 +132,15 @@
       "body": "Share a link by email, SMS or chat. No app download needed to open it."
     }
   },
+  "tutorial": {
+    "next": "Next",
+    "back": "Back",
+    "skip": "Skip tour",
+    "done": "Start exploring",
+    "howItWorks": "How Giftly works",
+    "howItWorksBody": "A quick tour of gift cards, baskets and sending",
+    "languageChanged": "Language changed"
+  },
   "tabs": {
     "home": "Home",
     "cards": "My cards",

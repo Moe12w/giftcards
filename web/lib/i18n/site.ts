@@ -10,6 +10,7 @@ const en = {
   nav: {
     main: 'Main',
     vendors: 'Vendors',
+    aiGiftCards: 'AI gift cards',
     business: 'For business',
     howItWorks: 'How it works',
     contact: 'Contact',
@@ -516,6 +517,7 @@ const ar: SiteCopy = {
   nav: {
     main: 'القائمة الرئيسية',
     vendors: 'المتاجر',
+    aiGiftCards: 'بطاقات AI',
     business: 'للأعمال',
     howItWorks: 'كيف تعمل',
     contact: 'تواصل معنا',

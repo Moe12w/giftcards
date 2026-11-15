@@ -1,5 +1,6 @@
 // src/i18n/index.ts
 // i18next setup for English and Arabic, with device-locale detection.
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { getLocales } from 'expo-localization';
@@ -11,7 +12,16 @@ import ar from './ar.json';
 export const SUPPORTED_LANGUAGES = ['en', 'ar'] as const;
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
-function detectLanguage(): Language {
+/** The customer's explicit choice, so it survives a reload. */
+export const LANGUAGE_KEY = 'giftly.language';
+
+async function detectLanguage(): Promise<Language> {
+  try {
+    const stored = await AsyncStorage.getItem(LANGUAGE_KEY);
+    if (stored === 'ar' || stored === 'en') return stored;
+  } catch {
+    // Storage is best-effort; fall back to the device locale.
+  }
   const device = getLocales()[0];
   const code = device?.languageCode?.toLowerCase();
   return code === 'ar' ? 'ar' : 'en';
@@ -30,7 +40,9 @@ I18nManager.allowRTL(true);
 export async function initI18n(): Promise<typeof i18n> {
   if (i18n.isInitialized) return i18n;
 
-  const language = detectLanguage();
+  const language = await detectLanguage();
+  // Fresh installs launched in Arabic should start with an RTL layout.
+  I18nManager.forceRTL(isRTL(language));
 
   await i18n.use(initReactI18next).init({
     resources: {
@@ -49,6 +61,11 @@ export async function initI18n(): Promise<typeof i18n> {
 
 export async function setLanguage(language: Language): Promise<void> {
   await i18n.changeLanguage(language);
+  try {
+    await AsyncStorage.setItem(LANGUAGE_KEY, language);
+  } catch {
+    // Non-fatal: the language still applies for this session.
+  }
   // The layout direction is applied natively; a reload may be required on
   // Android/iOS for the change to take full effect.
   I18nManager.forceRTL(isRTL(language));

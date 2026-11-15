@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { Bell, Gift, Heart } from 'lucide-react-native';
+import { Bell, Gift, Globe, Heart } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/src/components/Avatar';
@@ -32,6 +32,7 @@ import {
 import { CATEGORIES, CURATED_COLLECTIONS, offerStartingPriceMinor, offerTitle, offersForCollection } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { countUnreadNotifications, listActiveOffers, listMarketplaceBusinesses } from '@/src/lib/data';
+import { hasSeenTutorial } from '@/src/lib/tutorial';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
 import { useAuth } from '@/src/lib/auth';
 import type { MarketplaceBusiness, Offer } from '@/src/lib/types';
@@ -47,6 +48,21 @@ export default function ExploreHomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [pickerOffer, setPickerOffer] = useState<Offer | null>(null);
+  const tutorialPrompted = useRef(false);
+
+  // A first-time customer gets the tour once, just like a new dashboard
+  // account. Finishing or skipping it stores the flag so it does not reopen.
+  useEffect(() => {
+    let active = true;
+    hasSeenTutorial().then((seen) => {
+      if (!active || seen || tutorialPrompted.current) return;
+      tutorialPrompted.current = true;
+      router.push('/(customer)/tutorial');
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -150,6 +166,14 @@ export default function ExploreHomeScreen() {
             </Text>
             <Text style={styles.subtitle}>{t('discovery.subtitle')}</Text>
           </View>
+          <Pressable
+            onPress={() => router.push('/(customer)/profile/language')}
+            accessibilityRole="button"
+            accessibilityLabel={t('profile.language')}
+            style={styles.iconButton}
+          >
+            <Globe size={21} color={colors.ink} />
+          </Pressable>
           <Pressable
             onPress={() => router.push('/(customer)/notifications')}
             accessibilityRole="button"

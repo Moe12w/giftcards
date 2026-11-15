@@ -5,11 +5,11 @@
 -- Create the statements table
 CREATE TABLE IF NOT EXISTS statements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  vendor_id UUID NOT NULL REFERENCES sub_merchants(id) ON DELETE CASCADE,
+  vendor_id UUID NOT NULL REFERENCES public.vendors(id) ON DELETE CASCADE,
   period VARCHAR(20) NOT NULL CHECK (period IN ('daily', 'weekly', 'monthly')),
   start_date TIMESTAMP NOT NULL,
   end_date TIMESTAMP NOT NULL,
-  format VARCHAR(10) NOT NULL CHECK (format IN ('csv', 'json')),
+  format VARCHAR(10) NOT NULL CHECK (format IN ('csv', 'json', 'pdf')),
   status VARCHAR(20) NOT NULL DEFAULT 'generating' CHECK (status IN ('generating', 'completed', 'failed')),
   file_path VARCHAR(255), -- Supabase Storage path: statements/{vendor_id}/{id}.{format}
   file_size INTEGER NOT NULL DEFAULT 0,
@@ -35,6 +35,8 @@ CREATE INDEX IF NOT EXISTS idx_statements_vendor_active ON statements(vendor_id,
 COMMENT ON TABLE statements IS 'Vendor accounting statement exports for CSV/JSON download';
 
 -- Create RLS policies
+ALTER TABLE statements ENABLE ROW LEVEL SECURITY;
+
 -- Vendors can view their own statements
 CREATE POLICY "Vendors can view own statements"
 ON statements FOR SELECT

@@ -6,6 +6,7 @@ import { initials } from '@/lib/format';
 import { EmptyState } from '@/components/ui';
 import { site } from '@/lib/i18n/site';
 import { common } from '@/lib/i18n/common';
+import { searchBusinesses } from '@/lib/search';
 import { pick, fill } from '@/lib/i18n';
 import { getLocale } from '@/lib/i18n/server';
 
@@ -33,12 +34,23 @@ export default async function VendorsPage({
     .order('gift_count', { ascending: false })
     .order('rating', { ascending: false });
 
-  if (q) {
-    query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%,area.ilike.%${q}%`);
-  }
-
   const { data: businesses } = await query;
-  const rows = businesses ?? [];
+  const rows = (businesses ?? []) as Array<{
+    id: string;
+    business_kind: string;
+    name: string;
+    slug: string | null;
+    logo_url: string | null;
+    banner_url: string | null;
+    city: string | null;
+    area: string | null;
+    rating: number | null;
+    description: string | null;
+    gift_count: number;
+  }>;
+
+  // Fuzzy, bilingual (EN/AR) search across name, description, area and city.
+  const results = (q ? searchBusinesses(rows, q) : rows) as typeof rows;
 
   return (
     <>
@@ -47,7 +59,7 @@ export default async function VendorsPage({
           <span className="eyebrow lavender">{t.eyebrow}</span>
           <h1>{t.title}</h1>
           <p className="lede">
-            {fill(rows.length === 1 ? t.ledeOne : t.ledeMany, { count: rows.length })}
+            {fill(results.length === 1 ? t.ledeOne : t.ledeMany, { count: results.length })}
           </p>
           <form className="search-bar" action="/vendors" method="get">
             <Search size={18} />
@@ -60,7 +72,7 @@ export default async function VendorsPage({
       </section>
 
       <section className="container section tight">
-        {rows.length === 0 ? (
+        {results.length === 0 ? (
           <EmptyState
             title={t.emptyTitle}
             body={t.emptyBody}
@@ -72,7 +84,7 @@ export default async function VendorsPage({
           />
         ) : (
           <div className="grid-3">
-            {rows.map((business) => {
+            {results.map((business) => {
               const productCount = Number(business.gift_count ?? 0);
               const isPartner = business.business_kind === 'partner';
               return (

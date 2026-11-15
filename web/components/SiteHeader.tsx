@@ -18,6 +18,7 @@ export function SiteHeader() {
 
   const links = [
     { href: '/vendors', label: copy.nav.vendors },
+    { href: '/ai-gift-cards', label: copy.nav.aiGiftCards },
     { href: '/corporate', label: copy.nav.business },
     { href: '/faq', label: copy.nav.howItWorks },
     { href: '/contact', label: copy.nav.contact },

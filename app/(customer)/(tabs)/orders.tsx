@@ -53,7 +53,9 @@ export default function OrdersScreen() {
             <Card key={order.id} style={styles.card}>
               <View style={styles.row}>
                 <Text style={styles.orderNumber}>
-                  {t('orders.orderNumber', { number: order.payment_reference })}
+                  {t('orders.orderNumber', {
+                    number: order.order_ref ?? order.payment_reference,
+                  })}
                 </Text>
                 <Badge label={t(`orders.${order.status}`)} tone={statusTone[order.status]} />
               </View>

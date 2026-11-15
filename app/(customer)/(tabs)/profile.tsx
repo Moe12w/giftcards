@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Avatar } from '@/src/components/Avatar';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
+import { LanguageToggle } from '@/src/components/LanguageToggle';
 import { ListRow } from '@/src/components/ListRow';
 import { PageHeader } from '@/src/components/PageHeader';
 import { Screen } from '@/src/components/Screen';
@@ -68,7 +69,11 @@ export default function ProfileScreen() {
 
   return (
     <Screen tabbed>
-      <PageHeader title={t('profile.title')} subtitle={t('profile.subtitle')} />
+      <PageHeader
+        title={t('profile.title')}
+        subtitle={t('profile.subtitle')}
+        right={<LanguageToggle />}
+      />
 
       <Card tone="pink" style={styles.identity}>
         <View style={styles.identityRow}>
@@ -175,6 +180,13 @@ export default function ProfileScreen() {
       </Card>
 
       <Card>
+        <ListRow
+          icon="gift"
+          tone="sky"
+          title={t('tutorial.howItWorks')}
+          subtitle={t('tutorial.howItWorksBody')}
+          onPress={() => router.push('/(customer)/tutorial')}
+        />
         <ListRow
           icon="shield"
           tone="teal"

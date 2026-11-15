@@ -24,6 +24,7 @@ import { SearchBar } from '@/src/components/SearchBar';
 import { CATEGORIES, offerBusinessLogo, offerBusinessName, offerIsFixedAmount, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { listActiveOffers } from '@/src/lib/data';
+import { searchOffers } from '@/src/lib/search';
 import { formatMoney } from '@/src/lib/money';
 import type { AccentTone, CategoryId, OccasionId, Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
@@ -77,16 +78,10 @@ export default function PickGiftsScreen() {
   }, [offers, params.preset]);
 
   const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return offers.filter((offer) => {
-      if (category !== 'all' && offer.category !== category) return false;
-      if (!needle) return true;
-      return [offer.title, offer.title_ar ?? '', offerBusinessName(offer), offer.location ?? '']
-        .join(' ')
-        .toLowerCase()
-        .includes(needle);
-    });
-  }, [category, offers, query]);
+    const searched = searchOffers(offers, query, i18n.language);
+    if (category === 'all') return searched;
+    return searched.filter((offer) => offer.category === category);
+  }, [category, offers, query, i18n.language]);
 
   const selectedOffers = useMemo(
     () => offers.filter((offer) => selection[offer.id] !== undefined),

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
+import { LanguageToggle } from '@/src/components/LanguageToggle';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
@@ -57,6 +58,7 @@ export default function LoginScreen() {
 
   return (
     <Screen>
+      <LanguageToggle style={styles.languageToggle} />
       <View style={styles.hero}>
         <View style={styles.blob} />
         <View style={styles.logoCircle}>
@@ -127,6 +129,7 @@ export default function LoginScreen() {
 }
 
 const styles = themedStyles(() => ({
+  languageToggle: { alignSelf: 'flex-end' },
   hero: {
     alignItems: 'center',
     gap: spacing.sm,

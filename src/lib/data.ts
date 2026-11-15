@@ -435,7 +435,31 @@ export async function listMyOrders(): Promise<Order[]> {
     .select('*')
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []) as Order[];
+
+  // Catalogue orders (including MCP-prepared ones) carry their total on the
+  // header. Older offer orders still carry amount_minor. Normalise both so the
+  // list renders the same shape it always has.
+  type OrderRow = Order & {
+    amount_minor?: number | null;
+    total_minor?: number | null;
+    payment_reference?: string | null;
+  };
+
+  return ((data ?? []) as OrderRow[]).map((row) => {
+    const total = Number(row.total_minor ?? 0);
+    const amount =
+      typeof row.amount_minor === 'number'
+        ? row.amount_minor
+        : Number.isFinite(total)
+          ? total
+          : 0;
+
+    return {
+      ...row,
+      amount_minor: amount,
+      payment_reference: row.payment_reference ?? row.order_ref ?? row.id,
+    };
+  });
 }
 
 /**

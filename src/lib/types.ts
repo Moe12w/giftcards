@@ -167,12 +167,17 @@ export interface RedemptionEntry {
 export interface Order {
   id: string;
   buyer_id: string;
-  offer_id: string;
+  /** Legacy offer orders keep this; catalogue orders use order_items. */
+  offer_id?: string | null;
   amount_minor: number;
-  commission_minor: number;
-  vendor_share_minor: number;
+  commission_minor?: number;
+  vendor_share_minor?: number;
   status: OrderStatus;
   payment_reference: string;
+  /** Human-readable reference used by the current checkout and MCP orders. */
+  order_ref?: string | null;
+  total_minor?: number;
+  currency?: string;
   created_at: string;
   gift_card_id?: string | null;
 }

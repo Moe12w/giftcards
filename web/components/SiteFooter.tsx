@@ -15,6 +15,7 @@ export function SiteFooter() {
       title: t.marketplace,
       links: [
         { href: '/vendors', label: t.vendors },
+        { href: '/ai-gift-cards', label: t.aiGiftCards },
         { href: '/download', label: t.download },
         { href: '/faq', label: t.faq },
         { href: '/corporate', label: t.corporate },
@@ -53,7 +54,7 @@ export function SiteFooter() {
           </div>
           {columns.map((column) => (
             <div key={column.title}>
-              <h4>{column.title}</h4>
+              <h3>{column.title}</h3>
               <ul>
                 {column.links.map((link) => (
                   <li key={link.href}>

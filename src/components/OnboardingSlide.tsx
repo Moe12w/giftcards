@@ -18,6 +18,13 @@ interface OnboardingSlideProps {
   total: number;
   nextLabel: string;
   skipLabel: string;
+  /** Optional aside shown under the body, used by the customer tour. */
+  tip?: string;
+  /** Optional back control, used when the slide is part of a longer tour. */
+  onBack?: () => void;
+  backLabel?: string;
+  /** Lets long copy scroll instead of squeezing the illustration. */
+  scroll?: boolean;
   onNext: () => void;
   onSkip: () => void;
 }
@@ -47,11 +54,15 @@ export function OnboardingSlide({
   total,
   nextLabel,
   skipLabel,
+  tip,
+  onBack,
+  backLabel,
+  scroll = false,
   onNext,
   onSkip,
 }: OnboardingSlideProps) {
   return (
-    <Screen scroll={false} contentStyle={styles.content}>
+    <Screen scroll={scroll} contentStyle={scroll ? styles.scrollContent : styles.content}>
       <View style={styles.topRow}>
         <Text style={styles.step}>
           {step + 1} / {total}
@@ -61,7 +72,7 @@ export function OnboardingSlide({
         </Pressable>
       </View>
 
-      <View style={styles.illustration}>
+      <View style={[styles.illustration, scroll && styles.illustrationScroll]}>
         <View style={[styles.blob, { backgroundColor: blobs[tone] }]} />
         <View style={[styles.circle, { backgroundColor: backgrounds[tone] }]}>
           <Glyph name={icon} size={54} />
@@ -74,11 +85,26 @@ export function OnboardingSlide({
       <View style={styles.copy}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.body}>{body}</Text>
+        {tip ? (
+          <View style={styles.tipBox}>
+            <Text style={styles.tip}>{tip}</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.footer}>
         <ProgressDots count={total} active={step} />
-        <Button label={nextLabel} onPress={onNext} />
+        <View style={styles.actions}>
+          {onBack ? (
+            <Button
+              label={backLabel ?? 'Back'}
+              variant="secondary"
+              onPress={onBack}
+              style={styles.action}
+            />
+          ) : null}
+          <Button label={nextLabel} onPress={onNext} style={styles.action} />
+        </View>
       </View>
     </Screen>
   );
@@ -87,6 +113,10 @@ export function OnboardingSlide({
 const styles = themedStyles(() => ({
   content: {
     flex: 1,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xl,
+  },
+  scrollContent: {
     paddingTop: spacing.md,
     paddingBottom: spacing.xl,
   },
@@ -110,6 +140,11 @@ const styles = themedStyles(() => ({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  illustrationScroll: {
+    flex: 0,
+    minHeight: 270,
+    marginVertical: spacing.md,
   },
   blob: {
     position: 'absolute',
@@ -149,5 +184,23 @@ const styles = themedStyles(() => ({
     color: colors.textMuted,
     lineHeight: 22,
   },
-  footer: { gap: spacing.lg },
+  tipBox: {
+    padding: spacing.sm + 2,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: colors.borderSoft,
+    backgroundColor: colors.surfaceAlt,
+  },
+  tip: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.sm,
+    color: colors.text,
+    lineHeight: 19,
+  },
+  footer: { gap: spacing.sm },
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  action: { flex: 1 },
 }));

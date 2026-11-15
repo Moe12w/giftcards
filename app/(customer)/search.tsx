@@ -9,9 +9,9 @@ import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
 import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
+import { searchOffers } from '@/src/lib/search';
 import { listActiveOffers } from '@/src/lib/data';
 import { useThemeRefresh } from '@/src/lib/theme';
-import { offerBusinessName, offerTitle } from '@/src/lib/catalog';
 import type { Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
@@ -34,22 +34,10 @@ export default function SearchScreen() {
     };
   }, []);
 
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return offers;
-    return offers.filter((offer) => {
-      const haystack = [
-        offer.title,
-        offer.title_ar ?? '',
-        offerBusinessName(offer),
-        offer.category ?? '',
-        offer.location ?? '',
-      ]
-        .join(' ')
-        .toLowerCase();
-      return haystack.includes(q);
-    });
-  }, [offers, query]);
+  const results = useMemo(
+    () => searchOffers(offers, query, i18n.language),
+    [offers, query, i18n.language],
+  );
 
   return (
     <Screen>
