@@ -17,6 +17,8 @@ export interface SearchField {
 export function normalizeSearchText(value: string | null | undefined): string {
   if (!value) return '';
   return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[\u0640\u064B-\u065F\u0670]/g, '')
     .replace(/[^a-z0-9\u0600-\u08FF\s]/g, ' ')
@@ -37,11 +39,25 @@ export function tokenizeSearch(value: string | null | undefined): string[] {
  * (covers small typos), partial coverage scores lower still.
  */
 export function fuzzyTokenScore(queryToken: string, targetToken: string): number {
-  const q = queryToken.trim();
-  const t = targetToken.trim();
+  const q = normalizeSearchText(queryToken);
+  const t = normalizeSearchText(targetToken);
   if (!q || !t) return 0;
   if (q === t) return 1;
-  if (t.includes(q) || q.includes(t)) return 0.9;
+
+  // Plural / inflection boost: target is query plus a common suffix (or the
+  // reverse). Keeps "spa"->"spas" and "coffee"->"coffees" without letting
+  // unrelated words that merely start with the query through.
+  const INFLECTION_SUFFIXES = ['', 's', 'es', 'ed', 'ing', 'er', 'est', 'ly', 'y', 'ies', 'd'];
+  if (q.length >= 3 && t.startsWith(q)) {
+    const suffix = t.slice(q.length);
+    if (INFLECTION_SUFFIXES.includes(suffix)) return 0.9;
+  }
+  if (t.length >= 3 && q.startsWith(t)) {
+    const suffix = q.slice(t.length);
+    if (INFLECTION_SUFFIXES.includes(suffix)) return 0.9;
+  }
+
+  // Typo tolerance via subsequence matching.
   let qi = 0;
   let ti = 0;
   let matched = 0;
@@ -53,8 +69,26 @@ export function fuzzyTokenScore(queryToken: string, targetToken: string): number
     ti += 1;
   }
   const coverage = matched / q.length;
-  if (coverage <= 0) return 0;
+  if (coverage < 0.6) return 0;
+
+  const isPrefix = t.startsWith(q) || q.startsWith(t);
+  const suffix = isPrefix
+    ? t.length > q.length
+      ? t.slice(q.length)
+      : q.slice(t.length)
+    : '';
+  const allowedSuffix =
+    INFLECTION_SUFFIXES.includes(suffix) ||
+    (suffix.length >= 1 && suffix.length <= 2 && /^[aeiouy]+$/i.test(suffix));
+  if (isPrefix && suffix.length > 0 && !allowedSuffix) return 0;
+  const smallDiff = Math.abs(t.length - q.length) <= 2 && allowedSuffix;
+  if (!(isPrefix && smallDiff)) {
+    if (coverage < 0.85) return 0;
+  }
+
   const ratio = Math.min(q.length, t.length) / Math.max(q.length, t.length);
+  if (ratio < 0.7) return 0;
+
   const score = 0.65 * coverage * (0.7 + 0.3 * ratio);
   return Math.max(0.15, Math.min(0.89, score));
 }
@@ -70,8 +104,12 @@ export function searchScore(query: string, fields: SearchField[]): number {
   for (const token of tokens) {
     let best = 0;
     for (const field of fields) {
-      const score = field.weight * fuzzyTokenScore(token, field.text);
-      if (score > best) best = score;
+      const targetTokens = tokenizeSearch(field.text);
+      const candidates = targetTokens.length > 0 ? targetTokens : [normalizeSearchText(field.text)];
+      for (const targetToken of candidates) {
+        const score = field.weight * fuzzyTokenScore(token, targetToken);
+        if (score > best) best = score;
+      }
     }
     if (best <= 0) return 0;
     total += best;
