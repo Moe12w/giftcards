@@ -25,6 +25,11 @@ export const maxDuration = 60;
  * Point a scheduler at GET or POST /api/cron. `web/vercel.json` registers it
  * with Vercel; the same URL works from cron-job.org, GitHub Actions or a
  * Supabase scheduled function.
+ *
+ * Vercel's Hobby plan only permits one cron run per day, so `web/vercel.json`
+ * uses `0 0 * * *`. If this work needs to run hourly, keep the Vercel config
+ * daily and point an external scheduler (cron-job.org, GitHub Actions or a
+ * Supabase scheduled function) at this endpoint instead.
  */
 async function run(request: Request) {
   const expected = cronSecret();
