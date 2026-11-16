@@ -110,7 +110,7 @@ webhooks and refunds with tests.
    `src/lib/data.ts`. It deletes the auth user and personal rows, keeps orders
    and vouchers as financial records with the buyer link cleared, and blocks
    admin/vendor/enterprise/business accounts with a "contact support" message.
-   Apply `0109` along with `0108`.
+   Both `0108` and `0109` are applied on the production project.
 4. **Scheduled gifts** — customers choose a delivery date, not a time, so one
    daily run is enough. `web/vercel.json` now runs `/api/cron` at `5 0 * * *`
    (00:05 UTC, 03:05 in Qatar — the same date) and the route/docs describe that
@@ -140,11 +140,14 @@ webhooks and refunds with tests.
    - remove `0040_universal_test_login.sql` from the migration chain (or neuter
      it) and keep demo logins in `supabase/seed.sql` only, which is never pushed;
    - rotate any credentials that shared that password.
-2. **Apply migrations `0108_tenant_isolation_hardening.sql` and
-   `0109_account_deletion.sql`.** `0108` is committed but not yet applied; it
-   closes cross-tenant holes in the advertising partner RPCs, voucher
+2. **Migrations applied — verify in the app.** `0108_tenant_isolation_hardening.sql`
+   (cross-tenant holes in the advertising partner RPCs, voucher
    lookup/reconciliation, business-account self-approval, buyer writes on bulk
-   orders, and the `statements` policy. `0109` adds real account deletion.
+   orders and the `statements` policy) and `0109_account_deletion.sql` (real
+   account deletion) are both applied on the production project, and the server
+   migration history lists `0109`. What remains is a check on a real device:
+   delete a customer account from Account → Delete account, then confirm that
+   login no longer works while the vendor still sees the past order.
 3. **Webhook fails open** without `MYFATOORAH_WEBHOOK_SECRET` (see §1). Make the
    secret required and return 500 when missing.
 4. **Card data in the app** (see §1) — remove the PAN form.
@@ -187,7 +190,8 @@ deletion path from §4.
 ## 8. Suggested order of work
 
 1. Clean up: remove the universal test-login migration and delete the account in
-   production; apply `0108`; delete `audit-tmp.cjs`.
+   production; confirm migrations `0108`/`0109` on a real device (already
+   applied); delete `audit-tmp.cjs`.
 2. Store setup: bundle ids, EAS project, `eas.json`, then a TestFlight/internal
    build.
 3. Payments: `order_items` creation → MyFatoorah split with commission → return
