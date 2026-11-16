@@ -1,5 +1,6 @@
 // src/lib/time.ts
 // Small date helpers shared by demo data and screens.
+import { toLatinDigits } from './digits';
 
 export function daysFromNow(days: number): string {
   return new Date(Date.now() + days * 86_400_000).toISOString();
@@ -7,19 +8,23 @@ export function daysFromNow(days: number): string {
 
 export function formatDate(iso: string | null | undefined, locale: string): string {
   if (!iso) return '';
-  return new Date(iso).toLocaleDateString(locale === 'ar' ? 'ar-QA' : 'en-QA', {
-    numberingSystem: 'latn',
-  });
+  return toLatinDigits(
+    new Date(iso).toLocaleDateString(locale === 'ar' ? 'ar-QA' : 'en-QA', {
+      numberingSystem: 'latn',
+    }),
+  );
 }
 
 /** Date and time, used by support threads where both matter. */
 export function formatDateTime(iso: string | null | undefined, locale: string): string {
   if (!iso) return '';
-  return new Date(iso).toLocaleString(locale === 'ar' ? 'ar-QA' : 'en-QA', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    numberingSystem: 'latn',
-  });
+  return toLatinDigits(
+    new Date(iso).toLocaleString(locale === 'ar' ? 'ar-QA' : 'en-QA', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      numberingSystem: 'latn',
+    }),
+  );
 }
 
 /** Compact relative timestamp used by the basket activity feed. */

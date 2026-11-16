@@ -1,6 +1,7 @@
 // src/lib/money.ts
 // Money is always stored as integers in minor units (fils). QAR 1.00 = 100 fils.
 // Never store or compute money as decimals.
+import { toLatinDigits } from './digits';
 
 export const CURRENCY = 'QAR';
 export const MINOR_UNITS_PER_UNIT = 100;
@@ -20,7 +21,7 @@ export function toMajorUnits(minor: number): number {
   return minor / MINOR_UNITS_PER_UNIT;
 }
 
-/** Format minor units as "QAR 1,234.50" (English) or "١٬٢٣٤٫٥٠ ر.ق" (Arabic). */
+/** Format minor units as "QAR 1,234.50" or "1,234.50 ر.ق" — always Latin digits. */
 export function formatMoney(minor: number, locale: 'en' | 'ar' = 'en'): string {
   assertInteger(minor);
   const major = Math.abs(minor) / MINOR_UNITS_PER_UNIT;
@@ -32,14 +33,14 @@ export function formatMoney(minor: number, locale: 'en' | 'ar' = 'en'): string {
       maximumFractionDigits: 2,
       numberingSystem: 'latn',
     }).format(major);
-    return `${sign}${formatted} ر.ق`;
+    return `${sign}${toLatinDigits(formatted)} ر.ق`;
   }
 
   const formatted = new Intl.NumberFormat('en-QA', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(major);
-  return `${sign}QAR ${formatted}`;
+  return `${sign}QAR ${toLatinDigits(formatted)}`;
 }
 
 /** Split a minor-unit amount into an integer part and two-digit decimal part. */

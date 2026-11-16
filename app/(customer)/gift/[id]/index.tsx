@@ -13,6 +13,7 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { ListRow } from '@/src/components/ListRow';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
+import { formatDate } from '@/src/lib/time';
 import {
   offerBusinessId,
   offerBusinessLogo,
@@ -179,12 +180,7 @@ export default function GiftDetailScreen() {
         <Badge
           label={
             offer.valid_until
-              ? t('gift.validUntil', {
-                  date: new Date(offer.valid_until).toLocaleDateString(
-                    i18n.language === 'ar' ? 'ar-QA' : 'en-QA',
-                    { numberingSystem: 'latn' },
-                  ),
-                })
+              ? t('gift.validUntil', { date: formatDate(offer.valid_until, i18n.language) })
               : t('gift.noExpiry')
           }
           tone="success"

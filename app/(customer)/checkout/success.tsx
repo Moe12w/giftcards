@@ -8,6 +8,7 @@ import { Card } from '@/src/components/Card';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { useGiftDraft } from '@/src/lib/gift-draft';
+import { formatDate } from '@/src/lib/time';
 import { formatMoney } from '@/src/lib/money';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { isUsablePhone, shareOnWhatsapp } from '@/src/lib/whatsapp';
@@ -55,9 +56,7 @@ export default function CheckoutSuccessScreen() {
         <Text style={styles.body}>
           {scheduled && draft.deliveryDate
             ? t('checkout.scheduledBody', {
-                date: new Date(draft.deliveryDate).toLocaleDateString(
-                  i18n.language === 'ar' ? 'ar-QA' : 'en-QA',
-                ),
+                date: formatDate(draft.deliveryDate, i18n.language),
               })
             : wantsWhatsapp
               ? t('checkout.whatsappSuccessBody', {

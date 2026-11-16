@@ -8,6 +8,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { listMyOrders } from '@/src/lib/data';
+import { formatDate } from '@/src/lib/time';
 import { useThemeRefresh } from '@/src/lib/theme';
 import type { Order, OrderStatus } from '@/src/lib/types';
 import { colors, fontSizes, spacing, themedStyles } from '@/src/theme';
@@ -62,9 +63,7 @@ export default function OrdersScreen() {
               <View style={styles.row}>
                 <Text style={styles.muted}>
                   {t('orders.placedOn', {
-                    date: new Date(order.created_at).toLocaleDateString(
-                      i18n.language === 'ar' ? 'ar-QA' : 'en-QA',
-                    ),
+                    date: formatDate(order.created_at, i18n.language),
                   })}
                 </Text>
                 <Money minor={order.amount_minor} style={styles.total} />

@@ -119,7 +119,11 @@ export default function CardDetailScreen() {
           <>
             <Text style={styles.balanceLabel}>{t('sessions.remaining')}</Text>
             <Text style={styles.sessionCount}>
-              {t('sessions.leftOf', { remaining, total: card.total_sessions ?? 1 })}
+              {t('sessions.leftOf', {
+                // Strings keep the digits Latin even where Intl is ignored.
+                remaining: String(remaining),
+                total: String(card.total_sessions ?? 1),
+              })}
             </Text>
             <SessionMeter
               remaining={remaining}
@@ -136,9 +140,7 @@ export default function CardDetailScreen() {
 
         <Text style={styles.expiry}>
           {card.expires_at
-            ? t('cards.expires', {
-                date: new Date(card.expires_at).toLocaleDateString(lang === 'ar' ? 'ar-QA' : 'en-QA'),
-              })
+            ? t('cards.expires', { date: formatDate(card.expires_at, lang) })
             : t('cards.noExpiry')}
         </Text>
       </Card>

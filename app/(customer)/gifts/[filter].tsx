@@ -10,6 +10,7 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { Screen } from '@/src/components/Screen';
 import { useCards } from '@/src/lib/cards';
+import { formatDate } from '@/src/lib/time';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { isSessionCard } from '@/src/lib/sessions';
 import type { CardStatus, GiftCard } from '@/src/lib/types';
@@ -87,11 +88,7 @@ export default function GiftFilterScreen() {
               message={card.message ?? undefined}
               meta={
                 card.expires_at
-                  ? t('gifts.expiresOn', {
-                      date: new Date(card.expires_at).toLocaleDateString(
-                        lang === 'ar' ? 'ar-QA' : 'en-QA',
-                      ),
-                    })
+                  ? t('gifts.expiresOn', { date: formatDate(card.expires_at, lang) })
                   : t('cards.noExpiry')
               }
               badge={{ label: t(`cards.${card.status}`), tone: statusTone[card.status] }}

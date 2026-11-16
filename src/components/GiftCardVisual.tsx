@@ -79,8 +79,9 @@ export function GiftCardVisual({
           <Text style={styles.balanceLabel}>{t('sessions.remaining')}</Text>
           <Text style={styles.sessionCount}>
             {t('sessions.leftOf', {
-              remaining: sessionsRemaining ?? sessionsTotal ?? 0,
-              total: sessionsTotal ?? 0,
+              // Strings, so the digits stay Latin on every engine.
+              remaining: String(sessionsRemaining ?? sessionsTotal ?? 0),
+              total: String(sessionsTotal ?? 0),
             })}
           </Text>
         </View>

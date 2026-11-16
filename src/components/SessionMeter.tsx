@@ -40,7 +40,7 @@ export function SessionMeter({
       <View style={styles.headerRow}>
         <Text style={styles.label}>{t('sessions.remaining')}</Text>
         <Text style={styles.count}>
-          {t('sessions.leftOf', { remaining, total: safeTotal })}
+          {t('sessions.leftOf', { remaining: String(remaining), total: String(safeTotal) })}
         </Text>
       </View>
       <View style={styles.track}>

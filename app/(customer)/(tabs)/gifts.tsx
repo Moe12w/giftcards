@@ -85,9 +85,7 @@ export default function GiftsScreen() {
           isWaiting && card.scheduled_for
             ? t('gifts.scheduledFor', { date: formatDate(card.scheduled_for, lang) })
             : card.expires_at
-              ? t('gifts.expiresOn', {
-                  date: new Date(card.expires_at).toLocaleDateString(lang === 'ar' ? 'ar-QA' : 'en-QA'),
-                })
+              ? t('gifts.expiresOn', { date: formatDate(card.expires_at, lang) })
               : t('cards.noExpiry')
         }
         badge={

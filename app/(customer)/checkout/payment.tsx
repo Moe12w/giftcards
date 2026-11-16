@@ -15,6 +15,7 @@ import { useThemeRefresh } from '@/src/lib/theme';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { formatMoney } from '@/src/lib/money';
+import { formatDate } from '@/src/lib/time';
 import type { Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
@@ -121,9 +122,7 @@ export default function PaymentScreen() {
           label={t('send.deliveryDate')}
           value={
             draft.deliveryDate
-              ? new Date(draft.deliveryDate).toLocaleDateString(
-                  i18n.language === 'ar' ? 'ar-QA' : 'en-QA',
-                )
+              ? formatDate(draft.deliveryDate, i18n.language)
               : t('send.deliveryNow')
           }
         />
