@@ -66,6 +66,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    {
+      url: `${SITE_URL}/legal`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
+    ...(['client', 'vendor', 'enterprise', 'bulk'] as const).flatMap((audience) => [
+      {
+        url: `${SITE_URL}/legal/${audience}/terms`,
+        lastModified: now,
+        changeFrequency: 'yearly' as const,
+        priority: 0.3,
+      },
+      {
+        url: `${SITE_URL}/legal/${audience}/privacy`,
+        lastModified: now,
+        changeFrequency: 'yearly' as const,
+        priority: 0.3,
+      },
+    ]),
   ];
 
   // Public business pages are the long tail of the marketplace. The anon key

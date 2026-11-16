@@ -1,0 +1,741 @@
+{
+  "updated": "16 November 2026",
+  "company": {
+    "legalName": "Nexgen Software Publishing Solution",
+    "brand": "Giftly",
+    "cr": "238473",
+    "address": "Doha, State of Qatar",
+    "legalEmail": "legal@giftly.qa",
+    "privacyEmail": "privacy@giftly.qa",
+    "supportEmail": "hello@giftly.qa"
+  },
+  "ui": {
+    "legalCentre": "Legal centre",
+    "legalCentreLede": "The terms and privacy notices that apply to each side of the Giftly marketplace.",
+    "terms": "Terms & Conditions",
+    "privacy": "Privacy Policy",
+    "lastUpdated": "Last updated",
+    "version": "Version 1.0",
+    "onThisPage": "On this page",
+    "contactLegal": "Contact the legal team",
+    "contactPrivacy": "Contact the privacy team",
+    "readTerms": "Read the terms",
+    "readPrivacy": "Read the privacy policy",
+    "backToLegal": "Back to the legal centre",
+    "audience": "This document applies to",
+    "important": "Important",
+    "allDocuments": "All legal documents"
+  },
+  "audiences": {
+    "client": {
+      "label": "Customers",
+      "short": "People who buy, send, receive or hold a Giftly gift card.",
+      "termsTitle": "Customer Terms & Conditions",
+      "privacyTitle": "Customer Privacy Policy"
+    },
+    "vendor": {
+      "label": "Vendors",
+      "short": "Businesses that list gifts and remain the issuer of their own closed-loop gift cards.",
+      "termsTitle": "Vendor Terms & Conditions",
+      "privacyTitle": "Vendor Privacy Policy"
+    },
+    "enterprise": {
+      "label": "Enterprise clients",
+      "short": "Organisations that import their own codes or run a corporate reward programme.",
+      "termsTitle": "Enterprise Client Terms & Conditions",
+      "privacyTitle": "Enterprise Client Privacy Policy"
+    },
+    "bulk": {
+      "label": "Bulk buyers",
+      "short": "Approved business buyers that purchase gift cards in volume for their own use.",
+      "termsTitle": "Bulk Buyer Terms & Conditions",
+      "privacyTitle": "Bulk Buyer Privacy Policy"
+    }
+  },
+  "common": {
+    "terms": {
+      "title": "Terms & Conditions",
+      "intro": [
+        "These Terms & Conditions (the Terms) are a legal agreement between you and Nexgen Software Publishing Solution, a company registered in the State of Qatar under commercial registration number 238473 and operating the Giftly brand and platform (Nexgen, we, us or our).",
+        "They govern your access to and use of the Giftly website, mobile application, business dashboards, application programming interfaces and related services (together, the Platform). By creating an account, browsing, listing, buying, sending, importing, allocating or redeeming a gift card, or otherwise using the Platform, you agree to these Terms. If you do not agree, you must not use the Platform."
+      ],
+      "opening": [
+        {
+          "h": "1. About Giftly and these Terms",
+          "p": [
+            "Giftly is a technology marketplace. It allows independent businesses to describe and list closed-loop gift cards, and allows customers, enterprise clients and approved bulk buyers to discover, purchase, send, store, allocate and redeem those gift cards in a single digital experience.",
+            "These Terms apply to everyone who uses the Platform. Some users also accept a role-specific schedule: the Vendor Schedule, the Enterprise Client Schedule or the Bulk Buyer Schedule. A role-specific schedule forms part of these Terms and prevails over the general sections to the extent of any conflict for that role. Customer-specific provisions are set out in the Customer Schedule.",
+            "The Platform is operated from Qatar. We may offer parts of the Platform in English and Arabic. Both language versions are intended to have the same meaning. To the extent Qatari law requires consumer information in Arabic, the Arabic version prevails for that information. Otherwise, the English version prevails to the extent permitted by applicable law."
+          ]
+        },
+        {
+          "h": "2. Definitions",
+          "p": [
+            "In these Terms, the following words have the meanings below unless the context requires otherwise."
+          ],
+          "b": [
+            "Platform: the Giftly website, mobile application, dashboards, APIs, checkout, delivery tools, wallet integrations and related services.",
+            "Customer: a person who buys, sends, receives or holds a gift card for personal or family use, and who is not acting for a trade, business or profession.",
+            "Vendor: a business that lists gifts on the Platform and issues the gift card or code that is sold.",
+            "Enterprise Client: an organisation that uses the enterprise portal to import its own codes, run a reward programme, or allocate gift cards to employees, customers or other recipients.",
+            "Bulk Buyer: an approved business account that buys gift cards in volume for its own business use.",
+            "Issuer: the legal person that issues, and is responsible for honouring, a gift card. For vendor-listed cards, the Issuer is the Vendor. For enterprise-imported codes, the Issuer is the Enterprise Client or the third party that authorised the codes.",
+            "Gift Card: a closed-loop, prepaid instrument or digital code that may be redeemed only with the Issuer for the goods or services described in the listing or programme, and that cannot be redeemed for cash.",
+            "Closed-loop: a gift card usable only with the Issuer, for a limited range of goods or services, and not usable to withdraw cash or to make payments through a general-purpose payment network.",
+            "Code: the alphanumeric, QR, barcode, link or other credential that identifies a Gift Card and enables redemption.",
+            "Order: a request to purchase, import, allocate or issue one or more Gift Cards through the Platform.",
+            "Payment Processor: a bank, licensed payment service provider or other regulated payment intermediary that processes a payment on behalf of a Vendor, Enterprise Client or Bulk Buyer.",
+            "Content: text, images, logos, prices, descriptions, gift card terms, codes, data and other material uploaded to or displayed on the Platform.",
+            "Business Day: a day other than Friday, Saturday or an official public holiday in Qatar."
+          ]
+        },
+        {
+          "h": "3. Our role: a marketplace, not an issuer or payment provider",
+          "p": [
+            "Nexgen operates a technology marketplace. Nexgen is not the Issuer of any Vendor gift card, is not the merchant of record for the underlying goods or services, and is not a party to the contract between a Customer and a Vendor, or between an Enterprise Client or Bulk Buyer and an Issuer.",
+            "Nexgen does not issue e-money, operate a payment account, acquire merchant transactions, hold customer funds, act as escrow, trustee or fiduciary, or settle funds between buyers and sellers. All payments are processed by a Payment Processor. Each Vendor, Enterprise Client or Bulk Buyer contracts directly with its Payment Processor and maintains its own merchant or business account with that processor. Nexgen never receives, holds, controls or settles the purchase price.",
+            "Nexgen provides listing, discovery, checkout orchestration, delivery, wallet presentation, code storage, reporting and support tools. Nexgen does not control the Issuer's business, does not guarantee that an Issuer will remain solvent or willing to honour a Gift Card, and does not verify every statement an Issuer makes beyond the checks described in these Terms.",
+            "Any statement on the Platform that a gift is 'sold by Giftly' or similar is a marketing shorthand. It does not make Nexgen the seller, Issuer, merchant of record or payment provider. The identity of the Issuer is shown on the listing, order confirmation, gift card and redemption page."
+          ]
+        },
+        {
+          "h": "4. Eligibility, accounts and business verification",
+          "p": [
+            "You must be at least 18 years old and have legal capacity to enter into a binding contract. If you use the Platform for an organisation, you confirm that you are authorised to bind that organisation and that the organisation accepts these Terms.",
+            "You must provide accurate, current and complete information, keep it up to date, and use only accounts that belong to you or your organisation. You are responsible for protecting your login credentials, devices and one-time codes, and for all activity under your account. You must notify us immediately at hello@giftly.qa if you suspect unauthorised access.",
+            "Business users must complete our onboarding and know-your-customer checks, including providing a valid commercial registration, trade licence, tax information, beneficial ownership information, authorised signatory details and any other document we reasonably request. We may verify information with public registers, Payment Processors, banks and other service providers. Approval is discretionary and may be refused, limited, suspended or withdrawn.",
+            "We may refuse, suspend or close an account where we suspect fraud, sanctions, money laundering, terrorist financing, unlawful conduct, misrepresentation, a risk to customers, or a breach of these Terms. We may also do so where required by law, a regulator, a Payment Processor or a court."
+          ]
+        },
+        {
+          "h": "5. Closed-loop gift cards and redemption rules",
+          "p": [
+            "Every Gift Card on the Platform is a closed-loop gift card. It is redeemable only with the Issuer named on the card, only for the goods or services described in the listing or programme, and only during the validity period stated by the Issuer. It is not a general-purpose prepaid card, payment account, e-wallet, deposit, security, investment or financial instrument.",
+            "Gift Cards cannot be redeemed for cash, cash equivalents, cryptocurrencies, foreign currency, gambling chips, tobacco, alcohol where prohibited, or any unlawful product or service. No cash change or cash refund is given for an unused balance. Where the Issuer permits partial redemption, the remaining balance stays on the Gift Card until it is used or expires. Any balance remaining after expiry is dealt with under the Issuer's terms and applicable Qatari law.",
+            "Unless the Issuer expressly permits it, a Gift Card is not transferable, resaleable or redeemable by a person other than the holder. The holder is responsible for keeping the Code confidential. Lost, stolen, shared, copied or fraudulently used Codes may not be replaceable, and Nexgen is not responsible for replacing them. Replacement, suspension and balance protection are matters for the Issuer and are subject to its terms and the law.",
+            "The Issuer may set reasonable rules about bookings, availability, age restrictions, identification, geographic limits, exclusions and combination with other offers. Those rules must be disclosed before purchase and must not unfairly restrict rights that cannot be excluded under Qatari law."
+          ]
+        },
+        {
+          "h": "6. Prices, payment and the Payment Processor",
+          "p": [
+            "Prices are shown in Qatari Riyals (QAR) and include applicable taxes unless stated otherwise. The total price, any platform or service fee, and any delivery charge are shown before you confirm an Order. We may correct obvious pricing errors before an Order is accepted.",
+            "Payments are processed by a third-party Payment Processor. By submitting payment details, you authorise the Payment Processor to charge the amount shown, using the payment method you select. You confirm that you are authorised to use that payment method. Strong customer authentication, 3-D Secure or similar checks may be required.",
+            "Nexgen does not receive, hold, control or settle your funds. The Vendor, Enterprise Client or Bulk Buyer maintains its own account with the Payment Processor and is responsible for its own payment obligations, refunds, chargebacks, processor fees and taxes. Nexgen is not responsible for a Payment Processor's acts, omissions, decisions, delays, holds, declines, currency conversion, fraud reviews or outages.",
+            "If a payment is reversed, charged back, blocked or suspected of fraud, we may suspend the Order or account, cancel unused Codes, withhold platform services and share relevant records with the Payment Processor, banks, Issuers and authorities. You must cooperate with any verification request.",
+            "Refunds are processed through the original payment method where possible. The time taken depends on the Payment Processor, card scheme and issuing bank. Nexgen does not control those timelines and does not hold the funds being refunded."
+          ]
+        },
+        {
+          "h": "7. Orders, delivery, cancellation and refunds",
+          "p": [
+            "An Order is an offer to purchase. It is accepted when the Issuer or the Platform, acting on the Issuer's instructions, confirms issuance or delivery. We may reject or cancel an Order where a Gift Card is unavailable, a price or listing is wrong, a payment fails, fraud is suspected, or the law requires it.",
+            "Gift Cards are delivered digitally by email, SMS, shareable link, in-app wallet or another method shown at checkout. Delivery is complete when the Code is sent to the contact details you provided or made available in your account. You are responsible for checking the recipient details before confirming the Order. Risk in the Code passes to you or the recipient on delivery.",
+            "You may cancel an Order before a Code is issued or delivered. Once a Code has been issued or delivered, cancellation, return, exchange and refund are subject to the Issuer's terms and applicable Qatari law, including mandatory consumer rights. A Gift Card that has been redeemed, shared, copied or partly used will normally not be refundable.",
+            "If a Gift Card is not delivered, is defective, cannot be redeemed, or the Issuer refuses to honour it, contact the Issuer first and then contact us at hello@giftly.qa. We may help investigate and may, where appropriate, facilitate a replacement or refund from the Issuer. We do not become the Issuer or merchant of record by helping. Nothing in this section limits a consumer's statutory rights."
+          ]
+        },
+        {
+          "h": "8. Acceptable use",
+          "p": [
+            "You must use the Platform lawfully, honestly and only for its intended purpose. You must not:"
+          ],
+          "b": [
+            "commit fraud, money laundering, terrorist financing, sanctions evasion or any other financial crime;",
+            "buy, sell, transfer or use Gift Cards for unlawful goods or services, or in breach of an Issuer's lawful restrictions;",
+            "resell Gift Cards as open-loop payment instruments, exchange them for cash, or present them as cash equivalents;",
+            "use stolen, unauthorised or expired payment methods, or impersonate another person or organisation;",
+            "scrape, crawl, harvest, reverse engineer, decompile, bypass security, probe or overload the Platform;",
+            "upload malware, unlawful, misleading, defamatory, infringing or harmful Content;",
+            "send spam, phishing, fake promotions or unsolicited marketing;",
+            "circumvent fees, redemption controls, region restrictions or fraud checks; or",
+            "use the Platform in a way that harms Nexgen, an Issuer, another user, a Payment Processor or the public."
+          ]
+        },
+        {
+          "h": "9. Content and intellectual property",
+          "p": [
+            "The Platform, including its software, design, text, graphics, logos, databases and trade marks, is owned by Nexgen or its licensors and is protected by Qatari and international intellectual property laws. You receive a limited, revocable, non-exclusive, non-transferable licence to use the Platform for its intended purpose. You may not copy, modify, distribute, sell, sublicense or create derivative works without our written consent.",
+            "If you upload Content, you grant Nexgen a worldwide, non-exclusive, royalty-free licence to host, store, reproduce, adapt, translate, publish and display that Content as needed to operate, promote and improve the Platform. You represent that you own or have all rights needed to grant that licence and that the Content is accurate and lawful.",
+            "Vendors and Enterprise Clients are responsible for the accuracy of their listings, prices, card terms, expiry dates, redemption instructions, images and codes. We may edit, reject, remove or translate Content that breaches these Terms, is misleading, unlawful or harmful, or is required to be removed by law.",
+            "If you send us feedback, you grant us a perpetual, royalty-free licence to use it without obligation to you. Nothing in these Terms transfers ownership of your pre-existing intellectual property."
+          ]
+        },
+        {
+          "h": "10. Third-party services",
+          "p": [
+            "The Platform relies on third-party services, including Payment Processors, cloud hosting, databases, email and SMS providers, analytics, map providers, wallet providers and app stores. Those services have their own terms and privacy policies. We do not control them and are not responsible for their acts, omissions, availability, security or content.",
+            "Links to third-party websites or services are provided for convenience. A link does not mean we endorse or control the destination. You use third-party services at your own risk and should read their terms."
+          ]
+        },
+        {
+          "h": "11. Availability and disclaimers",
+          "p": [
+            "The Platform is provided on an 'as is' and 'as available' basis. To the maximum extent permitted by law, we disclaim all warranties, whether express, implied or statutory, including warranties of merchantability, fitness for a particular purpose, accuracy, availability, security and non-infringement.",
+            "We do not warrant that the Platform will be uninterrupted, error-free, secure or free of viruses; that listings, prices, availability, expiry dates or codes are accurate or complete; that an Issuer will honour a Gift Card; or that a Gift Card is suitable for your purpose. We may suspend, change or discontinue any part of the Platform for maintenance, security, legal or business reasons.",
+            "Nothing on the Platform is financial, investment, legal, tax, medical or regulatory advice. You should obtain independent advice before making a decision that depends on such matters."
+          ]
+        },
+        {
+          "h": "12. Limitation of liability",
+          "p": [
+            "To the maximum extent permitted by Qatari law, Nexgen and its directors, officers, employees, agents and suppliers will not be liable for any indirect, incidental, special, consequential, punitive or exemplary loss, or for loss of profit, revenue, business, goodwill, opportunity, data or anticipated savings, however caused and whether in contract, tort, negligence, statute or otherwise.",
+            "To the maximum extent permitted by law, Nexgen's total aggregate liability arising out of or in connection with the Platform or these Terms will not exceed the greater of (a) QAR 100, or (b) the platform fees actually received by Nexgen for the specific transaction giving rise to the claim during the 12 months before the claim. Amounts paid to an Issuer, Payment Processor or other third party are not platform fees and are excluded from this cap.",
+            "Nexgen is not liable for the acts or omissions of an Issuer, including a failure or refusal to honour a Gift Card, insolvency, closure, change of ownership, redemption disputes, card expiry, lost or stolen Codes, or the quality, safety or legality of the underlying goods or services. Nexgen is not liable for a Payment Processor's acts, omissions, delays, holds, declines, chargebacks or outages.",
+            "Nothing in these Terms excludes or limits liability for fraud, wilful misconduct, death or personal injury caused by negligence, or any liability that cannot lawfully be excluded or limited under Qatari law. Nothing in these Terms excludes or limits mandatory rights of a consumer under Law No. 8 of 2008 on Consumer Protection or other applicable law."
+          ]
+        },
+        {
+          "h": "13. Indemnity",
+          "p": [
+            "To the maximum extent permitted by law, you agree to indemnify, defend and hold harmless Nexgen and its directors, officers, employees and agents from and against any claim, loss, liability, damage, fine, penalty, cost or expense (including reasonable legal fees) arising out of or connected with: your breach of these Terms; your unlawful or fraudulent use of the Platform; Content you upload; your Gift Cards, codes, products or programmes; your failure to obtain consents or give notices; your breach of data protection, consumer, payment, tax or other law; or any claim by a recipient, customer, regulator or third party relating to your conduct.",
+            "This indemnity is in addition to any specific indemnity in a role-specific schedule. It does not apply to the extent the claim is caused by Nexgen's own fraud, wilful misconduct or negligence."
+          ]
+        },
+        {
+          "h": "14. Suspension and termination",
+          "p": [
+            "We may suspend, restrict or terminate your access to all or part of the Platform immediately if we reasonably believe that you have breached these Terms, pose a fraud, security, legal or regulatory risk, have failed verification, or if required by law, a regulator, a Payment Processor or a court. Where practicable, we will give notice and an opportunity to remedy a curable breach.",
+            "You may stop using the Platform and close your account at any time, subject to any outstanding Orders and our retention obligations. Closing an account does not affect Gift Cards already issued or rights that have accrued.",
+            "On termination, your right to use the Platform ends. We may cancel unused Codes, remove Content and retain records as required by law. Provisions that by their nature should survive, including intellectual property, disclaimers, liability, indemnity, data protection, governing law and dispute resolution, will survive."
+          ]
+        },
+        {
+          "h": "15. Changes to these Terms",
+          "p": [
+            "We may update these Terms to reflect changes in the Platform, law, regulation, security or our business. The current version is always posted on the Platform with its last-updated date. For material changes, we will give reasonable notice, normally at least 15 calendar days before the change takes effect, unless a shorter period is required by law or for security reasons.",
+            "If you do not agree to a change, you should stop using the Platform before it takes effect. Continued use after the effective date means you accept the updated Terms. Changes do not apply retroactively to completed Orders or vested rights."
+          ]
+        },
+        {
+          "h": "16. Governing law and disputes",
+          "p": [
+            "These Terms and any dispute arising out of or in connection with them or the Platform are governed by the laws of the State of Qatar, without regard to conflict-of-laws rules. Subject to any mandatory consumer forum, the courts of Qatar have exclusive jurisdiction.",
+            "Before starting court proceedings, the parties should try in good faith to resolve the dispute by written notice and negotiation for at least 30 days. A consumer may also contact the Ministry of Commerce and Industry (MOCI) consumer protection authorities. Regulatory questions about payment services or closed-loop gift cards may be directed to the Qatar Central Bank (QCB). Data protection complaints may be directed to the National Cyber Security Agency's Compliance and Data Protection department (NCSA/CDP).",
+            "Nothing in this section prevents either party from seeking urgent injunctive relief or from referring a matter to a regulator with competent jurisdiction."
+          ]
+        },
+        {
+          "h": "17. Contact and notices",
+          "p": [
+            "Legal notices to Nexgen must be sent to legal@giftly.qa and, where required, by registered mail to our registered address in Doha, Qatar. Notices to you may be sent to the email address or phone number on your account, posted in the Platform, or delivered through the app. You are responsible for keeping your contact details current.",
+            "Our details: Nexgen Software Publishing Solution, commercial registration number 238473, Doha, State of Qatar. Brand: Giftly. Legal: legal@giftly.qa. Privacy: privacy@giftly.qa. Support: hello@giftly.qa."
+          ]
+        }
+      ],
+      "closing": []
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "intro": [
+        "This Privacy Policy explains how Nexgen Software Publishing Solution (Nexgen, we, us or our), commercial registration number 238473, collects, uses, shares, stores and protects personal data when you use the Giftly website, mobile application, dashboards, APIs and related services (the Platform).",
+        "We are committed to handling personal data transparently, fairly and securely, in line with Law No. 13 of 2016 on Protecting Personal Data Privacy (the Data Privacy Law) and other applicable Qatari law. This Policy should be read with our Terms & Conditions."
+      ],
+      "opening": [
+        {
+          "h": "1. Who is responsible for your data",
+          "p": [
+            "Nexgen is the controller of personal data that it processes for its own purposes, including account creation, platform security, checkout orchestration, customer support, analytics, marketing and legal compliance. Our registered address is Doha, State of Qatar. Our privacy contact is privacy@giftly.qa.",
+            "For some data, another party is the controller. A Vendor is normally an independent controller of the data it receives to fulfil and redeem its own gift cards and to run its own business. An Enterprise Client or Bulk Buyer is normally the controller of the employee, customer or recipient data it uploads or instructs us to process. In those cases, Nexgen acts as a processor or a separate controller only for the limited purposes described in this Policy and the applicable role schedule.",
+            "We have a Privacy Officer responsible for data protection. You can contact the Privacy Officer at privacy@giftly.qa. If you are a customer of a Vendor, Enterprise Client or Bulk Buyer and want to exercise rights over data that party controls, please contact that party first. We will assist it as required."
+          ]
+        },
+        {
+          "h": "2. Scope",
+          "p": [
+            "This Policy applies to personal data processed through the Platform, our support channels, our business relationships, events and marketing. It does not apply to third-party websites, apps, payment pages or services that we do not control, even if they are linked from the Platform. Those third parties have their own privacy policies."
+          ]
+        },
+        {
+          "h": "3. Personal data we collect",
+          "p": [
+            "The data we collect depends on how you use the Platform and whether you are a customer, recipient, vendor, enterprise client, bulk buyer, authorised user or visitor. Categories include:"
+          ],
+          "b": [
+            "Account and identity data: name, email address, phone number, password hash, profile photo, language preference, date of birth where needed, and account status.",
+            "Business and verification data: company name, commercial registration number, trade licence, tax details, registered address, beneficial ownership, authorised signatory, identification documents, bank or merchant onboarding status, and correspondence with our verification team.",
+            "Order and transaction data: gifts viewed, orders, amounts, payment status, gift card identifiers, redemption status and history, delivery details, invoices, refunds, chargebacks and support notes.",
+            "Recipient data: name, email address, phone number, delivery method, personal message, relationship to the sender, and any preferences the recipient chooses to share.",
+            "Payment data: payment method type, card brand and last four digits, expiry month, tokenised payment reference and Payment Processor identifiers. We do not store full card numbers, CVV codes or full bank account details. Payment details are processed by the Payment Processor.",
+            "Device and usage data: IP address, device type, operating system, app version, browser, language, approximate location derived from IP, pages viewed, features used, referral source, crash reports and server logs.",
+            "Cookie and analytics data: cookies, pixels, local storage and similar technologies, including identifiers, preferences, session data and analytics events.",
+            "Support and communications data: messages, emails, chat transcripts, call notes, attachments, complaint records and feedback.",
+            "Marketing data: consent status, preferences, campaign engagement, unsubscribes and communication history.",
+            "Enterprise and bulk data: authorised user details, employee or recipient lists, allocation records, imported code metadata, programme rules and reporting data.",
+            "Fraud, risk and compliance data: sanctions and watchlist screening results, fraud signals, device risk scores, transaction monitoring alerts and audit logs."
+          ]
+        },
+        {
+          "h": "4. How we obtain personal data",
+          "p": [
+            "We collect data directly from you when you create an account, place an order, send a gift, contact support, complete business onboarding, import codes or use the Platform. We collect recipient data from the person who sends a gift or from an Enterprise Client or Bulk Buyer that uploads it.",
+            "We also collect data automatically from your device and from our service providers, including Payment Processors, fraud and analytics providers, hosting and communications providers. We may receive data from public registers, banks, credit or fraud reference agencies, and business partners. Where you provide data about another person, you must have the authority and any required consent or other lawful basis to do so."
+          ]
+        },
+        {
+          "h": "5. Why we use personal data and our lawful bases",
+          "p": [
+            "We use personal data only for lawful purposes that are relevant to our relationship with you. Under the Data Privacy Law, we rely on one or more of the following bases: your consent; performance of a contract with you; compliance with a legal obligation; protection of your vital interests; a task carried out in the public interest; or our legitimate interests where those interests are not overridden by your rights.",
+            "Our main purposes are:"
+          ],
+          "b": [
+            "Providing the Platform, creating and managing accounts, processing orders, delivering gift cards, storing codes and showing balances and redemption status.",
+            "Verifying business users, preventing fraud, money laundering, terrorist financing and sanctions violations, and protecting the security of the Platform.",
+            "Processing payments through the Payment Processor, handling refunds, chargebacks and disputes, and keeping financial and tax records.",
+            "Providing customer support, responding to complaints, investigating incidents and improving service quality.",
+            "Sending service messages, receipts, delivery notifications, security alerts and important legal notices.",
+            "Sending marketing communications where we have consent or another lawful basis, and measuring their effectiveness.",
+            "Analysing usage, testing, troubleshooting, developing features and producing aggregated statistics.",
+            "Complying with law, court orders, regulatory requests and our contractual obligations, and establishing, exercising or defending legal claims.",
+            "Operating enterprise and bulk programmes, allocating codes, producing reports and managing authorised users."
+          ]
+        },
+        {
+          "h": "6. Cookies and similar technologies",
+          "p": [
+            "We use strictly necessary cookies to run the Platform, remember your language and session, keep you signed in and protect against fraud. We use preference cookies to remember settings, analytics cookies to understand how the Platform is used, and, where permitted, marketing cookies to measure campaigns.",
+            "Where consent is required, we ask for it before setting non-essential cookies. You can change your choices in the cookie banner or browser settings. Blocking strictly necessary cookies may prevent the Platform from working. We do not currently respond to browser 'Do Not Track' signals because there is no common standard, but we honour applicable consent choices."
+          ]
+        },
+        {
+          "h": "7. Who we share personal data with",
+          "p": [
+            "We share personal data only as needed for the purposes described in this Policy, with appropriate safeguards. Recipients may include:"
+          ],
+          "b": [
+            "Vendors and Issuers: the details needed to process, deliver, redeem, support or refund a gift card, including buyer name, order details, recipient delivery details and redemption status.",
+            "Enterprise Clients and Bulk Buyers: their authorised users' and recipients' data, allocation records, reports and order data.",
+            "Payment Processors and banks: payment, billing, refund, chargeback, fraud and verification data. They process payments under their own terms and privacy policies.",
+            "Cloud, hosting and database providers: account, order, code and log data stored on secure infrastructure, including our database and file storage providers.",
+            "Communications providers: email, SMS, push notification and chat providers that deliver messages and support conversations.",
+            "Analytics, security and fraud providers: device, usage, cookie and risk data used to analyse performance, detect fraud and protect the Platform.",
+            "Professional advisers, auditors and insurers: where necessary for legal, accounting, audit, insurance or compliance purposes.",
+            "Authorities and courts: where required by law, a court order, a regulator (including QCB, MOCI or NCSA), a law enforcement body or to protect rights, safety and security.",
+            "Successors: in connection with a merger, acquisition, financing, reorganisation, sale of assets or insolvency, subject to appropriate confidentiality.",
+            "Other parties with your consent or at your direction."
+          ]
+        },
+        {
+          "h": "8. International transfers",
+          "p": [
+            "Some of our service providers may store or process personal data outside Qatar. Where we transfer personal data internationally, we take steps required by the Data Privacy Law to protect it, including contractual safeguards, security assessments and, where required, your consent. The Data Privacy Law generally permits cross-border flows unless the processing breaches the law or may cause serious harm to personal data or individual privacy.",
+            "Our cloud and database providers may process data in the region or in other countries where they operate. You can ask us for more information about the safeguards used for a particular transfer by contacting privacy@giftly.qa."
+          ]
+        },
+        {
+          "h": "9. How long we keep personal data",
+          "p": [
+            "We keep personal data only for as long as necessary for the purposes for which it was collected, to comply with legal, tax, accounting and regulatory requirements, to resolve disputes and to enforce agreements. Retention periods depend on the type of data and the context.",
+            "As a general guide: account data is kept while the account is active and for a reasonable period afterwards; order, invoice, payment and tax records are kept for the period required by Qatari commercial and tax law; business verification records are kept for the relationship and the required period afterwards; support records are kept for a reasonable period; marketing data is kept until you withdraw consent or object; security and server logs are kept for a limited period; and code redemption records are kept as needed to prevent fraud and honour obligations. When data is no longer needed, we delete it, anonymise it or archive it securely."
+          ]
+        },
+        {
+          "h": "10. How we protect personal data",
+          "p": [
+            "We use administrative, technical and physical safeguards appropriate to the nature and sensitivity of the data. Measures include encryption in transit and at rest, access controls, least-privilege permissions, authentication, logging and monitoring, secure development practices, vendor due diligence, incident response procedures and staff training.",
+            "We do not store full payment card numbers or CVV codes; payments are handled by Payment Processors. Gift card codes are stored and transmitted using protective controls, and access is limited to authorised personnel and systems. No method of transmission or storage is completely secure, so we cannot guarantee absolute security."
+          ]
+        },
+        {
+          "h": "11. Your rights",
+          "p": [
+            "Subject to the Data Privacy Law and applicable exceptions, you have the right to:"
+          ],
+          "b": [
+            "be informed about the processing of your personal data and its purposes;",
+            "access your personal data and obtain a copy, subject to any permitted service charge;",
+            "request correction of inaccurate or incomplete data, with supporting evidence;",
+            "request deletion or erasure where the purpose has ended or the legal basis no longer applies;",
+            "object to processing that is unnecessary, excessive, discriminatory, unfair or unlawful;",
+            "withdraw consent at any time, without affecting processing already carried out;",
+            "request restriction of processing where applicable; and",
+            "complain to the competent data protection authority, currently the National Cyber Security Agency's Compliance and Data Protection department (NCSA/CDP)."
+          ]
+        },
+        {
+          "h": "12. Marketing and communications",
+          "p": [
+            "We send marketing only where we have your consent or another lawful basis. You can withdraw consent or opt out at any time using the unsubscribe link in an email, the settings in the app, or by contacting privacy@giftly.qa. We may still send service messages, receipts, security alerts and legal notices that are necessary for the Platform.",
+            "If you are a business contact, we may rely on our legitimate interests to send relevant business communications, subject to your right to object. We do not sell personal data or rent email lists."
+          ]
+        },
+        {
+          "h": "13. Children",
+          "p": [
+            "The Platform is intended for adults aged 18 and over. We do not knowingly collect personal data from children. If a gift card is intended for a minor, the parent or guardian must manage the purchase, redemption and any data. If we learn that we have collected a child's data without guardian consent, we will delete it. A guardian may contact privacy@giftly.qa to request access or deletion."
+          ]
+        },
+        {
+          "h": "14. Data breaches",
+          "p": [
+            "If we become aware of a breach of security that affects personal data, we will investigate, contain it and take remedial action. Where the breach may cause serious damage to personal data or individual privacy, we will notify affected individuals and the competent department as required by the Data Privacy Law. Our processors must notify us without undue delay. We keep records of breaches and remedial actions."
+          ]
+        },
+        {
+          "h": "15. Automated decisions and analytics",
+          "p": [
+            "We may use automated tools for fraud detection, risk scoring, recommendations and analytics. We do not make solely automated decisions that produce legal or similarly significant effects without human review. You can ask for human review of an automated decision that affects you by contacting privacy@giftly.qa.",
+            "We may produce aggregated or de-identified statistics. Aggregated data that cannot identify an individual is not personal data, but we apply appropriate safeguards before sharing it."
+          ]
+        },
+        {
+          "h": "16. Changes and contact",
+          "p": [
+            "We may update this Policy to reflect changes in law, our services or our data practices. The current version is posted on the Platform with its last-updated date. For material changes, we will provide reasonable notice. If you do not agree, you should stop using the Platform and may close your account.",
+            "For any privacy question, request or complaint, contact our Privacy Officer at privacy@giftly.qa or write to Nexgen Software Publishing Solution, Doha, State of Qatar. We aim to respond within 30 days. If you are not satisfied, you may complain to NCSA/CDP. Our legal contact is legal@giftly.qa."
+          ]
+        }
+      ],
+      "closing": []
+    }
+  },
+  "audienceSections": {
+    "client": {
+      "terms": [
+        {
+          "h": "18. Customer Schedule",
+          "p": [
+            "This schedule applies if you use Giftly as a Customer. It adds to, and does not replace, the general Terms."
+          ]
+        },
+        {
+          "h": "18.1 Buying and sending gifts",
+          "p": [
+            "You may buy a Gift Card for yourself or as a gift. When you send a gift, you must provide accurate recipient details and have the right to share them. The recipient will receive the gift card, the Issuer's terms and a link to this Policy. You are responsible for the message and any personal data you include.",
+            "A gift is delivered when the Code is sent to the recipient or made available in your account. If the recipient does not receive it, contact us promptly. We may resend the delivery or facilitate a replacement, but we do not guarantee delivery where the contact details are wrong or the recipient's provider blocks the message."
+          ]
+        },
+        {
+          "h": "18.2 Redemption and the Issuer relationship",
+          "p": [
+            "The contract for the goods or services is between you or the recipient and the Issuer. The Issuer is responsible for honouring the Gift Card, providing the goods or services, complying with health, safety and consumer law, and handling redemption disputes. Nexgen is not the supplier of those goods or services.",
+            "Gift Cards cannot be exchanged for cash. Where the Issuer allows partial redemption, the remaining balance stays on the card. Expiry dates, booking rules, age limits, location restrictions and exclusions are set by the Issuer and must be shown before purchase. If an Issuer refuses to honour a valid card, contact the Issuer first, then contact us. We may assist but are not liable for the Issuer's refusal."
+          ]
+        },
+        {
+          "h": "18.3 Refunds, faulty cards and complaints",
+          "p": [
+            "You have the rights given to consumers by Qatari law, including Law No. 8 of 2008 on Consumer Protection. Nothing in these Terms reduces those rights. If a Gift Card is faulty, not as described, not delivered or cannot be redeemed, contact the Issuer and our support team. We may ask for proof of purchase, screenshots, the Code and other information needed to investigate.",
+            "Refunds for a Gift Card that has not been used may be available under the Issuer's terms and the law. Refunds for a used, shared, copied or expired card may be limited. Where we facilitate a refund, it is paid by the party that received the funds through the original payment method, subject to the Payment Processor's timelines."
+          ]
+        },
+        {
+          "h": "18.4 Your account and communications",
+          "p": [
+            "You are responsible for your account, your recipients and your communications. You must not use Giftly to send unlawful, harassing, discriminatory or misleading messages. We may suspend an account that sends spam or abuses recipients.",
+            "We send service messages about orders, delivery, security and legal changes. We send marketing only with consent or another lawful basis, and you can opt out at any time. Opting out of marketing does not stop service messages."
+          ]
+        }
+      ],
+      "privacy": [
+        {
+          "h": "17. Customer Privacy Schedule",
+          "p": [
+            "This schedule explains the additional privacy points that apply when you buy, send, receive or hold a gift card as a Customer."
+          ]
+        },
+        {
+          "h": "17.1 Buyer and recipient data",
+          "p": [
+            "We process your account, order, payment, delivery and support data to provide the Platform, deliver gifts, prevent fraud and comply with law. When you send a gift, we share the recipient's name, delivery details, message and order information with the Issuer and our delivery providers so the gift can be delivered and redeemed.",
+            "If you are a recipient, we receive your details from the sender or the Issuer. We use them to deliver and support the gift, prevent fraud and, where permitted, to provide you with information about the gift. You can contact privacy@giftly.qa to exercise your rights. If the sender or Issuer controls the data, we will direct your request to them or assist them."
+          ]
+        },
+        {
+          "h": "17.2 Marketing and preferences",
+          "p": [
+            "We do not sell your data. We send marketing to customers only with consent or another lawful basis. You can manage preferences in the app or unsubscribe from emails. We may use aggregated analytics to improve the Platform. We do not use the content of your gift messages for advertising."
+          ]
+        },
+        {
+          "h": "17.3 Your choices",
+          "p": [
+            "You can access, correct, delete or object to the processing of your data, withdraw consent and request a copy, subject to the Data Privacy Law. Some data must be retained for tax, accounting, fraud prevention or legal claims. If you close your account, we will delete or anonymise data that we no longer need and keep the rest only for permitted purposes.",
+            "You can complain to NCSA/CDP. We ask that you contact us first so we can try to resolve the issue."
+          ]
+        }
+      ]
+    },
+    "vendor": {
+      "terms": [
+        {
+          "h": "18. Vendor Schedule",
+          "p": [
+            "This schedule applies if you are a Vendor. It is fundamental to the marketplace model and prevails over the general Terms to the extent of any conflict. By listing a gift card, you accept this schedule."
+          ]
+        },
+        {
+          "h": "18.1 Independent issuer and merchant of record",
+          "p": [
+            "You are an independent business, not an employee, agent, partner, joint venturer or representative of Nexgen. You are solely responsible for your products, services, prices, staff, premises, licences, taxes and customer service. You have full authority to list and sell your gift cards and to bind your business to this schedule.",
+            "You are the Issuer and merchant of record for every gift card you list. You are solely responsible for honouring it, for the goods or services it represents, for its value, expiry, restrictions, redemption and refunds, and for all consumer, health, safety, tax and advertising obligations. Nexgen is not your agent and does not issue, underwrite, guarantee or redeem your gift cards. You must not describe Nexgen or Giftly as the issuer, seller, merchant of record or payment provider of your gift cards."
+          ]
+        },
+        {
+          "h": "18.2 Closed-loop status and QCB notification",
+          "p": [
+            "You are solely responsible for determining the regulatory status of your gift card programme. Under the Qatar Central Bank Payment Services Regulation (2021), the issuance of closed prepaid payment instruments that are issued for facilitating the purchase of goods and services only from the issuer, for limited purposes, and that do not permit cash withdrawal or redemption, is exempt from the payment services licensing regime, but the issuer must inform the Qatar Central Bank about the issuance and provide information on request.",
+            "You, as Issuer, are solely responsible for: (a) assessing whether your programme falls within that exemption or requires a licence or approval; (b) notifying QCB and responding to QCB, and maintaining all records; (c) obtaining any licence, approval, registration or legal advice required; and (d) complying with all QCB instructions, circulars and applicable law. Nexgen does not make that assessment, does not notify QCB on your behalf, does not act as your agent for regulatory purposes, and gives no assurance that your programme is exempt or compliant.",
+            "You must notify Nexgen promptly if QCB or another regulator contacts you about your gift card programme, if your regulatory status changes, or if you are required to suspend or stop issuing cards. You must include accurate issuer identity, card terms and redemption information in your listing."
+          ]
+        },
+        {
+          "h": "18.3 Codes, inventory and warranties",
+          "p": [
+            "You may upload, authorise or connect codes and inventory to the Platform. You represent and warrant, on a continuing basis, that: you own or have all necessary rights to every code; each code is unique, valid, unused, correctly valued and redeemable; the code has not been sold, promised or allocated to anyone else; the expiry date and restrictions are accurate; the code is not stolen, fraudulent, counterfeit or obtained unlawfully; and you have the right to sell it in Qatar.",
+            "You must not upload open-loop payment instruments, cash equivalents, cryptocurrency, foreign exchange, gambling credits, or codes that you cannot honour. You must keep codes and redemption credentials secure, limit access to authorised staff, and notify us immediately if you suspect a breach, duplication, fraud or unauthorised access.",
+            "We may validate, deduplicate, scan or monitor codes and listings, but we are not obliged to do so and any check is not an acceptance, certification or guarantee of a code. You remain solely responsible for your inventory."
+          ]
+        },
+        {
+          "h": "18.4 Listings, pricing and consumer law",
+          "p": [
+            "You must describe each gift card accurately and clearly, in Arabic and English where required, including the issuer identity, value, price, expiry, redemption locations, availability, age limits, booking rules, exclusions and any restrictions. You must not use misleading, deceptive or fake information, hidden fees, fake discounts or unsubstantiated claims.",
+            "You must comply with Law No. 8 of 2008 on Consumer Protection, the Electronic Transactions and Commerce Law No. 16 of 2010, advertising and e-commerce rules, and all other applicable law. You must honour valid gift cards, provide refunds, replacements or remedies where required, and not impose terms that unfairly exclude mandatory consumer rights. If a card is defective or not as described, you are responsible for the remedy.",
+            "You must display your legal name, commercial registration, contact details and complaint channels. You must respond to customer complaints promptly and cooperate with MOCI, QCB and other authorities."
+          ]
+        },
+        {
+          "h": "18.5 Redemption, service and business continuity",
+          "p": [
+            "You must maintain the ability to redeem gift cards during your normal business hours, train your staff, and provide clear redemption instructions. You must accept partial redemption where your terms allow it. You must not refuse a valid card without a lawful reason, and you must not charge hidden redemption fees.",
+            "You must acknowledge customer complaints within 2 Business Days and aim to resolve them within 10 Business Days. You must notify us promptly of any outage, fraud, stock issue, closure, insolvency, change of ownership or other event that may affect redemption. If you cease trading or can no longer honour your cards, you must honour outstanding cards or arrange refunds or replacements as required by law, and you must notify us so we can inform affected customers.",
+            "You must maintain appropriate insurance for your business and products, including public liability and, where appropriate, product liability, and provide evidence on request."
+          ]
+        },
+        {
+          "h": "18.6 Payments, fees, chargebacks and taxes",
+          "p": [
+            "You contract directly with your Payment Processor and maintain your own merchant account. Nexgen does not receive, hold, control or settle the purchase price. You are responsible for your Payment Processor's fees, refunds, chargebacks, reversals, fines and holds, and for all taxes, VAT, invoices and accounting.",
+            "Platform fees, if any, are disclosed in your agreement or dashboard. We may invoice you for platform fees and suspend services for non-payment. We do not set off platform fees against customer funds because we do not hold customer funds. You must not surcharge customers in breach of applicable law or card scheme rules."
+          ]
+        },
+        {
+          "h": "18.7 Data protection",
+          "p": [
+            "You are an independent controller of personal data you receive through the Platform for your own purposes. You must comply with the Data Privacy Law and use buyer and recipient data only to fulfil orders, redeem cards, provide support, prevent fraud and meet legal obligations. You must not sell, rent, trade or use that data for unrelated marketing without a lawful basis and any required consent.",
+            "You must implement appropriate security, keep data accurate and minimal, retain it only as long as necessary, and notify Nexgen within 24 hours of becoming aware of a breach affecting Platform data. You must assist individuals with their rights and cooperate with our investigations. You must not combine Platform data with other datasets in a way that identifies individuals without a lawful basis."
+          ]
+        },
+        {
+          "h": "18.8 Compliance, audit and indemnity",
+          "p": [
+            "You must comply with all applicable laws, including AML/CFT, sanctions, consumer protection, e-commerce, advertising, tax, labour, health and safety, and data protection. You must maintain records of your gift card programme, redemption and complaints for at least the period required by law and make them available to us or a regulator on request.",
+            "You agree to indemnify Nexgen against any claim, loss, fine, penalty, cost or expense arising from your gift cards, codes, products, services, listings, redemption, regulatory status, failure to notify QCB, data processing, or breach of this schedule. This indemnity survives termination.",
+            "We may audit or request information about your compliance. We may suspend or remove your listings immediately if we reasonably believe there is a fraud, regulatory, consumer, security or reputational risk."
+          ]
+        },
+        {
+          "h": "18.9 Term, suspension and outstanding cards",
+          "p": [
+            "This schedule applies while you have listings on the Platform and afterwards for as long as you have outstanding gift cards or legal obligations. We may suspend or terminate your access for breach, risk, non-payment or legal requirements.",
+            "Termination does not release you from honouring gift cards already sold. You must continue to redeem or refund outstanding cards as required by law, and you must cooperate with a wind-down plan and customer communications."
+          ]
+        }
+      ],
+      "privacy": [
+        {
+          "h": "17. Vendor Privacy Schedule",
+          "p": [
+            "This schedule applies to personal data you handle as a Vendor. It supplements the general Privacy Policy and reflects your independent controller role."
+          ]
+        },
+        {
+          "h": "17.1 Your controller role",
+          "p": [
+            "You are an independent controller of buyer, recipient, redemption and staff data that you receive or create in connection with your gift cards. You determine how and why you use that data, subject to the Data Privacy Law and this schedule. Nexgen is not responsible for your independent processing.",
+            "You must provide your own privacy notice to customers and staff, obtain any required consent, and explain how they can exercise their rights. You must not rely on Nexgen's Privacy Policy as your own notice."
+          ]
+        },
+        {
+          "h": "17.2 Permitted uses and security",
+          "p": [
+            "You may use Platform data only to fulfil orders, redeem cards, provide support, prevent fraud, comply with law and manage your relationship with the customer. You must not sell or rent it, use it for unrelated marketing without a lawful basis, or disclose it except to service providers who are bound by appropriate confidentiality and security obligations.",
+            "You must apply appropriate technical and organisational security, limit access to authorised staff, retain data only as long as necessary, and notify Nexgen within 24 hours of a breach affecting Platform data. You must cooperate with data subject requests and our incident response."
+          ]
+        },
+        {
+          "h": "17.3 Retention and deletion",
+          "p": [
+            "You must delete or return Platform data when it is no longer needed for the permitted purposes or when your relationship with Nexgen ends, unless retention is required by law. You must keep redemption and complaint records for the period required by Qatari law and provide them to Nexgen or a regulator on request."
+          ]
+        }
+      ]
+    },
+    "enterprise": {
+      "terms": [
+        {
+          "h": "18. Enterprise Client Schedule",
+          "p": [
+            "This schedule applies if you use the enterprise portal as an Enterprise Client. It prevails over the general Terms to the extent of any conflict."
+          ]
+        },
+        {
+          "h": "18.1 Enterprise account and authority",
+          "p": [
+            "You confirm that the entity accepting these Terms is duly incorporated or registered, has authority to run the programme, and that each authorised user has authority to act for you. You are responsible for all activity by your authorised users, for managing their access, and for removing access when they leave or change roles.",
+            "You must provide accurate company, commercial registration, tax, signatory and beneficial ownership information and complete our verification. We may approve, limit, suspend or reject an enterprise account at our discretion."
+          ]
+        },
+        {
+          "h": "18.2 Your codes and your issuer responsibility",
+          "p": [
+            "The enterprise portal may allow you to import your own codes, upload code files, allocate platform codes or run a corporate reward programme. You are solely responsible for the codes you import or authorise, including their ownership, validity, uniqueness, value, expiry, redemption, security and legality. You must not import open-loop payment instruments, cash equivalents, stolen or fraudulent codes, or codes you are not authorised to use.",
+            "If you are the Issuer of the imported codes, you are solely responsible for honouring them and for the regulatory status of your programme. Under the Qatar Central Bank Payment Services Regulation (2021), the issuer of a closed-loop prepaid instrument for goods or services from the issuer, with no cash withdrawal or redemption, may be exempt from payment services licensing but must inform QCB about the issuance. You are solely responsible for assessing and fulfilling that obligation. Nexgen does not notify QCB on your behalf and gives no regulatory assurance.",
+            "If you are not the Issuer, you must have a written agreement with the Issuer authorising you to distribute or allocate the codes, and you must ensure the Issuer will honour them. You must not describe Nexgen as the Issuer, seller or guarantor."
+          ]
+        },
+        {
+          "h": "18.3 Recipient eligibility, allocation and restrictions",
+          "p": [
+            "You may allocate gift cards only to recipients who are eligible under your programme and applicable law. You must not sell, resell, auction or exchange gift cards for cash, use them as an open-loop payment instrument, or allocate them for unlawful, gambling, discriminatory or harmful purposes.",
+            "You must communicate the Issuer's terms, value, expiry, restrictions and redemption instructions to recipients. You are responsible for your programme rules, eligibility, tax treatment, employee communications and any collective agreement or works council consultation. Unused codes remain subject to the Issuer's terms and the law."
+          ]
+        },
+        {
+          "h": "18.4 Orders, invoicing and taxes",
+          "p": [
+            "Enterprise orders, quantities, pricing, payment terms and invoicing are set out in your order form, dashboard or separate agreement. You must pay invoices when due and provide accurate billing and tax information. Payments are processed by the Payment Processor; Nexgen does not hold your funds.",
+            "Unless required by law or expressly agreed, fees for codes that have been issued or delivered are non-refundable. You are responsible for any withholding tax, VAT, duties and reporting obligations connected with your programme."
+          ]
+        },
+        {
+          "h": "18.5 Service levels, reporting and support",
+          "p": [
+            "We aim to make the enterprise portal available during normal business hours, but we do not guarantee uninterrupted or error-free service. We may perform maintenance and may change features. Reports are provided for information and must be reconciled by you against your own records. We are not your auditor or tax adviser.",
+            "You must designate an administrator and a security contact, respond to our requests, and cooperate with investigations. We may suspend the portal for security, legal or risk reasons."
+          ]
+        },
+        {
+          "h": "18.6 Data protection",
+          "p": [
+            "For employee, customer or recipient data that you upload, you are normally the controller and Nexgen is a processor acting on your documented instructions. You are responsible for providing notices, obtaining consents or identifying another lawful basis, minimising data, ensuring accuracy and complying with the Data Privacy Law. You must not upload special-category data or children's data without a lawful basis and any required permission.",
+            "Nexgen will process that data only to provide the portal, allocate codes, produce reports, provide support, prevent fraud and comply with law. We will implement appropriate security, assist with data subject requests, notify you of breaches and delete or return data on termination, subject to legal retention. Our subprocessors are bound by appropriate obligations. Cross-border transfers are handled as described in the general Privacy Policy."
+          ]
+        },
+        {
+          "h": "18.7 Compliance, indemnity and termination",
+          "p": [
+            "You must comply with all applicable laws, including AML/CFT, sanctions, consumer, e-commerce, advertising, tax, employment and data protection. You agree to indemnify Nexgen against claims, fines, losses and costs arising from your imported codes, your programme, your recipient data, your allocation decisions, your regulatory status or your breach of this schedule.",
+            "We may suspend or terminate your access for breach, risk, non-payment or legal requirements. Termination does not affect codes already issued or rights that have accrued. You must continue to honour outstanding codes or arrange refunds as required by law."
+          ]
+        }
+      ],
+      "privacy": [
+        {
+          "h": "17. Enterprise Privacy Schedule",
+          "p": [
+            "This schedule applies to personal data processed in the enterprise portal. It supplements the general Privacy Policy."
+          ]
+        },
+        {
+          "h": "17.1 Your controller role and our processor role",
+          "p": [
+            "For employee, customer and recipient data that you upload or instruct us to process, you are normally the controller and Nexgen is a processor. You determine the purposes and lawful bases, provide privacy notices, obtain consents where required, and ensure the data is accurate, relevant and limited to what is necessary.",
+            "Nexgen processes that data only on your documented instructions, to provide the portal, allocate codes, produce reports, provide support, prevent fraud and comply with law. We do not use your recipient data for our own marketing. We may use aggregated or de-identified data for service improvement."
+          ]
+        },
+        {
+          "h": "17.2 Security, subprocessors and transfers",
+          "p": [
+            "We apply appropriate technical and organisational security, limit access, and require our subprocessors to protect the data. We may use cloud, database, communications and analytics providers. We will notify you of any breach affecting your data without undue delay and assist with notifications to individuals or regulators.",
+            "Some processing may occur outside Qatar. We use appropriate safeguards required by the Data Privacy Law. You are responsible for ensuring that your own instructions and transfers comply with the law."
+          ]
+        },
+        {
+          "h": "17.3 Retention, deletion and audit",
+          "p": [
+            "We retain enterprise data for the term of your agreement and afterwards as required by law or for legal claims. On termination, we will delete or return your data on request, subject to legal retention. You may request information about our security and processing, and we will cooperate with reasonable audits and data protection impact assessments."
+          ]
+        }
+      ]
+    },
+    "bulk": {
+      "terms": [
+        {
+          "h": "18. Bulk Buyer Schedule",
+          "p": [
+            "This schedule applies if you are an approved Bulk Buyer. It prevails over the general Terms to the extent of any conflict."
+          ]
+        },
+        {
+          "h": "18.1 Business account and eligibility",
+          "p": [
+            "You confirm that you are a duly registered business, that you have authority to purchase gift cards in volume, and that the information in your application is accurate. You must complete our verification and maintain a valid commercial registration and trade licence. Bulk pricing is available only to approved business accounts and is not available to consumers.",
+            "We may approve, limit, suspend or reject a bulk account, set purchase limits and require prepayment or security. You must notify us of changes in ownership, control, licence status or business activity."
+          ]
+        },
+        {
+          "h": "18.2 Bulk orders, pricing and acceptance",
+          "p": [
+            "Bulk orders are subject to minimum quantities, tier pricing, availability and our acceptance. A quote is an invitation to order, not a binding offer. We may reject an order for stock, pricing, fraud, sanctions or legal reasons. Prices are exclusive or inclusive of tax as stated and may change for future orders.",
+            "You are responsible for checking quantities, denominations, expiry dates and recipient details before confirming an order. Once codes are issued or delivered, changes and cancellations are limited and subject to the Issuer's terms and applicable law."
+          ]
+        },
+        {
+          "h": "18.3 Payment, credit and taxes",
+          "p": [
+            "Unless we agree credit terms in writing, bulk orders must be paid before codes are issued. Payments are processed by the Payment Processor; Nexgen does not hold your funds. You must pay invoices, taxes, duties and any agreed fees when due. We may charge interest or suspend services for late payment where permitted by law.",
+            "You are responsible for your own accounting, tax reporting and treatment of gift cards. We do not provide tax advice."
+          ]
+        },
+        {
+          "h": "18.4 Codes, allocation and no resale",
+          "p": [
+            "Codes are supplied for your own business use, including employee rewards, customer promotions and charitable or corporate programmes. Unless we agree in writing, you must not resell, distribute, auction or exchange codes for cash, use them as an open-loop payment instrument, or present them as cash equivalents. You must comply with the Issuer's terms and all applicable law.",
+            "You are responsible for how you allocate and communicate codes, for verifying recipient eligibility, and for any marketing or promotion you run. You must not use misleading claims, fake scarcity, unlawful discrimination or spam."
+          ]
+        },
+        {
+          "h": "18.5 Issuer relationship and QCB responsibility",
+          "p": [
+            "The Issuer remains responsible for honouring the gift cards. If you are the Issuer, you are solely responsible for the regulatory status of your programme, including any QCB notification required for closed-loop prepaid instruments and any licence or approval needed. Nexgen does not notify QCB on your behalf and gives no regulatory assurance.",
+            "If you are not the Issuer, you must ensure you have authority to buy and distribute the codes and that the Issuer will honour them. You must not describe Nexgen as the Issuer, seller, guarantor or payment provider."
+          ]
+        },
+        {
+          "h": "18.6 Refunds, chargebacks and disputes",
+          "p": [
+            "Refunds for issued or delivered codes are limited and subject to the Issuer's terms and applicable law. You are responsible for chargebacks, reversals, fraud and payment disputes connected with your orders. We may suspend your account and recover losses where a chargeback is upheld.",
+            "If a code is invalid or not honoured, contact the Issuer and our support team with the order details and evidence. We may facilitate a replacement or refund from the Issuer but are not liable for the Issuer's obligations."
+          ]
+        },
+        {
+          "h": "18.7 Data protection, confidentiality and indemnity",
+          "p": [
+            "You are responsible for personal data you collect or upload for recipients, including notices, consents, accuracy, security and retention. You must comply with the Data Privacy Law and must not upload special-category data or children's data without a lawful basis. You must keep our pricing, codes and commercial information confidential.",
+            "You agree to indemnify Nexgen against claims, fines, losses and costs arising from your codes, allocation, marketing, recipient data, regulatory status or breach of this schedule. We may suspend or terminate your account for breach, risk, non-payment or legal requirements."
+          ]
+        }
+      ],
+      "privacy": [
+        {
+          "h": "17. Bulk Buyer Privacy Schedule",
+          "p": [
+            "This schedule applies to personal data processed for a Bulk Buyer account. It supplements the general Privacy Policy."
+          ]
+        },
+        {
+          "h": "17.1 Account, contact and order data",
+          "p": [
+            "We process your company contact, authorised user, order, invoice, payment and support data to provide the bulk account, verify your business, process orders, prevent fraud and comply with law. We are the controller for that data. We share order and redemption data with the Issuer and Payment Processor as needed.",
+            "We may use business contact data for relevant business communications under our legitimate interests, subject to your right to object. We do not sell your data."
+          ]
+        },
+        {
+          "h": "17.2 Recipient data you provide",
+          "p": [
+            "For recipient data you provide, you are normally the controller and Nexgen processes it on your instructions to allocate codes, deliver communications, provide support and produce reports. You must provide notices, obtain consents where required, minimise data and ensure accuracy. You must not upload special-category data or children's data without a lawful basis and any required permission.",
+            "We apply appropriate security, limit access, require subprocessors to protect the data and notify you of breaches without undue delay. We retain data for the agreement and as required by law, then delete or return it on request."
+          ]
+        },
+        {
+          "h": "17.3 Marketing, retention and rights",
+          "p": [
+            "You must not use recipient data for spam or unrelated marketing. You must honour opt-outs and keep your own suppression lists. We assist with data subject requests relating to data we control or process for you. You can contact privacy@giftly.qa for more information."
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -100,6 +100,7 @@ export default async function VendorDashboardLayout({ children }: { children: Re
       tutorial={VENDOR_SCRIPT}
       locale={locale}
       autoOpenTutorial={!ctx.profile?.tutorial_completed_at}
+      legalAudience="vendor"
       topRight={
         <>
           <span className="tag mint dash-role">{titleCase(ctx.role, locale)}</span>

@@ -71,6 +71,7 @@ export default async function EnterpriseDashboardLayout({ children }: { children
       tutorial={ENTERPRISE_SCRIPT}
       locale={locale}
       autoOpenTutorial={!ctx.profile?.tutorial_completed_at}
+      legalAudience="enterprise"
       topRight={
         <>
           <span className="tag lavender dash-role">{titleCase(ctx.role, locale)}</span>

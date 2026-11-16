@@ -52,6 +52,7 @@ export default async function BusinessPortalLayout({ children }: { children: Rea
       tutorial={BUSINESS_SCRIPT}
       locale={locale}
       autoOpenTutorial={false}
+      legalAudience="bulk"
       topRight={
         <>
           <span className="tag lavender dash-role">{t.chrome.bulkPricing}</span>

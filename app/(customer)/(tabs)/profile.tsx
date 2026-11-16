@@ -13,6 +13,7 @@ import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { listMyCards, listMyOrders } from '@/src/lib/data';
+import { getLegalBundle } from '@/src/legal';
 import { setLanguage, type Language } from '@/src/i18n';
 import type { GiftCard, Order } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
@@ -20,6 +21,7 @@ import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 export default function ProfileScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
+  const legal = getLegalBundle(i18n.language === 'ar' ? 'ar' : 'en').ui;
   const { user, signOut, isDemo } = useAuth();
   const [cards, setCards] = useState<GiftCard[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -192,6 +194,12 @@ export default function ProfileScreen() {
           tone="teal"
           title={t('profile.support')}
           onPress={() => router.push('/(customer)/support')}
+        />
+        <ListRow
+          icon="file"
+          tone="teal"
+          title={legal.legalCentre}
+          onPress={() => router.push('/(customer)/info/legal')}
         />
         <ListRow
           icon="justBecause"

@@ -30,6 +30,16 @@ export function SiteFooter() {
       ],
     },
     {
+      title: t.legal,
+      links: [
+        { href: '/legal', label: t.legalCentre },
+        { href: '/legal/client/terms', label: t.customerTerms },
+        { href: '/legal/vendor/terms', label: t.vendorTerms },
+        { href: '/legal/enterprise/terms', label: t.enterpriseTerms },
+        { href: '/legal/bulk/terms', label: t.bulkTerms },
+      ],
+    },
+    {
       title: t.support,
       links: [
         { href: '/vendor/login', label: t.vendorDashboard },

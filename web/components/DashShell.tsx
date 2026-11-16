@@ -91,6 +91,9 @@ const CHROME = {
     flow: 'Gift life cycle',
     howItWorks: 'How this works',
     language: 'Language',
+    legalCentre: 'Legal centre',
+    terms: 'Terms',
+    privacy: 'Privacy',
   },
   ar: {
     tutorial: 'الدليل',
@@ -100,6 +103,9 @@ const CHROME = {
     flow: 'دورة حياة الهدية',
     howItWorks: 'كيف تعمل هذه الصفحة',
     language: 'اللغة',
+    legalCentre: 'المركز القانوني',
+    terms: 'الشروط',
+    privacy: 'الخصوصية',
   },
 };
 
@@ -118,6 +124,7 @@ export function DashShell({
   tutorial,
   locale = 'en',
   autoOpenTutorial = false,
+  legalAudience = 'client',
   children,
 }: {
   portalLabel: string;
@@ -135,6 +142,7 @@ export function DashShell({
   tutorial?: TutorialScript;
   locale?: 'en' | 'ar';
   autoOpenTutorial?: boolean;
+  legalAudience?: 'client' | 'vendor' | 'enterprise' | 'bulk';
   children: ReactNode;
 }) {
   return (
@@ -153,6 +161,7 @@ export function DashShell({
         topRight={topRight}
         locale={locale}
         script={tutorial ?? EMPTY_SCRIPT}
+        legalAudience={legalAudience}
       >
         {children}
       </DashShellInner>
@@ -186,6 +195,7 @@ function DashShellInner({
   topRight,
   locale,
   script,
+  legalAudience,
   children,
 }: {
   portalLabel: string;
@@ -201,6 +211,7 @@ function DashShellInner({
   topRight?: ReactNode;
   locale: 'en' | 'ar';
   script: TutorialScript;
+  legalAudience: 'client' | 'vendor' | 'enterprise' | 'bulk';
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -406,6 +417,17 @@ function DashShellInner({
               <span className="small muted">{chrome.tutorialHint}</span>
             </span>
           </button>
+          <div className="dash-legal">
+            <Link href="/legal" onClick={closeNav}>
+              {chrome.legalCentre}
+            </Link>
+            <Link href={`/legal/${legalAudience}/terms`} onClick={closeNav}>
+              {chrome.terms}
+            </Link>
+            <Link href={`/legal/${legalAudience}/privacy`} onClick={closeNav}>
+              {chrome.privacy}
+            </Link>
+          </div>
           <LanguageSwitch />
           <div className="who">
             <span className="avatar">{userInitials}</span>

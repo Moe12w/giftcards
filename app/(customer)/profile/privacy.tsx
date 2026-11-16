@@ -9,12 +9,14 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { ListRow } from '@/src/components/ListRow';
 import { Screen } from '@/src/components/Screen';
 import { getPreferences, savePreferences } from '@/src/lib/data';
+import { getLegalBundle } from '@/src/legal';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function PrivacyScreen() {
   useThemeRefresh();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const legal = getLegalBundle(i18n.language === 'ar' ? 'ar' : 'en').ui;
   const [profileVisible, setProfileVisible] = useState(true);
   const [analytics, setAnalytics] = useState(true);
 
@@ -63,6 +65,13 @@ export default function PrivacyScreen() {
       </Card>
 
       <Card>
+        <ListRow
+          icon="file"
+          tone="teal"
+          title={legal.legalCentre}
+          subtitle={legal.legalCentreLede}
+          onPress={() => router.push('/(customer)/info/legal')}
+        />
         <ListRow
           icon="file"
           tone="teal"
