@@ -32,6 +32,7 @@ import {
 import { CATEGORIES, CURATED_COLLECTIONS, offerStartingPriceMinor, offerTitle, offersForCollection } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { countUnreadNotifications, listActiveOffers, listMarketplaceBusinesses } from '@/src/lib/data';
+import { pushOnce } from '@/src/lib/navigation';
 import { hasSeenTutorial } from '@/src/lib/tutorial';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
 import { useAuth } from '@/src/lib/auth';
@@ -241,7 +242,7 @@ export default function ExploreHomeScreen() {
                 key={business.id}
                 business={business}
                 index={index}
-                onPress={() => router.push(`/(customer)/business/${business.id}`)}
+                onPress={() => pushOnce(`/(customer)/business/${business.id}`)}
               />
             ))}
           </ScrollView>

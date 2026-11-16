@@ -21,6 +21,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { router } from 'expo-router';
+import { pushOnce } from '../lib/navigation';
 import { ArrowRight, Megaphone } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -83,7 +84,7 @@ async function openSponsoredAd(ad: SponsoredAd): Promise<void> {
     return;
   }
   if (destinationType === 'business' && destinationId) {
-    router.push(`/(customer)/business/${destinationId}` as never);
+    pushOnce(`/(customer)/business/${destinationId}`);
     return;
   }
   if (destinationType === 'gift_card' && destinationId) {

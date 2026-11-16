@@ -6,25 +6,19 @@ import { Text, View } from 'react-native';
 
 import { Card } from './Card';
 import { Chip } from './Chip';
-import type { LegalAudience, LegalDoc, LegalDocument, LegalLocale } from '../legal';
-import {
-  audienceLabel,
-  LEGAL_AUDIENCES,
-  LEGAL_DOCS,
-} from '../legal';
+import type { LegalDoc, LegalDocument, LegalLocale } from '../legal';
+import { LEGAL_DOCS } from '../legal';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 
 interface LegalDocumentViewProps {
   document: LegalDocument;
   locale: LegalLocale;
-  onSelectAudience: (audience: LegalAudience) => void;
   onSelectDoc: (doc: LegalDoc) => void;
 }
 
 export function LegalDocumentView({
   document,
   locale,
-  onSelectAudience,
   onSelectDoc,
 }: LegalDocumentViewProps) {
   const t = document.ui;
@@ -33,19 +27,7 @@ export function LegalDocumentView({
   return (
     <View style={styles.wrapper}>
       <Card tone="lavender">
-        <Text style={styles.audienceLabel}>{t.audience}</Text>
-        <View style={styles.chips}>
-          {LEGAL_AUDIENCES.map((audience) => (
-            <Chip
-              key={audience}
-              label={audienceLabel(locale, audience)}
-              active={audience === document.audience}
-              onPress={() => onSelectAudience(audience)}
-            />
-          ))}
-        </View>
-
-        <Text style={[styles.audienceLabel, styles.spaced]}>{t.allDocuments}</Text>
+        <Text style={styles.sectionLabel}>{t.allDocuments}</Text>
         <View style={styles.chips}>
           {LEGAL_DOCS.map((doc) => (
             <Chip
@@ -114,7 +96,7 @@ export function LegalDocumentView({
 
 const styles = themedStyles(() => ({
   wrapper: { gap: spacing.md },
-  audienceLabel: {
+  sectionLabel: {
     fontFamily: fonts.semibold,
     fontSize: fontSizes.sm,
     color: colors.textMuted,
@@ -122,7 +104,6 @@ const styles = themedStyles(() => ({
     letterSpacing: 0.6,
     marginBottom: spacing.sm,
   },
-  spaced: { marginTop: spacing.md },
   chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',

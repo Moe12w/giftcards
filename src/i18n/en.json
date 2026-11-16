@@ -304,6 +304,14 @@
     "termsBody": "Gift cards are valid for the period shown on the card. They cannot be exchanged for cash, are not refundable after delivery, and can be used in full or in part at the business. Lost or shared codes are the responsibility of the holder.",
     "redemption": "How to redeem",
     "redemptionBody": "Open the gift link, show the QR code at the business counter, and the amount is deducted from the card. Partial redemptions are allowed. The card is only marked as redeemed when the balance reaches zero.",
+    "redemptionSteps": {
+      "openTitle": "Open the gift link",
+      "openBody": "Use the link in your gift message, or find the card under My Gifts.",
+      "scanTitle": "Show the QR code",
+      "scanBody": "The business scans your code at the counter and enters the amount to redeem.",
+      "partialTitle": "Keep the rest",
+      "partialBody": "Only the amount used is deducted. Your remaining balance stays on the card until it reaches zero."
+    },
     "validUntil": "Valid until {{date}}",
     "noExpiry": "No expiry",
     "balance": "Balance",

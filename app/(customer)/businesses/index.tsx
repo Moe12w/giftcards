@@ -12,6 +12,7 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
 import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { listMarketplaceBusinesses } from '@/src/lib/data';
+import { pushOnce } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
 import type { MarketplaceBusiness } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
@@ -65,7 +66,7 @@ export default function BusinessesScreen() {
             return (
               <Pressable
                 key={business.id}
-                onPress={() => router.push(`/(customer)/business/${business.id}`)}
+                onPress={() => pushOnce(`/(customer)/business/${business.id}`)}
                 accessibilityRole="button"
                 accessibilityLabel={business.name}
                 style={({ pressed }) => pressed && styles.pressed}

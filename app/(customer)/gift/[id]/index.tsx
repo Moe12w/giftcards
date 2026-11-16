@@ -26,6 +26,7 @@ import {
   offerTone,
 } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
+import { pushOnce } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { isSessionOffer } from '@/src/lib/sessions';
@@ -130,7 +131,7 @@ export default function GiftDetailScreen() {
             <Pressable
               onPress={() => {
                 const businessId = offerBusinessId(offer);
-                if (businessId) router.push(`/(customer)/business/${businessId}`);
+                if (businessId) pushOnce(`/(customer)/business/${businessId}`);
               }}
               accessibilityRole="button"
               accessibilityLabel={offerBusinessName(offer, title)}

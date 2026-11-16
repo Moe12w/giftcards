@@ -14,10 +14,7 @@ import {
   audienceShort,
   getLegalBundle,
   getLegalDocument,
-  isLegalAudience,
   isLegalDoc,
-  LEGAL_AUDIENCES,
-  type LegalAudience,
   type LegalDoc,
   type LegalLocale,
 } from '@/src/legal';
@@ -35,7 +32,6 @@ export default function InfoScreen() {
   const { t, i18n } = useTranslation();
   const params = useLocalSearchParams<{
     slug?: string;
-    audience?: string;
     doc?: string;
   }>();
 
@@ -47,7 +43,6 @@ export default function InfoScreen() {
       <LegalScreen
         slug={slug}
         locale={locale}
-        audienceParam={params.audience}
         docParam={params.doc}
       />
     );
@@ -71,71 +66,71 @@ export default function InfoScreen() {
 function LegalScreen({
   slug,
   locale,
-  audienceParam,
   docParam,
 }: {
   slug: 'terms' | 'privacy' | 'legal';
   locale: LegalLocale;
-  audienceParam?: string;
   docParam?: string;
 }) {
   const { t } = useTranslation();
   const bundle = getLegalBundle(locale);
 
-  // `info/terms` and `info/privacy` open the customer version by default, but
-  // the selectors can still switch role and document from the same screen.
+  // The app is used by customers, so the legal centre only serves the
+  // customer documents. Vendor, enterprise and bulk terms stay on the web.
+  const audience = 'client' as const;
   const defaultDoc: LegalDoc = slug === 'privacy' ? 'privacy' : 'terms';
-  const audience: LegalAudience = isLegalAudience(audienceParam) ? audienceParam : 'client';
   const doc: LegalDoc = isLegalDoc(docParam) ? docParam : defaultDoc;
 
-  const openDocument = (nextAudience: LegalAudience, nextDoc: LegalDoc) => {
-    router.setParams({ audience: nextAudience, doc: nextDoc });
+  const openDocument = (nextDoc: LegalDoc) => {
+    router.setParams({ doc: nextDoc });
   };
 
-  if (slug === 'legal' && !isLegalAudience(audienceParam) && !isLegalDoc(docParam)) {
+  if (slug === 'legal' && !isLegalDoc(docParam)) {
     return (
       <Screen>
         <FlowHeader
           title={bundle.ui.legalCentre}
-          subtitle={bundle.ui.legalCentreLede}
+          subtitle={
+            locale === 'ar'
+              ? 'الشروط وسياسة الخصوصية التي تنطبق عليك كعميل في Giftly.'
+              : 'The terms and privacy policy that apply to you as a Giftly customer.'
+          }
           onBack={() => router.back()}
         />
 
         <Card tone="teal">
           <Text style={styles.hubNote}>
             {locale === 'ar'
-              ? 'لكل دور شروطه وسياسة خصوصية خاصة به. تنطبق الأقسام العامة على الجميع، ويضيف ملحق دورك الأحكام التي تنطبق على طريقة تعاملك مع المنصة.'
-              : 'Each role has its own terms and privacy notice. The general sections apply to everyone, and your role schedule adds the provisions that match the way you use the Platform.'}
+              ? 'هذه هي الشروط وسياسة الخصوصية التي تنطبق على العملاء الذين يشترون بطاقات هدايا Giftly أو يرسلونها أو يستلمونها أو يحتفظون بها عبر التطبيق.'
+              : 'These are the terms and privacy policy that apply to customers who buy, send, receive or hold a gift card in the Giftly app.'}
           </Text>
         </Card>
 
-        {LEGAL_AUDIENCES.map((entry) => (
-          <Card key={entry}>
-            <Text style={styles.hubAudience}>{audienceLabel(locale, entry)}</Text>
-            <Text style={styles.hubShort}>{audienceShort(locale, entry)}</Text>
-            <View style={styles.hubButtons}>
-              <Button
-                label={t('info.terms.title')}
-                onPress={() =>
-                  router.push({
-                    pathname: '/(customer)/info/[slug]',
-                    params: { slug: 'legal', audience: entry, doc: 'terms' },
-                  })
-                }
-              />
-              <Button
-                label={t('info.privacy.title')}
-                variant="secondary"
-                onPress={() =>
-                  router.push({
-                    pathname: '/(customer)/info/[slug]',
-                    params: { slug: 'legal', audience: entry, doc: 'privacy' },
-                  })
-                }
-              />
-            </View>
-          </Card>
-        ))}
+        <Card>
+          <Text style={styles.hubAudience}>{audienceLabel(locale, 'client')}</Text>
+          <Text style={styles.hubShort}>{audienceShort(locale, 'client')}</Text>
+          <View style={styles.hubButtons}>
+            <Button
+              label={t('info.terms.title')}
+              onPress={() =>
+                router.push({
+                  pathname: '/(customer)/info/[slug]',
+                  params: { slug: 'legal', doc: 'terms' },
+                })
+              }
+            />
+            <Button
+              label={t('info.privacy.title')}
+              variant="secondary"
+              onPress={() =>
+                router.push({
+                  pathname: '/(customer)/info/[slug]',
+                  params: { slug: 'legal', doc: 'privacy' },
+                })
+              }
+            />
+          </View>
+        </Card>
 
         <Text style={styles.hubMeta}>
           {bundle.ui.lastUpdated}: {bundle.updated} · {bundle.ui.version} ·{' '}
@@ -161,8 +156,7 @@ function LegalScreen({
       <LegalDocumentView
         document={document}
         locale={locale}
-        onSelectAudience={(nextAudience) => openDocument(nextAudience, document.doc)}
-        onSelectDoc={(nextDoc) => openDocument(document.audience, nextDoc)}
+        onSelectDoc={openDocument}
       />
 
       <Button label={t('common.back')} variant="secondary" onPress={() => router.back()} />

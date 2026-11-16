@@ -12,9 +12,9 @@ import { Screen } from '@/src/components/Screen';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const STEPS = [
-  { icon: 'link', key: 'open' },
-  { icon: 'camera', key: 'scan' },
-  { icon: 'link', key: 'partial' },
+  { icon: 'gift', key: 'open', tone: 'lavender' },
+  { icon: 'qr', key: 'scan', tone: 'teal' },
+  { icon: 'wallet', key: 'partial', tone: 'gold' },
 ] as const;
 
 export default function GiftRedemptionScreen() {
@@ -33,10 +33,15 @@ export default function GiftRedemptionScreen() {
       <View style={styles.steps}>
         {STEPS.map((step, index) => (
           <Card key={step.key} style={styles.step}>
-            <IconTile icon={step.icon} size={46} tone="lavender" />
+            <IconTile icon={step.icon} size={46} tone={step.tone} />
             <View style={styles.stepCopy}>
               <Text style={styles.stepIndex}>{index + 1}</Text>
-              <Text style={styles.stepText}>{t(`claimExtra.instructionsTitle`)}</Text>
+              <Text style={styles.stepTitle}>
+                {t(`gift.redemptionSteps.${step.key}Title`)}
+              </Text>
+              <Text style={styles.stepText}>
+                {t(`gift.redemptionSteps.${step.key}Body`)}
+              </Text>
             </View>
           </Card>
         ))}
@@ -58,16 +63,22 @@ const styles = themedStyles(() => ({
     lineHeight: 22,
   },
   steps: { gap: spacing.sm },
-  step: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  step: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
   stepCopy: { flex: 1, gap: 2 },
   stepIndex: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.xs,
     color: colors.tealDark,
   },
-  stepText: {
+  stepTitle: {
     fontFamily: fonts.semibold,
     fontSize: fontSizes.md,
     color: colors.text,
+  },
+  stepText: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+    lineHeight: 20,
   },
 }));

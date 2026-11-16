@@ -8,6 +8,7 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
 import { offerBusinessId } from '@/src/lib/catalog';
+import { pushOnce } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { listFavourites } from '@/src/lib/data';
 import type { Offer } from '@/src/lib/types';
@@ -50,7 +51,7 @@ export default function FavouritesScreen() {
               key={offer.id}
               offer={offer}
               index={index}
-              onPress={() => router.push(`/(customer)/business/${offerBusinessId(offer)}`)}
+              onPress={() => pushOnce(`/(customer)/business/${offerBusinessId(offer)}`)}
             />
           ))}
         </View>

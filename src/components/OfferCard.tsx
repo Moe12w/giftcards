@@ -1,7 +1,6 @@
 // src/components/OfferCard.tsx
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
 import { ArrowLeft, ArrowRight, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import {
@@ -13,6 +12,7 @@ import {
   offerTitle,
   offerTone,
 } from '../lib/catalog';
+import { pushOnce } from '../lib/navigation';
 import type { AccentTone, Offer } from '../lib/types';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Card, type CardTone } from './Card';
@@ -60,7 +60,7 @@ export function OfferCard({ offer, index = 0, onPress, vendorLink = true }: Offe
             </Text>
             {vendorLink && businessId ? (
               <Pressable
-                onPress={() => router.push(`/(customer)/business/${businessId}`)}
+                onPress={() => pushOnce(`/(customer)/business/${businessId}`)}
                 accessibilityRole="button"
                 accessibilityLabel={businessName}
                 hitSlop={6}
