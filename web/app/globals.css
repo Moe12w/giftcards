@@ -2228,8 +2228,31 @@ table.data .sub {
     display: none;
   }
 
+  /* Keep the business name in the first header row next to the menu button;
+     only the portal label above it is dropped. */
+  .dash-top .title .dash-top-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
   .dash-top .title strong {
     font-size: 0.98rem;
+  }
+
+  /* The header's actions cannot share a row with the workspace name on a
+     phone, so they move to their own full-width row instead of clipping off
+     the right edge of the screen. */
+  .dash-top {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .dash-top .btn-row {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .mobile-only {
