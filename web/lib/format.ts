@@ -19,6 +19,7 @@ export function formatDate(
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Asia/Qatar',
     numberingSystem: 'latn',
   }).format(date);
 }
@@ -36,6 +37,7 @@ export function formatDateTime(
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZone: 'Asia/Qatar',
     numberingSystem: 'latn',
   }).format(date);
 }
