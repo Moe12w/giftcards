@@ -138,7 +138,7 @@ export default async function VendorAdvertisingCampaignPage({
       <div className="pill-row">
         <StatusTag status={campaign.status} />
         <StatusTag status={campaign.payment_status} />
-        {campaign.approved_at ? <span className="tag success">approved</span> : <span className="tag warning">not approved</span>}
+        {campaign.approved_at ? <span className="tag success">approved</span> : null}
         {campaign.auto_renew ? <span className="tag sky">auto-renew</span> : null}
         {campaign.pause_reason ? <span className="tag warning">{campaign.pause_reason.replace(/_/g, ' ')}</span> : null}
       </div>
