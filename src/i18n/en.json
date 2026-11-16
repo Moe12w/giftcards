@@ -608,7 +608,8 @@
     "deleteAccountConfirm": "Delete my account",
     "signOutConfirmTitle": "Log out?",
     "signOutConfirmBody": "You can sign back in any time.",
-    "rtlReloadHint": "You may need to restart the app to apply the right-to-left layout."
+    "rtlReloadHint": "You may need to restart the app to apply the right-to-left layout.",
+    "deleteFailed": "We couldn't delete this account. If it is linked to a business, contact support."
   },
   "profile": {
     "title": "Profile",
@@ -655,6 +656,7 @@
     "deleteTitle": "Delete your account?",
     "deleteBody": "This permanently removes your account and personal data.",
     "deleteConfirm": "Delete my account",
+    "deleteFailed": "We couldn't delete this account. If it is linked to a business, contact support.",
     "privacyBody": "Control who can see your profile and how your data is used.",
     "securityBody": "Manage your password, devices and sign-in protection.",
     "preferencesBody": "Choose how Giftly looks and feels.",

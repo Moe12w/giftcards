@@ -3044,7 +3044,12 @@ table.data .sub {
     height: 100vh;
     height: 100lvh;
     padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    /* The drawer runs to the large viewport so Safari's glass bar stays
+       translucent over it, which leaves the last rows (language, account,
+       sign out) underneath that bar. Extra bottom padding lets the drawer
+       scroll them up into the visible area instead of trapping them there. */
+    padding-bottom: calc(env(safe-area-inset-bottom) + 88px);
+    scroll-padding-bottom: 88px;
     transform: translateX(-102%);
     transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.3, 1);
     box-shadow: 6px 0 0 rgba(28, 28, 28, 0.12);

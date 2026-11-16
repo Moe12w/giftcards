@@ -8,6 +8,7 @@ import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
+import { deleteMyAccount } from '@/src/lib/data';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
@@ -26,7 +27,19 @@ export default function DeleteAccountScreen() {
         text: t('profile.deleteConfirm'),
         style: 'destructive',
         onPress: async () => {
-          await signOut();
+          try {
+            await deleteMyAccount();
+          } catch {
+            setConfirming(false);
+            Alert.alert(t('profile.deleteAccount'), t('profile.deleteFailed'));
+            return;
+          }
+          // The account is gone; a failed sign-out is harmless.
+          try {
+            await signOut();
+          } catch {
+            // ignore
+          }
           router.replace('/(auth)/login');
         },
       },

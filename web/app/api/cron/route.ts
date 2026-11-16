@@ -26,10 +26,12 @@ export const maxDuration = 60;
  * with Vercel; the same URL works from cron-job.org, GitHub Actions or a
  * Supabase scheduled function.
  *
- * Vercel's Hobby plan only permits one cron run per day, so `web/vercel.json`
- * uses `0 0 * * *`. If this work needs to run hourly, keep the Vercel config
- * daily and point an external scheduler (cron-job.org, GitHub Actions or a
- * Supabase scheduled function) at this endpoint instead.
+ * Customers choose a delivery date, never a time, so one run just after
+ * midnight is enough: a gift scheduled for today is delivered on that day.
+ * `web/vercel.json` uses `5 0 * * *` (00:05 UTC, which is 03:05 in Qatar — still
+ * the same date). Vercel cron times are UTC. If this work ever needs to run
+ * more often, point an external scheduler (cron-job.org, GitHub Actions or a
+ * Supabase scheduled function) at the same endpoint.
  */
 async function run(request: Request) {
   const expected = cronSecret();

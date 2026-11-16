@@ -752,6 +752,17 @@ export async function addPaymentMethod(method: {
   if (error) throw error;
 }
 
+/**
+ * Deletes the signed-in customer's account and personal data.
+ * Financial records (orders, vouchers) stay with the vendor and recipient.
+ * Throws when the account belongs to a vendor, partner or business buyer.
+ */
+export async function deleteMyAccount(): Promise<void> {
+  if (!hasSupabaseConfig) return;
+  const { error } = await getSupabase().rpc('delete_my_account');
+  if (error) throw error;
+}
+
 /** Removes a saved payment method. */
 export async function removePaymentMethod(id: string): Promise<void> {
   if (!hasSupabaseConfig) return;

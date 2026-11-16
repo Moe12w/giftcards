@@ -43,9 +43,10 @@ describe('formatMoney', () => {
   });
 
   it('formats QAR in Arabic', () => {
-    const value = formatMoney(123450, 'ar');
-    expect(value).toContain('ر.ق');
-    expect(value).toContain('١');
+    // Arabic uses the same Latin digits as English on purpose, so amounts read
+    // the same everywhere; only the currency label changes.
+    expect(formatMoney(123450, 'ar')).toBe('1,234.50 ر.ق');
+    expect(formatMoney(123450, 'ar')).not.toContain('١');
   });
 });
 

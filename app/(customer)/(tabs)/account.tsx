@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,7 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
+import { deleteMyAccount } from '@/src/lib/data';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { setLanguage, type Language } from '@/src/i18n';
 import { colors, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
@@ -15,6 +16,7 @@ export default function AccountScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { user, signOut, isDemo } = useAuth();
+  const [deleting, setDeleting] = useState(false);
   const current = (i18n.language === 'ar' ? 'ar' : 'en') as Language;
 
   const name = (user?.user_metadata?.full_name as string | undefined) ?? '—';
@@ -43,9 +45,31 @@ export default function AccountScreen() {
   }
 
   function confirmDelete() {
+    if (deleting) return;
     Alert.alert(t('account.deleteAccountTitle'), t('account.deleteAccountBody'), [
       { text: t('common.cancel'), style: 'cancel' },
-      { text: t('account.deleteAccountConfirm'), style: 'destructive', onPress: () => undefined },
+      {
+        text: t('account.deleteAccountConfirm'),
+        style: 'destructive',
+        onPress: async () => {
+          setDeleting(true);
+          try {
+            await deleteMyAccount();
+          } catch {
+            setDeleting(false);
+            Alert.alert(t('account.deleteAccount'), t('account.deleteFailed'));
+            return;
+          }
+          // The account is gone, so the sign-out request may fail; the session
+          // is invalid either way.
+          try {
+            await signOut();
+          } catch {
+            // ignore: nothing left to sign out of
+          }
+          router.replace('/(auth)/login');
+        },
+      },
     ]);
   }
 
@@ -84,7 +108,13 @@ export default function AccountScreen() {
       <Card style={[styles.card, styles.dangerCard]}>
         <Text style={styles.sectionLabel}>{t('account.dangerZone')}</Text>
         <Text style={styles.dangerBody}>{t('account.deleteAccountBody')}</Text>
-        <Button label={t('account.deleteAccount')} variant="danger" onPress={confirmDelete} />
+        <Button
+          label={t('account.deleteAccount')}
+          variant="danger"
+          loading={deleting}
+          disabled={deleting}
+          onPress={confirmDelete}
+        />
       </Card>
     </Screen>
   );
