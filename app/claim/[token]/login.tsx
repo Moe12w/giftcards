@@ -8,6 +8,7 @@ import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
+import { claimGift } from '@/src/lib/claim';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
@@ -31,6 +32,10 @@ export default function ClaimLoginScreen() {
     setSubmitting(true);
     try {
       await signIn(email.trim(), password);
+      // A signed-in recipient binds the gift to their account on first
+      // arrival, so it lands in their wallet instead of being redeeemed as an
+      // anonymous token.
+      await claimGift(token);
       router.replace(`/claim/${token}/success`);
     } catch {
       setErrors({ form: t('common.errorGeneric') });

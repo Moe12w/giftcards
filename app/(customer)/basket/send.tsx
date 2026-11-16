@@ -66,38 +66,29 @@ export default function SendBasketScreen() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    // WhatsApp is handed off to the customer, who sends the message from
-    // their own conversation. Wait for the hand-off before leaving the screen
-    // so the link is not lost while the route changes.
-    if (method === 'whatsapp') {
-      setSending(true);
-      const opened = await shareOnWhatsapp(
-        phone,
-        t('basket.whatsappMessage', {
-          name: name.trim(),
-          link: Linking.createURL(`/invite/${basket.code}`),
-        }),
-      );
-      setSending(false);
-      if (!opened) {
-        setErrors({ whatsapp: t('basket.whatsappError') });
-        return;
-      }
-      sendBasket(basket.id, { recipientName: name.trim(), message: message.trim() });
-      if (router.canDismiss()) {
-        router.dismissAll();
-        router.push(`/(customer)/basket/${basket.id}?sent=1`);
-        return;
-      }
-      router.replace(`/(customer)/basket/${basket.id}?sent=1`);
-      return;
-    }
-
     setSending(true);
-    // Delivery is queued by the backend after the payment provider settles in
-    // production. Demo mode completes after a short simulated hand-off.
-    setTimeout(() => {
-      sendBasket(basket.id, { recipientName: name.trim(), message: message.trim() });
+    try {
+      // WhatsApp is handed off to the customer, who sends the message from
+      // their own conversation. Wait for the hand-off before leaving the screen
+      // so the link is not lost while the route changes.
+      if (method === 'whatsapp') {
+        const opened = await shareOnWhatsapp(
+          phone,
+          t('basket.whatsappMessage', {
+            name: name.trim(),
+            link: Linking.createURL(`/invite/${basket.code}`),
+          }),
+        );
+        if (!opened) {
+          setErrors({ whatsapp: t('basket.whatsappError') });
+          return;
+        }
+        await sendBasket(basket.id, { recipientName: name.trim(), message: message.trim() });
+      } else {
+        // Delivery is queued by the backend after the payment provider settles in
+        // production. Demo mode completes after a short simulated hand-off.
+        await sendBasket(basket.id, { recipientName: name.trim(), message: message.trim() });
+      }
       // Close the send screen and the basket screen beneath it, then open the
       // finished basket fresh so Back returns to the tabs, not to this form.
       if (router.canDismiss()) {
@@ -106,7 +97,11 @@ export default function SendBasketScreen() {
         return;
       }
       router.replace(`/(customer)/basket/${basket.id}?sent=1`);
-    }, 900);
+    } catch {
+      setErrors({ form: t('common.errorGeneric') });
+    } finally {
+      setSending(false);
+    }
   }
 
   if (!ready) {

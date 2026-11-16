@@ -3,13 +3,14 @@
 //
 // The provider settings live in the admin dashboard (`system_settings`), so a
 // key can be pasted in and used without a redeploy. The environment variables
-// stay as a fallback for deployments that set them instead.
+// stay as the fallback for deployments that set them instead.
 //
 // Without a key nothing is sent: bulk messages are queued in the outbox so the
 // business can still download the links and send them any way it likes.
 //
 // Server only. The provider key is a platform secret and is read with the
 // service role client; never import this module from a client component.
+import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export const DEFAULT_EMAIL_FROM = 'Giftly <gifts@giftly.qa>';

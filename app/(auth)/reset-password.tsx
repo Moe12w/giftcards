@@ -15,7 +15,7 @@ import { Glyph } from '@/src/components/Glyph';
 export default function ResetPasswordScreen() {
   useThemeRefresh();
   const { t } = useTranslation();
-  const { session, updatePassword } = useAuth();
+  const { recovery, updatePassword } = useAuth();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -23,9 +23,10 @@ export default function ResetPasswordScreen() {
   const [done, setDone] = useState(false);
 
   // The screen is opened from the link in the recovery email. Without that
-  // session there is nothing to update, so we explain what to do instead of
-  // failing with a generic error.
-  const hasRecoverySession = Boolean(session);
+  // recovery session there is nothing to update, so we explain what to do instead
+  // of failing with a generic error. The flag is set only by the password
+  // recovery flow, never by an arbitrary deep link.
+  const hasRecoverySession = recovery;
 
   async function onSubmit() {
     const next: Record<string, string> = {};

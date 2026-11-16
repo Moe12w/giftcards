@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -7,31 +7,63 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
-import { useAuth } from '@/src/lib/auth';
-import { useThemeRefresh } from '@/src/lib/theme';
 import { TextField } from '@/src/components/TextField';
+import { useAuth } from '@/src/lib/auth';
+import { hasSupabaseConfig } from '@/src/lib/env';
+import { getSupabase } from '@/src/lib/supabase';
+import { useThemeRefresh } from '@/src/lib/theme';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function SecurityScreen() {
   useThemeRefresh();
-  const { updatePassword } = useAuth();
+  const { user, updatePassword } = useAuth();
   const { t } = useTranslation();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [twoFactor, setTwoFactor] = useState(false);
+  const [twoFactor, setTwoFactor] = useState<boolean | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
 
+  // Ask the auth server whether the account has two-factor authentication on.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!hasSupabaseConfig) {
+        if (!cancelled) setTwoFactor(false);
+        return;
+      }
+      try {
+        const { data, error: mfaError } = await getSupabase().auth.mfa.getAuthenticatorAssuranceLevel();
+        if (!cancelled) setTwoFactor(!mfaError && data?.currentLevel === 'aal2');
+      } catch {
+        if (!cancelled) setTwoFactor(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   async function save() {
     const nextErrors: Record<string, string> = {};
-    if (!current) nextErrors.current = t('common.required');
+    if (!current) nextErrors.current = t('profile.currentPassword');
     if (next.length < 8) nextErrors.next = t('auth.passwordTooShort');
     if (next !== confirm) nextErrors.confirm = t('authExtra.passwordsDontMatch');
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
+    // Re-authenticate before changing the password: the current password is
+    // checked here, so a stolen session cannot be used to take over the account.
     try {
+      const { error: signInError } = await getSupabase().auth.signInWithPassword({
+        email: user?.email ?? '',
+        password: current,
+      });
+      if (signInError) {
+        setErrors({ current: t('authExtra.currentPasswordIncorrect') });
+        return;
+      }
       await updatePassword(next);
       setSaved(true);
       setCurrent('');
@@ -41,6 +73,12 @@ export default function SecurityScreen() {
       setErrors({ next: t('authExtra.resetFailed') });
     }
   }
+
+  const twoFactorStatus = twoFactor
+    ? t('profile.twoFactorEnabled')
+    : twoFactor === null
+      ? t('common.loading')
+      : t('profile.twoFactorPending');
 
   return (
     <Screen>
@@ -81,12 +119,7 @@ export default function SecurityScreen() {
       <Card>
         <View style={styles.row}>
           <Text style={styles.label}>{t('profile.twoFactor')}</Text>
-          <Switch
-            value={twoFactor}
-            onValueChange={setTwoFactor}
-            trackColor={{ false: colors.borderSoft, true: colors.teal }}
-            thumbColor={colors.surface}
-          />
+          <Text style={styles.status}>{twoFactorStatus}</Text>
         </View>
       </Card>
     </Screen>
@@ -104,4 +137,5 @@ const styles = themedStyles(() => ({
     gap: spacing.md,
   },
   label: { flex: 1, fontFamily: fonts.semibold, fontSize: fontSizes.md, color: colors.text },
+  status: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.text, textAlign: 'right' },
 }));

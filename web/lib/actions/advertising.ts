@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin, requireAdvertiser } from '@/lib/auth';
 import { parseMoneyToMinor } from '@/lib/money';
+import { validateImageUpload } from '@/lib/security';
 
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
@@ -250,10 +251,12 @@ export async function markAdvertisingNotificationRead(formData: FormData) {
   const ctx = await requireAdvertiser();
   const id = str(formData, 'notification_id');
   if (id) {
-    await ctx.supabase
+    const { error } = await ctx.supabase
       .from('advertising_notifications')
       .update({ read_at: new Date().toISOString() })
-      .eq('id', id);
+      .eq('id', id)
+      .eq('vendor_id', ctx.vendor.id);
+    if (error) back(ctx.home, 'Could not update that notification right now.');
   }
   refreshAdvertiser(ctx.kind);
   redirect(ctx.home);
@@ -276,17 +279,13 @@ export async function uploadAdvertisingCreativeImage(formData: FormData): Promis
   const ctx = await requireAdvertiser();
   const kind = str(formData, 'kind') === 'mobile_image' ? 'mobile_image' : 'image';
   const file = formData.get('file');
-  if (!(file instanceof File) || file.size === 0) {
+  if (!(file instanceof File)) {
     return { ok: false, error: 'Choose an image to upload.' };
   }
-  if (!file.type.startsWith('image/')) {
-    return { ok: false, error: 'That file is not an image.' };
-  }
-  if (file.size > 4 * 1024 * 1024) {
-    return { ok: false, error: 'That image is too large. Keep it under 4 MB.' };
-  }
+  const image = validateImageUpload(file);
+  if (!image.ok) return { ok: false, error: image.error };
+  const { extension } = image;
 
-  const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
   const path = `${ctx.vendor.id}/ad-creative-${kind}-${Date.now()}.${extension}`;
 
   const { error } = await ctx.supabase.storage.from(AD_CREATIVE_MEDIA_BUCKET).upload(path, file, {

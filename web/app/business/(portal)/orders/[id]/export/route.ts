@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { csvCell } from '@/lib/security';
 import { claimUrl } from '@/lib/email';
-
-function csvEscape(value: unknown) {
-  const s = value == null ? '' : String(value);
-  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
 
 export async function GET(
   _request: Request,
@@ -61,7 +56,7 @@ export async function GET(
     v?.claim_token ? claimUrl(v.claim_token) : '',
   ]);
 
-  const csv = [header, ...rows].map((r) => r.map(csvEscape).join(',')).join('\n');
+  const csv = [header, ...rows].map((r) => r.map(csvCell).join(',')).join('\n');
   return new NextResponse('\ufeff' + csv, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',

@@ -565,7 +565,11 @@ export async function listAddresses(): Promise<CustomerAddress[]> {
 /** Adds a saved address. */
 export async function addAddress(address: Omit<CustomerAddress, 'id'>): Promise<void> {
   if (!hasSupabaseConfig) return;
-  const { error } = await getSupabase().from('customer_addresses').insert(address);
+  const { isDefault, ...rest } = address;
+  const { error } = await getSupabase().from('customer_addresses').insert({
+    ...rest,
+    is_default: isDefault,
+  });
   if (error) throw error;
 }
 

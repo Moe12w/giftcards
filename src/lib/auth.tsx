@@ -5,7 +5,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import * as Linking from 'expo-linking';
 import type { Session, User } from '@supabase/supabase-js';
 import { handleAuthUrl, passwordResetLink } from './auth-link';
-import { hasSupabaseConfig } from './env';
+import { env, hasSupabaseConfig } from './env';
 import { getSupabase } from './supabase';
 import { registerPushToken } from './push';
 
@@ -14,6 +14,8 @@ interface AuthState {
   session: Session | null;
   loading: boolean;
   isDemo: boolean;
+  /** True only while a password-recovery flow is active (set by the auth event). */
+  recovery: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   /**
    * Creates an account. Returns the session when the project confirms emails
@@ -44,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(hasSupabaseConfig ? null : DEMO_USER);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(hasSupabaseConfig);
+  const [recovery, setRecovery] = useState(false);
 
   useEffect(() => {
     if (!hasSupabaseConfig) return;
@@ -55,9 +58,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next);
       setUser(next?.user ?? null);
+      // The reset screen is only reachable through a recovery flow, so an
+      // implicit-flow token link must not unlock the password change.
+      setRecovery(event === 'PASSWORD_RECOVERY');
     });
 
     // A password recovery link opens the app directly. The session has to be
@@ -89,10 +95,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       loading,
       isDemo: !hasSupabaseConfig,
+      recovery,
       async signIn(email, password) {
         if (!hasSupabaseConfig) return;
+        const identifier = email.trim().toLowerCase();
+
+        // Ask the auth gate whether this identifier is still inside the attempt
+        // budget. The gate reads the same server-side ledger the web server
+        // actions use; if it is unreachable we fail open rather than lock people
+        // out of the app.
+        let denied = false;
+        if (env.authGateUrl) {
+          try {
+            const response = await fetch(env.authGateUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ identifier, outcome: 'check' }),
+            });
+            const data = (await response.json().catch(() => null)) as { allowed?: boolean } | null;
+            denied = response.status === 429 || data?.allowed === false;
+          } catch {
+            // The gate is an optimisation; never block sign-in because of it.
+          }
+        }
+
         const { error } = await getSupabase().auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const success = !error;
+
+        if (env.authGateUrl) {
+          try {
+            await fetch(env.authGateUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ identifier, outcome: 'record', success }),
+            });
+          } catch {
+            // Best effort: never block the sign-in outcome on the ledger write.
+          }
+        }
+
+        if (error) {
+          // Never log credentials; user-agent details are enough for support.
+          if (__DEV__) console.warn('[auth] sign in failed', error.message);
+          throw error;
+        }
       },
       async signUp(email, password, fullName) {
         if (!hasSupabaseConfig) return { session: null };
@@ -101,25 +147,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           password,
           options: { data: { full_name: fullName } },
         });
-        if (error) throw error;
+        if (error) {
+          if (__DEV__) console.warn('[auth] sign up failed', error.message);
+          throw error;
+        }
         return { session: data.session ?? null };
       },
       async signOut() {
         if (!hasSupabaseConfig) return;
         const { error } = await getSupabase().auth.signOut();
-        if (error) throw error;
+        if (error) {
+          if (__DEV__) console.warn('[auth] sign out failed', error.message);
+          throw error;
+        }
       },
       async resetPassword(email) {
         if (!hasSupabaseConfig) return;
         const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
           redirectTo: passwordResetLink(),
         });
-        if (error) throw error;
+        if (error) {
+          if (__DEV__) console.warn('[auth] reset failed', error.message);
+          throw error;
+        }
       },
       async updatePassword(password) {
         if (!hasSupabaseConfig) return;
         const { error } = await getSupabase().auth.updateUser({ password });
-        if (error) throw error;
+        if (error) {
+          if (__DEV__) console.warn('[auth] update password failed', error.message);
+          throw error;
+        }
       },
       async updateProfile(patch) {
         if (!hasSupabaseConfig) {
@@ -137,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) throw error;
       },
     }),
-    [user, session, loading],
+    [user, session, loading, recovery],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -96,7 +96,6 @@ export default function ClaimLandingScreen() {
         label={t('claimExtra.openCta')}
         onPress={() => router.push(`/claim/${token}/open`)}
       />
-      <Text style={styles.note}>{t('claimExtra.noAccountNeeded')}</Text>
     </Screen>
   );
 }

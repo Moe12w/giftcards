@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/components/Button';
@@ -10,6 +10,7 @@ import { ListRow } from '@/src/components/ListRow';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { fetchClaimGift, type ClaimGift } from '@/src/lib/claim';
+import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
@@ -18,6 +19,7 @@ export default function ClaimDetailsScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
+  const { user, loading: authLoading } = useAuth();
   const [gift, setGift] = useState<ClaimGift | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +38,9 @@ export default function ClaimDetailsScreen() {
     };
   }, [token]);
 
+
+  if (authLoading) return null;
+  if (!user) return <Redirect href={`/claim/${token}/add`} />;
 
   return (
     <Screen>

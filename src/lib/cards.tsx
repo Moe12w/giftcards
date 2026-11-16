@@ -71,8 +71,14 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
   const [entries, setEntries] = useState<RedemptionEntry[]>([]);
   const [ready, setReady] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (userId: string | null) => {
     if (!hasSupabaseConfig) {
+      setReady(true);
+      return;
+    }
+    if (!userId) {
+      setCards([]);
+      setEntries([]);
       setReady(true);
       return;
     }
@@ -89,8 +95,8 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    void load(userId);
+  }, [load, userId]);
 
   const getCard = useCallback(
     (id: string) => cards.find((card) => card.id === id) ?? null,
@@ -137,10 +143,10 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       } catch {
         return false;
       }
-      await load();
+      await load(userId);
       return true;
     },
-    [load],
+    [load, userId],
   );
 
   const redeemValue = useCallback(
@@ -150,10 +156,10 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       } catch {
         return false;
       }
-      await load();
+      await load(userId);
       return true;
     },
-    [load],
+    [load, userId],
   );
 
   const revealPartnerCode = useCallback(async (cardId: string) => {
@@ -172,10 +178,10 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       } catch {
         return false;
       }
-      await load();
+      await load(userId);
       return true;
     },
-    [load],
+    [load, userId],
   );
 
   // A voucher the customer received was claimed by them. A voucher they sent
@@ -222,7 +228,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       redeemValue,
       revealPartnerCode,
       markPartnerCodeUsed,
-      reload: load,
+      reload: () => load(userId),
     }),
     [
       ready,
@@ -242,6 +248,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       revealPartnerCode,
       markPartnerCodeUsed,
       load,
+      userId,
     ],
   );
 

@@ -1,9 +1,5 @@
 import { requireEnterprise } from '@/lib/auth';
-
-function csvCell(value: unknown): string {
-  const text = value === null || value === undefined ? '' : String(value);
-  return `"${text.replace(/"/g, '""')}"`;
-}
+import { csvCell } from '@/lib/security';
 
 export async function GET(request: Request) {
   const ctx = await requireEnterprise();

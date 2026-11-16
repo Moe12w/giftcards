@@ -7,6 +7,7 @@ import { parseMoneyToMinor } from '@/lib/money';
 import { slugify } from '@/lib/format';
 import { normalizeTone } from '@/lib/catalog';
 import { parseBulkTiers } from '@/lib/bulk';
+import { normalizeWebsite } from '@/lib/security';
 
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
@@ -109,8 +110,10 @@ export async function saveEnterpriseProduct(formData: FormData) {
   const name = str(formData, 'name');
   const denomination = moneyField(formData, 'denomination');
   const sellingPrice = moneyField(formData, 'selling_price');
-  const commissionPercent = Number(str(formData, 'commission_percent') || '0');
-  const commissionBps = Math.round(commissionPercent * 100);
+  // The platform's take is server-controlled (the partner cannot set its own
+  // commission), so it is read from the partner context, not from the form.
+  const commissionBps = Math.round(ctx.partner?.commission_bps ?? 0);
+  const partnerNet = Math.round((sellingPrice ?? 0) * (1 - commissionBps / 10_000));
 
   if (!name) back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Give the product a name.');
   if (denomination === null || denomination <= 0) {
@@ -119,12 +122,9 @@ export async function saveEnterpriseProduct(formData: FormData) {
   if (sellingPrice === null || sellingPrice <= 0) {
     back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Enter a valid price.');
   }
-  if (!Number.isFinite(commissionPercent) || commissionPercent < 0 || commissionPercent > 100) {
+  if (commissionBps < 0 || commissionBps > 10_000) {
     back(id ? `/enterprise/products/${id}` : '/enterprise/products', "Giftly's cut must be between 0 and 100%.");
   }
-
-  // The partner sets the price, Giftly takes its cut, the rest is theirs.
-  const partnerNet = Math.round(sellingPrice * (1 - commissionBps / 10000));
 
   const patch = {
     name,
@@ -341,11 +341,13 @@ export async function saveEnterpriseProfile(formData: FormData) {
   const name = str(formData, 'name');
   if (name.length < 2) back('/enterprise/settings', 'Company name is required.');
 
+  const website = normalizeWebsite(optional(formData, 'website'));
+
   const { error } = await ctx.supabase
     .from('enterprise_partners')
     .update({
       name,
-      website: optional(formData, 'website'),
+      website,
       contact_name: optional(formData, 'contact_name'),
       contact_email: optional(formData, 'contact_email'),
       contact_phone: optional(formData, 'contact_phone'),

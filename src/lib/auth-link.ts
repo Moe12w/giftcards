@@ -23,16 +23,21 @@ function paramFrom(url: string, key: string): string | null {
 /**
  * Establishes a session from an incoming auth link.
  * Returns true when the link carried a usable session.
+ *
+ * Token flows are accepted only on the password-recovery deep link, so a
+ * crafted `giftly://...?access_token=...` cannot be used to sign somebody into
+ * another account.
  */
 export async function handleAuthUrl(url: string | null): Promise<boolean> {
   if (!url) return false;
 
   try {
     const supabase = getSupabase();
+    const path = (url.split('#')[0] || url).split('?')[0];
 
     // PKCE flow: the link carries ?code=...
     const code = paramFrom(url, 'code');
-    if (code) {
+    if (code && path.includes('reset-password')) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       return !error;
     }
@@ -40,7 +45,7 @@ export async function handleAuthUrl(url: string | null): Promise<boolean> {
     // Implicit flow: the link carries #access_token=...&refresh_token=...
     const accessToken = paramFrom(url, 'access_token');
     const refreshToken = paramFrom(url, 'refresh_token');
-    if (accessToken && refreshToken) {
+    if (accessToken && refreshToken && path.includes('reset-password')) {
       const { error } = await supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,

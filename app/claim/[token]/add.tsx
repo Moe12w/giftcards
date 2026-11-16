@@ -1,5 +1,5 @@
 import { useThemeRefresh } from '@/src/lib/theme';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -9,11 +9,23 @@ import { Card } from '@/src/components/Card';
 import { Screen } from '@/src/components/Screen';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
+import { useAuth } from '@/src/lib/auth';
+import { claimGift } from '@/src/lib/claim';
 
 export default function ClaimAddScreen() {
   useThemeRefresh();
   const { t } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
+  const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (authLoading || !user || !token) return;
+    // Already signed in: bind the gift and continue.
+    claimGift(token).finally(() => router.replace(`/claim/${token}/details`));
+  }, [authLoading, user, token]);
+
+  if (authLoading) return null;
+  if (user) return null;
 
   return (
     <Screen scroll={false} contentStyle={styles.content}>
@@ -35,11 +47,6 @@ export default function ClaimAddScreen() {
           label={t('claimExtra.signIn')}
           variant="secondary"
           onPress={() => router.push(`/claim/${token}/login`)}
-        />
-        <Button
-          label={t('common.skip')}
-          variant="ghost"
-          onPress={() => router.replace(`/claim/${token}/details`)}
         />
       </Card>
     </Screen>

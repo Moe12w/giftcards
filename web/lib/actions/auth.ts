@@ -3,11 +3,17 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import {
+  AUTH_MAX_FAILED,
+  AUTH_WINDOW_SECONDS,
+  authErrorMessage,
+  authIdentifier,
+  safeNextPath,
+} from '@/lib/security';
 
 function safeNext(value: FormDataEntryValue | null, fallback: string): string {
-  const next = typeof value === 'string' ? value : '';
-  if (next.startsWith('/') && !next.startsWith('//')) return next;
-  return fallback;
+  return safeNextPath(typeof value === 'string' ? value : '', fallback);
 }
 
 function fail(path: string, message: string): never {
@@ -23,6 +29,79 @@ async function siteOrigin(): Promise<string> {
   return `${proto}://${host}`;
 }
 
+function admin() {
+  return createAdminClient();
+}
+
+async function clientIp(): Promise<string | null> {
+  const headerStore = await headers();
+  const forwarded = headerStore.get('x-forwarded-for')?.split(',')[0]?.trim();
+  return forwarded || headerStore.get('x-real-ip') || null;
+}
+
+async function attemptsExceeded(identifier: string, windowSeconds: number, maxFailed: number): Promise<boolean> {
+  const { data } = await admin().rpc('auth_attempts_exceeded', {
+    p_identifier: identifier,
+    p_window_seconds: windowSeconds,
+    p_max_failed: maxFailed,
+  });
+  return data === true;
+}
+
+async function recordAuthAttempt(identifier: string, success: boolean, ip: string | null): Promise<void> {
+  try {
+    await admin().rpc('record_auth_attempt', { p_identifier: identifier, p_success: success });
+    if (ip) {
+      await admin().rpc('record_auth_attempt', { p_identifier: `ip:${ip}`, p_success: success });
+    }
+    if (success) {
+      await admin().rpc('clear_auth_attempts', { p_identifier: identifier });
+      if (ip) await admin().rpc('clear_auth_attempts', { p_identifier: `ip:${ip}` });
+    }
+  } catch {
+    // Throttling must never lock a legitimate user out of the app.
+  }
+}
+
+type ServerSupabase = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Signs a user in through Supabase, recording the attempt and enforcing the
+ * per-identifier and per-IP limits before the credentials are checked.
+ */
+async function signInWithLimiter(
+  supabase: ServerSupabase,
+  email: string,
+  password: string,
+  loginPath: string,
+) {
+  const identifier = authIdentifier(email);
+  const ip = await clientIp();
+  const ipLimited = ip ? await attemptsExceeded(`ip:${ip}`, AUTH_WINDOW_SECONDS, 40) : false;
+  if (ipLimited || (await attemptsExceeded(identifier, AUTH_WINDOW_SECONDS, AUTH_MAX_FAILED))) {
+    await recordAuthAttempt(identifier, false, ip);
+    fail(loginPath, 'Too many attempts. Please wait a few minutes and try again.');
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error || !data.user) {
+    await recordAuthAttempt(identifier, false, ip);
+    fail(loginPath, authErrorMessage(error));
+  }
+
+  await recordAuthAttempt(identifier, true, ip);
+  return data.user;
+}
+
+/** Per-address and per-IP throttle for public sign-up forms. */
+async function signUpAllowed(email: string): Promise<boolean> {
+  const identifier = `signup:${authIdentifier(email)}`;
+  const ip = await clientIp();
+  if (await attemptsExceeded(identifier, 3600, 5)) return false;
+  if (ip && (await attemptsExceeded(`signup:ip:${ip}`, 3600, 10))) return false;
+  return true;
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
@@ -36,13 +115,12 @@ export async function vendorSignIn(formData: FormData) {
   if (!email || !password) fail('/vendor/login', 'Enter your email and password.');
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error || !data.user) fail('/vendor/login', error?.message ?? 'Could not sign you in.');
+  const user = await signInWithLimiter(supabase, email, password, '/vendor/login');
 
   const { data: membership } = await supabase
     .from('vendor_members')
     .select('vendor_id')
-    .eq('user_id', data.user.id)
+    .eq('user_id', user.id)
     .eq('active', true)
     .limit(1)
     .maybeSingle();
@@ -57,13 +135,12 @@ export async function enterpriseSignIn(formData: FormData) {
   if (!email || !password) fail('/enterprise/login', 'Enter your email and password.');
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error || !data.user) fail('/enterprise/login', error?.message ?? 'Could not sign you in.');
+  const user = await signInWithLimiter(supabase, email, password, '/enterprise/login');
 
   const { data: membership } = await supabase
     .from('enterprise_members')
     .select('partner_id')
-    .eq('user_id', data.user.id)
+    .eq('user_id', user.id)
     .eq('active', true)
     .limit(1)
     .maybeSingle();
@@ -81,12 +158,11 @@ export async function adminSignIn(formData: FormData) {
   if (!email || !password) fail('/admin/login', 'Enter your email and password.');
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error || !data.user) fail('/admin/login', error?.message ?? 'Could not sign you in.');
+  const user = await signInWithLimiter(supabase, email, password, '/admin/login');
 
   const [{ data: role }, { data: profile }] = await Promise.all([
-    supabase.from('user_roles').select('role').eq('user_id', data.user.id).maybeSingle(),
-    supabase.from('profiles').select('is_admin').eq('id', data.user.id).maybeSingle(),
+    supabase.from('user_roles').select('role').eq('user_id', user.id).maybeSingle(),
+    supabase.from('profiles').select('is_admin').eq('id', user.id).maybeSingle(),
   ]);
 
   if (role?.role !== 'admin' && !profile?.is_admin) {
@@ -106,7 +182,18 @@ export async function requestPasswordReset(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const portal = String(formData.get('portal') ?? 'vendor');
   const loginPath = PORTAL_LOGIN[portal] ?? '/vendor/login';
-  if (!email) fail(loginPath.replace('/login', '/forgot-password'), 'Enter your email address.');
+  const resetPath = loginPath.replace('/login', '/forgot-password');
+  if (!email) fail(resetPath, 'Enter your email address.');
+
+  // Password-reset requests are unauthenticated and are a common way to make
+  // a platform send mail to somebody else, so throttle per address and per IP.
+  const identifier = `reset:${authIdentifier(email)}`;
+  const ip = await clientIp();
+  const ipIdentifier = ip ? `reset:ip:${ip}` : null;
+  const limited =
+    (await attemptsExceeded(identifier, 3600, 5)) ||
+    (ipIdentifier ? await attemptsExceeded(ipIdentifier, 3600, 10) : false);
+  if (limited) redirect(`${resetPath}?sent=1`);
 
   const supabase = await createClient();
   const origin = await siteOrigin();
@@ -114,8 +201,11 @@ export async function requestPasswordReset(formData: FormData) {
     redirectTo: `${origin}/auth/callback?next=${encodeURIComponent('/reset-password')}`,
   });
 
-  if (error) fail(loginPath.replace('/login', '/forgot-password'), error.message);
-  redirect(`${loginPath.replace('/login', '/forgot-password')}?sent=1`);
+  await recordAuthAttempt(identifier, !error, null);
+  if (ipIdentifier) await recordAuthAttempt(ipIdentifier, !error, null);
+
+  if (error) fail(resetPath, authErrorMessage(error));
+  redirect(`${resetPath}?sent=1`);
 }
 
 export async function updatePassword(formData: FormData) {
@@ -126,7 +216,7 @@ export async function updatePassword(formData: FormData) {
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password });
-  if (error) fail('/reset-password', error.message);
+  if (error) fail('/reset-password', authErrorMessage(error));
   redirect('/reset-password?done=1');
 }
 
@@ -148,13 +238,16 @@ export async function registerVendorAccount(formData: FormData) {
     if (password.length < 8) {
       fail('/vendor/register', 'Use at least 8 characters for your password.');
     }
+    if (!(await signUpAllowed(email))) {
+      fail('/vendor/register', 'Too many attempts. Please wait a few minutes and try again.');
+    }
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName } },
     });
-    if (error) fail('/vendor/register', error.message);
+    if (error) fail('/vendor/register', authErrorMessage(error));
     if (!data.session) {
       redirect('/vendor/register?notice=confirm-email');
     }
@@ -208,13 +301,12 @@ export async function businessSignIn(formData: FormData) {
   if (!email || !password) fail('/business/login', 'Enter your email and password.');
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error || !data.user) fail('/business/login', error?.message ?? 'Could not sign you in.');
+  const user = await signInWithLimiter(supabase, email, password, '/business/login');
 
   const { data: account } = await supabase
     .from('business_accounts')
     .select('id, status')
-    .eq('user_id', data.user.id)
+    .eq('user_id', user.id)
     .maybeSingle();
 
   if (!account) redirect('/business/register?notice=finish');
@@ -240,13 +332,16 @@ export async function registerBusinessAccount(formData: FormData) {
     if (password.length < 8) {
       fail('/business/register', 'Use at least 8 characters for your password.');
     }
+    if (!(await signUpAllowed(email))) {
+      fail('/business/register', 'Too many attempts. Please wait a few minutes and try again.');
+    }
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName } },
     });
-    if (error) fail('/business/register', error.message);
+    if (error) fail('/business/register', authErrorMessage(error));
     if (!data.session) {
       redirect('/business/register?notice=confirm-email');
     }
@@ -289,7 +384,7 @@ export async function registerBusinessAccount(formData: FormData) {
     status: 'pending_approval',
   });
 
-  if (error) fail('/business/register', error.message);
+  if (error) fail('/business/register', 'Could not create your business account. Please try again.');
 
   // The platform role is only set when the account does not already have one,
   // so a vendor owner or admin keeps their role.

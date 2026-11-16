@@ -7,6 +7,7 @@ import {
   requireEnterprise,
   requireVendor,
 } from '@/lib/auth';
+import { safeNextPath } from '@/lib/security';
 
 export type SupportAudience = 'vendor' | 'enterprise' | 'business';
 
@@ -16,6 +17,22 @@ function str(formData: FormData, key: string): string {
 
 function back(path: string, message: string): never {
   redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
+}
+
+const SUPPORT_PREFIXES = ['/vendor/support', '/enterprise/support', '/business/support', '/admin/support'];
+
+/**
+ * `return_to` comes from the form and is used in a redirect, so it is limited
+ * to the support screens the caller could legitimately return to.
+ */
+function safeReturnTo(value: string, fallback: string): string {
+  const candidate = safeNextPath(value, '');
+  if (!candidate) return fallback;
+  return SUPPORT_PREFIXES.some(
+    (prefix) => candidate === prefix || candidate.startsWith(`${prefix}/`) || candidate.startsWith(`${prefix}?`),
+  )
+    ? candidate
+    : fallback;
 }
 
 /**
@@ -28,7 +45,7 @@ function back(path: string, message: string): never {
  */
 export async function submitSupportTicket(formData: FormData) {
   const audience = str(formData, 'audience') as SupportAudience;
-  const returnTo = str(formData, 'return_to') || '/vendor/support';
+  const returnTo = safeReturnTo(str(formData, 'return_to'), '/vendor/support');
   const subject = str(formData, 'subject');
   const body = str(formData, 'body');
   const reference = str(formData, 'reference') || null;
@@ -88,7 +105,7 @@ export async function submitSupportTicket(formData: FormData) {
  */
 export async function replyToSupportTicket(formData: FormData) {
   const audience = str(formData, 'audience') as SupportAudience;
-  const returnTo = str(formData, 'return_to') || '/vendor/support';
+  const returnTo = safeReturnTo(str(formData, 'return_to'), '/vendor/support');
   const requestId = str(formData, 'request_id');
   const body = str(formData, 'body');
 

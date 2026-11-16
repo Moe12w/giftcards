@@ -281,11 +281,12 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
   );
 
   const fetchBasket = useCallback(async (id: string): Promise<GiftBasket | null> => {
-    const { data } = await getSupabase()
+    const { data, error } = await getSupabase()
       .from('gift_baskets')
       .select(BASKET_SELECT)
       .eq('id', id)
       .maybeSingle();
+    if (error) return null;
     return data ? mapBasket(data as unknown as BasketRow) : null;
   }, []);
 
@@ -323,7 +324,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       if (error || !basket) return null;
 
       for (const item of input.items) {
-        await getSupabase().from('gift_basket_items').insert({
+        const { error: itemError } = await getSupabase().from('gift_basket_items').insert({
           basket_id: basket.id,
           offer_id: item.offer.id,
           vendor_id: item.offer.vendor_id,
@@ -337,14 +338,16 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           added_by: ownerId,
           added_by_name: ownerName,
         });
+        if (itemError) return null;
       }
 
-      await getSupabase().from('gift_basket_activity').insert({
+      const { error: activityError } = await getSupabase().from('gift_basket_activity').insert({
         basket_id: basket.id,
         kind: 'created',
         actor_id: ownerId,
         actor_name: ownerName,
       });
+      if (activityError) return null;
 
       await load();
       return fetchBasket(basket.id);
@@ -377,7 +380,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
         .single();
       if (error || !data) return null;
 
-      await getSupabase().from('gift_basket_activity').insert({
+      const { error: activityError } = await getSupabase().from('gift_basket_activity').insert({
         basket_id: basketId,
         kind: 'item_added',
         actor_id: user.id,
@@ -385,6 +388,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
         item_title: input.offer.title,
         amount_minor: input.amountMinor,
       });
+      if (activityError) return null;
 
       await load();
 
@@ -408,11 +412,12 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
   const removeItem = useCallback(
     async (basketId: string, itemId: string) => {
       if (!hasSupabaseConfig) return;
-      await getSupabase()
+      const { error } = await getSupabase()
         .from('gift_basket_items')
         .delete()
         .eq('basket_id', basketId)
         .eq('id', itemId);
+      if (error) throw error;
       await load();
     },
     [load],
@@ -434,19 +439,21 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       const row = (Array.isArray(data) ? data[0] : data) as { id?: string } | null;
       if (!row?.id) return null;
 
-      await getSupabase().from('gift_basket_participants').insert({
+      const { error: joinError } = await getSupabase().from('gift_basket_participants').insert({
         basket_id: row.id,
         user_id: user.id,
         name: displayName(),
         is_owner: false,
       });
+      if (joinError) return null;
 
-      await getSupabase().from('gift_basket_activity').insert({
+      const { error: activityError } = await getSupabase().from('gift_basket_activity').insert({
         basket_id: row.id,
         kind: 'joined',
         actor_id: user.id,
         actor_name: displayName(),
       });
+      if (activityError) return null;
 
       await load();
       return fetchBasket(row.id);
@@ -457,7 +464,8 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
   const markReady = useCallback(
     async (basketId: string) => {
       if (!hasSupabaseConfig) return;
-      await getSupabase().from('gift_baskets').update({ status: 'ready' }).eq('id', basketId);
+      const { error } = await getSupabase().from('gift_baskets').update({ status: 'ready' }).eq('id', basketId);
+      if (error) throw error;
       await load();
     },
     [load],
@@ -466,10 +474,11 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
   const markCompleted = useCallback(
     async (basketId: string) => {
       if (!hasSupabaseConfig) return;
-      await getSupabase()
+      const { error } = await getSupabase()
         .from('gift_baskets')
         .update({ status: 'completed', completed_at: new Date().toISOString() })
         .eq('id', basketId);
+      if (error) throw error;
       await load();
     },
     [load],
@@ -478,7 +487,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
   const sendBasket = useCallback(
     async (basketId: string, details: { recipientName?: string; message?: string }) => {
       if (!hasSupabaseConfig) return;
-      await getSupabase()
+      const { error } = await getSupabase()
         .from('gift_baskets')
         .update({
           status: 'completed',
@@ -487,6 +496,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           note: details.message?.trim() || undefined,
         })
         .eq('id', basketId);
+      if (error) throw error;
       await load();
     },
     [load],

@@ -18,8 +18,8 @@ export default function CustomerLayout() {
   }
 
   return (
-    <BasketProvider>
-      <GiftDraftProvider>
+    <BasketProvider key={user?.id ?? 'anon'}>
+      <GiftDraftProvider key={user?.id ?? 'anon'}>
         <Stack
           screenOptions={{
             headerShown: false,

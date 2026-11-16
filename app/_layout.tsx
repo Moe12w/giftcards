@@ -12,7 +12,7 @@ import {
   Figtree_900Black,
 } from '@expo-google-fonts/figtree';
 
-import { AuthProvider } from '@/src/lib/auth';
+import { AuthProvider, useAuth } from '@/src/lib/auth';
 import { CardProvider } from '@/src/lib/cards';
 import { initI18n } from '@/src/i18n';
 import { ThemeProvider, useTheme } from '@/src/lib/theme';
@@ -47,7 +47,9 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <AppShell loaded={loaded} i18nReady={i18nReady} />
+      <AuthProvider>
+        <AppShell loaded={loaded} i18nReady={i18nReady} />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
@@ -58,6 +60,7 @@ export default function RootLayout() {
  */
 function AppShell({ loaded, i18nReady }: { loaded: boolean; i18nReady: boolean }) {
   const { isDark, ready } = useTheme();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (loaded && i18nReady && ready) {
@@ -70,23 +73,21 @@ function AppShell({ loaded, i18nReady }: { loaded: boolean; i18nReady: boolean }
   }
 
   return (
-    <AuthProvider>
-      <CardProvider>
-        <StatusBar style={isDark ? 'light' : 'dark'} />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.background },
-            animation: 'slide_from_right',
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(onboarding)" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(customer)" />
-          <Stack.Screen name="(admin)" />
-        </Stack>
-      </CardProvider>
-    </AuthProvider>
+    <CardProvider key={user?.id ?? 'anon'}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+          animation: 'slide_from_right',
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(onboarding)" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(customer)" />
+        <Stack.Screen name="(admin)" />
+      </Stack>
+    </CardProvider>
   );
 }

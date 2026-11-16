@@ -8,6 +8,7 @@ import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
+import { claimGift } from '@/src/lib/claim';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 
@@ -32,7 +33,11 @@ export default function ClaimSignupScreen() {
 
     setSubmitting(true);
     try {
-      await signUp(email.trim(), password, name.trim());
+      const result = await signUp(email.trim(), password, name.trim());
+      // Bind the gift to the freshly created account when a session exists.
+      if (result.session) {
+        await claimGift(token);
+      }
       router.replace(`/claim/${token}/success`);
     } catch {
       setErrors({ form: t('common.errorGeneric') });

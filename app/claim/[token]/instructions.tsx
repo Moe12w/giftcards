@@ -1,7 +1,8 @@
+import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/components/Button';
@@ -13,6 +14,10 @@ export default function ClaimInstructionsScreen() {
   useThemeRefresh();
   const { t } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
+  const { user, loading: authLoading } = useAuth();
+
+  if (authLoading) return null;
+  if (!user) return <Redirect href={`/claim/${token}/add`} />;
 
   return (
     <Screen>

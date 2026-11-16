@@ -7,8 +7,9 @@ import { createClient } from '@/lib/supabase/server';
 import { requireVendor } from '@/lib/auth';
 import { slugify } from '@/lib/format';
 import { normalizeTone } from '@/lib/catalog';
-import { parseMoneyToMinor } from '@/lib/money';
 import { parseBulkTiers } from '@/lib/bulk';
+import { parseMoneyToMinor } from '@/lib/money';
+import { normalizeWebsite, safeNextPath, validateImageUpload } from '@/lib/security';
 
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
@@ -24,7 +25,9 @@ function back(path: string, message: string): never {
 }
 
 function returnTo(value: string, fallback: string): string {
-  return value.startsWith('/vendor') ? value : fallback;
+  const candidate = safeNextPath(value, '');
+  if (!candidate.startsWith('/vendor')) return fallback;
+  return candidate;
 }
 
 function moneyField(formData: FormData, key: string): number | null {
@@ -71,6 +74,7 @@ export async function switchVendor(formData: FormData) {
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 24 * 365,
   });
   redirect('/vendor');
@@ -100,7 +104,7 @@ export async function saveVendorProfile(formData: FormData) {
       address: optional(formData, 'address'),
       phone: optional(formData, 'phone'),
       email: optional(formData, 'email'),
-      website: optional(formData, 'website'),
+      website: normalizeWebsite(optional(formData, 'website')),
       social_handle: optional(formData, 'social_handle'),
       updated_at: new Date().toISOString(),
     })
@@ -876,7 +880,8 @@ async function deleteStoredImage(ctx: Awaited<ReturnType<typeof requireVendor>>,
   const path = mediaPathFromUrl(url);
   if (!path) return;
   if (!path.startsWith(`${ctx.vendor.id}/`)) return;
-  await ctx.supabase.storage.from(MEDIA_BUCKET).remove([path]);
+  const { error: removeError } = await ctx.supabase.storage.from(MEDIA_BUCKET).remove([path]);
+  if (removeError) console.error('[vendor] storage remove failed', removeError);
 }
 
 export async function uploadVendorImage(formData: FormData): Promise<ImageActionResult> {
@@ -887,17 +892,13 @@ export async function uploadVendorImage(formData: FormData): Promise<ImageAction
 
   const kind = str(formData, 'kind') === 'banner' ? 'banner' : 'logo';
   const file = formData.get('file');
-  if (!(file instanceof File) || file.size === 0) {
+  if (!(file instanceof File)) {
     return { ok: false, error: 'Choose an image to upload.' };
   }
-  if (!file.type.startsWith('image/')) {
-    return { ok: false, error: 'That file is not an image.' };
-  }
-  if (file.size > 4 * 1024 * 1024) {
-    return { ok: false, error: 'That image is too large. Keep it under 4 MB.' };
-  }
+  const image = validateImageUpload(file);
+  if (!image.ok) return { ok: false, error: image.error };
+  const { extension } = image;
 
-  const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
   const path = `${ctx.vendor.id}/${kind}-${Date.now()}.${extension}`;
 
   const { error } = await ctx.supabase.storage.from(MEDIA_BUCKET).upload(path, file, {
