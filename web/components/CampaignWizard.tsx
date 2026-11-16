@@ -157,7 +157,7 @@ export function CampaignWizard({
     ? placement?.slot_prices_minor?.[slotNumber - 1] ?? price?.fixed_price_minor ?? 0
     : price?.fixed_price_minor ?? 0;
   const quoteMinor = slotPrice * periods;
-  const PERIOD_CHOICES = [1, 2, 3, 4, 6, 8, 12];
+  const PERIOD_CHOICES = [1, 2, 3, 4, 5, 6, 8, 12];
   const periodsLocked = Boolean(campaign && campaign.payment_status === 'paid');
   const needsImage = placement?.format === 'banner' || placement?.format === 'carousel';
   const visiblePlacements = placements.filter((row) => surfaceFor(row.key) === surface);
@@ -410,16 +410,22 @@ export function CampaignWizard({
           {slotBased ? (
             <div className="field full" style={{ marginTop: 14 }}>
               <label>How many 6-hour periods?</label>
-              <div className="btn-row" style={{ flexWrap: 'wrap' }}>
+              <div className="period-grid">
                 {PERIOD_CHOICES.map((count) => (
                   <button
                     key={count}
                     type="button"
-                    className={`btn sm${periods === count ? ' primary' : ' ghost'}`}
+                    className={`period-tile${periods === count ? ' selected' : ''}`}
+                    aria-pressed={periods === count}
                     onClick={() => setPeriods(count)}
                     disabled={periodsLocked}
                   >
-                    {count} × 6h{count === 1 ? '' : ` · ${(count * slotPrice) > 0 ? formatMoney(count * slotPrice) : ''}`}
+                    <span className="period-count">{count} × 6h</span>
+                    <span className="period-meta">
+                      {count * slotPrice > 0
+                        ? formatMoney(count * slotPrice)
+                        : `${count * 6} hour${count * 6 === 1 ? '' : 's'}`}
+                    </span>
                   </button>
                 ))}
               </div>
