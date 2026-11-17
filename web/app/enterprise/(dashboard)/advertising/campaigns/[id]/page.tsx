@@ -92,8 +92,15 @@ export default async function VendorAdvertisingCampaignPage({
         actions={
           <>
             {unpaid ? (
-              <Link className="btn sm primary" href={`${ctx.home}/checkout/${campaign.id}`}>
-                Checkout
+              <Link
+                className="btn sm primary"
+                href={
+                  campaign.slot_number
+                    ? `${ctx.home}/checkout/${campaign.id}`
+                    : `${ctx.home}/campaigns/${campaign.id}/edit`
+                }
+              >
+                {campaign.slot_number ? 'Checkout' : 'Choose a slot'}
               </Link>
             ) : null}
             {editable ? (
@@ -190,8 +197,14 @@ export default async function VendorAdvertisingCampaignPage({
           </div>
           <div className="panel-body">
             <div className="split-list">
-              <ReadRow label="Starts" value={formatDateTime(campaign.starts_at)} />
-              <ReadRow label="Ends" value={formatDateTime(campaign.ends_at)} />
+              <ReadRow
+                label="Starts"
+                value={campaign.starts_at ? formatDateTime(campaign.starts_at) : 'Not booked yet'}
+              />
+              <ReadRow
+                label="Ends"
+                value={campaign.ends_at ? formatDateTime(campaign.ends_at) : 'Not booked yet'}
+              />
               <ReadRow label="Slot" value={campaign.slot_number ? `Slot ${campaign.slot_number}` : 'Shared placement'} />
               <ReadRow label="Pricing model" value={campaign.pricing_model.toUpperCase()} />
               <ReadRow
@@ -274,8 +287,15 @@ export default async function VendorAdvertisingCampaignPage({
                 </form>
               ) : null}
               {unpaid ? (
-                <Link className="btn sm primary" href={`${ctx.home}/checkout/${campaign.id}`}>
-                  <Receipt size={15} /> Go to checkout
+                <Link
+                  className="btn sm primary"
+                  href={
+                    campaign.slot_number
+                      ? `${ctx.home}/checkout/${campaign.id}`
+                      : `${ctx.home}/campaigns/${campaign.id}/edit`
+                  }
+                >
+                  <Receipt size={15} /> {campaign.slot_number ? 'Go to checkout' : 'Choose a slot'}
                 </Link>
               ) : null}
             </div>

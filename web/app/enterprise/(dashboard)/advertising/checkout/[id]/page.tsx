@@ -37,16 +37,20 @@ export default async function AdvertisingCheckoutPage({
 
   const availableCredit = (credits ?? []).reduce((sum: number, row: any) => sum + Number(row.remaining_minor ?? 0), 0);
   const creative = (campaign.advertising_creatives ?? [])[0];
-  const bookedPeriods = Math.max(
-    1,
-    Math.round(
-      (new Date(campaign.ends_at).getTime() - new Date(campaign.starts_at).getTime()) / (6 * 60 * 60 * 1000),
-    ),
-  );
+  const booked = Boolean(campaign.starts_at && campaign.ends_at);
+  const bookedPeriods = booked
+    ? Math.max(
+        1,
+        Math.round(
+          (new Date(campaign.ends_at as string).getTime() - new Date(campaign.starts_at as string).getTime()) /
+            (6 * 60 * 60 * 1000),
+        ),
+      )
+    : 0;
   const paid = campaign.payment_status === 'paid';
   // A draft whose booked window has already ended cannot be paid for; the
   // advertiser has to go back and pick an available slot first.
-  const windowExpired = !paid && new Date(campaign.ends_at).getTime() <= Date.now();
+  const windowExpired = !paid && booked && new Date(campaign.ends_at as string).getTime() <= Date.now();
   const canPayWithCredit =
     !paid && !windowExpired && availableCredit >= Number(campaign.quote_amount_minor ?? 0);
   const holdExpiresMs = campaign.hold_expires_at ? new Date(campaign.hold_expires_at).getTime() : 0;
@@ -89,7 +93,7 @@ export default async function AdvertisingCheckoutPage({
         <span className="tag lavender">{campaign.pricing_model.toUpperCase()}</span>
       </div>
 
-      {!paid && !windowExpired ? (
+      {!paid && !windowExpired && booked ? (
         <AdvertisingExpiryCountdown
           holdExpiresAt={campaign.hold_expires_at ?? null}
           initialRemainingMs={holdRemainingMs}
@@ -126,11 +130,15 @@ export default async function AdvertisingCheckoutPage({
                       : `${formatMoney(campaign.cpm_rate_minor)} / 1,000 impressions`
                 }
               />
-              <ReadRow label="Starts" value={formatDateTime(campaign.starts_at)} />
-              <ReadRow label="Ends" value={formatDateTime(campaign.ends_at)} />
+              <ReadRow label="Starts" value={campaign.starts_at ? formatDateTime(campaign.starts_at) : 'Not booked yet'} />
+              <ReadRow label="Ends" value={campaign.ends_at ? formatDateTime(campaign.ends_at) : 'Not booked yet'} />
               <ReadRow
                 label="Booked"
-                value={`${bookedPeriods} × 6-hour period${bookedPeriods === 1 ? '' : 's'} (${bookedPeriods * 6} hours)`}
+                value={
+                  booked
+                    ? `${bookedPeriods} × 6-hour period${bookedPeriods === 1 ? '' : 's'} (${bookedPeriods * 6} hours)`
+                    : 'No slot booked yet'
+                }
               />
               <ReadRow label="Slot" value={campaign.slot_number ? `Slot ${campaign.slot_number}` : 'Shared placement'} />
               <ReadRow
@@ -164,6 +172,16 @@ export default async function AdvertisingCheckoutPage({
               <p className="small muted">
                 This campaign is fully paid. No further payment is required unless you extend or renew it.
               </p>
+            ) : !booked ? (
+              <div className="callout warn">
+                <CalendarClock size={16} /> This draft has no slot booked yet, so there is nothing to pay for. Pick an
+                available slot and it will be booked at the next free time.
+                <div style={{ marginTop: 10 }}>
+                  <Link className="btn sm primary" href={`${ctx.home}/campaigns/${campaign.id}/edit`}>
+                    Choose a slot
+                  </Link>
+                </div>
+              </div>
             ) : windowExpired ? (
               <div className="callout error">
                 <CalendarClock size={16} /> The booked window ended on {formatDateTime(campaign.ends_at)}. Payment is

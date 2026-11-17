@@ -8,6 +8,7 @@ import {
   Clock,
   Check,
   Megaphone,
+  Save,
   Wallet,
 } from 'lucide-react';
 import { formatMoney } from '@/lib/money';
@@ -52,8 +53,8 @@ export interface WizardCampaign {
   pricing_id: string | null;
   pricing_model: string;
   slot_number: number | null;
-  starts_at: string;
-  ends_at: string;
+  starts_at: string | null;
+  ends_at: string | null;
   total_budget_minor: number;
   daily_budget_minor: number;
   auto_renew: boolean;
@@ -98,6 +99,7 @@ const STEPS = [
 
 export function CampaignWizard({
   action,
+  saveDraftAction,
   placements,
   offers,
   categories,
@@ -109,6 +111,8 @@ export function CampaignWizard({
   slotsByPlacement = {},
 }: {
   action: (formData: FormData) => void | Promise<void>;
+  /** Saves the details as a draft with no slot, so it can be finished later. */
+  saveDraftAction?: (formData: FormData) => void | Promise<void>;
   placements: WizardPlacement[];
   offers: { id: string; title: string }[];
   categories: { id: string; name: string }[];
@@ -135,7 +139,7 @@ export function CampaignWizard({
   );
   const [slotNumber, setSlotNumber] = useState(campaign?.slot_number ?? 1);
   const [periods, setPeriods] = useState(() => {
-    if (!campaign) return 1;
+    if (!campaign?.starts_at || !campaign.ends_at) return 1;
     const hours =
       (new Date(campaign.ends_at).getTime() - new Date(campaign.starts_at).getTime()) / (60 * 60 * 1000);
     return Math.max(1, Math.round(hours / 6));
@@ -181,13 +185,17 @@ export function CampaignWizard({
   // window instead of being submitted with a date that is already gone.
   const windowStart = (() => {
     if (!campaign) return slotBased ? nextSlotStart : new Date();
-    if (paidCampaign) return new Date(campaign.starts_at);
+    if (paidCampaign && campaign.starts_at) return new Date(campaign.starts_at);
     if (slotBased) return nextSlotStart;
+    if (!campaign.starts_at) return new Date();
     return new Date(Math.max(new Date(campaign.starts_at).getTime(), Date.now()));
   })();
   const windowEnd = new Date(windowStart.getTime() + periods * 6 * 60 * 60 * 1000);
   const windowExpired = Boolean(
-    campaign && !paidCampaign && new Date(campaign.ends_at).getTime() <= Date.now(),
+    campaign &&
+      !paidCampaign &&
+      campaign.ends_at &&
+      new Date(campaign.ends_at).getTime() <= Date.now(),
   );
 
   function choosePlacement(next: WizardPlacement) {
@@ -409,7 +417,8 @@ export function CampaignWizard({
               </div>
               <span className="hint">
                 Slot 1 is seen first and costs the most. No calendar to fill in — your ad takes the next free time in
-                the slot.{paidCampaign ? ' A paid booking keeps the slot and time it was bought for.' : ''}
+                the slot. A draft is saved without a slot; choosing one here books it for two minutes while you pay.
+                {paidCampaign ? ' A paid booking keeps the slot and time it was bought for.' : ''}
               </span>
             </div>
           ) : null}
@@ -608,6 +617,11 @@ export function CampaignWizard({
           )}
         </div>
         <div className="btn-row">
+          {saveDraftAction ? (
+            <button className="btn ghost" type="submit" formAction={saveDraftAction}>
+              <Save size={15} /> Save draft
+            </button>
+          ) : null}
           {step < 1 ? (
             <button className="btn primary" type="button" onClick={nextStep}>
               Continue <ArrowRight size={15} />

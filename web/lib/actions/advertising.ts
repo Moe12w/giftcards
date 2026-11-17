@@ -71,6 +71,10 @@ const ADVERTISING_ERROR_MESSAGES: Record<string, string> = {
   invoice_required: 'The card payment could not be started. Please try again.',
   slot_unavailable:
     'That slot is taken for this window. Go back and pick an available slot to re-book.',
+  name_required: 'Add a campaign name before saving this draft.',
+  campaign_not_found: 'That campaign no longer exists.',
+  campaign_not_editable: 'This campaign can no longer be saved as a draft.',
+  campaign_already_paid: 'This campaign is already paid, so it cannot be saved as a draft.',
 };
 
 function friendly(message: string | undefined): string {
@@ -139,24 +143,62 @@ export async function createAdvertisingCampaign(formData: FormData) {
   if (!placementKey || !pricingId) back(ctx.home, 'Choose a placement and pricing model.');
   if (!startsAt || !endsAt) back(ctx.home, 'Choose a start and end date.');
 
-  const { data, error } = await ctx.supabase.rpc('advertising_create_campaign', {
+  // The details are stored slotless first, then the chosen slot is booked on
+  // top of the same draft. That keeps drafts free of any time slot.
+  const { data: draftId, error: draftError } = await ctx.supabase.rpc('advertising_save_draft', {
+    p_campaign_id: str(formData, 'campaign_id') || null,
     p_vendor_id: ctx.vendor.id,
     p_placement_key: placementKey,
     p_pricing_id: pricingId,
+    p_name: name,
+    p_creative: creativeFromForm(formData),
+  });
+  if (draftError || !draftId) back(ctx.home, friendly(draftError?.message));
+
+  const { error } = await ctx.supabase.rpc('advertising_update_campaign', {
+    p_campaign_id: draftId,
     p_name: name,
     p_starts_at: startsAt,
     p_ends_at: endsAt,
     p_total_budget_minor: totalBudget ?? 0,
     p_daily_budget_minor: dailyBudget,
-    p_slot_number: intField(formData, 'slot_number') ?? 1,
+    p_auto_renew: false,
     p_creative: creativeFromForm(formData),
+    p_slot_number: intField(formData, 'slot_number'),
     p_periods: Math.min(Math.max(intField(formData, 'periods') ?? 1, 1), 120),
   });
 
-  if (error) back(ctx.home, friendly(error.message));
+  if (error) back(`${ctx.home}/campaigns/${draftId}/edit`, friendly(error.message));
+
+  refreshAdvertiser(ctx.kind, draftId as string);
+  redirect(`${ctx.home}/checkout/${draftId}`);
+}
+
+/**
+ * Saves the ad details as a draft with no time slot. Reopening a draft always
+ * asks for an available slot again, because slots are booked at checkout time.
+ */
+export async function saveAdvertisingDraft(formData: FormData) {
+  const ctx = await requireAdvertiser();
+  const campaignId = str(formData, 'campaign_id') || null;
+  const placementKey = str(formData, 'placement_key');
+  const pricingId = str(formData, 'pricing_id');
+  const name = str(formData, 'name');
+  const backTo = campaignId ? `${ctx.home}/campaigns/${campaignId}/edit` : `${ctx.home}/new`;
+
+  const { data, error } = await ctx.supabase.rpc('advertising_save_draft', {
+    p_campaign_id: campaignId,
+    p_vendor_id: ctx.vendor.id,
+    p_placement_key: placementKey,
+    p_pricing_id: pricingId,
+    p_name: name,
+    p_creative: creativeFromForm(formData),
+  });
+
+  if (error || !data) back(backTo, friendly(error?.message));
 
   refreshAdvertiser(ctx.kind, data as string);
-  redirect(`${ctx.home}/checkout/${data}`);
+  redirect(`${ctx.home}/campaigns/${data}?saved=1`);
 }
 
 export async function updateAdvertisingCampaign(formData: FormData) {
@@ -216,7 +258,7 @@ export async function payAdvertisingWithMyFatoorah(formData: FormData) {
 
   const { data: campaign } = await ctx.supabase
     .from('advertising_campaigns')
-    .select('id, name, status, payment_status, quote_amount_minor, currency, ends_at')
+    .select('id, name, status, payment_status, quote_amount_minor, currency, starts_at, ends_at')
     .eq('id', campaignId)
     .eq('vendor_id', ctx.vendor.id)
     .maybeSingle();
@@ -224,6 +266,12 @@ export async function payAdvertisingWithMyFatoorah(formData: FormData) {
   if (campaign.payment_status === 'paid') redirect(`${ctx.home}/campaigns/${campaignId}?paid=1`);
   if (!['draft', 'rejected', 'pending_payment'].includes(String(campaign.status))) {
     back(`${ctx.home}/checkout/${campaignId}`, 'This campaign cannot be paid right now.');
+  }
+  if (!campaign.starts_at || !campaign.ends_at) {
+    back(
+      `${ctx.home}/campaigns/${campaignId}/edit`,
+      'This draft has no slot yet. Choose an available slot to book it before paying.',
+    );
   }
   if (new Date(campaign.ends_at).getTime() <= Date.now()) {
     back(
@@ -291,14 +339,20 @@ export async function payAdvertisingWithCredit(formData: FormData) {
 
   const { data: campaign } = await ctx.supabase
     .from('advertising_campaigns')
-    .select('ends_at, payment_status')
+    .select('starts_at, ends_at, payment_status')
     .eq('id', campaignId)
     .eq('vendor_id', ctx.vendor.id)
     .maybeSingle();
   if (!campaign) back(ctx.home, 'Missing campaign.');
+  if (campaign.payment_status !== 'paid' && (!campaign.starts_at || !campaign.ends_at)) {
+    back(
+      `${ctx.home}/campaigns/${campaignId}/edit`,
+      'This draft has no slot yet. Choose an available slot to book it before paying.',
+    );
+  }
   if (
     campaign.payment_status !== 'paid' &&
-    new Date(campaign.ends_at).getTime() <= Date.now()
+    new Date(campaign.ends_at as string).getTime() <= Date.now()
   ) {
     back(
       `${ctx.home}/campaigns/${campaignId}/edit`,

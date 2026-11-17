@@ -227,8 +227,14 @@ export default async function AdminAdvertisingCampaignPage({
                 }
               />
               <ReadRow label="Quote" value={formatMoney(campaign.quote_amount_minor)} />
-              <ReadRow label="Starts" value={formatDateTime(campaign.starts_at)} />
-              <ReadRow label="Ends" value={formatDateTime(campaign.ends_at)} />
+              <ReadRow
+                label="Starts"
+                value={campaign.starts_at ? formatDateTime(campaign.starts_at) : 'Not booked'}
+              />
+              <ReadRow
+                label="Ends"
+                value={campaign.ends_at ? formatDateTime(campaign.ends_at) : 'Not booked'}
+              />
               <ReadRow label="Priority / weight" value={`${campaign.priority} / ${campaign.rotation_weight}`} />
               <ReadRow
                 label="Frequency cap"
