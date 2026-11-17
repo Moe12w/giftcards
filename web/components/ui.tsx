@@ -24,7 +24,13 @@ export async function StatusTag({ status }: { status: string | null | undefined 
           value === 'reserved' ||
           value === 'claimed' ||
           value === 'issued' ||
-          value === 'partially_redeemed'
+          value === 'partially_redeemed' ||
+          value === 'submitted' ||
+          value === 'under_review' ||
+          value === 'in_progress' ||
+          value === 'documents_required' ||
+          value === 'agreement_pending' ||
+          value === 'additional_information_required'
         ? 'warning'
         : value === 'rejected' ||
             value === 'suspended' ||

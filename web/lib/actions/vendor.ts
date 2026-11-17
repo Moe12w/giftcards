@@ -148,6 +148,60 @@ export async function submitVendorApplication(formData: FormData) {
   redirect('/vendor/onboarding?submitted=1');
 }
 
+const ONBOARDING_STEPS = ['business', 'profile', 'preferences', 'done'] as const;
+type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
+/**
+ * Saves one wizard step and moves to the next. Every step is stored on its own,
+ * so closing the tab never loses progress.
+ */
+export async function saveVendorOnboardingStep(formData: FormData) {
+  const ctx = await requireVendor();
+  if (ctx.role === 'redemption_staff') {
+    back('/vendor/onboarding', 'Only owners and managers can edit the business profile.');
+  }
+
+  const rawStep = str(formData, 'step') as OnboardingStep;
+  const step: OnboardingStep = ONBOARDING_STEPS.includes(rawStep) ? rawStep : 'business';
+
+  const patch: Record<string, unknown> = {
+    name: optional(formData, 'name'),
+    name_ar: optional(formData, 'name_ar'),
+    business_type: optional(formData, 'business_type'),
+    category_id: optional(formData, 'category_id'),
+    phone: optional(formData, 'phone'),
+    email: optional(formData, 'email'),
+    website: normalizeWebsite(optional(formData, 'website')),
+    social_handle: optional(formData, 'social_handle'),
+    city: optional(formData, 'city'),
+    area: optional(formData, 'area'),
+    address: optional(formData, 'address'),
+    description: optional(formData, 'description'),
+    intents: formData
+      .getAll('intents')
+      .map((value) => String(value))
+      .filter((value) => ['gift_cards', 'experiences', 'services', 'products', 'packages'].includes(value)),
+  };
+
+  if (step === 'business' && String(patch.name ?? '').length < 2) {
+    back('/vendor/onboarding?step=business', 'Business name is required.');
+  }
+
+  const { error } = await ctx.supabase.rpc('save_vendor_onboarding_step', {
+    p_vendor_id: ctx.vendor.id,
+    p_step: step,
+    p_patch: patch,
+  });
+  if (error) back(`/vendor/onboarding?step=${step}`, error.message.replace(/_/g, ' '));
+
+  revalidatePath('/vendor');
+  revalidatePath('/vendor/onboarding');
+  revalidatePath('/vendor/settings');
+
+  const next = ONBOARDING_STEPS[Math.min(ONBOARDING_STEPS.indexOf(step) + 1, ONBOARDING_STEPS.length - 1)];
+  redirect(`/vendor/onboarding?step=${next}&saved=1`);
+}
+
 export async function addVendorLocation(formData: FormData) {
   const ctx = await requireVendor();
   if (ctx.role === 'redemption_staff') {

@@ -1,6 +1,12 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    // `web/` has its own package-lock.json, but the repository root has one
+    // too, so Next would otherwise infer the root as the repository root and
+    // watch every file above this app. Pin it to this directory.
+    root: __dirname,
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'placehold.co' },

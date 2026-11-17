@@ -24,6 +24,8 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
         { href: '/admin', label: t.overview, icon: 'dashboard', hint: t.overviewHint },
         { href: '/admin/vendors', label: t.vendors, icon: 'vendors', hint: t.vendorsHint },
         { href: '/admin/enterprise', label: t.enterprise, icon: 'enterprise', hint: t.enterpriseHint },
+        { href: '/admin/merchant-onboarding', label: t.merchantOnboarding, icon: 'finance', hint: t.merchantOnboardingHint },
+        { href: '/admin/merchant-onboarding/agreements', label: t.merchantAgreements, icon: 'settings', hint: t.merchantAgreementsHint },
       ],
     },
     {

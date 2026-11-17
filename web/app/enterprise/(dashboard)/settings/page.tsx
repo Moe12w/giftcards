@@ -60,6 +60,45 @@ export default async function EnterpriseSettingsPage({
                   <input id="industry" name="industry" defaultValue={partner.industry ?? ''} placeholder={t.industryPlaceholder} />
                 </div>
                 <div className="field">
+                  <label htmlFor="legal_name">Legal business name</label>
+                  <input id="legal_name" name="legal_name" defaultValue={partner.legal_name ?? ''} />
+                </div>
+                <div className="field">
+                  <label htmlFor="contact_role">Primary contact role</label>
+                  <input
+                    id="contact_role"
+                    name="contact_role"
+                    defaultValue={partner.contact_role ?? ''}
+                    placeholder="Finance director, operations lead…"
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="company_size">Company size</label>
+                  <select id="company_size" name="company_size" defaultValue={partner.company_size ?? ''}>
+                    <option value="">Not set</option>
+                    {['1–10', '11–50', '51–200', '201–500', '500+'].map((size) => (
+                      <option key={size} value={size}>
+                        {size} employees
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="branches_count">Branches</label>
+                  <input
+                    id="branches_count"
+                    name="branches_count"
+                    type="number"
+                    min={0}
+                    defaultValue={partner.branches_count ?? ''}
+                  />
+                  <span className="hint">How many branches or outlets accept Giftly.</span>
+                </div>
+                <div className="field">
+                  <label htmlFor="country">Country of registration</label>
+                  <input id="country" name="country" defaultValue={partner.country ?? 'Qatar'} />
+                </div>
+                <div className="field">
                   <label htmlFor="contact_name">{t.primaryContact}</label>
                   <input id="contact_name" name="contact_name" defaultValue={partner.contact_name ?? ''} />
                 </div>

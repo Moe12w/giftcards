@@ -4385,3 +4385,14 @@ table.data .sub {
   }
 }
 
+/* A small rotating icon for in-progress uploads and saves. */
+.spin {
+  animation: giftly-spin 0.9s linear infinite;
+}
+
+@keyframes giftly-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+

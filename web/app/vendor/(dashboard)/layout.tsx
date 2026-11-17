@@ -24,6 +24,7 @@ export default async function VendorDashboardLayout({ children }: { children: Re
       items: [
         { href: '/vendor', label: t.overview, icon: 'dashboard', hint: t.overviewHint },
         { href: '/vendor/onboarding', label: t.onboarding, icon: 'onboarding', hint: t.onboardingHint },
+        { href: '/vendor/payments', label: t.payments, icon: 'finance', hint: t.paymentsHint },
       ],
     },
     {

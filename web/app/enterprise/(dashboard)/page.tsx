@@ -3,8 +3,6 @@ import {
   ArrowRight,
   Boxes,
   Building2,
-  Circle,
-  CheckCircle2,
   FileBarChart,
   Package,
   Upload,
@@ -16,6 +14,9 @@ import { formatDate, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
 import { HelpButton } from '@/components/HelpButton';
+import { SetupChecklist } from '@/components/SetupChecklist';
+import { loadMerchantBundle } from '@/lib/merchant-server';
+import { requiredDocKeys } from '@/lib/merchant';
 import { fill, pick } from '@/lib/i18n';
 import { common } from '@/lib/i18n/common';
 import { enterpriseCopy } from '@/lib/i18n/enterprise';
@@ -83,11 +84,75 @@ export default async function EnterpriseOverviewPage() {
   const soldValue = paidItems.reduce((sum, item) => sum + Number(item.total_minor ?? 0), 0);
   const activeProducts = products.filter((product) => product.is_active).length;
 
-  const checklist = [
-    { label: t.checklistProfile, done: Boolean(partner.contact_name && partner.contact_email), href: '/enterprise/settings' },
-    { label: t.checklistProduct, done: products.length > 0, href: '/enterprise/products' },
-    { label: t.checklistImport, done: inventory.length > 0, href: '/enterprise/import' },
-    { label: t.checklistOrder, done: allocated.length > 0, href: '/enterprise/reports' },
+  const paymentsBundle = await loadMerchantBundle(supabase, 'partner', partner.id);
+  const paymentsApp = paymentsBundle.application;
+  const paymentDocsRequired = requiredDocKeys(paymentsApp?.business_type ?? null);
+  const paymentDocsUploaded = paymentsBundle.documents.filter(
+    (doc) => paymentDocsRequired.includes(doc.doc_type) && doc.status !== 'rejected',
+  ).length;
+  const agreementSigned = Boolean(
+    paymentsBundle.signature &&
+      paymentsBundle.agreement &&
+      paymentsBundle.signature.agreement_id === paymentsBundle.agreement.id,
+  );
+
+  const setupItems = [
+    {
+      key: 'profile',
+      label: 'Complete organisation profile',
+      done: Boolean(partner.contact_name && partner.contact_email && partner.industry),
+      href: '/enterprise/onboarding?step=organisation',
+      action: 'Complete',
+    },
+    {
+      key: 'team',
+      label: 'Add your team members',
+      done: members.length > 1,
+      href: '/enterprise/settings',
+      action: 'Invite',
+    },
+    {
+      key: 'product',
+      label: 'Define your first reward product',
+      done: products.length > 0,
+      href: '/enterprise/products',
+      action: 'Create',
+    },
+    {
+      key: 'import',
+      label: 'Import your codes',
+      done: inventory.length > 0,
+      href: '/enterprise/import',
+      action: 'Import',
+    },
+    {
+      key: 'allocate',
+      label: 'Allocate codes to a recipient',
+      done: allocated.length > 0,
+      href: '/enterprise/reports',
+      action: 'Allocate',
+    },
+    {
+      key: 'payments',
+      label: 'Configure online payments',
+      done: Boolean(paymentsApp && paymentsApp.payment_methods.length > 0),
+      href: '/enterprise/payments/application?step=2',
+      action: 'Configure',
+    },
+    {
+      key: 'documents',
+      label: 'Submit business verification documents',
+      done: paymentDocsRequired.length > 0 && paymentDocsUploaded >= paymentDocsRequired.length,
+      href: '/enterprise/payments/application?step=3',
+      action: 'Upload',
+    },
+    {
+      key: 'agreement',
+      label: 'Sign payment processing agreement',
+      done: agreementSigned,
+      href: '/enterprise/payments/agreement',
+      action: 'Sign',
+    },
   ];
 
   return (
@@ -107,6 +172,14 @@ export default async function EnterpriseOverviewPage() {
             </Link>
           </>
         }
+      />
+
+      <SetupChecklist
+        title="Complete your organisation setup"
+        subtitle="Get your organisation ready. You can dismiss this any time."
+        items={setupItems}
+        dismissLabel="Dismiss setup checklist"
+        storageKey={`enterprise-setup-${partner.id}`}
       />
 
       <div className="kpi-grid">
@@ -184,48 +257,6 @@ export default async function EnterpriseOverviewPage() {
                 </table>
               </div>
             )}
-          </div>
-        </section>
-
-        <section className="panel">
-          <div className="panel-head">
-            <h3>{t.setupChecklist}</h3>
-            <span className="tag neutral">
-              {checklist.filter((item) => item.done).length}/{checklist.length}
-            </span>
-          </div>
-          <div className="panel-body">
-            <div className="split-list">
-              {checklist.map((item) => (
-                <div key={item.label}>
-                  <span className="k">
-                    {item.done ? (
-                      <CheckCircle2 size={16} color="var(--success)" />
-                    ) : (
-                      <Circle size={16} />
-                    )}{' '}
-                    {item.label}
-                  </span>
-                  <span className="v small">
-                    {item.done ? (
-                      t.done
-                    ) : (
-                      <Link href={item.href} style={{ textDecoration: 'underline' }}>
-                        {t.setUp}
-                      </Link>
-                    )}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="btn-row" style={{ marginTop: 16 }}>
-              <Link className="btn sm" href="/enterprise/settings">
-                {t.companySettings}
-              </Link>
-              <Link className="btn sm ghost" href="/enterprise/import">
-                {t.import}
-              </Link>
-            </div>
           </div>
         </section>
       </div>

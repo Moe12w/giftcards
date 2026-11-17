@@ -17,6 +17,9 @@ import { formatDate, formatDateTime, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
 import { HelpButton } from '@/components/HelpButton';
+import { SetupChecklist } from '@/components/SetupChecklist';
+import { loadMerchantBundle } from '@/lib/merchant-server';
+import { requiredDocKeys } from '@/lib/merchant';
 import { fulfilmentLabel } from '@/lib/catalog';
 import { fill, pick } from '@/lib/i18n';
 import { common } from '@/lib/i18n/common';
@@ -103,13 +106,70 @@ export default async function VendorOverviewPage() {
   const topMax = top[0]?.[1] ?? 1;
 
   const publishedCount = products.filter((product) => product.status === 'published').length;
-  const checklist = [
-    { label: t.addDescription, done: Boolean(vendor.description) },
-    { label: t.addLogo, done: Boolean(vendor.logo_url) },
-    { label: t.addLocation, done: (locationsCount.count ?? 0) > 0 },
-    { label: t.publishFirstGift, done: publishedCount > 0 },
+
+  const paymentsBundle = await loadMerchantBundle(supabase, 'vendor', vendor.id);
+  const paymentsApp = paymentsBundle.application;
+  const paymentDocsRequired = requiredDocKeys(paymentsApp?.business_type ?? null);
+  const paymentDocsUploaded = paymentsBundle.documents.filter(
+    (doc) => paymentDocsRequired.includes(doc.doc_type) && doc.status !== 'rejected',
+  ).length;
+  const agreementSigned = Boolean(
+    paymentsBundle.signature &&
+      paymentsBundle.agreement &&
+      paymentsBundle.signature.agreement_id === paymentsBundle.agreement.id,
+  );
+
+  const setupItems = [
+    {
+      key: 'profile',
+      label: 'Complete business profile',
+      done: Boolean(vendor.description) && Boolean(vendor.phone) && Boolean(vendor.category_id),
+      href: '/vendor/onboarding?step=business',
+      action: 'Complete',
+    },
+    {
+      key: 'logo',
+      label: 'Add business logo',
+      done: Boolean(vendor.logo_url),
+      href: '/vendor/onboarding?step=profile',
+      action: 'Upload',
+    },
+    {
+      key: 'location',
+      label: 'Add your business location',
+      done: (locationsCount.count ?? 0) > 0 || Boolean(vendor.city && vendor.area),
+      href: '/vendor/settings#locations',
+      action: 'Add',
+    },
+    {
+      key: 'gifts',
+      label: 'Set up your gift card offerings',
+      done: publishedCount > 0,
+      href: '/vendor/products/new',
+      action: 'Create',
+    },
+    {
+      key: 'payments',
+      label: 'Configure online payments',
+      done: Boolean(paymentsApp && paymentsApp.payment_methods.length > 0),
+      href: '/vendor/payments/application?step=2',
+      action: 'Configure',
+    },
+    {
+      key: 'documents',
+      label: 'Submit business verification documents',
+      done: paymentDocsRequired.length > 0 && paymentDocsUploaded >= paymentDocsRequired.length,
+      href: '/vendor/payments/application?step=3',
+      action: 'Upload',
+    },
+    {
+      key: 'agreement',
+      label: 'Sign payment processing agreement',
+      done: agreementSigned,
+      href: '/vendor/payments/agreement',
+      action: 'Sign',
+    },
   ];
-  const remainingChecks = checklist.filter((item) => !item.done).length;
 
   return (
     <div className="dash-content">
@@ -128,6 +188,14 @@ export default async function VendorOverviewPage() {
             </Link>
           </>
         }
+      />
+
+      <SetupChecklist
+        title="Complete your business setup"
+        subtitle="A few steps to get the most out of Giftly. You can dismiss this any time."
+        items={setupItems}
+        dismissLabel="Dismiss setup checklist"
+        storageKey={`vendor-setup-${vendor.id}`}
       />
 
       {vendor.status !== 'approved' ? (
@@ -291,43 +359,6 @@ export default async function VendorOverviewPage() {
                 })}
               </div>
             )}
-          </div>
-        </section>
-
-        <section className="panel">
-          <div className="panel-head">
-            <h3>{t.getSetUp}</h3>
-            <span className="tag neutral">{4 - remainingChecks}/4</span>
-          </div>
-          <div className="panel-body">
-            {remainingChecks === 0 ? (
-              <div style={{ display: 'grid', gap: 8 }}>
-                <span className="tag success">
-                  <CheckCircle2 size={13} /> {t.profileComplete}
-                </span>
-                <p className="small muted">{t.storefrontReady}</p>
-              </div>
-            ) : (
-              <div className="split-list">
-                {checklist.map((item) => (
-                  <div key={item.label}>
-                    <span className="k">
-                      {item.done ? <CheckCircle2 size={15} color="var(--success)" /> : <AlertCircle size={15} />}{' '}
-                      {item.label}
-                    </span>
-                    <span className="v small">{item.done ? t.done : t.toDo}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="btn-row" style={{ marginTop: 16 }}>
-              <Link className="btn sm" href="/vendor/onboarding">
-                {copy.nav.onboarding}
-              </Link>
-              <Link className="btn sm" href="/vendor/settings">
-                {copy.nav.settings}
-              </Link>
-            </div>
           </div>
         </section>
       </div>

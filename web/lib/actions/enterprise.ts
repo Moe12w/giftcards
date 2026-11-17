@@ -43,6 +43,53 @@ function checkbox(formData: FormData, key: string): boolean {
   return formData.get(key) === 'on' || formData.get(key) === 'true';
 }
 
+const ONBOARDING_STEPS = ['organisation', 'contact', 'structure', 'done'] as const;
+type EnterpriseOnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
+/** Saves one enterprise onboarding step and advances. */
+export async function saveEnterpriseOnboardingStep(formData: FormData) {
+  const ctx = await requireEnterprise();
+  if (ctx.role === 'analyst') {
+    back('/enterprise/onboarding', 'Only owners and managers can edit the organisation profile.');
+  }
+
+  const rawStep = str(formData, 'step') as EnterpriseOnboardingStep;
+  const step: EnterpriseOnboardingStep = ONBOARDING_STEPS.includes(rawStep) ? rawStep : 'organisation';
+
+  const patch: Record<string, unknown> = {
+    name: optional(formData, 'name'),
+    legal_name: optional(formData, 'legal_name'),
+    website: normalizeWebsite(optional(formData, 'website')),
+    contact_name: optional(formData, 'contact_name'),
+    contact_role: optional(formData, 'contact_role'),
+    contact_email: optional(formData, 'contact_email'),
+    contact_phone: optional(formData, 'contact_phone'),
+    industry: optional(formData, 'industry'),
+    company_size: optional(formData, 'company_size'),
+    branches_count: optional(formData, 'branches_count'),
+    country: optional(formData, 'country'),
+    notes: optional(formData, 'notes'),
+  };
+
+  if (step === 'organisation' && String(patch.name ?? '').length < 2) {
+    back('/enterprise/onboarding?step=organisation', 'Organisation name is required.');
+  }
+
+  const { error } = await ctx.supabase.rpc('save_partner_onboarding_step', {
+    p_partner_id: ctx.partner.id,
+    p_step: step,
+    p_patch: patch,
+  });
+  if (error) back(`/enterprise/onboarding?step=${step}`, error.message.replace(/_/g, ' '));
+
+  revalidatePath('/enterprise');
+  revalidatePath('/enterprise/onboarding');
+  revalidatePath('/enterprise/settings');
+
+  const next = ONBOARDING_STEPS[Math.min(ONBOARDING_STEPS.indexOf(step) + 1, ONBOARDING_STEPS.length - 1)];
+  redirect(`/enterprise/onboarding?step=${next}&saved=1`);
+}
+
 /**
  * Keeps the gift that customers see in the app in step with the partner's
  * product: same name, the price the partner set, live or hidden.
@@ -342,16 +389,23 @@ export async function saveEnterpriseProfile(formData: FormData) {
   if (name.length < 2) back('/enterprise/settings', 'Company name is required.');
 
   const website = normalizeWebsite(optional(formData, 'website'));
+  const branchesRaw = optional(formData, 'branches_count');
+  const branchesCount = branchesRaw === null ? null : Number.parseInt(branchesRaw, 10);
 
   const { error } = await ctx.supabase
     .from('enterprise_partners')
     .update({
       name,
       website,
+      legal_name: optional(formData, 'legal_name'),
       contact_name: optional(formData, 'contact_name'),
+      contact_role: optional(formData, 'contact_role'),
       contact_email: optional(formData, 'contact_email'),
       contact_phone: optional(formData, 'contact_phone'),
       industry: optional(formData, 'industry'),
+      company_size: optional(formData, 'company_size'),
+      branches_count: Number.isFinite(branchesCount) ? branchesCount : null,
+      country: optional(formData, 'country') ?? 'Qatar',
       expected_volume: optional(formData, 'expected_volume'),
       notes: optional(formData, 'notes'),
       updated_at: new Date().toISOString(),

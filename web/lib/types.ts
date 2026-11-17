@@ -60,6 +60,8 @@ export interface Vendor {
   rating: number;
   is_featured: boolean;
   approved_at: string | null;
+  business_type: string | null;
+  intents: string[];
   created_at: string;
   updated_at: string;
 }
@@ -231,6 +233,11 @@ export interface EnterprisePartner {
   banner_url: string | null;
   status: string;
   commission_bps: number;
+  legal_name: string | null;
+  contact_role: string | null;
+  company_size: string | null;
+  branches_count: number | null;
+  country: string;
   created_at: string;
   updated_at: string;
 }
@@ -316,6 +323,8 @@ export interface VendorApplication {
   submitted_at: string | null;
   decided_at: string | null;
   decision_note: string | null;
+  business_type: string | null;
+  intents: string[];
   created_at: string;
   updated_at: string;
   vendors?: Pick<Vendor, 'id' | 'name' | 'status' | 'logo_url'> | null;

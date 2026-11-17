@@ -11,6 +11,7 @@ import {
   authIdentifier,
   safeNextPath,
 } from '@/lib/security';
+import { merchantErrorMessage } from '@/lib/merchant';
 
 function safeNext(value: FormDataEntryValue | null, fallback: string): string {
   return safeNextPath(typeof value === 'string' ? value : '', fallback);
@@ -249,7 +250,14 @@ export async function updatePassword(formData: FormData) {
   redirect('/reset-password?done=1');
 }
 
-export async function registerVendorAccount(formData: FormData) {
+/**
+ * Creates the auth user (when needed) and its business record, then sends the
+ * person straight into their dashboard. No documents, bank details or payment
+ * information are collected at this stage — those live in Online Payments and
+ * never block access.
+ */
+async function createMerchantAccount(formData: FormData, kind: 'vendor' | 'partner'): Promise<never> {
+  const registerPath = kind === 'vendor' ? '/vendor/register' : '/enterprise/register';
   const supabase = await createClient();
   const {
     data: { user },
@@ -260,57 +268,77 @@ export async function registerVendorAccount(formData: FormData) {
   if (!currentUser) {
     const fullName = String(formData.get('full_name') ?? '').trim();
     const email = String(formData.get('email') ?? '').trim();
+    const mobile = String(formData.get('mobile') ?? '').trim();
     const password = String(formData.get('password') ?? '');
+    const accepted = formData.get('terms') === 'on';
+
     if (!fullName || !email || !password) {
-      fail('/vendor/register', 'Enter your name, email and password.');
+      fail(registerPath, 'Enter your name, email and password.');
     }
     if (password.length < 8) {
-      fail('/vendor/register', 'Use at least 8 characters for your password.');
+      fail(registerPath, 'Use at least 8 characters for your password.');
+    }
+    if (!mobile) {
+      fail(registerPath, 'Enter your mobile number.');
+    }
+    if (!accepted) {
+      fail(registerPath, 'Accept the terms and privacy policy to continue.');
     }
     if (!(await signUpAllowed(email))) {
-      fail('/vendor/register', 'Too many attempts. Please wait a few minutes and try again.');
+      fail(registerPath, 'Too many attempts. Please wait a few minutes and try again.');
     }
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: { data: { full_name: fullName, phone: mobile } },
     });
-    if (error) fail('/vendor/register', authErrorMessage(error));
+    if (error) fail(registerPath, authErrorMessage(error));
     if (!data.session) {
-      redirect('/vendor/register?notice=confirm-email');
+      redirect(`${registerPath}?notice=confirm-email`);
     }
     currentUser = data.user;
   }
 
-  if (!currentUser) fail('/vendor/register', 'Could not create your account.');
+  if (!currentUser) fail(registerPath, 'Could not create your account.');
 
-  const { data: existing } = await supabase
-    .from('vendor_members')
-    .select('vendor_id')
-    .eq('user_id', currentUser.id)
-    .eq('active', true)
-    .limit(1)
-    .maybeSingle();
-  if (existing) redirect('/vendor');
-
-  const businessName = String(formData.get('business_name') ?? '').trim();
+  // Registration asks for the person, not the business. The provisional record
+  // name comes from their name and is corrected in the setup wizard, so no
+  // business paperwork is collected before the dashboard opens.
+  const metadataName = String((currentUser.user_metadata as { full_name?: string } | null)?.full_name ?? '').trim();
+  const businessName =
+    String(formData.get('business_name') ?? '').trim() ||
+    String(formData.get('full_name') ?? '').trim() ||
+    metadataName ||
+    (currentUser.email ?? '').split('@')[0] ||
+    '';
   if (businessName.length < 2) {
-    fail('/vendor/register', 'Enter your business name to continue.');
+    fail(registerPath, 'Add your name so we can create your account.');
   }
 
-  const { error } = await supabase.rpc('register_vendor_account', {
+  const { error } = await supabase.rpc('register_merchant_account', {
+    p_kind: kind,
+    p_full_name: String(formData.get('full_name') ?? '').trim() || metadataName || null,
     p_business_name: businessName,
-    p_category: String(formData.get('business_category') ?? '').trim() || null,
-    p_description: String(formData.get('business_description') ?? '').trim() || null,
-    p_email: String(formData.get('business_email') ?? '').trim() || null,
-    p_phone: String(formData.get('business_phone') ?? '').trim() || null,
-    p_location: String(formData.get('business_location') ?? '').trim() || null,
-    p_website: String(formData.get('business_website') ?? '').trim() || null,
+    p_email:
+      String(formData.get('business_email') ?? formData.get('email') ?? '').trim() ||
+      currentUser.email ||
+      null,
+    p_phone: String(formData.get('mobile') ?? '').trim() || null,
   });
 
-  if (error) fail('/vendor/register', error.message);
+  if (error) fail(registerPath, merchantErrorMessage(error.message));
+
+  if (kind === 'partner') redirect('/enterprise/onboarding?welcome=1');
   redirect('/vendor/onboarding?welcome=1');
+}
+
+export async function registerVendorAccount(formData: FormData) {
+  return createMerchantAccount(formData, 'vendor');
+}
+
+export async function registerEnterpriseAccount(formData: FormData) {
+  return createMerchantAccount(formData, 'partner');
 }
 
 export async function acceptVendorInvite(formData: FormData) {
