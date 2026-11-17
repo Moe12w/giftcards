@@ -263,8 +263,15 @@ export default async function VendorAdvertisingPage({
                               </form>
                             ) : null}
                             {['draft', 'pending_payment', 'rejected'].includes(campaign.status) ? (
-                              <Link className="btn sm primary" href={`${ctx.home}/checkout/${campaign.id}`}>
-                                Checkout
+                              <Link
+                                className="btn sm primary"
+                                href={
+                                  campaign.slot_number
+                                    ? `${ctx.home}/checkout/${campaign.id}`
+                                    : `${ctx.home}/campaigns/${campaign.id}/edit`
+                                }
+                              >
+                                {campaign.slot_number ? 'Checkout' : 'Choose a slot'}
                               </Link>
                             ) : null}
                           </div>

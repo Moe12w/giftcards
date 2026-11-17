@@ -25,7 +25,6 @@ import {
   adminGrantAdvertisingCredit,
   adminOverrideAdvertisingCampaign,
   adminReviewAdvertisingCampaign,
-  adminVerifyAdvertisingPayment,
 } from '@/lib/actions/advertising';
 
 function toLocalInput(value: string | null | undefined): string {
@@ -50,7 +49,7 @@ export default async function AdminAdvertisingCampaignPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ verified?: string; reviewed?: string; override?: string; credited?: string; saved?: string; error?: string }>;
+  searchParams: Promise<{ reviewed?: string; override?: string; credited?: string; saved?: string; error?: string }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
@@ -158,15 +157,13 @@ export default async function AdminAdvertisingCampaignPage({
       <Notice
         error={query.error}
         success={
-          query.verified === '1'
-            ? 'Payment verified. The campaign moved through approval and activation automatically.'
-            : query.reviewed === '1'
-              ? 'Review recorded.'
-              : query.override === '1'
-                ? 'Override applied.'
-                : query.saved === '1'
-                  ? 'Saved.'
-                  : null
+          query.reviewed === '1'
+            ? 'Review recorded.'
+            : query.override === '1'
+              ? 'Override applied.'
+              : query.saved === '1'
+                ? 'Saved.'
+                : null
         }
       />
 
@@ -230,8 +227,14 @@ export default async function AdminAdvertisingCampaignPage({
                 }
               />
               <ReadRow label="Quote" value={formatMoney(campaign.quote_amount_minor)} />
-              <ReadRow label="Starts" value={formatDateTime(campaign.starts_at)} />
-              <ReadRow label="Ends" value={formatDateTime(campaign.ends_at)} />
+              <ReadRow
+                label="Starts"
+                value={campaign.starts_at ? formatDateTime(campaign.starts_at) : 'Not booked'}
+              />
+              <ReadRow
+                label="Ends"
+                value={campaign.ends_at ? formatDateTime(campaign.ends_at) : 'Not booked'}
+              />
               <ReadRow label="Priority / weight" value={`${campaign.priority} / ${campaign.rotation_weight}`} />
               <ReadRow
                 label="Frequency cap"
@@ -316,31 +319,21 @@ export default async function AdminAdvertisingCampaignPage({
         <section className="panel">
           <div className="panel-head">
             <h3>
-              <Receipt size={17} /> Payment verification
+              <Receipt size={17} /> Payment
             </h3>
-            <span className="small muted">Server-side only</span>
+            <span className="small muted">MyFatoorah</span>
           </div>
           <div className="panel-body">
             {paid ? (
               <div className="callout info">
-                Payment is verified. Reference <span className="mono">{campaign.payment_reference ?? '—'}</span>.
+                Paid by card through MyFatoorah. Reference{' '}
+                <span className="mono">{campaign.payment_reference ?? '—'}</span>.
               </div>
             ) : (
-              <form action={adminVerifyAdvertisingPayment} style={{ display: 'grid', gap: 12 }}>
-                <input type="hidden" name="campaign_id" value={campaign.id} />
-                <div className="field">
-                  <label htmlFor="provider_reference">Provider / bank reference</label>
-                  <input id="provider_reference" name="provider_reference" required defaultValue={campaign.payment_reference ?? ''} />
-                </div>
-                <div className="field">
-                  <label htmlFor="amount">Amount received (QAR)</label>
-                  <input id="amount" name="amount" inputMode="decimal" defaultValue={minorToInput(campaign.quote_amount_minor)} required />
-                  <span className="hint">Must be at least the campaign quote.</span>
-                </div>
-                <button className="btn primary" type="submit">
-                  <ShieldCheck size={15} /> Verify payment
-                </button>
-              </form>
+              <p className="small muted">
+                The advertiser pays by card on the hosted MyFatoorah page. Nothing needs marking by hand: the
+                campaign is confirmed from the provider response and then follows the approval rules.
+              </p>
             )}
           </div>
         </section>
@@ -665,7 +658,7 @@ export default async function AdminAdvertisingCampaignPage({
         <section className="panel">
           <div className="panel-head">
             <h3>Grant advertiser credit</h3>
-            <span className="small muted">Credit is spent before any manual payment.</span>
+            <span className="small muted">Optional promotional credit for this advertiser.</span>
           </div>
           <div className="panel-body">
             <form action={adminGrantAdvertisingCredit} className="inline-form">

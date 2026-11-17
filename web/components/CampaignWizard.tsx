@@ -8,6 +8,7 @@ import {
   Clock,
   Check,
   Megaphone,
+  Save,
   Wallet,
 } from 'lucide-react';
 import { formatMoney } from '@/lib/money';
@@ -52,8 +53,8 @@ export interface WizardCampaign {
   pricing_id: string | null;
   pricing_model: string;
   slot_number: number | null;
-  starts_at: string;
-  ends_at: string;
+  starts_at: string | null;
+  ends_at: string | null;
   total_budget_minor: number;
   daily_budget_minor: number;
   auto_renew: boolean;
@@ -98,6 +99,7 @@ const STEPS = [
 
 export function CampaignWizard({
   action,
+  saveDraftAction,
   placements,
   offers,
   categories,
@@ -109,6 +111,8 @@ export function CampaignWizard({
   slotsByPlacement = {},
 }: {
   action: (formData: FormData) => void | Promise<void>;
+  /** Saves the details as a draft with no slot, so it can be finished later. */
+  saveDraftAction?: (formData: FormData) => void | Promise<void>;
   placements: WizardPlacement[];
   offers: { id: string; title: string }[];
   categories: { id: string; name: string }[];
@@ -135,7 +139,7 @@ export function CampaignWizard({
   );
   const [slotNumber, setSlotNumber] = useState(campaign?.slot_number ?? 1);
   const [periods, setPeriods] = useState(() => {
-    if (!campaign) return 1;
+    if (!campaign?.starts_at || !campaign.ends_at) return 1;
     const hours =
       (new Date(campaign.ends_at).getTime() - new Date(campaign.starts_at).getTime()) / (60 * 60 * 1000);
     return Math.max(1, Math.round(hours / 6));
@@ -158,7 +162,8 @@ export function CampaignWizard({
     : price?.fixed_price_minor ?? 0;
   const quoteMinor = slotPrice * periods;
   const PERIOD_CHOICES = [1, 2, 3, 4, 5, 6, 8, 12];
-  const periodsLocked = Boolean(campaign && campaign.payment_status === 'paid');
+  const paidCampaign = Boolean(campaign && campaign.payment_status === 'paid');
+  const periodsLocked = paidCampaign;
   const needsImage = placement?.format === 'banner' || placement?.format === 'carousel';
   const visiblePlacements = placements.filter((row) => surfaceFor(row.key) === surface);
   const slots = placement ? slotsByPlacement[placement.key] ?? [] : [];
@@ -173,6 +178,24 @@ export function CampaignWizard({
   const hoursToNextSlot = Math.max(
     0,
     Math.ceil((nextSlotStart.getTime() - Date.now()) / (60 * 60 * 1000)),
+  );
+
+  // A paid booking keeps the window it bought. An unpaid one follows the live
+  // slot map, so a draft whose time has passed is booked into the next free
+  // window instead of being submitted with a date that is already gone.
+  const windowStart = (() => {
+    if (!campaign) return slotBased ? nextSlotStart : new Date();
+    if (paidCampaign && campaign.starts_at) return new Date(campaign.starts_at);
+    if (slotBased) return nextSlotStart;
+    if (!campaign.starts_at) return new Date();
+    return new Date(Math.max(new Date(campaign.starts_at).getTime(), Date.now()));
+  })();
+  const windowEnd = new Date(windowStart.getTime() + periods * 6 * 60 * 60 * 1000);
+  const windowExpired = Boolean(
+    campaign &&
+      !paidCampaign &&
+      campaign.ends_at &&
+      new Date(campaign.ends_at).getTime() <= Date.now(),
   );
 
   function choosePlacement(next: WizardPlacement) {
@@ -241,24 +264,9 @@ export function CampaignWizard({
       <input type="hidden" name="placement_key" value={placementKey} />
       <input type="hidden" name="pricing_id" value={pricingId} />
       <input type="hidden" name="slot_number" value={slotNumber} />
-      <input
-        type="hidden"
-        name="starts_at"
-        value={campaign ? campaign.starts_at : nextSlotStart.toISOString()}
-      />
-      <input
-        type="hidden"
-        name="periods"
-        value={periods}
-      />
-      <input
-        type="hidden"
-        name="ends_at"
-        value={new Date(
-          (campaign ? new Date(campaign.starts_at).getTime() : nextSlotStart.getTime()) +
-            periods * 6 * 60 * 60 * 1000,
-        ).toISOString()}
-      />
+      <input type="hidden" name="starts_at" value={windowStart.toISOString()} />
+      <input type="hidden" name="periods" value={periods} />
+      <input type="hidden" name="ends_at" value={windowEnd.toISOString()} />
       <input type="hidden" name="type" value="image" />
       <input type="hidden" name="sponsored_label" value="Sponsored" />
       <input type="hidden" name="sponsored_label_ar" value="إعلان مدفوع" />
@@ -278,6 +286,12 @@ export function CampaignWizard({
       </div>
 
       {message ? <div className="callout error">{message}</div> : null}
+      {windowExpired ? (
+        <div className="callout warn">
+          <Clock size={16} /> This draft&apos;s booked time has already passed, so it cannot be paid for. Pick a slot
+          below and it will be booked into the next free window.
+        </div>
+      ) : null}
 
       <section className="panel" style={{ display: step === 0 ? undefined : 'none' }}>
         <div className="panel-head">
@@ -378,7 +392,7 @@ export function CampaignWizard({
                       type="button"
                       className={`btn sm${chosen ? ' primary' : ' ghost'}`}
                       onClick={() => chooseSlot(slot)}
-                      disabled={Boolean(campaign)}
+                      disabled={paidCampaign}
                       title={`Slot ${slot} — ${formatMoney(slotPriceMinor)} per 6 hours`}
                       style={{ display: 'grid', gap: 2, textAlign: 'center', opacity: occupied && !chosen ? 0.65 : 1 }}
                     >
@@ -403,7 +417,8 @@ export function CampaignWizard({
               </div>
               <span className="hint">
                 Slot 1 is seen first and costs the most. No calendar to fill in — your ad takes the next free time in
-                the slot.
+                the slot. A draft is saved without a slot; choosing one here books it for two minutes while you pay.
+                {paidCampaign ? ' A paid booking keeps the slot and time it was bought for.' : ''}
               </span>
             </div>
           ) : null}
@@ -602,6 +617,11 @@ export function CampaignWizard({
           )}
         </div>
         <div className="btn-row">
+          {saveDraftAction ? (
+            <button className="btn ghost" type="submit" formAction={saveDraftAction}>
+              <Save size={15} /> Save draft
+            </button>
+          ) : null}
           {step < 1 ? (
             <button className="btn primary" type="button" onClick={nextStep}>
               Continue <ArrowRight size={15} />

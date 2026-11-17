@@ -72,6 +72,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
         { href: '/admin/advertising/placements', label: t.advertisingPlacements, icon: 'controls', hint: t.advertisingPlacementsHint },
         { href: '/admin/advertising/advertisers', label: t.advertisers, icon: 'vendors', hint: t.advertisersHint },
         { href: '/admin/advertising/finance', label: t.advertisingFinance, icon: 'finance', hint: t.advertisingFinanceHint },
+        { href: '/admin/advertising/payments', label: t.advertisingPayments, icon: 'settings', hint: t.advertisingPaymentsHint },
         { href: '/admin/advertising/rules', label: t.advertisingRules, icon: 'settings', hint: t.advertisingRulesHint },
       ],
     },

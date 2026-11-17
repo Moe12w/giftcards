@@ -594,9 +594,9 @@ function advertisingAdvertiserScript(portal: 'vendor' | 'enterprise'): TutorialS
         title: 'Pay once to lock the space',
         titleAr: 'ادفع مرة واحدة لتثبيت المساحة',
         body:
-          'Advertising is prepaid at a fixed price. You can pay with promotional credit if you have any, or submit the campaign and let the platform team verify a bank transfer. A browser success flag is never trusted — payment is confirmed on the server before anything activates.',
+          'Advertising is prepaid at a fixed price for the number of six-hour periods you choose. Pay securely by card, Apple Pay or KNET on the hosted MyFatoorah page; the campaign is confirmed and goes live as soon as MyFatoorah reports the payment.',
         bodyAr:
-          'الإعلان مدفوع مقدماً بسعر ثابت. يمكنك الدفع من رصيدك الترويجي إن وُجد، أو إرسال الحملة ليتحقق فريق المنصة من التحويل البنكي. ولا يُعتمد أي إشارة نجاح من المتصفح: يُثبَّت الدفع في الخادم قبل التفعيل.',
+          'الإعلان مدفوع مقدماً بسعر ثابت مقابل عدد فترات الست ساعات التي تختارها. ادفع بأمان بالبطاقة أو Apple Pay أو KNET على صفحة MyFatoorah، وتُؤكَّد الحملة وتظهر مباشرةً بعد تأكيد الدفع.',
         href: `/${portal}/advertising`,
       },
       {

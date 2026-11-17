@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { requireAdvertiser } from '@/lib/auth';
 import { PageHead } from '@/components/ui';
 import { CampaignWizard } from '@/components/CampaignWizard';
-import { createAdvertisingCampaign } from '@/lib/actions/advertising';
+import { createAdvertisingCampaign, saveAdvertisingDraft } from '@/lib/actions/advertising';
 import { loadAdvertisingSlotMap } from '@/lib/advertising-slots';
 import { getUserLocale } from '@/lib/i18n/server';
 
@@ -56,6 +56,7 @@ export default async function NewAdvertisingCampaignPage() {
       />
       <CampaignWizard
         action={createAdvertisingCampaign}
+        saveDraftAction={saveAdvertisingDraft}
         placements={placements}
         offers={(offersResult.data ?? []) as { id: string; title: string }[]}
         categories={(categoriesResult.data ?? []) as { id: string; name: string }[]}
