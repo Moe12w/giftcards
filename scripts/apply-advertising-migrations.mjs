@@ -18,6 +18,7 @@ if (!token || !ref) {
 const migrations = [
   ['0114', 'advertising_slot_rebooking', 'supabase/migrations/0114_advertising_slot_rebooking.sql'],
   ['0115', 'advertising_manual_payment_off', 'supabase/migrations/0115_advertising_manual_payment_off.sql'],
+  ['0116', 'advertising_two_minute_hold', 'supabase/migrations/0116_advertising_two_minute_hold.sql'],
 ];
 
 async function runQuery(query) {

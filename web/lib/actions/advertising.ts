@@ -69,6 +69,8 @@ const ADVERTISING_ERROR_MESSAGES: Record<string, string> = {
     'This booking time has already passed. Choose an available slot time before paying.',
   campaign_not_payable: 'This campaign cannot be paid right now.',
   invoice_required: 'The card payment could not be started. Please try again.',
+  slot_unavailable:
+    'That slot is taken for this window. Go back and pick an available slot to re-book.',
 };
 
 function friendly(message: string | undefined): string {

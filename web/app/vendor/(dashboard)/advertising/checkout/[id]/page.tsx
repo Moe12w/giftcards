@@ -49,7 +49,8 @@ export default async function AdvertisingCheckoutPage({
   const windowExpired = !paid && new Date(campaign.ends_at).getTime() <= Date.now();
   const canPayWithCredit =
     !paid && !windowExpired && availableCredit >= Number(campaign.quote_amount_minor ?? 0);
-  const remainingMs = new Date(campaign.ends_at).getTime() - Date.now();
+  const holdExpiresMs = campaign.hold_expires_at ? new Date(campaign.hold_expires_at).getTime() : 0;
+  const holdRemainingMs = holdExpiresMs - Date.now();
 
   return (
     <div className="dash-content">
@@ -90,9 +91,8 @@ export default async function AdvertisingCheckoutPage({
 
       {!paid && !windowExpired ? (
         <AdvertisingExpiryCountdown
-          endsAt={campaign.ends_at}
-          endsAtLabel={formatDateTime(campaign.ends_at)}
-          initialRemainingMs={remainingMs}
+          holdExpiresAt={campaign.hold_expires_at ?? null}
+          initialRemainingMs={holdRemainingMs}
         />
       ) : null}
 

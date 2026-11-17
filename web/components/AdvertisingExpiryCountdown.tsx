@@ -1,72 +1,58 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlarmClock, CalendarClock } from 'lucide-react';
+import { AlarmClock } from 'lucide-react';
 
-/** One six-hour booking period: below this the window is called out as urgent. */
-const URGENT_MS = 6 * 60 * 60 * 1000;
+/** The slot is held for two minutes while the advertiser pays. */
+const HOLD_MINUTES = 2;
 
 function formatRemaining(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  const pad = (value: number) => String(value).padStart(2, '0');
-  if (hours >= 24) {
-    return `${Math.floor(hours / 24)}d ${pad(hours % 24)}h`;
-  }
-  return `${hours}h ${pad(minutes)}m ${pad(seconds)}s`;
+  return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
 }
 
 /**
- * Live "expires in" warning for an unpaid advertising draft. The server passes
- * the first measurement so the initial paint matches on both sides, then the
- * countdown ticks locally and flips to a hard stop when the window closes.
+ * Live countdown for the two-minute slot hold an unpaid draft has at checkout.
+ *
+ * The server passes the first measurement so the initial paint matches on both
+ * sides, then the countdown ticks locally and turns into a "hold ended" warning
+ * when the slot is released to everyone else.
  */
 export function AdvertisingExpiryCountdown({
-  endsAt,
-  endsAtLabel,
+  holdExpiresAt,
   initialRemainingMs,
 }: {
-  endsAt: string;
-  /** Server-formatted end time, so the label never differs between server and client. */
-  endsAtLabel: string;
+  /** When the current hold ends; null before any hold exists. */
+  holdExpiresAt: string | null;
   initialRemainingMs: number;
 }) {
   const [remaining, setRemaining] = useState(initialRemainingMs);
 
   useEffect(() => {
-    const target = new Date(endsAt).getTime();
+    if (!holdExpiresAt) return;
+    const target = new Date(holdExpiresAt).getTime();
     const tick = () => setRemaining(target - Date.now());
     tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
-  }, [endsAt]);
+  }, [holdExpiresAt]);
 
-  if (remaining <= 0) {
-    return (
-      <div className="callout error">
-        <CalendarClock size={16} /> This booking window has just ended, so payment is closed. Choose an available slot
-        to re-book the draft.
-      </div>
-    );
-  }
-
-  if (remaining <= URGENT_MS) {
+  if (!holdExpiresAt || remaining <= 0) {
     return (
       <div className="callout warn">
-        <AlarmClock size={16} /> This booking window ends in{' '}
-        <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{formatRemaining(remaining)}</strong> ({endsAtLabel}).
-        Pay before then, or pick a new slot once it closes.
+        <AlarmClock size={16} /> Your {HOLD_MINUTES}-minute hold has ended. The slot is released and anyone can book
+        it now — pay immediately, or go back and pick another slot.
       </div>
     );
   }
 
   return (
-    <div className="callout info">
-      <AlarmClock size={16} /> Booking window closes in{' '}
-      <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{formatRemaining(remaining)}</strong> ({endsAtLabel}).
-      Unpaid drafts have to be re-booked after that.
+    <div className="callout warn">
+      <AlarmClock size={16} /> Slot held for{' '}
+      <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{formatRemaining(remaining)}</strong>. Pay before it runs
+      out — after that the slot is released and someone else can book it.
     </div>
   );
 }
