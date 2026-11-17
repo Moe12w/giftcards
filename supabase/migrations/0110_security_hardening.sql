@@ -15,49 +15,29 @@
 -- search_path. These functions all reference public.* qualified names, so
 -- pinning the path changes no behaviour; it removes the ability for a caller
 -- to shadow a relation or function used inside them.
+--
+-- The list is derived from the catalogue at apply time rather than hard-coded,
+-- so a signature drift in an earlier migration cannot break this one.
 
-alter function public.admin_issue_manual_voucher(uuid, bigint, text, text, text, timestamptz, text) set search_path = public;
-alter function public.admin_rotate_claim_token(uuid) set search_path = public;
-alter function public.admin_set_bulk_order_status(uuid, public.bulk_order_status, text) set search_path = public;
-alter function public.admin_set_business_account_status(uuid, public.business_account_status, text) set search_path = public;
-alter function public.admin_set_vendor_status(uuid, public.vendor_status, text) set search_path = public;
-alter function public.advertising_activation_ready(uuid) set search_path = public;
-alter function public.advertising_admin_run_maintenance() set search_path = public;
-alter function public.advertising_campaign_is_eligible(uuid) set search_path = public;
-alter function public.advertising_can_view_campaign(uuid) set search_path = public;
-alter function public.advertising_can_view_vendor(uuid) set search_path = public;
-alter function public.advertising_copy_campaign(uuid, boolean) set search_path = public;
-alter function public.advertising_create_campaign(uuid, text, uuid, text, timestamptz, timestamptz, bigint, bigint, boolean, jsonb) set search_path = public;
-alter function public.advertising_create_campaign(uuid, text, uuid, text, timestamptz, timestamptz, bigint, bigint, integer, jsonb) set search_path = public;
-alter function public.advertising_create_campaign(uuid, text, uuid, text, timestamptz, timestamptz, bigint, bigint, integer, jsonb, integer) set search_path = public;
-alter function public.advertising_deliver(text, integer, text, text, jsonb) set search_path = public;
-alter function public.advertising_pay_with_credit(uuid) set search_path = public;
-alter function public.advertising_resume_campaign(uuid) set search_path = public;
-alter function public.advertising_run_maintenance() set search_path = public;
-alter function public.advertising_slot_map() set search_path = public;
-alter function public.advertising_stats_conversion() set search_path = public;
-alter function public.advertising_sync_category_placement() set search_path = public;
-alter function public.advertising_update_campaign(uuid, text, timestamptz, timestamptz, bigint, bigint, boolean, jsonb) set search_path = public;
-alter function public.audit_count_for(text, uuid) set search_path = public;
-alter function public.bulk_registration_requires_approval() set search_path = public;
-alter function public.buyer_claim_link(uuid) set search_path = public;
-alter function public.buyer_owns_order(uuid) set search_path = public;
-alter function public.can_access_bulk_buying() set search_path = public;
-alter function public.claim_voucher(text) set search_path = public;
-alter function public.delete_my_account() set search_path = public;
-alter function public.deliver_scheduled_gifts(integer) set search_path = public;
-alter function public.get_basket_by_code(text) set search_path = public;
-alter function public.guard_profile_admin() set search_path = public;
-alter function public.import_enterprise_redemptions(uuid, jsonb) set search_path = public;
-alter function public.mcp_take_rate_limit(text, integer, integer) set search_path = public;
-alter function public.notify_on_support_reply() set search_path = public;
-alter function public.notify_on_voucher_expiry() set search_path = public;
-alter function public.record_admin_action(text, text, uuid, jsonb) set search_path = public;
-alter function public.report_enterprise_code_usage(uuid, text) set search_path = public;
-alter function public.sync_product_partner() set search_path = public;
-alter function public.validate_promo_code(text, bigint) set search_path = public;
-alter function public.vendor_outstanding_minor(uuid) set search_path = public;
-alter function public.write_audit(text, text, text, jsonb, jsonb) set search_path = public;
+do $$
+declare
+  r record;
+begin
+  for r in
+    select p.oid::regprocedure as signature
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.prosecdef
+      and not exists (
+        select 1
+        from unnest(coalesce(p.proconfig, '{}')) as c
+        where c like 'search_path=%'
+      )
+  loop
+    execute format('alter function %s set search_path = public', r.signature);
+  end loop;
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- 2. Login attempt ledger

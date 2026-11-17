@@ -30,33 +30,53 @@ async function siteOrigin(): Promise<string> {
 }
 
 function admin() {
-  return createAdminClient();
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return null;
+  }
+  try {
+    return createAdminClient();
+  } catch {
+    return null;
+  }
 }
 
 async function clientIp(): Promise<string | null> {
-  const headerStore = await headers();
-  const forwarded = headerStore.get('x-forwarded-for')?.split(',')[0]?.trim();
-  return forwarded || headerStore.get('x-real-ip') || null;
+  try {
+    const headerStore = await headers();
+    const forwarded = headerStore.get('x-forwarded-for')?.split(',')[0]?.trim();
+    return forwarded || headerStore.get('x-real-ip') || null;
+  } catch {
+    return null;
+  }
 }
 
 async function attemptsExceeded(identifier: string, windowSeconds: number, maxFailed: number): Promise<boolean> {
-  const { data } = await admin().rpc('auth_attempts_exceeded', {
-    p_identifier: identifier,
-    p_window_seconds: windowSeconds,
-    p_max_failed: maxFailed,
-  });
-  return data === true;
+  const client = admin();
+  if (!client) return false;
+  try {
+    const { data, error } = await client.rpc('auth_attempts_exceeded', {
+      p_identifier: identifier,
+      p_window_seconds: windowSeconds,
+      p_max_failed: maxFailed,
+    });
+    if (error) return false;
+    return data === true;
+  } catch {
+    return false;
+  }
 }
 
 async function recordAuthAttempt(identifier: string, success: boolean, ip: string | null): Promise<void> {
+  const client = admin();
+  if (!client) return;
   try {
-    await admin().rpc('record_auth_attempt', { p_identifier: identifier, p_success: success });
+    await client.rpc('record_auth_attempt', { p_identifier: identifier, p_success: success });
     if (ip) {
-      await admin().rpc('record_auth_attempt', { p_identifier: `ip:${ip}`, p_success: success });
+      await client.rpc('record_auth_attempt', { p_identifier: `ip:${ip}`, p_success: success });
     }
     if (success) {
-      await admin().rpc('clear_auth_attempts', { p_identifier: identifier });
-      if (ip) await admin().rpc('clear_auth_attempts', { p_identifier: `ip:${ip}` });
+      await client.rpc('clear_auth_attempts', { p_identifier: identifier });
+      if (ip) await client.rpc('clear_auth_attempts', { p_identifier: `ip:${ip}` });
     }
   } catch {
     // Throttling must never lock a legitimate user out of the app.
@@ -68,6 +88,7 @@ type ServerSupabase = Awaited<ReturnType<typeof createClient>>;
 /**
  * Signs a user in through Supabase, recording the attempt and enforcing the
  * per-identifier and per-IP limits before the credentials are checked.
+ * Every failure in the limiter fails open: the credential check still runs.
  */
 async function signInWithLimiter(
   supabase: ServerSupabase,
@@ -77,8 +98,16 @@ async function signInWithLimiter(
 ) {
   const identifier = authIdentifier(email);
   const ip = await clientIp();
-  const ipLimited = ip ? await attemptsExceeded(`ip:${ip}`, AUTH_WINDOW_SECONDS, 40) : false;
-  if (ipLimited || (await attemptsExceeded(identifier, AUTH_WINDOW_SECONDS, AUTH_MAX_FAILED))) {
+
+  let limited = false;
+  try {
+    limited = Boolean(ip) && (await attemptsExceeded(`ip:${ip}`, AUTH_WINDOW_SECONDS, 40));
+    if (!limited) limited = await attemptsExceeded(identifier, AUTH_WINDOW_SECONDS, AUTH_MAX_FAILED);
+  } catch {
+    limited = false;
+  }
+
+  if (limited) {
     await recordAuthAttempt(identifier, false, ip);
     fail(loginPath, 'Too many attempts. Please wait a few minutes and try again.');
   }
