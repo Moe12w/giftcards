@@ -20,6 +20,7 @@ export default async function BusinessPortalLayout({ children }: { children: Rea
       items: [
         { href: '/business', label: t.nav.overview, icon: 'dashboard', hint: t.nav.overviewHint },
         { href: '/business/deals', label: t.nav.deals, icon: 'products', hint: t.nav.dealsHint },
+        { href: '/business/cart', label: t.nav.cart, icon: 'finance', hint: t.nav.cartHint },
       ],
     },
     {

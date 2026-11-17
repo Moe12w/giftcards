@@ -62,6 +62,67 @@ export async function adminSetMyFatoorahEligibility(formData: FormData) {
   redirect(`${path}?eligibility=1`);
 }
 
+// ---------------------------------------------------------------------------
+// Enterprise partners use the identical supplier lifecycle.
+// ---------------------------------------------------------------------------
+
+/** Creates a supplier for a partner exactly once. */
+export async function adminCreatePartnerSupplier(formData: FormData) {
+  await requireAdmin();
+  const partnerId = str(formData, 'partner_id');
+  const path = `/admin/enterprise/${partnerId}`;
+  if (!partnerId) back('/admin/enterprise', 'Partner not found.');
+
+  const result = await callSupplierFunction('supplier-onboard', { partnerId });
+  if (!result.ok && !result.skipped) back(path, result.error ?? 'Supplier creation failed.');
+  revalidatePath(path);
+  revalidatePath('/admin/merchant-onboarding');
+  redirect(`${path}?supplier=1`);
+}
+
+/** Synchronises supplier statuses for vendors and partners alike. */
+export async function adminSyncPartnerSuppliers(formData: FormData) {
+  await requireAdmin();
+  const partnerId = str(formData, 'partner_id');
+  const path = partnerId ? `/admin/enterprise/${partnerId}` : '/admin/enterprise';
+
+  const result = await callSupplierFunction('sync-myfatoorah-suppliers');
+  if (!result.ok && !result.skipped) back(path, result.error ?? 'Supplier sync failed.');
+  revalidate(path);
+  redirect(`${path}?synced=1`);
+}
+
+/** Admin-only platform gate for a partner supplier. */
+export async function adminSetPartnerPaymentEligibility(formData: FormData) {
+  const ctx = await requireAdmin();
+  const partnerId = str(formData, 'partner_id');
+  const path = `/admin/enterprise/${partnerId}`;
+  if (!partnerId) back('/admin/enterprise', 'Partner not found.');
+
+  const { error } = await ctx.supabase.rpc('myfatoorah_partner_set_eligibility', {
+    p_partner_id: partnerId,
+    p_eligible: str(formData, 'eligible') === 'true',
+    p_note: str(formData, 'note') || null,
+  });
+  if (error) back(path, error.message.replace(/_/g, ' '));
+  revalidatePath(path);
+  redirect(`${path}?eligibility=1`);
+}
+
+/** Retries a partner document submission after a provider failure. */
+export async function adminResubmitPartnerDocument(formData: FormData) {
+  await requireAdmin();
+  const partnerId = str(formData, 'partner_id');
+  const documentId = str(formData, 'document_id');
+  const path = partnerId ? `/admin/enterprise/${partnerId}` : '/admin/merchant-onboarding';
+  if (!documentId) back(path, 'Document not found.');
+
+  const result = await callSupplierFunction('upload-supplier-document', { documentId });
+  if (!result.ok && !result.skipped) back(path, result.error ?? 'Document submission failed.');
+  revalidate(path);
+  redirect(`${path}?document_submitted=1`);
+}
+
 /** Retries a document submission after a provider failure or replacement. */
 export async function adminResubmitSupplierDocument(formData: FormData) {
   await requireAdmin();

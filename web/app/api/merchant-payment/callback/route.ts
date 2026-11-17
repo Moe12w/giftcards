@@ -16,9 +16,24 @@ export async function GET(request: Request) {
   const appUrl = (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/+$/, '');
   const target = `${appUrl || '/'}${appUrl ? '/' : ''}`;
 
-  if (failed || !orderId) {
-    return NextResponse.redirect(`${target}?payment=failed${orderId ? `&order=${orderId}` : ''}`);
-  }
+  // A mobile checkout passes its app scheme here; the browser closes itself
+  // when MyFatoorah follows this redirect. Never trust an arbitrary URL.
+  const requestedReturn = url.searchParams.get('return_to') ?? '';
+  const returnTo =
+    requestedReturn.startsWith('giftly://') ||
+    (appUrl && (requestedReturn === appUrl || requestedReturn.startsWith(`${appUrl}/`)))
+      ? requestedReturn
+      : '';
+  const finish = (status: string) => {
+    const query = `payment=${status}${orderId ? `&order=${orderId}` : ''}`;
+    if (returnTo) {
+      const separator = returnTo.includes('?') ? '&' : '?';
+      return NextResponse.redirect(`${returnTo}${separator}${query}`);
+    }
+    return NextResponse.redirect(`${target}${query}`);
+  };
+
+  if (failed || !orderId) return finish('failed');
 
   const internal = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   try {
@@ -38,13 +53,11 @@ export async function GET(request: Request) {
         cache: 'no-store',
       });
       const result = await response.json().catch(() => ({}));
-      return NextResponse.redirect(
-        `${target}?payment=${result.confirmed ? 'paid' : 'pending'}&order=${orderId}`,
-      );
+      return finish(result.confirmed ? 'paid' : 'pending');
     }
   } catch (error) {
     console.error('[merchant-payment] callback confirmation failed', error);
   }
 
-  return NextResponse.redirect(`${target}?payment=pending&order=${orderId}`);
+  return finish('pending');
 }

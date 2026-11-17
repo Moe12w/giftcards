@@ -15,6 +15,7 @@ import { offerBusinessLogo, offerIcon, offerTitle, offerTone } from '@/src/lib/c
 import { useThemeRefresh } from '@/src/lib/theme';
 import { getOffer } from '@/src/lib/data';
 import { getSupabase } from '@/src/lib/supabase';
+import { env } from '@/src/lib/env';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { formatMoney } from '@/src/lib/money';
 import { formatDate } from '@/src/lib/time';
@@ -73,6 +74,9 @@ export default function PaymentScreen() {
           message: draft.message || undefined,
           language: lang,
           idempotencyKey: idempotencyKey.current,
+          // MyFatoorah redirects here after payment so the in-app browser
+          // closes automatically and we return to the app.
+          returnUrl: `${env.appScheme}://payment`,
         },
       });
       if (error) throw error;
@@ -80,7 +84,8 @@ export default function PaymentScreen() {
       const orderId = String((data as any)?.orderId ?? '');
       if (!paymentUrl || !orderId) throw new Error('payment_link_unavailable');
 
-      await WebBrowser.openBrowserAsync(paymentUrl);
+      const redirectUrl = `${env.appScheme}://payment`;
+      await WebBrowser.openAuthSessionAsync(paymentUrl, redirectUrl);
       router.push({
         pathname: '/(customer)/checkout/processing',
         params: { orderId },

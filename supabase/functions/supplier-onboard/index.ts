@@ -1,10 +1,9 @@
 // supabase/functions/supplier-onboard/index.ts
-// Creates a MyFatoorah supplier for a vendor whose merchant application is
-// complete. NEVER creates twice: an existing SupplierCode short-circuits.
+// Creates a MyFatoorah supplier for a vendor OR an enterprise partner whose
+// merchant application is complete. Both business types are treated identically.
 //
-// Called server-to-server by the Next.js admin action with:
-//   x-internal-key: <SUPABASE_SERVICE_ROLE_KEY>
-//   { vendorId }
+// x-internal-key: <SUPABASE_SERVICE_ROLE_KEY>
+// { vendorId } or { partnerId }
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { adminClient } from '../_shared/clients.ts';
 import {
@@ -35,13 +34,7 @@ function qatarMobile(value: unknown): string {
 }
 
 function holderName(value: unknown): string {
-  // Provider rejects special characters and numbers in the holder name.
   return String(value ?? '').replace(/[^A-Za-z ]/g, '').replace(/\s+/g, ' ').trim().slice(0, 100);
-}
-
-function num(value: unknown): number | undefined {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }
 
 Deno.serve(async (req) => {
@@ -50,38 +43,47 @@ Deno.serve(async (req) => {
   if (!internalRequest(req)) return json({ error: 'unauthorized' }, 401);
 
   try {
-    const body = (await req.json()) as { vendorId?: string };
+    const body = (await req.json()) as { vendorId?: string; partnerId?: string };
     const vendorId = String(body.vendorId ?? '').trim();
-    if (!vendorId) return json({ error: 'invalid_request' }, 400);
-
+    const partnerId = String(body.partnerId ?? '').trim();
+    if (Boolean(vendorId) === Boolean(partnerId)) {
+      return json({ error: 'invalid_request' }, 400);
+    }
+    const ownerType = vendorId ? 'vendor' : 'partner';
+    const ownerId = vendorId || partnerId;
     const admin = adminClient();
 
-    const { data: vendor, error: vendorError } = await admin
-      .from('vendors')
-      .select(
-        'id, name, status, owner_id, myfatoorah_supplier_code, myfatoorah_supplier_status, myfatoorah_supplier_email',
-      )
-      .eq('id', vendorId)
-      .maybeSingle();
-    if (vendorError) throw vendorError;
-    if (!vendor) return json({ error: 'vendor_not_found' }, 404);
+    const ownerTable = ownerType === 'vendor' ? 'vendors' : 'enterprise_partners';
+    const ownerColumn = ownerType === 'vendor' ? 'vendor_id' : 'partner_id';
+    const claimFn = ownerType === 'vendor' ? 'myfatoorah_supplier_claim' : 'myfatoorah_partner_claim';
+    const createdFn = ownerType === 'vendor' ? 'myfatoorah_supplier_created' : 'myfatoorah_partner_created';
+    const failedFn = ownerType === 'vendor' ? 'myfatoorah_supplier_failed' : 'myfatoorah_partner_failed';
 
-    // Idempotency: a SupplierCode is permanent. Never create a second one.
-    if (vendor.myfatoorah_supplier_code) {
+    const { data: owner, error: ownerError } = await admin
+      .from(ownerTable)
+      .select('id, name, status, owner_id, myfatoorah_supplier_code, myfatoorah_supplier_status, myfatoorah_supplier_email')
+      .eq('id', ownerId)
+      .maybeSingle();
+    if (ownerError) throw ownerError;
+    if (!owner) return json({ error: 'business_not_found' }, 404);
+
+    // A supplier code is permanent. Never create a second one.
+    if (owner.myfatoorah_supplier_code) {
       return json({
         created: false,
+        ownerType,
         status: 'existing',
-        supplierCode: vendor.myfatoorah_supplier_code,
-        supplierStatus: vendor.myfatoorah_supplier_status,
+        supplierCode: owner.myfatoorah_supplier_code,
+        supplierStatus: owner.myfatoorah_supplier_status,
       });
     }
 
     const { data: application, error: appError } = await admin
       .from('merchant_applications')
       .select(
-        'id, status, contact_name, business_name, business_email, business_phone, business_type, bank_name, bank_account_name, bank_account_number, bank_iban',
+        'id, status, business_name, business_email, business_phone, business_type, bank_name, bank_account_name, bank_account_number, bank_iban',
       )
-      .eq('vendor_id', vendorId)
+      .eq(ownerColumn, ownerId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -90,12 +92,10 @@ Deno.serve(async (req) => {
 
     const email = String(application.business_email ?? '').trim();
     const mobile = qatarMobile(application.business_phone);
-    if (!email || !mobile) {
-      return json({ error: 'supplier_contact_incomplete' }, 409);
-    }
+    if (!email || !mobile) return json({ error: 'supplier_contact_incomplete' }, 409);
 
-    const { data: claimed, error: claimError } = await admin.rpc('myfatoorah_supplier_claim', {
-      p_vendor_id: vendorId,
+    const { data: claimed, error: claimError } = await admin.rpc(claimFn, {
+      [ownerType === 'vendor' ? 'p_vendor_id' : 'p_partner_id']: ownerId,
     });
     if (claimError) {
       const message = String(claimError.message ?? '');
@@ -105,45 +105,40 @@ Deno.serve(async (req) => {
       throw claimError;
     }
     if (!claimed) {
-      // Another request won the race and stored a code in the meantime.
       const { data: refreshed } = await admin
-        .from('vendors')
+        .from(ownerTable)
         .select('myfatoorah_supplier_code, myfatoorah_supplier_status')
-        .eq('id', vendorId)
+        .eq('id', ownerId)
         .maybeSingle();
       return json({
         created: false,
+        ownerType,
         status: 'existing',
         supplierCode: refreshed?.myfatoorah_supplier_code ?? null,
         supplierStatus: refreshed?.myfatoorah_supplier_status ?? null,
       });
     }
 
+    const displayName = String(application.business_name || owner.name || '').slice(0, 100);
     const input: SupplierInput = {
-      SupplierName: String(application.business_name || vendor.name || '').slice(0, 100),
+      SupplierName: displayName,
       Mobile: mobile,
       Email: email,
-      // 1 = Home Business, 2 = Company (documented CreateSupplier values).
       BusinessType: application.business_type === 'company' ? 2 : 1,
-      BusinessName: String(application.business_name || vendor.name || '').slice(0, 100),
+      BusinessName: displayName,
     };
-
     const holder = holderName(application.bank_account_name);
     if (holder) input.BankAccountHolderName = holder;
-
     const account = digits(application.bank_account_number);
     if (account) input.BankAccount = account;
-
     const iban = String(application.bank_iban ?? '').replace(/[\s-]/g, '').toUpperCase();
     if (/^QA\d{2}[A-Z0-9]{11,30}$/.test(iban)) input.Iban = iban;
-
-    // CommissionValue / CommissionPercentage / DepositTerms are intentionally
-    // omitted: they come from the account's provider-side commercial arrangement.
+    // Commission / deposit terms come from the provider's configuration.
 
     try {
       const supplier = await createSupplier(input);
-      const { data: saved, error: saveError } = await admin.rpc('myfatoorah_supplier_created', {
-        p_vendor_id: vendorId,
+      const { data: saved, error: saveError } = await admin.rpc(createdFn, {
+        [ownerType === 'vendor' ? 'p_vendor_id' : 'p_partner_id']: ownerId,
         p_supplier_code: supplier.supplierCode,
         p_supplier_email: supplier.supplierEmail,
         p_provider_date: supplier.date,
@@ -151,10 +146,10 @@ Deno.serve(async (req) => {
       });
       if (saveError) throw saveError;
 
-      await notifyOwner(admin, vendor.owner_id, 'Your MyFatoorah supplier was created. KYC verification is next.');
-
+      await notifyOwner(admin, owner.owner_id, 'Your MyFatoorah supplier was created. KYC verification is next.');
       return json({
         created: true,
+        ownerType,
         status: 'created',
         supplierCode: supplier.supplierCode,
         supplierStatus: saved?.myfatoorah_supplier_status ?? 'Pending',
@@ -162,19 +157,18 @@ Deno.serve(async (req) => {
     } catch (error) {
       logProviderError('supplier-onboard failed', error);
 
-      // A timeout is ambiguous: the supplier may exist. Check before retrying.
+      // A timeout is ambiguous: check whether the supplier was created first.
       if (error instanceof MyFatoorahError && error.timeout) {
         try {
           const suppliers = await getSuppliers();
           const match = suppliers.find(
             (s) =>
-              String(s.SupplierCode) === String(vendor.myfatoorah_supplier_code ?? '') ||
               String(s.Email ?? '').toLowerCase() === email.toLowerCase() ||
-              String(s.SupplierName ?? '').toLowerCase() === String(input.SupplierName).toLowerCase(),
+              String(s.SupplierName ?? '').toLowerCase() === displayName.toLowerCase(),
           );
           if (match) {
-            const { data: saved } = await admin.rpc('myfatoorah_supplier_created', {
-              p_vendor_id: vendorId,
+            const { data: saved } = await admin.rpc(createdFn, {
+              [ownerType === 'vendor' ? 'p_vendor_id' : 'p_partner_id']: ownerId,
               p_supplier_code: String(match.SupplierCode),
               p_supplier_email: String(match.Email ?? email),
               p_provider_date: null,
@@ -182,6 +176,7 @@ Deno.serve(async (req) => {
             });
             return json({
               created: true,
+              ownerType,
               status: 'recovered_after_timeout',
               supplierCode: String(match.SupplierCode),
               supplierStatus: saved?.myfatoorah_supplier_status ?? match.SupplierStatus ?? 'Pending',
@@ -193,8 +188,8 @@ Deno.serve(async (req) => {
       }
 
       const detail = error instanceof MyFatoorahError ? error.message : 'supplier_creation_failed';
-      await admin.rpc('myfatoorah_supplier_failed', {
-        p_vendor_id: vendorId,
+      await admin.rpc(failedFn, {
+        [ownerType === 'vendor' ? 'p_vendor_id' : 'p_partner_id']: ownerId,
         p_error: detail,
         p_timeout: error instanceof MyFatoorahError && error.timeout,
       });

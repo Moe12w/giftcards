@@ -109,9 +109,16 @@ export default async function AdminMerchantApplicationPage({
         title={application.business_name ?? owner}
         description={`${application.owner_type === 'vendor' ? 'Vendor' : 'Enterprise'} · ${owner} · application ${application.id.slice(0, 8)}`}
         actions={
-          <Link className="btn sm ghost" href="/admin/merchant-onboarding">
-            <ArrowLeft size={14} /> All applications
-          </Link>
+          <>
+            {application.partner_id ? (
+              <Link className="btn sm" href={`/admin/enterprise/${application.partner_id}`}>
+                Manage partner supplier
+              </Link>
+            ) : null}
+            <Link className="btn sm ghost" href="/admin/merchant-onboarding">
+              <ArrowLeft size={14} /> All applications
+            </Link>
+          </>
         }
       />
 

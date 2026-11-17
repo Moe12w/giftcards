@@ -14,6 +14,12 @@ import {
 } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
 import { adminUpdatePartner } from '@/lib/actions/admin';
+import {
+  adminCreatePartnerSupplier,
+  adminResubmitPartnerDocument,
+  adminSetPartnerPaymentEligibility,
+  adminSyncPartnerSuppliers,
+} from '@/lib/actions/admin-supplier';
 import { formatDate, formatDateTime, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
@@ -27,7 +33,14 @@ export default async function AdminEnterpriseDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{
+    saved?: string;
+    error?: string;
+    supplier?: string;
+    synced?: string;
+    eligibility?: string;
+    document_submitted?: string;
+  }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
@@ -91,6 +104,21 @@ export default async function AdminEnterpriseDetailPage({
     return order?.status === 'paid';
   });
 
+  const { data: merchantApplication } = await supabase
+    .from('merchant_applications')
+    .select('id, status, business_name, submitted_at')
+    .eq('partner_id', id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const { data: merchantDocuments } = merchantApplication
+    ? await supabase
+        .from('merchant_application_documents')
+        .select('id, doc_type, status, myfatoorah_file_type, provider_submission_status')
+        .eq('application_id', merchantApplication.id)
+        .order('doc_type')
+    : { data: [] };
+
   const available = inventory.filter((item) => item.status === 'available');
   const allocated = inventory.filter((item) => ['reserved', 'sold', 'delivered'].includes(item.status));
   const redeemed = inventory.filter((item) => item.status === 'redeemed');
@@ -131,7 +159,149 @@ export default async function AdminEnterpriseDetailPage({
         }
       />
 
-      <Notice error={query.error ?? error?.message} success={query.saved === '1' ? t.saved : null} />
+      <Notice
+        error={query.error ?? error?.message}
+        success={
+          query.saved === '1'
+            ? t.saved
+            : query.supplier === '1'
+              ? 'Supplier request completed.'
+              : query.synced === '1'
+                ? 'Supplier statuses synchronised.'
+                : query.eligibility === '1'
+                  ? 'Payment eligibility updated.'
+                  : query.document_submitted === '1'
+                    ? 'Document submission completed.'
+                    : null
+        }
+      />
+
+      <section className="panel">
+        <div className="panel-head">
+          <h3>MyFatoorah payment management</h3>
+          <StatusTag
+            status={
+              partner.myfatoorah_supplier_status === 'active'
+                ? 'approved'
+                : partner.myfatoorah_supplier_status === 'rejected'
+                  ? 'rejected'
+                  : partner.myfatoorah_supplier_status
+                    ? 'pending'
+                    : 'not_started'
+            }
+          />
+        </div>
+        <div className="panel-body" style={{ display: 'grid', gap: 14 }}>
+          <div className="split-list">
+            <div>
+              <span className="k">Payment application</span>
+              <span className="v">{merchantApplication?.status ?? 'Not started'}</span>
+            </div>
+            <div>
+              <span className="k">Supplier code</span>
+              <span className="v mono">{partner.myfatoorah_supplier_code ?? 'Not created'}</span>
+            </div>
+            <div>
+              <span className="k">Provider status</span>
+              <span className="v">{partner.myfatoorah_supplier_status ?? 'Not created'}</span>
+            </div>
+            <div>
+              <span className="k">Partner status</span>
+              <span className="v">{partner.status}</span>
+            </div>
+            <div>
+              <span className="k">Deposit terms</span>
+              <span className="v">{partner.myfatoorah_deposit_terms ?? 'Provider-managed'}</span>
+            </div>
+            <div>
+              <span className="k">Provider commission</span>
+              <span className="v">
+                {partner.myfatoorah_commission_percentage != null
+                  ? `${partner.myfatoorah_commission_percentage}%`
+                  : 'Provider-managed'}
+              </span>
+            </div>
+            <div>
+              <span className="k">Last synchronised</span>
+              <span className="v">
+                {partner.myfatoorah_last_synced_at ? formatDateTime(partner.myfatoorah_last_synced_at, locale) : 'Never'}
+              </span>
+            </div>
+            <div>
+              <span className="k">Live payments</span>
+              <span className="v">
+                {partner.payment_eligibility ? <span className="tag success">Enabled</span> : <span className="tag neutral">Disabled</span>}
+              </span>
+            </div>
+          </div>
+
+          {partner.myfatoorah_rejection_comment ? (
+            <div className="callout error">MyFatoorah rejection: {partner.myfatoorah_rejection_comment}</div>
+          ) : null}
+          {partner.myfatoorah_last_error ? (
+            <div className="callout warn">Last provider error: {partner.myfatoorah_last_error}</div>
+          ) : null}
+
+          <div className="btn-row">
+            {!partner.myfatoorah_supplier_code ? (
+              <form action={adminCreatePartnerSupplier}>
+                <input type="hidden" name="partner_id" value={id} />
+                <button className="btn sm primary" type="submit">
+                  Create MyFatoorah supplier
+                </button>
+              </form>
+            ) : null}
+            <form action={adminSyncPartnerSuppliers}>
+              <input type="hidden" name="partner_id" value={id} />
+              <button className="btn sm ghost" type="submit">
+                Sync provider status
+              </button>
+            </form>
+            <form action={adminSetPartnerPaymentEligibility}>
+              <input type="hidden" name="partner_id" value={id} />
+              <input type="hidden" name="eligible" value={partner.payment_eligibility ? 'false' : 'true'} />
+              <input type="hidden" name="note" value={partner.payment_eligibility ? 'Disabled by administrator' : 'Enabled by administrator'} />
+              <button className="btn sm" type="submit">
+                {partner.payment_eligibility ? 'Disable live payments' : 'Enable live payments'}
+              </button>
+            </form>
+            {merchantApplication ? (
+              <Link className="btn sm ghost" href={`/admin/merchant-onboarding/${merchantApplication.id}`}>
+                Review application
+              </Link>
+            ) : null}
+          </div>
+
+          {(merchantDocuments ?? []).length > 0 ? (
+            <div className="split-list">
+              {(merchantDocuments ?? []).map((document) => (
+                <div key={document.id}>
+                  <span className="k">{document.doc_type.replace(/_/g, ' ')}</span>
+                  <span className="v small" style={{ display: 'grid', gap: 4, justifyItems: 'end' }}>
+                    <StatusTag status={document.status} />
+                    <span className="muted">
+                      {document.provider_submission_status === 'submitted'
+                        ? `Sent to MyFatoorah · FileType ${document.myfatoorah_file_type ?? '—'}`
+                        : document.provider_submission_status === 'failed'
+                          ? 'Provider submission failed'
+                          : 'Not sent to provider'}
+                    </span>
+                    {document.provider_submission_status !== 'submitted' && partner.myfatoorah_supplier_code ? (
+                      <form action={adminResubmitPartnerDocument}>
+                        <input type="hidden" name="partner_id" value={id} />
+                        <input type="hidden" name="document_id" value={document.id} />
+                        <button className="btn sm ghost" type="submit">
+                          Submit to MyFatoorah
+                        </button>
+                      </form>
+                    ) : null}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </section>
 
       <div className="kpi-grid">
         <div className="kpi">

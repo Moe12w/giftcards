@@ -158,22 +158,29 @@ Deno.serve(async (req) => {
         await markProcessed();
         return json({ received: true, ignored: true });
       }
-      const { data: vendor } = await admin
-        .from('vendors')
-        .select('id')
-        .eq('myfatoorah_supplier_code', code)
-        .maybeSingle();
-      if (vendor) {
+      const [vendorResult, partnerResult] = await Promise.all([
+        admin.from('vendors').select('id').eq('myfatoorah_supplier_code', code).maybeSingle(),
+        admin.from('enterprise_partners').select('id').eq('myfatoorah_supplier_code', code).maybeSingle(),
+      ]);
+      const owner = vendorResult.data
+        ? { id: vendorResult.data.id, kind: 'vendor' as const }
+        : partnerResult.data
+          ? { id: partnerResult.data.id, kind: 'partner' as const }
+          : null;
+      if (owner) {
         const status = kyc === 'APPROVED' ? 'active' : kyc === 'REJECTED' ? 'rejected' : 'pending';
         const reasons = Array.isArray(data?.KycDecision?.RejectionReason)
           ? data.KycDecision.RejectionReason.map((r: any) => value(r?.Description)).filter(Boolean).join('; ')
           : '';
-        const { error } = await admin.rpc('myfatoorah_supplier_synced', {
-          p_vendor_id: vendor.id,
-          p_status: status,
-          p_comment: reasons || null,
-          p_raw: data,
-        });
+        const { error } = await admin.rpc(
+          owner.kind === 'vendor' ? 'myfatoorah_supplier_synced' : 'myfatoorah_partner_synced',
+          {
+            [owner.kind === 'vendor' ? 'p_vendor_id' : 'p_partner_id']: owner.id,
+            p_status: status,
+            p_comment: reasons || null,
+            p_raw: data,
+          },
+        );
         if (error) throw error;
       }
       await markProcessed();

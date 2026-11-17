@@ -38,15 +38,25 @@ Deno.serve(async (req) => {
       return json({ synced: 0, unmatched: [], total: 0 });
     }
 
-    const { data: vendors, error: vendorError } = await admin
-      .from('vendors')
-      .select('id, myfatoorah_supplier_code, myfatoorah_supplier_status')
-      .in('myfatoorah_supplier_code', codes);
-    if (vendorError) throw vendorError;
+    const [vendorsResult, partnersResult] = await Promise.all([
+      admin
+        .from('vendors')
+        .select('id, myfatoorah_supplier_code')
+        .in('myfatoorah_supplier_code', codes),
+      admin
+        .from('enterprise_partners')
+        .select('id, myfatoorah_supplier_code')
+        .in('myfatoorah_supplier_code', codes),
+    ]);
+    if (vendorsResult.error) throw vendorsResult.error;
+    if (partnersResult.error) throw partnersResult.error;
 
-    const byCode = new Map<string, any>();
-    for (const vendor of vendors ?? []) {
-      byCode.set(String(vendor.myfatoorah_supplier_code), vendor);
+    const byCode = new Map<string, { id: string; kind: 'vendor' | 'partner' }>();
+    for (const vendor of vendorsResult.data ?? []) {
+      byCode.set(String(vendor.myfatoorah_supplier_code), { id: vendor.id, kind: 'vendor' });
+    }
+    for (const partner of partnersResult.data ?? []) {
+      byCode.set(String(partner.myfatoorah_supplier_code), { id: partner.id, kind: 'partner' });
     }
 
     let synced = 0;
@@ -61,15 +71,19 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const { error } = await admin.rpc('myfatoorah_supplier_synced', {
-        p_vendor_id: vendor.id,
-        p_status: String(supplier.SupplierStatus ?? 'Pending'),
-        p_comment: supplier.Comment ? String(supplier.Comment) : null,
-        p_deposit_terms: supplier.DepositTerms ? String(supplier.DepositTerms) : null,
-        p_commission_percentage: toNumber(supplier.CommissionPercentage),
-        p_commission_value: toNumber(supplier.CommissionValue),
-        p_raw: supplier,
-      });
+      const isVendor = vendor.kind === 'vendor';
+      const { error } = await admin.rpc(
+        isVendor ? 'myfatoorah_supplier_synced' : 'myfatoorah_partner_synced',
+        {
+          [isVendor ? 'p_vendor_id' : 'p_partner_id']: vendor.id,
+          p_status: String(supplier.SupplierStatus ?? 'Pending'),
+          p_comment: supplier.Comment ? String(supplier.Comment) : null,
+          p_deposit_terms: supplier.DepositTerms ? String(supplier.DepositTerms) : null,
+          p_commission_percentage: toNumber(supplier.CommissionPercentage),
+          p_commission_value: toNumber(supplier.CommissionValue),
+          p_raw: supplier,
+        },
+      );
       if (error) {
         errors.push({ supplierCode: code, error: error.message });
       } else {

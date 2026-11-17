@@ -107,7 +107,7 @@ export async function loadMerchantBundle(
     supabase.rpc('merchant_application_can_manage', { p_application_id: application.id }),
     ownerType === 'vendor'
       ? supabase.from('vendors').select(supplierColumns).eq('id', ownerId).maybeSingle()
-      : supabase.from('enterprise_partners').select('id').eq('id', ownerId).maybeSingle(),
+      : supabase.from('enterprise_partners').select(supplierColumns).eq('id', ownerId).maybeSingle(),
   ]);
 
   const supplierRow = supplierResult.data as Record<string, any> | null;

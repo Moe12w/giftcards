@@ -220,7 +220,7 @@ export default async function AdminPaymentManagementPage({
           </div>
           <div className="callout info" style={{ marginTop: 14 }}>
             Deploy the Edge Functions before going live:{' '}
-            <code>supabase functions deploy supplier-onboard upload-supplier-document sync-myfatoorah-suppliers create-payment payment-webhook</code>.
+            <code>supabase functions deploy supplier-onboard upload-supplier-document sync-myfatoorah-suppliers create-payment create-bulk-payment payment-webhook</code>.
             The payment webhook must be deployed with JWT verification disabled.
           </div>
           <div className="btn-row" style={{ marginTop: 12 }}>

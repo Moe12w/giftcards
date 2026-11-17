@@ -25,6 +25,8 @@ interface Body {
   message?: string;
   language?: 'en' | 'ar';
   idempotencyKey?: string;
+  /** Deep link MyFatoorah returns to after payment (mobile app only). */
+  returnUrl?: string;
 }
 
 Deno.serve(async (req) => {
@@ -54,11 +56,11 @@ Deno.serve(async (req) => {
     // open-value product accepts an amount only inside the product's range.
     const { data: product, error: productError } = await admin
       .from('products')
-      .select('id, vendor_id, partner_id, min_amount_minor, max_amount_minor, is_active, currency, title, title_ar, fulfilment_type')
+      .select('id, vendor_id, partner_id, enterprise_product_id, min_amount_minor, max_amount_minor, is_active, currency, title, title_ar, fulfilment_type')
       .eq('id', body.productId)
       .maybeSingle();
     if (productError) throw productError;
-    if (!product?.is_active || !product.vendor_id) {
+    if (!product?.is_active || (!product.vendor_id && !product.partner_id)) {
       return json({ error: 'product_unavailable' }, 404);
     }
 
@@ -89,30 +91,55 @@ Deno.serve(async (req) => {
       return json({ error: 'invalid_amount' }, 400);
     }
 
-    const { data: vendor, error: vendorError } = await admin
-      .from('vendors')
-      .select('id, name, status, myfatoorah_supplier_code, myfatoorah_supplier_status, payment_eligibility, max_unredeemed_minor')
-      .eq('id', product.vendor_id)
-      .maybeSingle();
-    if (vendorError) throw vendorError;
-    if (!vendor || vendor.status !== 'approved') return json({ error: 'vendor_unavailable' }, 409);
-    if (!vendor.myfatoorah_supplier_code) return json({ error: 'supplier_not_ready' }, 409);
-    if (String(vendor.myfatoorah_supplier_status).toLowerCase() !== 'active') {
+    // Vendors and enterprise partners use the identical supplier model.
+    let ownerName = '';
+    let supplierCode: string | null = null;
+    if (product.vendor_id) {
+      const { data: vendor, error: vendorError } = await admin
+        .from('vendors')
+        .select('id, name, status, myfatoorah_supplier_code, myfatoorah_supplier_status, payment_eligibility, max_unredeemed_minor')
+        .eq('id', product.vendor_id)
+        .maybeSingle();
+      if (vendorError) throw vendorError;
+      if (!vendor || vendor.status !== 'approved') return json({ error: 'vendor_unavailable' }, 409);
+      supplierCode = vendor.myfatoorah_supplier_code;
+      ownerName = vendor.name;
+      const exposureLimit = Number(vendor.max_unredeemed_minor ?? 0);
+      if (exposureLimit > 0) {
+        const { data: outstandingData, error: outstandingError } = await admin.rpc(
+          'vendor_outstanding_minor', { p_vendor_id: vendor.id },
+        );
+        if (outstandingError) throw outstandingError;
+        if (Number(outstandingData ?? 0) + unitPriceMinor > exposureLimit) {
+          return json({ error: 'vendor_exposure_limit_reached' }, 409);
+        }
+      }
+    } else {
+      const { data: partner, error: partnerError } = await admin
+        .from('enterprise_partners')
+        .select('id, name, status, myfatoorah_supplier_code, myfatoorah_supplier_status, payment_eligibility')
+        .eq('id', product.partner_id)
+        .maybeSingle();
+      if (partnerError) throw partnerError;
+      if (!partner || partner.status !== 'active') return json({ error: 'vendor_unavailable' }, 409);
+      supplierCode = partner.myfatoorah_supplier_code;
+      ownerName = partner.name;
+    }
+
+    if (!supplierCode) return json({ error: 'supplier_not_ready' }, 409);
+    if (String((await admin
+      .from(product.vendor_id ? 'vendors' : 'enterprise_partners')
+      .select('myfatoorah_supplier_status')
+      .eq('id', product.vendor_id ?? product.partner_id)
+      .maybeSingle()).data?.myfatoorah_supplier_status ?? '').toLowerCase() !== 'active') {
       return json({ error: 'supplier_not_active' }, 409);
     }
-    if (!vendor.payment_eligibility) return json({ error: 'payments_not_enabled' }, 409);
-
-    const exposureLimit = Number(vendor.max_unredeemed_minor ?? 0);
-    if (exposureLimit > 0) {
-      const { data: outstandingData, error: outstandingError } = await admin.rpc(
-        'vendor_outstanding_minor',
-        { p_vendor_id: vendor.id },
-      );
-      if (outstandingError) throw outstandingError;
-      if (Number(outstandingData ?? 0) + unitPriceMinor > exposureLimit) {
-        return json({ error: 'vendor_exposure_limit_reached' }, 409);
-      }
-    }
+    const { data: eligibilityRow } = await admin
+      .from(product.vendor_id ? 'vendors' : 'enterprise_partners')
+      .select('payment_eligibility')
+      .eq('id', product.vendor_id ?? product.partner_id)
+      .maybeSingle();
+    if (!eligibilityRow?.payment_eligibility) return json({ error: 'payments_not_enabled' }, 409);
 
     // Idempotency: one order per (buyer, client key).
     const idempotencyKey = String(body.idempotencyKey ?? '').trim();
@@ -161,7 +188,7 @@ Deno.serve(async (req) => {
         offer_snapshot: {
           title: product.title,
           title_ar: product.title_ar,
-          vendor_name: vendor.name,
+          vendor_name: ownerName,
           fulfilment_type: product.fulfilment_type,
         },
       })
@@ -173,7 +200,8 @@ Deno.serve(async (req) => {
       order_id: order.id,
       product_id: product.id,
       product_variant_id: variantId,
-      vendor_id: vendor.id,
+      enterprise_product_id: product.enterprise_product_id,
+      vendor_id: product.vendor_id,
       quantity: 1,
       unit_price_minor: unitPriceMinor,
       total_minor: unitPriceMinor,
@@ -195,6 +223,15 @@ Deno.serve(async (req) => {
     const baseUrl = config.baseUrl;
     const appUrl = config.appPublicUrl;
     const apiKey = config.apiKey;
+    // Only allow our own app scheme or the configured site as a return target.
+    const requestedReturn = String(body.returnUrl ?? '').trim();
+    const trustedReturn =
+      requestedReturn.startsWith('giftly://') ||
+      requestedReturn === config.appPublicUrl ||
+      requestedReturn.startsWith(`${config.appPublicUrl}/`);
+    const returnTo = trustedReturn && config.appPublicUrl
+      ? `&return_to=${encodeURIComponent(requestedReturn)}`
+      : '';
     if (!apiKey || !appUrl) {
       await admin.from('orders').update({ status: 'failed', payment_status: 'failed' }).eq('id', order.id);
       return json({ error: 'payment_provider_not_configured' }, 503);
@@ -209,12 +246,12 @@ Deno.serve(async (req) => {
       CustomerEmail: body.recipientEmail.trim(),
       CustomerReference: order.id,
       UserDefinedField: order.id,
-      CallBackUrl: `${appUrl}/api/merchant-payment/callback?order=${order.id}`,
-      ErrorUrl: `${appUrl}/api/merchant-payment/callback?order=${order.id}&failed=1`,
+      CallBackUrl: `${appUrl}/api/merchant-payment/callback?order=${order.id}${returnTo}`,
+      ErrorUrl: `${appUrl}/api/merchant-payment/callback?order=${order.id}&failed=1${returnTo}`,
       WebhookUrl: `${supabaseUrl}/functions/v1/payment-webhook`,
       Suppliers: [
         {
-          SupplierCode: Number(vendor.myfatoorah_supplier_code),
+          SupplierCode: Number(supplierCode),
           InvoiceShare: Number((unitPriceMinor / 100).toFixed(2)),
         },
       ],
@@ -254,7 +291,7 @@ Deno.serve(async (req) => {
       p_invoice_id: String(invoiceId),
       p_invoice_url: String(invoiceUrl),
       p_payment_url: String(invoiceUrl),
-      p_supplier_code: String(vendor.myfatoorah_supplier_code),
+      p_supplier_code: String(supplierCode),
       p_provider_response: provider?.Data ?? {},
     });
     if (recordError) throw recordError;

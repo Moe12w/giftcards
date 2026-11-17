@@ -54,6 +54,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ confirmed: false, reason: 'amount_mismatch' });
     }
 
+    // Bulk orders are fulfilled by the existing bulk-order flow (one voucher
+    // per allocated slot, then the buyer assigns recipients). They must not go
+    // through the single-item gift-card fulfilment path.
+    const { data: bulkOrders } = await admin
+      .from('bulk_orders')
+      .select('id')
+      .eq('checkout_order_id', payment.order_id)
+      .limit(1);
+    if (bulkOrders && bulkOrders.length > 0) {
+      const { data: result, error: bulkError } = await admin.rpc('bulk_fulfill_from_payment', {
+        p_checkout_order_id: payment.order_id,
+      });
+      if (bulkError) throw bulkError;
+      return NextResponse.json({
+        confirmed: true,
+        bulk: true,
+        orderId: payment.order_id,
+        fulfilled: (result as any)?.fulfilled ?? 0,
+        delivery: { delivered: false, reason: 'bulk_buyer_sends_links' },
+      });
+    }
+
     const raw = (status.raw ?? {}) as Record<string, any>;
     const { error: confirmError } = await admin.rpc('myfatoorah_payment_confirmed', {
       p_order_id: payment.order_id,

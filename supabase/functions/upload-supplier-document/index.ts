@@ -77,13 +77,25 @@ Deno.serve(async (req) => {
     if (applicationError) throw applicationError;
     if (!application) return json({ error: 'application_not_found' }, 404);
 
-    const { data: vendor, error: vendorError } = await admin
-      .from('vendors')
-      .select('id, myfatoorah_supplier_code')
-      .eq('id', application.vendor_id)
-      .maybeSingle();
-    if (vendorError) throw vendorError;
-    if (!vendor?.myfatoorah_supplier_code) {
+    let supplierCode: string | null = null;
+    if (application.vendor_id) {
+      const { data: vendor, error: vendorError } = await admin
+        .from('vendors')
+        .select('myfatoorah_supplier_code')
+        .eq('id', application.vendor_id)
+        .maybeSingle();
+      if (vendorError) throw vendorError;
+      supplierCode = vendor?.myfatoorah_supplier_code ?? null;
+    } else if (application.partner_id) {
+      const { data: partner, error: partnerError } = await admin
+        .from('enterprise_partners')
+        .select('myfatoorah_supplier_code')
+        .eq('id', application.partner_id)
+        .maybeSingle();
+      if (partnerError) throw partnerError;
+      supplierCode = partner?.myfatoorah_supplier_code ?? null;
+    }
+    if (!supplierCode) {
       return json({ error: 'supplier_not_ready' }, 409);
     }
 
@@ -131,7 +143,7 @@ Deno.serve(async (req) => {
         MediaType: mime,
         Buffer: toBase64(bytes),
         FileType: fileType,
-        SupplierCode: Number(vendor.myfatoorah_supplier_code),
+        SupplierCode: Number(supplierCode),
       });
 
       // A success response confirms SUBMISSION only, never KYC approval.

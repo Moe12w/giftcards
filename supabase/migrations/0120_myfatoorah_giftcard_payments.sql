@@ -51,6 +51,9 @@ create table if not exists public.myfatoorah_payment_allocations (
   updated_at timestamptz not null default now()
 );
 
+create unique index if not exists myfatoorah_payment_allocations_payment_supplier_key
+  on public.myfatoorah_payment_allocations (payment_id, supplier_code);
+
 create table if not exists public.myfatoorah_refunds (
   id uuid primary key default gen_random_uuid(),
   payment_id uuid not null references public.myfatoorah_payments(id) on delete cascade,
@@ -95,6 +98,19 @@ from public.financial_ledger
 where vendor_id is not null
 group by vendor_id;
 
+create or replace view public.partner_financial_balances
+with (security_invoker = true)
+as
+select
+  partner_id,
+  coalesce(sum(amount_minor), 0)::bigint as balance_minor,
+  coalesce(sum(case when amount_minor > 0 then amount_minor else 0 end), 0)::bigint as credits_minor,
+  coalesce(sum(case when amount_minor < 0 then -amount_minor else 0 end), 0)::bigint as debits_minor,
+  max(created_at) as updated_at
+from public.financial_ledger
+where partner_id is not null
+group by partner_id;
+
 -- ---------------------------------------------------------------------------
 -- Ledger helper: append-only, with a computed running balance
 -- ---------------------------------------------------------------------------
@@ -125,6 +141,40 @@ begin
     (entry_type, vendor_id, order_id, amount_minor, currency, reference, direction, balance_after_minor, metadata)
   values
     (p_entry_type, p_vendor_id, p_order_id, p_amount_minor, 'QAR', p_reference,
+     case when p_amount_minor < 0 then 'debit' else 'credit' end,
+     v_balance, coalesce(p_metadata, '{}'::jsonb));
+
+  return v_balance;
+end;
+$$;
+
+/** Append-only ledger entry for an enterprise partner's sale or refund. */
+create or replace function public.myfatoorah_partner_financial_entry(
+  p_partner_id uuid,
+  p_order_id uuid,
+  p_entry_type text,
+  p_amount_minor bigint,
+  p_reference text,
+  p_metadata jsonb default null
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_balance bigint;
+begin
+  perform set_config('mf.internal', '1', true);
+  select coalesce(sum(amount_minor), 0) into v_balance
+  from public.financial_ledger
+  where partner_id = p_partner_id;
+  v_balance := v_balance + p_amount_minor;
+
+  insert into public.financial_ledger
+    (entry_type, partner_id, order_id, amount_minor, currency, reference, direction, balance_after_minor, metadata)
+  values
+    (p_entry_type, p_partner_id, p_order_id, p_amount_minor, 'QAR', p_reference,
      case when p_amount_minor < 0 then 'debit' else 'credit' end,
      v_balance, coalesce(p_metadata, '{}'::jsonb));
 
@@ -186,12 +236,23 @@ begin
     select * into p from public.myfatoorah_payments where order_id = p_order_id;
   end if;
 
+  -- One allocation per supplier, so a multi-vendor/multi-partner invoice
+  -- reconciles exactly. Vendors and partners use the same supplier model.
   insert into public.myfatoorah_payment_allocations
     (payment_id, supplier_code, invoice_share_minor)
-  select p.id, p_supplier_code, coalesce(sum(total_minor), 0)
-  from public.order_items
-  where order_id = p_order_id
-  on conflict do nothing;
+  select p.id, supplier_code, coalesce(sum(oi.total_minor), 0)
+  from (
+    select oi.total_minor,
+           coalesce(v.myfatoorah_supplier_code, ep.myfatoorah_supplier_code) as supplier_code
+    from public.order_items oi
+    left join public.vendors v on v.id = oi.vendor_id
+    left join public.products pr on pr.id = oi.product_id
+    left join public.enterprise_partners ep on ep.id = pr.partner_id
+    where oi.order_id = p_order_id
+  ) lines
+  where supplier_code is not null
+  group by supplier_code
+  on conflict (payment_id, supplier_code) do nothing;
 
   return p;
 end;
@@ -213,6 +274,7 @@ declare
   p public.myfatoorah_payments;
   item record;
   v_share bigint;
+  v_partner uuid;
   already_paid boolean;
   supplier_raw jsonb;
 begin
@@ -242,6 +304,23 @@ begin
         coalesce(p_payment_id, p.invoice_id),
         jsonb_build_object('provider', 'myfatoorah', 'invoice_id', p.invoice_id)
       );
+    else
+      -- Partner sales own their codes; the partner receives the same ledger
+      -- treatment as a vendor, with no separate platform commission.
+      select pr.partner_id, coalesce(sum(oi.total_minor), 0)
+        into v_partner, v_share
+      from public.order_items oi
+      join public.products pr on pr.id = oi.product_id
+      where oi.order_id = p_order_id and pr.partner_id is not null
+      group by pr.partner_id
+      limit 1;
+      if v_partner is not null then
+        perform public.myfatoorah_partner_financial_entry(
+          v_partner, p_order_id, 'sale', v_share,
+          coalesce(p_payment_id, p.invoice_id),
+          jsonb_build_object('provider', 'myfatoorah', 'invoice_id', p.invoice_id)
+        );
+      end if;
     end if;
   end if;
 
@@ -312,6 +391,11 @@ begin
   loop
     i := i + 1;
     h := p_hashes -> (i - 1);
+    -- Partner codes are issued by the existing paid-order trigger
+    -- (issue_enterprise_code). Do not create a Giftly voucher for them.
+    if item.item_fulfilment_type = 'enterprise_code' then
+      continue;
+    end if;
     if h->>'claim_token_hash' is null or h->>'card_code_hash' is null then
       raise exception 'invalid_signature_array';
     end if;
@@ -379,6 +463,7 @@ as $$
 declare
   p public.myfatoorah_payments;
   r public.myfatoorah_refunds;
+  v_partner uuid;
 begin
   perform set_config('mf.internal', '1', true);
   select * into p from public.myfatoorah_payments where order_id = p_order_id for update;
@@ -406,6 +491,18 @@ begin
         p.vendor_id, p_order_id, 'refund', -p_amount_minor,
         p_refund_reference, jsonb_build_object('provider', 'myfatoorah')
       );
+    elsif p.vendor_id is null then
+      select pr.partner_id into v_partner
+      from public.order_items oi
+      join public.products pr on pr.id = oi.product_id
+      where oi.order_id = p_order_id and pr.partner_id is not null
+      limit 1;
+      if v_partner is not null then
+        perform public.myfatoorah_partner_financial_entry(
+          v_partner, p_order_id, 'refund', -p_amount_minor,
+          p_refund_reference, jsonb_build_object('provider', 'myfatoorah')
+        );
+      end if;
     end if;
   end if;
   return r;
@@ -441,18 +538,32 @@ create policy myfatoorah_allocations_select on public.myfatoorah_payment_allocat
 
 drop policy if exists myfatoorah_refunds_select on public.myfatoorah_refunds;
 create policy myfatoorah_refunds_select on public.myfatoorah_refunds
-  for select to authenticated using (public.is_admin() or public.is_vendor_member(vendor_id));
+  for select to authenticated using (
+    public.is_admin()
+    or public.is_vendor_member(vendor_id)
+    or exists (
+      select 1 from public.orders o
+      join public.order_items oi on oi.order_id = o.id
+      join public.products pr on pr.id = oi.product_id
+      where o.id = order_id
+        and pr.partner_id is not null
+        and public.is_enterprise_member(pr.partner_id)
+    )
+  );
 
 grant select on public.myfatoorah_payments, public.myfatoorah_payment_allocations,
-  public.myfatoorah_refunds, public.vendor_financial_balances to authenticated;
+  public.myfatoorah_refunds, public.vendor_financial_balances,
+  public.partner_financial_balances to authenticated;
 
 revoke all on function public.myfatoorah_financial_entry(uuid, uuid, text, bigint, text, jsonb) from public, anon, authenticated;
+revoke all on function public.myfatoorah_partner_financial_entry(uuid, uuid, text, bigint, text, jsonb) from public, anon, authenticated;
 revoke all on function public.myfatoorah_payment_recorded(uuid, text, text, text, text, jsonb) from public, anon, authenticated;
 revoke all on function public.myfatoorah_payment_confirmed(uuid, text, jsonb, jsonb) from public, anon, authenticated;
 revoke all on function public.myfatoorah_fulfill_order(text, jsonb) from public, anon, authenticated;
 revoke all on function public.myfatoorah_payment_refunded(uuid, bigint, text, text, jsonb) from public, anon, authenticated;
 
 grant execute on function public.myfatoorah_financial_entry(uuid, uuid, text, bigint, text, jsonb) to service_role;
+grant execute on function public.myfatoorah_partner_financial_entry(uuid, uuid, text, bigint, text, jsonb) to service_role;
 grant execute on function public.myfatoorah_payment_recorded(uuid, text, text, text, text, jsonb) to service_role;
 grant execute on function public.myfatoorah_payment_confirmed(uuid, text, jsonb, jsonb) to service_role;
 grant execute on function public.myfatoorah_fulfill_order(text, jsonb) to service_role;
