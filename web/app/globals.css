@@ -1189,6 +1189,80 @@ textarea.input {
   font-weight: 600;
 }
 
+/* Radios and checkboxes are controls, not text fields. Without this override the
+   generic `.field input` rule above stretches them to 100% width with text-field
+   padding, which pushes the option label outside the card on narrow screens. */
+.field input[type='radio'],
+.field input[type='checkbox'] {
+  width: auto;
+  min-width: 0;
+  padding: 0;
+  flex: none;
+  box-shadow: none;
+}
+
+.field .checkbox-row input[type='radio'],
+.field .checkbox-row input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+}
+
+/* Option pickers: business type, payment methods, onboarding choices. */
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.choice-card input[type='radio'],
+.choice-card input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  padding: 0;
+  accent-color: var(--mint-dark);
+  box-shadow: none;
+}
+
+.choice-card-text,
+.choice-card-main {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
+.choice-card-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.choice-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .choice-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .checkbox-row {
   display: flex;
   align-items: center;

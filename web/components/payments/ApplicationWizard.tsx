@@ -146,10 +146,10 @@ export function ApplicationWizard({ bundle, basePath, step, error, success, tone
               </div>
 
               <div className="field">
-                <label>Business type</label>
-                <div className="grid-2">
+                <span className="field-label">Business type</span>
+                <div className="choice-grid">
                   {BUSINESS_TYPES.map((type) => (
-                    <label key={type.key} className="card" style={{ padding: 12, display: 'flex', gap: 8 }}>
+                    <label key={type.key} className="card choice-card">
                       <input
                         type="radio"
                         name="business_type"
@@ -157,7 +157,7 @@ export function ApplicationWizard({ bundle, basePath, step, error, success, tone
                         required
                         defaultChecked={application.business_type === type.key}
                       />
-                      <span className="small">{type.label}</span>
+                      <span className="choice-card-text">{type.label}</span>
                     </label>
                   ))}
                 </div>
@@ -214,11 +214,11 @@ export function ApplicationWizard({ bundle, basePath, step, error, success, tone
                 Select every method you want to offer. You can change this before you submit.
               </p>
 
-              <div className="grid-2">
+              <div className="choice-grid">
                 {PAYMENT_METHODS.map((method) => (
-                  <label key={method.key} className="card" style={{ padding: 14, display: 'grid', gap: 6 }}>
-                    <span style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <label key={method.key} className="card choice-card">
+                    <span className="choice-card-row">
+                      <span className="choice-card-main">
                         <input
                           type="checkbox"
                           name="payment_methods"

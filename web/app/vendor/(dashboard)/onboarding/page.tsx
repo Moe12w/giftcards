@@ -199,15 +199,11 @@ export default async function VendorOnboardingPage({
                     </div>
 
                     <div className="field full">
-                      <label>Business type</label>
-                      <div className="grid-2">
+                      <span className="field-label">Business type</span>
+                      <div className="choice-grid">
                         {BUSINESS_TYPES.map((type) => (
-                          <label
-                            key={type.key}
-                            className="card"
-                            style={{ padding: 14, display: 'grid', gap: 4, cursor: 'pointer' }}
-                          >
-                            <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <label key={type.key} className="card choice-card choice-card-description">
+                            <span className="choice-card-main">
                               <input
                                 type="radio"
                                 name="business_type"
@@ -387,14 +383,10 @@ export default async function VendorOnboardingPage({
                     Choose everything that applies. We use this to set up your dashboard and suggest the right
                     gift types.
                   </p>
-                  <div className="grid-2">
+                  <div className="choice-grid">
                     {INTENTS.map((intent) => (
-                      <label
-                        key={intent.key}
-                        className="card"
-                        style={{ padding: 14, display: 'grid', gap: 4, cursor: 'pointer' }}
-                      >
-                        <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <label key={intent.key} className="card choice-card choice-card-description">
+                        <span className="choice-card-main">
                           <input
                             type="checkbox"
                             name="intents"
