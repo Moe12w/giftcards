@@ -1,18 +1,19 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, BadgeCheck, CreditCard, Receipt, ShieldCheck, Wallet } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, CalendarClock, CreditCard, Pencil, Receipt, Wallet } from 'lucide-react';
 import { requireAdvertiser } from '@/lib/auth';
 import { formatDateTime } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Notice, PageHead, ReadRow, StatusTag } from '@/components/ui';
-import { payAdvertisingWithCredit, submitAdvertisingCampaign } from '@/lib/actions/advertising';
+import { payAdvertisingWithCredit, payAdvertisingWithMyFatoorah } from '@/lib/actions/advertising';
+import { AdvertisingExpiryCountdown } from '@/components/AdvertisingExpiryCountdown';
 
 export default async function AdvertisingCheckoutPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ submitted?: string; error?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
@@ -43,8 +44,12 @@ export default async function AdvertisingCheckoutPage({
     ),
   );
   const paid = campaign.payment_status === 'paid';
-  const canSubmit = ['draft', 'rejected'].includes(campaign.status);
-  const canPayWithCredit = !paid && availableCredit >= Number(campaign.quote_amount_minor ?? 0);
+  // A draft whose booked window has already ended cannot be paid for; the
+  // advertiser has to go back and pick an available slot first.
+  const windowExpired = !paid && new Date(campaign.ends_at).getTime() <= Date.now();
+  const canPayWithCredit =
+    !paid && !windowExpired && availableCredit >= Number(campaign.quote_amount_minor ?? 0);
+  const remainingMs = new Date(campaign.ends_at).getTime() - Date.now();
 
   return (
     <div className="dash-content">
@@ -60,14 +65,18 @@ export default async function AdvertisingCheckoutPage({
             <Link className="btn sm primary" href={`${ctx.home}/campaigns/${campaign.id}`}>
               Open campaign
             </Link>
-          ) : null
+          ) : (
+            <Link className="btn sm" href={`${ctx.home}/campaigns/${campaign.id}/edit`}>
+              <Pencil size={15} /> Back to edit
+            </Link>
+          )
         }
       />
       <Notice
         error={query.error}
         success={
-          query.submitted === '1'
-            ? 'Campaign submitted. The platform team will verify the payment reference.'
+          query.saved === '1'
+            ? 'Draft updated. It is booked into the next free window for the slot you chose.'
             : null
         }
       />
@@ -78,6 +87,14 @@ export default async function AdvertisingCheckoutPage({
         <span className="tag neutral">{campaign.advertising_placements?.name ?? campaign.placement_key}</span>
         <span className="tag lavender">{campaign.pricing_model.toUpperCase()}</span>
       </div>
+
+      {!paid && !windowExpired ? (
+        <AdvertisingExpiryCountdown
+          endsAt={campaign.ends_at}
+          endsAtLabel={formatDateTime(campaign.ends_at)}
+          initialRemainingMs={remainingMs}
+        />
+      ) : null}
 
       {paid ? (
         <div className="callout info">
@@ -125,7 +142,7 @@ export default async function AdvertisingCheckoutPage({
                 value={campaign.daily_budget_minor > 0 ? formatMoney(campaign.daily_budget_minor) : 'No daily cap'}
               />
               <ReadRow label="Auto-renew" value="None — book again when the window ends" />
-              <ReadRow label="Payment reference" value={<span className="mono">{campaign.payment_reference ?? 'Generated on submit'}</span>} />
+              <ReadRow label="Payment reference" value={<span className="mono">{campaign.payment_reference ?? 'Generated when paid'}</span>} />
             </div>
             <div className="divider" />
             <div className="mini-row">
@@ -147,16 +164,26 @@ export default async function AdvertisingCheckoutPage({
               <p className="small muted">
                 This campaign is fully paid. No further payment is required unless you extend or renew it.
               </p>
+            ) : windowExpired ? (
+              <div className="callout error">
+                <CalendarClock size={16} /> The booked window ended on {formatDateTime(campaign.ends_at)}. Payment is
+                closed for this draft, so choose an available slot time and it will be re-booked.
+                <div style={{ marginTop: 10 }}>
+                  <Link className="btn sm primary" href={`${ctx.home}/campaigns/${campaign.id}/edit`}>
+                    Choose a new slot
+                  </Link>
+                </div>
+              </div>
             ) : (
               <div style={{ display: 'grid', gap: 14 }}>
                 <div className="card flat">
                   <div className="mini-row">
-                    <span className="small muted">Advertising credit available</span>
+                    <span className="small muted">Promotional credit available</span>
                     <span className="strong">{formatMoney(availableCredit)}</span>
                   </div>
                   <p className="small muted" style={{ marginTop: 6 }}>
-                    Credit is applied before any manual payment and activates the campaign immediately once the
-                    server verifies the balance.
+                    Credit granted by the platform can pay for the whole booking. It is applied before any card
+                    payment and activates the campaign immediately once the balance is verified.
                   </p>
                   <form action={payAdvertisingWithCredit} style={{ marginTop: 10 }}>
                     <input type="hidden" name="campaign_id" value={campaign.id} />
@@ -166,30 +193,28 @@ export default async function AdvertisingCheckoutPage({
                   </form>
                   {!canPayWithCredit ? (
                     <p className="small muted" style={{ marginTop: 6 }}>
-                      You need at least {formatMoney(campaign.quote_amount_minor)} of advertising credit.
+                      You need at least {formatMoney(campaign.quote_amount_minor)} of advertising credit for this
+                      option. Pay by card below instead.
                     </p>
                   ) : null}
                 </div>
 
                 <div className="card flat">
-                  <strong>Bank transfer / manual verification</strong>
-                  <p className="small muted">
-                    Submit the campaign to generate a payment reference. The platform team verifies the transfer and
-                    confirms the payment on the server. The campaign cannot activate before that confirmation.
+                  <div className="mini-row">
+                    <span className="small muted">Amount to pay</span>
+                    <span className="strong">{formatMoney(campaign.quote_amount_minor)}</span>
+                  </div>
+                  <strong>Pay by card</strong>
+                  <p className="small muted" style={{ marginTop: 6 }}>
+                    You will be redirected to MyFatoorah to pay securely by card, Apple Pay or KNET. The campaign goes
+                    live as soon as MyFatoorah confirms the payment for the slot you booked.
                   </p>
-                  {canSubmit ? (
-                    <form action={submitAdvertisingCampaign} style={{ marginTop: 10 }}>
-                      <input type="hidden" name="campaign_id" value={campaign.id} />
-                      <button className="btn" type="submit">
-                        <ShieldCheck size={15} /> Submit for payment verification
-                      </button>
-                    </form>
-                  ) : (
-                    <div className="callout info" style={{ marginTop: 10 }}>
-                      Reference <span className="mono">{campaign.payment_reference ?? '—'}</span> is waiting for
-                      verification. You will be notified as soon as it is confirmed.
-                    </div>
-                  )}
+                  <form action={payAdvertisingWithMyFatoorah} style={{ marginTop: 10 }}>
+                    <input type="hidden" name="campaign_id" value={campaign.id} />
+                    <button className="btn primary" type="submit">
+                      <CreditCard size={15} /> Pay {formatMoney(campaign.quote_amount_minor)}
+                    </button>
+                  </form>
                 </div>
               </div>
             )}

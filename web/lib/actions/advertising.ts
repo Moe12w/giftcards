@@ -5,6 +5,13 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin, requireAdvertiser } from '@/lib/auth';
 import { parseMoneyToMinor } from '@/lib/money';
 import { validateImageUpload } from '@/lib/security';
+import {
+  MYFATOORAH_SETTINGS_KEY,
+  clearMyFatoorahConfigCache,
+  createMyFatoorahInvoice,
+  getAppPublicUrl,
+  isMyFatoorahConfigured,
+} from '@/lib/myfatoorah';
 
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
@@ -57,9 +64,16 @@ function isoField(formData: FormData, key: string): string | null {
   return Number.isNaN(value.getTime()) ? null : value.toISOString();
 }
 
+const ADVERTISING_ERROR_MESSAGES: Record<string, string> = {
+  booking_window_expired:
+    'This booking time has already passed. Choose an available slot time before paying.',
+  campaign_not_payable: 'This campaign cannot be paid right now.',
+  invoice_required: 'The card payment could not be started. Please try again.',
+};
+
 function friendly(message: string | undefined): string {
   if (!message) return 'Something went wrong. Please try again.';
-  return message.replace(/_/g, ' ');
+  return ADVERTISING_ERROR_MESSAGES[message] ?? message.replace(/_/g, ' ');
 }
 
 function back(path: string, message: string): never {
@@ -160,33 +174,135 @@ export async function updateAdvertisingCampaign(formData: FormData) {
     p_daily_budget_minor: moneyField(formData, 'daily_budget'),
     p_auto_renew: false,
     p_creative: creativeFromForm(formData),
+    p_slot_number: intField(formData, 'slot_number'),
+    p_periods: intField(formData, 'periods'),
   });
 
   if (error) back(`${ctx.home}/campaigns/${campaignId}/edit`, friendly(error.message));
 
   refreshAdvertiser(ctx.kind, campaignId);
+
+  // An edited draft goes straight back to checkout so the advertiser can pay
+  // for the re-booked slot without hunting for the button again.
+  const { data: saved } = await ctx.supabase
+    .from('advertising_campaigns')
+    .select('status, payment_status')
+    .eq('id', campaignId)
+    .maybeSingle();
+  if (
+    saved &&
+    saved.payment_status !== 'paid' &&
+    ['draft', 'rejected', 'pending_payment'].includes(String(saved.status))
+  ) {
+    redirect(`${ctx.home}/checkout/${campaignId}?saved=1`);
+  }
+
   redirect(`${ctx.home}/campaigns/${campaignId}?saved=1`);
 }
 
-export async function submitAdvertisingCampaign(formData: FormData) {
+/**
+ * Starts a hosted MyFatoorah payment for the slot the advertiser booked.
+ *
+ * The amount is the campaign quote for the chosen number of six-hour periods,
+ * read from the database — never from the form. The campaign is only marked
+ * paid after MyFatoorah confirms the payment through the callback or webhook.
+ */
+export async function payAdvertisingWithMyFatoorah(formData: FormData) {
   const ctx = await requireAdvertiser();
   const campaignId = str(formData, 'campaign_id');
   if (!campaignId) back(ctx.home, 'Missing campaign.');
 
-  const { error } = await ctx.supabase.rpc('advertising_submit_campaign', {
+  const { data: campaign } = await ctx.supabase
+    .from('advertising_campaigns')
+    .select('id, name, status, payment_status, quote_amount_minor, currency, ends_at')
+    .eq('id', campaignId)
+    .eq('vendor_id', ctx.vendor.id)
+    .maybeSingle();
+  if (!campaign) back(ctx.home, 'Missing campaign.');
+  if (campaign.payment_status === 'paid') redirect(`${ctx.home}/campaigns/${campaignId}?paid=1`);
+  if (!['draft', 'rejected', 'pending_payment'].includes(String(campaign.status))) {
+    back(`${ctx.home}/checkout/${campaignId}`, 'This campaign cannot be paid right now.');
+  }
+  if (new Date(campaign.ends_at).getTime() <= Date.now()) {
+    back(
+      `${ctx.home}/campaigns/${campaignId}/edit`,
+      'This booking time has already passed. Choose an available slot time before paying.',
+    );
+  }
+
+  const appUrl = await getAppPublicUrl();
+  if (!appUrl) {
+    back(
+      `${ctx.home}/checkout/${campaignId}`,
+      'Card payments are not configured yet. Set APP_PUBLIC_URL on the server.',
+    );
+  }
+  if (!(await isMyFatoorahConfigured())) {
+    back(
+      `${ctx.home}/checkout/${campaignId}`,
+      'Card payments are not configured yet. Add the MyFatoorah API key on the server.',
+    );
+  }
+
+  let invoice: { invoiceId: string; invoiceUrl: string };
+  try {
+    invoice = await createMyFatoorahInvoice({
+      amountMinor: Number(campaign.quote_amount_minor ?? 0),
+      currency: campaign.currency ?? 'QAR',
+      customerName: ctx.vendor.name,
+      customerEmail: ctx.user.email,
+      reference: campaign.id,
+      description: `Advertising booking - ${campaign.name}`,
+      callbackUrl: `${appUrl}/api/advertising/myfatoorah/callback`,
+      errorUrl: `${appUrl}/api/advertising/myfatoorah/callback?failed=1`,
+      webhookUrl: `${appUrl}/api/advertising/myfatoorah/webhook`,
+    });
+  } catch (error) {
+    console.error('[advertising] could not create myfatoorah invoice', error);
+    back(`${ctx.home}/checkout/${campaignId}`, 'Could not start the card payment. Please try again.');
+  }
+
+  const { error } = await ctx.supabase.rpc('advertising_start_checkout', {
     p_campaign_id: campaignId,
+    p_invoice_id: invoice.invoiceId,
+    p_payment_url: invoice.invoiceUrl,
+    p_provider: 'myfatoorah',
+    p_meta: { surface: ctx.kind },
   });
 
   if (error) back(`${ctx.home}/checkout/${campaignId}`, friendly(error.message));
 
   refreshAdvertiser(ctx.kind, campaignId);
-  redirect(`${ctx.home}/checkout/${campaignId}?submitted=1`);
+  redirect(invoice.invoiceUrl);
 }
 
+/**
+ * Pays a campaign from promotional credit. Credit is granted by the platform
+ * (Admin → the advertiser or a campaign) and is applied in full, so it can only
+ * be used when the balance covers the whole quote. An expired booking window is
+ * still refused.
+ */
 export async function payAdvertisingWithCredit(formData: FormData) {
   const ctx = await requireAdvertiser();
   const campaignId = str(formData, 'campaign_id');
   if (!campaignId) back(ctx.home, 'Missing campaign.');
+
+  const { data: campaign } = await ctx.supabase
+    .from('advertising_campaigns')
+    .select('ends_at, payment_status')
+    .eq('id', campaignId)
+    .eq('vendor_id', ctx.vendor.id)
+    .maybeSingle();
+  if (!campaign) back(ctx.home, 'Missing campaign.');
+  if (
+    campaign.payment_status !== 'paid' &&
+    new Date(campaign.ends_at).getTime() <= Date.now()
+  ) {
+    back(
+      `${ctx.home}/campaigns/${campaignId}/edit`,
+      'This booking time has already passed. Choose an available slot time before paying.',
+    );
+  }
 
   const { error } = await ctx.supabase.rpc('advertising_pay_with_credit', {
     p_campaign_id: campaignId,
@@ -302,26 +418,6 @@ export async function uploadAdvertisingCreativeImage(formData: FormData): Promis
 // ---------------------------------------------------------------------------
 // Admin actions
 // ---------------------------------------------------------------------------
-
-export async function adminVerifyAdvertisingPayment(formData: FormData) {
-  const ctx = await requireAdmin();
-  const campaignId = str(formData, 'campaign_id');
-  const reference = str(formData, 'provider_reference');
-  if (!campaignId) back('/admin/advertising/campaigns', 'Missing campaign.');
-  if (!reference) back(`/admin/advertising/campaigns/${campaignId}`, 'Enter the payment reference.');
-
-  const { error } = await ctx.supabase.rpc('advertising_confirm_payment', {
-    p_campaign_id: campaignId,
-    p_provider: 'manual',
-    p_provider_reference: reference,
-    p_amount_minor: moneyField(formData, 'amount'),
-    p_raw_payload: { verified_by: ctx.user.id, source: 'admin' },
-  });
-
-  if (error) back(`/admin/advertising/campaigns/${campaignId}`, friendly(error.message));
-  refreshAdmin(campaignId);
-  redirect(`/admin/advertising/campaigns/${campaignId}?verified=1`);
-}
 
 export async function adminReviewAdvertisingCampaign(formData: FormData) {
   const ctx = await requireAdmin();
@@ -594,6 +690,82 @@ export async function adminSaveAdvertisingRule(formData: FormData) {
 
   revalidatePath('/admin/advertising/rules');
   redirect('/admin/advertising/rules?saved=1');
+}
+
+/**
+ * Stores the MyFatoorah settings edited in Admin → Advertising → Payments.
+ * Blank secret fields keep the saved value, so the form never has to echo a key
+ * back to the browser. Secrets are written to system_settings (admin-only) and
+ * are never logged.
+ */
+export async function adminSaveAdvertisingPaymentSettings(formData: FormData) {
+  const ctx = await requireAdmin();
+  const path = '/admin/advertising/payments';
+
+  const { data: existing } = await ctx.supabase
+    .from('system_settings')
+    .select('value')
+    .eq('key', MYFATOORAH_SETTINGS_KEY)
+    .maybeSingle();
+  const current = (existing?.value ?? {}) as Record<string, unknown>;
+  const saved = (key: string) => (typeof current[key] === 'string' ? String(current[key]) : '');
+
+  if (checkbox(formData, 'clear_keys')) {
+    const { error } = await ctx.supabase
+      .from('system_settings')
+      .delete()
+      .eq('key', MYFATOORAH_SETTINGS_KEY);
+    if (error) back(path, error.message);
+
+    clearMyFatoorahConfigCache();
+    await ctx.supabase.rpc('advertising_record_audit', {
+      p_action: 'payment_settings_cleared',
+      p_entity_type: 'system_settings',
+      p_entity_id: null,
+      p_details: { key: MYFATOORAH_SETTINGS_KEY },
+    });
+    revalidatePath(path);
+    redirect(`${path}?saved=1`);
+  }
+
+  const apiKey = str(formData, 'api_key') || saved('api_key');
+  const webhookSecret = str(formData, 'webhook_secret') || saved('webhook_secret');
+  const baseUrl = (str(formData, 'base_url') || saved('base_url') || 'https://apitest.myfatoorah.com').replace(/\/+$/, '');
+  const appUrl = (str(formData, 'app_public_url') || saved('app_public_url')).replace(/\/+$/, '');
+
+  if (!apiKey) back(path, 'Add the MyFatoorah API key.');
+  if (!/^https?:\/\//i.test(baseUrl)) back(path, 'The API base URL must start with http:// or https://.');
+  if (appUrl && !/^https?:\/\//i.test(appUrl)) back(path, 'The app URL must start with http:// or https://.');
+
+  const { error } = await ctx.supabase.from('system_settings').upsert(
+    {
+      key: MYFATOORAH_SETTINGS_KEY,
+      value: {
+        api_key: apiKey,
+        base_url: baseUrl,
+        webhook_secret: webhookSecret,
+        app_public_url: appUrl,
+      },
+      description: 'MyFatoorah card payments for advertising checkout',
+      is_public: false,
+      updated_by: ctx.user.id,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'key' },
+  );
+
+  if (error) back(path, error.message);
+
+  clearMyFatoorahConfigCache();
+  await ctx.supabase.rpc('advertising_record_audit', {
+    p_action: 'payment_settings_updated',
+    p_entity_type: 'system_settings',
+    p_entity_id: null,
+    p_details: { key: MYFATOORAH_SETTINGS_KEY, base_url: baseUrl },
+  });
+
+  revalidatePath(path);
+  redirect(`${path}?saved=1`);
 }
 
 export async function adminRunAdvertisingMaintenance() {
