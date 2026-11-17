@@ -19,6 +19,12 @@ import {
 } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
 import { adminSaveVendor, adminSetVendorStatus } from '@/lib/actions/admin';
+import {
+  adminCreateMyFatoorahSupplier,
+  adminResubmitSupplierDocument,
+  adminSetMyFatoorahEligibility,
+  adminSyncMyFatoorahSuppliers,
+} from '@/lib/actions/admin-supplier';
 import { formatDate, formatDateTime, initials, titleCase } from '@/lib/format';
 import { formatMoney, minorToInput } from '@/lib/money';
 import { fulfilmentLabel } from '@/lib/catalog';
@@ -35,7 +41,14 @@ export default async function AdminVendorDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{
+    saved?: string;
+    error?: string;
+    supplier?: string;
+    synced?: string;
+    eligibility?: string;
+    document_submitted?: string;
+  }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
@@ -62,6 +75,7 @@ export default async function AdminVendorDetailPage({
     itemsResult,
     vouchersResult,
     categoriesResult,
+    merchantApplicationResult,
   ] = await Promise.all([
     supabase
       .from('vendor_applications')
@@ -101,7 +115,24 @@ export default async function AdminVendorDetailPage({
       .order('created_at', { ascending: false })
       .limit(12),
     supabase.from('categories').select('id, name').order('sort_order'),
+    supabase
+      .from('merchant_applications')
+      .select('id, status, business_name, business_email, business_phone, business_type, bank_name, bank_account_name, bank_iban, submitted_at, reviewed_at, decision_note')
+      .eq('vendor_id', id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
+
+  const merchantApplication = merchantApplicationResult.data as any | null;
+  const merchantDocumentsResult = merchantApplication
+    ? await supabase
+        .from('merchant_application_documents')
+        .select('id, doc_type, status, myfatoorah_file_type, provider_submission_status, provider_submitted_at, provider_last_error')
+        .eq('application_id', merchantApplication.id)
+        .order('doc_type')
+    : { data: [] };
+  const merchantDocuments = merchantDocumentsResult.data ?? [];
 
   const error = vendorError ?? applicationsResult.error ?? null;
 
@@ -157,7 +188,22 @@ export default async function AdminVendorDetailPage({
         }
       />
 
-      <Notice error={query.error ?? error?.message} success={query.saved === '1' ? t.saved : null} />
+      <Notice
+        error={query.error ?? error?.message}
+        success={
+          query.saved === '1'
+            ? t.saved
+            : query.supplier === '1'
+              ? 'Supplier request completed.'
+              : query.synced === '1'
+                ? 'Supplier statuses synchronised.'
+                : query.eligibility === '1'
+                  ? 'Payment eligibility updated.'
+                  : query.document_submitted === '1'
+                    ? 'Document submission completed.'
+                    : null
+        }
+      />
 
       {pendingApplication ? (
         <div className="callout warn" style={{ display: 'grid', gap: 6 }}>
@@ -172,6 +218,134 @@ export default async function AdminVendorDetailPage({
           </span>
         </div>
       ) : null}
+
+      <section className="panel" style={{ marginTop: 18 }}>
+        <div className="panel-head">
+          <h3>MyFatoorah payment management</h3>
+          <StatusTag
+            status={
+              vendor.myfatoorah_supplier_status === 'active'
+                ? 'approved'
+                : vendor.myfatoorah_supplier_status === 'rejected'
+                  ? 'rejected'
+                  : vendor.myfatoorah_supplier_status
+                    ? 'pending'
+                    : 'not_started'
+            }
+          />
+        </div>
+        <div className="panel-body" style={{ display: 'grid', gap: 14 }}>
+          <div className="split-list">
+            <div>
+              <span className="k">Payment application</span>
+              <span className="v">{merchantApplication?.status ?? 'Not started'}</span>
+            </div>
+            <div>
+              <span className="k">Supplier code</span>
+              <span className="v mono">{vendor.myfatoorah_supplier_code ?? 'Not created'}</span>
+            </div>
+            <div>
+              <span className="k">Provider status</span>
+              <span className="v">{vendor.myfatoorah_supplier_status ?? 'Not created'}</span>
+            </div>
+            <div>
+              <span className="k">Deposit terms</span>
+              <span className="v">{vendor.myfatoorah_deposit_terms ?? 'Provider-managed'}</span>
+            </div>
+            <div>
+              <span className="k">Provider commission</span>
+              <span className="v">
+                {vendor.myfatoorah_commission_percentage != null
+                  ? `${vendor.myfatoorah_commission_percentage}%`
+                  : 'Provider-managed'}
+              </span>
+            </div>
+            <div>
+              <span className="k">Last synchronised</span>
+              <span className="v">
+                {vendor.myfatoorah_last_synced_at ? formatDateTime(vendor.myfatoorah_last_synced_at, locale) : 'Never'}
+              </span>
+            </div>
+            <div>
+              <span className="k">Live payments</span>
+              <span className="v">
+                {vendor.payment_eligibility ? <span className="tag success">Enabled</span> : <span className="tag neutral">Disabled</span>}
+              </span>
+            </div>
+          </div>
+
+          {vendor.myfatoorah_rejection_comment ? (
+            <div className="callout error">MyFatoorah rejection: {vendor.myfatoorah_rejection_comment}</div>
+          ) : null}
+          {vendor.myfatoorah_last_error ? (
+            <div className="callout warn">Last provider error: {vendor.myfatoorah_last_error}</div>
+          ) : null}
+          {vendor.payment_eligibility_note ? (
+            <p className="small muted" style={{ margin: 0 }}>
+              Eligibility note: {vendor.payment_eligibility_note}
+            </p>
+          ) : null}
+
+          <div className="btn-row">
+            {!vendor.myfatoorah_supplier_code ? (
+              <form action={adminCreateMyFatoorahSupplier}>
+                <input type="hidden" name="vendor_id" value={id} />
+                <button className="btn sm primary" type="submit">
+                  Create MyFatoorah supplier
+                </button>
+              </form>
+            ) : null}
+            <form action={adminSyncMyFatoorahSuppliers}>
+              <input type="hidden" name="vendor_id" value={id} />
+              <button className="btn sm ghost" type="submit">
+                Sync provider status
+              </button>
+            </form>
+            <form action={adminSetMyFatoorahEligibility}>
+              <input type="hidden" name="vendor_id" value={id} />
+              <input type="hidden" name="eligible" value={vendor.payment_eligibility ? 'false' : 'true'} />
+              <input type="hidden" name="note" value={vendor.payment_eligibility ? 'Disabled by administrator' : 'Enabled by administrator'} />
+              <button className="btn sm" type="submit">
+                {vendor.payment_eligibility ? 'Disable live payments' : 'Enable live payments'}
+              </button>
+            </form>
+            {merchantApplication ? (
+              <Link className="btn sm ghost" href={`/admin/merchant-onboarding/${merchantApplication.id}`}>
+                Review application
+              </Link>
+            ) : null}
+          </div>
+
+          {merchantDocuments.length > 0 ? (
+            <div className="split-list">
+              {merchantDocuments.map((document) => (
+                <div key={document.id}>
+                  <span className="k">{document.doc_type.replace(/_/g, ' ')}</span>
+                  <span className="v small" style={{ display: 'grid', gap: 4, justifyItems: 'end' }}>
+                    <StatusTag status={document.status} />
+                    <span className="muted">
+                      {document.provider_submission_status === 'submitted'
+                        ? `Sent to MyFatoorah · FileType ${document.myfatoorah_file_type ?? '—'}`
+                        : document.provider_submission_status === 'failed'
+                          ? 'Provider submission failed'
+                          : 'Not sent to provider'}
+                    </span>
+                    {document.provider_submission_status !== 'submitted' && vendor.myfatoorah_supplier_code ? (
+                      <form action={adminResubmitSupplierDocument}>
+                        <input type="hidden" name="vendor_id" value={id} />
+                        <input type="hidden" name="document_id" value={document.id} />
+                        <button className="btn sm ghost" type="submit">
+                          Submit to MyFatoorah
+                        </button>
+                      </form>
+                    ) : null}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </section>
 
       <div className="kpi-grid">
         <div className="kpi">

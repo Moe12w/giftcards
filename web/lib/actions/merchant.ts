@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { callSupplierFunction } from '@/lib/myfatoorah-supplier';
 import {
   DOCUMENT_MAX_BYTES,
   isPaymentMethodKey,
@@ -195,7 +196,7 @@ export async function uploadMerchantDocument(formData: FormData): Promise<Docume
     .eq('doc_type', docType)
     .maybeSingle();
 
-  const { error } = await supabase.rpc('merchant_document_register', {
+  const { data: document, error } = await supabase.rpc('merchant_document_register', {
     p_application_id: applicationId,
     p_doc_type: docType,
     p_storage_path: path,
@@ -211,6 +212,25 @@ export async function uploadMerchantDocument(formData: FormData): Promise<Docume
 
   if (previous?.storage_path && previous.storage_path !== path) {
     await admin.storage.from(BUCKET).remove([previous.storage_path]);
+  }
+
+  // Once a SupplierCode exists, submit the document to MyFatoorah immediately.
+  // A failed provider submission is recorded on the document; it never changes
+  // our internal review status and the merchant can retry.
+  if (ownerType === 'vendor' && application.vendor_id && document?.id) {
+    const { data: vendor } = await supabase
+      .from('vendors')
+      .select('myfatoorah_supplier_code')
+      .eq('id', application.vendor_id)
+      .maybeSingle();
+    if (vendor?.myfatoorah_supplier_code) {
+      const submission = await callSupplierFunction('upload-supplier-document', {
+        documentId: document.id,
+      });
+      if (!submission.ok && !submission.skipped) {
+        console.error('[myfatoorah] document submission failed', submission.error);
+      }
+    }
   }
 
   revalidatePath(`${paymentsPath(application)}/application`);

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/components/Button';
@@ -13,6 +14,7 @@ import { Screen } from '@/src/components/Screen';
 import { offerBusinessLogo, offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { getOffer } from '@/src/lib/data';
+import { getSupabase } from '@/src/lib/supabase';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { formatMoney } from '@/src/lib/money';
 import { formatDate } from '@/src/lib/time';
@@ -25,6 +27,9 @@ export default function PaymentScreen() {
   const { draft } = useGiftDraft();
   const [offer, setOffer] = useState<Offer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
+  const idempotencyKey = useRef(`${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
 
@@ -43,11 +48,53 @@ export default function PaymentScreen() {
     };
   }, [draft.offerId]);
 
-  function pay() {
-    router.push({
-      pathname: '/(customer)/checkout/processing',
-      params: { amount: String(draft.amountMinor) },
-    });
+  async function pay() {
+    if (paying) return;
+    setPaying(true);
+    setPayError(null);
+    try {
+      const supabase = getSupabase();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/(auth)/login');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: {
+          productId: draft.offerId,
+          variantId: draft.variantId ?? null,
+          amountMinor: draft.variantId ? undefined : draft.amountMinor,
+          recipientName: draft.recipient?.name || user.email || 'Gift recipient',
+          recipientEmail: draft.recipient?.email || user.email || '',
+          recipientPhone: draft.recipient?.phone || undefined,
+          message: draft.message || undefined,
+          language: lang,
+          idempotencyKey: idempotencyKey.current,
+        },
+      });
+      if (error) throw error;
+      const paymentUrl = String((data as any)?.paymentUrl ?? '');
+      const orderId = String((data as any)?.orderId ?? '');
+      if (!paymentUrl || !orderId) throw new Error('payment_link_unavailable');
+
+      await WebBrowser.openBrowserAsync(paymentUrl);
+      router.push({
+        pathname: '/(customer)/checkout/processing',
+        params: { orderId },
+      });
+    } catch (paymentError) {
+      console.error('[checkout] payment request failed', paymentError);
+      setPayError(
+        paymentError instanceof Error && paymentError.message.includes('supplier')
+          ? 'This business is not ready to accept payments yet. Please try another gift.'
+          : 'We could not start the payment. Please try again.',
+      );
+    } finally {
+      setPaying(false);
+    }
   }
 
   if (loading) {
@@ -133,6 +180,13 @@ export default function PaymentScreen() {
         </View>
       </Card>
 
+      {payError ? (
+        <Text style={styles.errorText} accessibilityRole="alert">
+          {payError}
+        </Text>
+      ) : null}
+      {paying ? <ActivityIndicator color={colors.teal} style={styles.loader} /> : null}
+
       <PaymentMethods amountMinor={draft.amountMinor} onPay={pay} />
     </Screen>
   );
@@ -151,6 +205,13 @@ function Row({ label, value }: { label: string; value: string }) {
 
 const styles = themedStyles(() => ({
   loader: { marginTop: spacing.xxl },
+  errorText: {
+    marginTop: spacing.sm,
+    fontFamily: fonts.semibold,
+    fontSize: fontSizes.sm,
+    color: colors.danger,
+    textAlign: 'center',
+  },
   summary: { gap: spacing.sm },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
   rowLabel: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted },

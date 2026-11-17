@@ -6,11 +6,25 @@ import type {
   MerchantSignature,
 } from '@/lib/merchant';
 
+export interface MerchantSupplierStatus {
+  supplierCode: string | null;
+  supplierStatus: string | null;
+  supplierCreatedAt: string | null;
+  lastSyncedAt: string | null;
+  lastError: string | null;
+  rejectionComment: string | null;
+  depositTerms: string | null;
+  paymentEligibility: boolean;
+  paymentEligibilityNote: string | null;
+}
+
 export interface MerchantBundle {
   application: MerchantApplication | null;
   documents: MerchantDocument[];
   signature: MerchantSignature | null;
   agreement: MerchantAgreement | null;
+  /** Provider + platform status of the business's MyFatoorah supplier. */
+  supplier: MerchantSupplierStatus | null;
   /** True when the viewer may edit the application (owner/manager, not an analyst). */
   canManage: boolean;
   error: string | null;
@@ -40,6 +54,7 @@ export async function loadMerchantBundle(
       documents: [],
       signature: null,
       agreement: null,
+      supplier: null,
       canManage: false,
       error: existingError.message,
     };
@@ -61,6 +76,7 @@ export async function loadMerchantBundle(
         documents: [],
         signature: null,
         agreement: null,
+        supplier: null,
         canManage: false,
         error: notAuthorized
           ? 'No payment application has been started yet. An owner or manager needs to open Online Payments first.'
@@ -70,7 +86,11 @@ export async function loadMerchantBundle(
     application = created as MerchantApplication;
   }
 
-  const [documentsResult, signatureResult, agreementResult, canManageResult] = await Promise.all([
+  const supplierColumns =
+    'myfatoorah_supplier_code, myfatoorah_supplier_status, myfatoorah_supplier_created_at, myfatoorah_last_synced_at, myfatoorah_last_error, myfatoorah_rejection_comment, myfatoorah_deposit_terms, payment_eligibility, payment_eligibility_note';
+
+  const [documentsResult, signatureResult, agreementResult, canManageResult, supplierResult] =
+    await Promise.all([
     supabase
       .from('merchant_application_documents')
       .select('*')
@@ -85,13 +105,31 @@ export async function loadMerchantBundle(
       .maybeSingle(),
     supabase.from('merchant_agreements').select('*').eq('is_active', true).maybeSingle(),
     supabase.rpc('merchant_application_can_manage', { p_application_id: application.id }),
+    ownerType === 'vendor'
+      ? supabase.from('vendors').select(supplierColumns).eq('id', ownerId).maybeSingle()
+      : supabase.from('enterprise_partners').select('id').eq('id', ownerId).maybeSingle(),
   ]);
+
+  const supplierRow = supplierResult.data as Record<string, any> | null;
 
   return {
     application,
     documents: (documentsResult.data ?? []) as MerchantDocument[],
     signature: (signatureResult.data as MerchantSignature | null) ?? null,
     agreement: (agreementResult.data as MerchantAgreement | null) ?? null,
+    supplier: supplierRow
+      ? {
+          supplierCode: supplierRow.myfatoorah_supplier_code ?? null,
+          supplierStatus: supplierRow.myfatoorah_supplier_status ?? null,
+          supplierCreatedAt: supplierRow.myfatoorah_supplier_created_at ?? null,
+          lastSyncedAt: supplierRow.myfatoorah_last_synced_at ?? null,
+          lastError: supplierRow.myfatoorah_last_error ?? null,
+          rejectionComment: supplierRow.myfatoorah_rejection_comment ?? null,
+          depositTerms: supplierRow.myfatoorah_deposit_terms ?? null,
+          paymentEligibility: Boolean(supplierRow.payment_eligibility),
+          paymentEligibilityNote: supplierRow.payment_eligibility_note ?? null,
+        }
+      : null,
     canManage: canManageResult.data === true,
     error: null,
   };

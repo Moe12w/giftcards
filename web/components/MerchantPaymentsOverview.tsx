@@ -104,6 +104,67 @@ export async function MerchantPaymentsOverview({
         </div>
       </section>
 
+      {bundle.supplier ? (
+        <section className="panel">
+          <div className="panel-head">
+            <h3>MyFatoorah supplier</h3>
+            <StatusTag
+              status={
+                bundle.supplier.supplierStatus === 'active'
+                  ? 'approved'
+                  : bundle.supplier.supplierStatus === 'rejected'
+                    ? 'rejected'
+                    : bundle.supplier.supplierStatus
+                      ? 'pending'
+                      : 'not_started'
+              }
+            />
+          </div>
+          <div className="panel-body" style={{ display: 'grid', gap: 12 }}>
+            <div className="split-list">
+              <div>
+                <span className="k">Supplier code</span>
+                <span className="v mono">{bundle.supplier.supplierCode ?? 'Not created yet'}</span>
+              </div>
+              <div>
+                <span className="k">Provider status</span>
+                <span className="v">{bundle.supplier.supplierStatus ?? 'Not created yet'}</span>
+              </div>
+              <div>
+                <span className="k">Deposit terms</span>
+                <span className="v">{bundle.supplier.depositTerms ?? 'Set by MyFatoorah'}</span>
+              </div>
+              <div>
+                <span className="k">Last synchronised</span>
+                <span className="v">{bundle.supplier.lastSyncedAt ? formatDate(bundle.supplier.lastSyncedAt) : 'Never'}</span>
+              </div>
+              <div>
+                <span className="k">Live payments</span>
+                <span className="v">
+                  {bundle.supplier.paymentEligibility ? (
+                    <span className="tag success">Enabled</span>
+                  ) : (
+                    <span className="tag neutral">Not enabled</span>
+                  )}
+                </span>
+              </div>
+            </div>
+            {bundle.supplier.rejectionComment ? (
+              <div className="callout error">MyFatoorah said: {bundle.supplier.rejectionComment}</div>
+            ) : null}
+            {bundle.supplier.lastError ? (
+              <div className="callout warn">Last provider error: {bundle.supplier.lastError}</div>
+            ) : null}
+            {!bundle.supplier.paymentEligibility ? (
+              <p className="small muted" style={{ margin: 0 }}>
+                Live payments are enabled by Giftly after MyFatoorah confirms the supplier is Active and your
+                onboarding checks are complete.
+              </p>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
       <section className="panel">
         <div className="panel-head">
           <h3>Documents</h3>
@@ -121,8 +182,13 @@ export async function MerchantPaymentsOverview({
                     <span className="k" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                       <FileText size={14} /> {MERCHANT_DOC_COPY[key]?.label ?? key.replace(/_/g, ' ')}
                     </span>
-                    <span className="v small">
+                    <span className="v small" style={{ display: 'grid', gap: 4, justifyItems: 'end' }}>
                       {document ? <StatusTag status={document.status} /> : <span className="muted">Missing</span>}
+                      {document?.provider_submission_status === 'submitted' ? (
+                        <span className="tag success">Sent to MyFatoorah</span>
+                      ) : document?.provider_submission_status === 'failed' ? (
+                        <span className="tag danger">Provider submission failed</span>
+                      ) : null}
                     </span>
                   </div>
                 );

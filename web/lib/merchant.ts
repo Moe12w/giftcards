@@ -65,6 +65,13 @@ export interface MerchantDocument {
   size_bytes: number;
   status: MerchantDocumentStatus;
   rejection_reason: string | null;
+  /** Provider submission is separate from our internal review. */
+  myfatoorah_file_type: number | null;
+  provider_submission_status: 'not_submitted' | 'submitted' | 'failed';
+  provider_submitted_at: string | null;
+  provider_document_status: string | null;
+  provider_last_error: string | null;
+  provider_attempts: number;
   uploaded_at?: string;
   reviewed_at: string | null;
   created_at: string;

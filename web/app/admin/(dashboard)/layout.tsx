@@ -26,6 +26,8 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
         { href: '/admin/enterprise', label: t.enterprise, icon: 'enterprise', hint: t.enterpriseHint },
         { href: '/admin/merchant-onboarding', label: t.merchantOnboarding, icon: 'finance', hint: t.merchantOnboardingHint },
         { href: '/admin/merchant-onboarding/agreements', label: t.merchantAgreements, icon: 'settings', hint: t.merchantAgreementsHint },
+        { href: '/admin/payment-management', label: t.paymentManagement ?? 'Payment management', icon: 'finance', hint: t.paymentManagementHint ?? 'MyFatoorah supplier keys and webhooks.' },
+        { href: '/admin/settlements', label: t.settlements ?? 'Settlements', icon: 'finance', hint: t.settlementsHint ?? 'Record provider deposits.' },
       ],
     },
     {

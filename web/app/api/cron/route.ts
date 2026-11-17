@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { cronSecret, cronSecretFromRequest, cronSecretMatches } from '@/lib/cron';
+import { callSupplierFunction } from '@/lib/myfatoorah-supplier';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -63,6 +64,22 @@ async function run(request: Request) {
       });
     }
 
+    // Supplier KYC statuses change in MyFatoorah without a guaranteed webhook,
+    // so reconcile the provider list on every scheduled run. A provider failure
+    // is reported but does not stop the other jobs.
+    let supplierSync: { ok: boolean; synced: number; error: string | null } = {
+      ok: true,
+      synced: 0,
+      error: null,
+    };
+    const sync = await callSupplierFunction('sync-myfatoorah-suppliers');
+    if (!sync.ok && !sync.skipped) {
+      supplierSync = { ok: false, synced: 0, error: sync.error ?? 'supplier_sync_failed' };
+      console.error('Supplier status sync failed', supplierSync.error);
+    } else {
+      supplierSync = { ok: true, synced: Number(sync.data?.synced ?? 0), error: null };
+    }
+
     const ok = !gifts.error && !advertising.error;
 
     // Best-effort push nudge for buyers with a gift due today. A gift that has
@@ -117,6 +134,7 @@ async function run(request: Request) {
           result: advertising.data ?? null,
           error: advertising.error?.message ?? null,
         },
+        suppliers: supplierSync,
       },
       { status: ok ? 200 : 500 },
     );

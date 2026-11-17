@@ -15,6 +15,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
  */
 
 export const MYFATOORAH_SETTINGS_KEY = 'advertising.myfatoorah';
+/** Gift-card / supplier configuration, edited in Admin → Payment Management. */
+export const GIFT_PAYMENTS_SETTINGS_KEY = 'payments.myfatoorah';
 const DEFAULT_BASE_URL = 'https://apitest.myfatoorah.com';
 const CACHE_TTL_MS = 30_000;
 
@@ -34,7 +36,7 @@ interface StoredConfig {
   appPublicUrl: string;
 }
 
-let cached: { at: number; value: MyFatoorahConfig } | null = null;
+const cached = new Map<string, { at: number; value: MyFatoorahConfig }>();
 
 function trimSlash(value: string): string {
   return value.replace(/\/+$/, '');
@@ -51,13 +53,13 @@ function envConfig(): StoredConfig {
   };
 }
 
-async function storedConfig(): Promise<StoredConfig> {
+async function storedConfig(settingsKey: string): Promise<StoredConfig> {
   try {
     const admin = createAdminClient();
     const { data } = await admin
       .from('system_settings')
       .select('value')
-      .eq('key', MYFATOORAH_SETTINGS_KEY)
+      .eq('key', settingsKey)
       .maybeSingle();
     const value = (data?.value ?? {}) as Record<string, unknown>;
     const text = (input: unknown) => (typeof input === 'string' ? input.trim() : '');
@@ -73,10 +75,13 @@ async function storedConfig(): Promise<StoredConfig> {
   }
 }
 
-export async function getMyFatoorahConfig(): Promise<MyFatoorahConfig> {
-  if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.value;
+export async function getMyFatoorahConfig(
+  settingsKey: string = MYFATOORAH_SETTINGS_KEY,
+): Promise<MyFatoorahConfig> {
+  const hit = cached.get(settingsKey);
+  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value;
 
-  const stored = await storedConfig();
+  const stored = await storedConfig(settingsKey);
   const env = envConfig();
   const value: MyFatoorahConfig = {
     apiKey: stored.apiKey || env.apiKey,
@@ -86,13 +91,19 @@ export async function getMyFatoorahConfig(): Promise<MyFatoorahConfig> {
     source: stored.apiKey ? 'database' : env.apiKey ? 'environment' : 'none',
   };
 
-  cached = { at: Date.now(), value };
+  cached.set(settingsKey, { at: Date.now(), value });
   return value;
 }
 
+/** Configuration used by gift-card checkout, suppliers and webhooks. */
+export async function getPaymentMyFatoorahConfig(): Promise<MyFatoorahConfig> {
+  return getMyFatoorahConfig(GIFT_PAYMENTS_SETTINGS_KEY);
+}
+
 /** Call after saving settings so the next payment uses the new values. */
-export function clearMyFatoorahConfigCache(): void {
-  cached = null;
+export function clearMyFatoorahConfigCache(settingsKey?: string): void {
+  if (settingsKey) cached.delete(settingsKey);
+  else cached.clear();
 }
 
 export async function isMyFatoorahConfigured(): Promise<boolean> {
@@ -197,11 +208,14 @@ export interface MyFatoorahPaymentStatus {
  * Server-to-server status inquiry. This is the only thing allowed to make a
  * payment "real": a browser redirect alone never marks a campaign as paid.
  */
-export async function getMyFatoorahPaymentStatus(input: {
-  key: string;
-  keyType: 'PaymentId' | 'InvoiceId' | 'CustomerReference';
-}): Promise<MyFatoorahPaymentStatus> {
-  const { apiKey, baseUrl } = await getMyFatoorahConfig();
+export async function getMyFatoorahPaymentStatus(
+  input: {
+    key: string;
+    keyType: 'PaymentId' | 'InvoiceId' | 'CustomerReference';
+  },
+  config?: MyFatoorahConfig,
+): Promise<MyFatoorahPaymentStatus> {
+  const { apiKey, baseUrl } = config ?? (await getMyFatoorahConfig());
   if (!apiKey) throw new Error('myfatoorah_status_failed: not configured');
 
   const response = await fetch(`${baseUrl}/v2/GetPaymentStatus`, {

@@ -1,24 +1,30 @@
 // supabase/functions/create-payment/index.ts
-// Creates an order and a MyFatoorah invoice with the vendor as a supplier.
-// Secrets come from Edge Function environment variables only.
+// Creates a gift-card order from a verified customer JWT, then asks MyFatoorah
+// for a hosted payment linked to the selling vendor's supplier.
 //
-// Required env:
-//   MYFATOORAH_API_KEY       (secret API key)
-//   MYFATOORAH_BASE_URL      (e.g. https://apitest.myfatoorah.com or https://api.myfatoorah.com)
-//   APP_PUBLIC_URL           (return/error URLs)
-//   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
+// Security / correctness:
+//  - The price is taken from our database, never trusted from the client.
+//  - SupplierCode and amount allocation are resolved server-side.
+//  - Provider-managed commission: no ProposedShare / ProposedDepositShare.
+//  - A client idempotency key prevents duplicate orders/invoices.
+//
+// Env: MYFATOORAH_API_KEY, MYFATOORAH_BASE_URL, APP_PUBLIC_URL,
+//      SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, json } from '../_shared/cors.ts';
-import { adminClient } from '../_shared/clients.ts';
+import { adminClient, sha256Hex } from '../_shared/clients.ts';
+import { mfConfig } from '../_shared/myfatoorah.ts';
 
 interface Body {
-  offerId: string;
-  amountMinor: number;
+  productId: string;
+  variantId?: string | null;
+  amountMinor?: number;
   recipientName: string;
   recipientEmail: string;
   recipientPhone?: string;
   message?: string;
   language?: 'en' | 'ar';
+  idempotencyKey?: string;
 }
 
 Deno.serve(async (req) => {
@@ -29,8 +35,6 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization') ?? '';
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-
-    // Identify the caller from their JWT.
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
       auth: { persistSession: false },
@@ -40,130 +44,228 @@ Deno.serve(async (req) => {
     const buyerId = userData.user.id;
 
     const body = (await req.json()) as Body;
-    if (!body.offerId || !Number.isInteger(body.amountMinor) || body.amountMinor <= 0) {
-      return json({ error: 'invalid_request' }, 400);
-    }
-    if (!body.recipientName?.trim() || !body.recipientEmail?.trim()) {
+    if (!body.productId || !body.recipientName?.trim() || !body.recipientEmail?.trim()) {
       return json({ error: 'invalid_request' }, 400);
     }
 
     const admin = adminClient();
 
-    // Load offer + vendor.
-    const { data: offer, error: offerError } = await admin
-      .from('offers')
-      .select('*, vendor:vendors(*)')
-      .eq('id', body.offerId)
+    // Price and vendor come from our database. A variant fixes the price; an
+    // open-value product accepts an amount only inside the product's range.
+    const { data: product, error: productError } = await admin
+      .from('products')
+      .select('id, vendor_id, partner_id, min_amount_minor, max_amount_minor, is_active, currency, title, title_ar, fulfilment_type')
+      .eq('id', body.productId)
       .maybeSingle();
-    if (offerError) throw offerError;
-    if (!offer || !offer.is_active) return json({ error: 'offer_unavailable' }, 404);
+    if (productError) throw productError;
+    if (!product?.is_active || !product.vendor_id) {
+      return json({ error: 'product_unavailable' }, 404);
+    }
 
-    const vendor = offer.vendor;
-    if (!vendor || vendor.status !== 'approved') return json({ error: 'vendor_unavailable' }, 409);
-    if (!vendor.myfatoorah_supplier_code) return json({ error: 'vendor_not_ready' }, 409);
-
-    // Validate amount against the offer range.
-    if (body.amountMinor < offer.min_amount_minor || body.amountMinor > offer.max_amount_minor) {
+    let unitPriceMinor = 0;
+    let variantId: string | null = null;
+    if (body.variantId) {
+      const { data: variant, error: variantError } = await admin
+        .from('product_variants')
+        .select('id, product_id, price_minor, amount_minor, active')
+        .eq('id', body.variantId)
+        .eq('product_id', body.productId)
+        .maybeSingle();
+      if (variantError) throw variantError;
+      if (!variant || variant.active === false) return json({ error: 'variant_unavailable' }, 404);
+      unitPriceMinor = Number(variant.price_minor ?? variant.amount_minor ?? 0);
+      variantId = variant.id;
+    } else {
+      unitPriceMinor = Number(body.amountMinor ?? 0);
+      const min = Number(product.min_amount_minor ?? 0);
+      const max = Number(product.max_amount_minor ?? 0);
+      if (!Number.isInteger(unitPriceMinor) || unitPriceMinor <= 0) {
+        return json({ error: 'invalid_amount' }, 400);
+      }
+      if (min > 0 && unitPriceMinor < min) return json({ error: 'invalid_amount' }, 400);
+      if (max > 0 && unitPriceMinor > max) return json({ error: 'invalid_amount' }, 400);
+    }
+    if (!Number.isInteger(unitPriceMinor) || unitPriceMinor <= 0) {
       return json({ error: 'invalid_amount' }, 400);
     }
 
-    // Enforce the vendor's exposure limit: unredeemed balance + this sale
-    // must not exceed max_unredeemed_minor.
-    const { data: outstandingData, error: balanceError } = await admin.rpc(
-      'vendor_outstanding_minor',
-      { p_vendor_id: vendor.id },
-    );
-    if (balanceError) throw balanceError;
-    const outstanding = Number(outstandingData ?? 0);
-    if (outstanding + body.amountMinor > vendor.max_unredeemed_minor) {
-      return json({ error: 'vendor_exposure_limit_reached' }, 409);
+    const { data: vendor, error: vendorError } = await admin
+      .from('vendors')
+      .select('id, name, status, myfatoorah_supplier_code, myfatoorah_supplier_status, payment_eligibility, max_unredeemed_minor')
+      .eq('id', product.vendor_id)
+      .maybeSingle();
+    if (vendorError) throw vendorError;
+    if (!vendor || vendor.status !== 'approved') return json({ error: 'vendor_unavailable' }, 409);
+    if (!vendor.myfatoorah_supplier_code) return json({ error: 'supplier_not_ready' }, 409);
+    if (String(vendor.myfatoorah_supplier_status).toLowerCase() !== 'active') {
+      return json({ error: 'supplier_not_active' }, 409);
+    }
+    if (!vendor.payment_eligibility) return json({ error: 'payments_not_enabled' }, 409);
+
+    const exposureLimit = Number(vendor.max_unredeemed_minor ?? 0);
+    if (exposureLimit > 0) {
+      const { data: outstandingData, error: outstandingError } = await admin.rpc(
+        'vendor_outstanding_minor',
+        { p_vendor_id: vendor.id },
+      );
+      if (outstandingError) throw outstandingError;
+      if (Number(outstandingData ?? 0) + unitPriceMinor > exposureLimit) {
+        return json({ error: 'vendor_exposure_limit_reached' }, 409);
+      }
     }
 
-    // Commission is computed server-side from the vendor's rate.
-    const commissionMinor = Math.round((body.amountMinor * vendor.commission_bps) / 10_000);
-    const vendorShareMinor = body.amountMinor - commissionMinor;
-    const reference = crypto.randomUUID();
+    // Idempotency: one order per (buyer, client key).
+    const idempotencyKey = String(body.idempotencyKey ?? '').trim();
+    const reference = idempotencyKey
+      ? `gc:${await sha256Hex(`${buyerId}:${idempotencyKey}`)}`
+      : `gc:${crypto.randomUUID()}`;
+    const { data: existingOrder } = await admin
+      .from('orders')
+      .select('id, order_ref')
+      .eq('payment_reference', reference)
+      .maybeSingle();
+    if (existingOrder) {
+      const { data: existingPayment } = await admin
+        .from('myfatoorah_payments')
+        .select('invoice_id, invoice_url')
+        .eq('order_id', existingOrder.id)
+        .maybeSingle();
+      return json({
+        orderId: existingOrder.id,
+        invoiceId: existingPayment?.invoice_id ?? null,
+        paymentUrl: existingPayment?.invoice_url ?? null,
+        existing: true,
+      });
+    }
 
-    // Create the pending order first.
+    const currency = product.currency || 'QAR';
+    const orderRef = `GC-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+
     const { data: order, error: orderError } = await admin
       .from('orders')
       .insert({
         buyer_id: buyerId,
-        offer_id: offer.id,
-        amount_minor: body.amountMinor,
-        commission_minor: commissionMinor,
-        vendor_share_minor: vendorShareMinor,
+        order_ref: orderRef,
+        currency,
+        subtotal_minor: unitPriceMinor,
+        fee_minor: 0,
+        total_minor: unitPriceMinor,
         status: 'pending',
+        payment_status: 'unpaid',
+        payment_provider: 'myfatoorah',
         payment_reference: reference,
-        recipient_name: body.recipientName,
-        recipient_email: body.recipientEmail,
-        recipient_phone: body.recipientPhone ?? null,
-        gift_message: body.message ?? null,
+        recipient_name: body.recipientName.trim(),
+        recipient_email: body.recipientEmail.trim(),
+        recipient_phone: body.recipientPhone?.trim() || null,
+        gift_message: body.message?.trim() || null,
         offer_snapshot: {
-          title: offer.title,
-          title_ar: offer.title_ar,
+          title: product.title,
+          title_ar: product.title_ar,
           vendor_name: vendor.name,
-          vendor_name_ar: vendor.name_ar,
+          fulfilment_type: product.fulfilment_type,
         },
       })
-      .select('*')
+      .select('id')
       .single();
     if (orderError) throw orderError;
 
-    const baseUrl = Deno.env.get('MYFATOORAH_BASE_URL') ?? 'https://apitest.myfatoorah.com';
-    const appUrl = Deno.env.get('APP_PUBLIC_URL') ?? 'https://example.com';
+    const { error: itemError } = await admin.from('order_items').insert({
+      order_id: order.id,
+      product_id: product.id,
+      product_variant_id: variantId,
+      vendor_id: vendor.id,
+      quantity: 1,
+      unit_price_minor: unitPriceMinor,
+      total_minor: unitPriceMinor,
+      // Provider-managed commission: no separate platform deduction here.
+      commission_minor: 0,
+      vendor_share_minor: unitPriceMinor,
+      currency,
+      recipient_name: body.recipientName.trim(),
+      recipient_email: body.recipientEmail.trim(),
+      recipient_phone: body.recipientPhone?.trim() || null,
+      gift_message: body.message?.trim() || null,
+    });
+    if (itemError) {
+      await admin.from('orders').delete().eq('id', order.id);
+      throw itemError;
+    }
 
-    // MyFatoorah SendPayment (V2). Amounts are major units here.
-    const invoicePayload = {
-      CustomerName: body.recipientName,
+    const config = await mfConfig();
+    const baseUrl = config.baseUrl;
+    const appUrl = config.appPublicUrl;
+    const apiKey = config.apiKey;
+    if (!apiKey || !appUrl) {
+      await admin.from('orders').update({ status: 'failed', payment_status: 'failed' }).eq('id', order.id);
+      return json({ error: 'payment_provider_not_configured' }, 503);
+    }
+
+    const payload: Record<string, unknown> = {
+      CustomerName: body.recipientName.trim(),
       NotificationOption: 'LNK',
-      InvoiceValue: body.amountMinor / 100,
-      DisplayCurrencyIso: 'QAR',
+      InvoiceValue: Number((unitPriceMinor / 100).toFixed(2)),
+      DisplayCurrencyIso: currency,
       Language: body.language === 'ar' ? 'AR' : 'EN',
-      CustomerEmail: body.recipientEmail,
+      CustomerEmail: body.recipientEmail.trim(),
       CustomerReference: order.id,
       UserDefinedField: order.id,
-      CallBackUrl: `${appUrl}/payment/success`,
-      ErrorUrl: `${appUrl}/payment/error`,
+      CallBackUrl: `${appUrl}/api/merchant-payment/callback?order=${order.id}`,
+      ErrorUrl: `${appUrl}/api/merchant-payment/callback?order=${order.id}&failed=1`,
+      WebhookUrl: `${supabaseUrl}/functions/v1/payment-webhook`,
       Suppliers: [
         {
           SupplierCode: Number(vendor.myfatoorah_supplier_code),
-          InvoiceShare: body.amountMinor / 100,
+          InvoiceShare: Number((unitPriceMinor / 100).toFixed(2)),
         },
       ],
     };
 
-    const mfResponse = await fetch(`${baseUrl}/v2/SendPayment`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${Deno.env.get('MYFATOORAH_API_KEY')}`,
-        // Idempotency supported for /v3/payments; SendPayment is V2. We still
-        // use our own unique reference to avoid duplicate orders.
-        'Idempotency-Key': reference,
-      },
-      body: JSON.stringify(invoicePayload),
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20_000);
+    let response: Response;
+    try {
+      response = await fetch(`${baseUrl}/v2/SendPayment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
 
-    const mfJson = await mfResponse.json();
-    if (!mfResponse.ok || !mfJson?.IsSuccess) {
-      await admin.from('orders').update({ status: 'failed' }).eq('id', order.id);
-      console.error('MyFatoorah error', mfJson);
+    const provider = await response.json().catch(() => null);
+    const invoiceId = provider?.Data?.InvoiceId;
+    const invoiceUrl = provider?.Data?.InvoiceURL;
+    if (!response.ok || provider?.IsSuccess !== true && String(provider?.IsSuccess).toLowerCase() !== 'true' || !invoiceId || !invoiceUrl) {
+      await admin
+        .from('orders')
+        .update({ status: 'failed', payment_status: 'failed' })
+        .eq('id', order.id);
+      console.error('MyFatoorah SendPayment failed', String(provider?.Message ?? `HTTP ${response.status}`));
       return json({ error: 'payment_provider_error' }, 502);
     }
 
-    await admin
-      .from('orders')
-      .update({ provider_invoice_id: String(mfJson.Data.InvoiceId) })
-      .eq('id', order.id);
+    const { error: recordError } = await admin.rpc('myfatoorah_payment_recorded', {
+      p_order_id: order.id,
+      p_invoice_id: String(invoiceId),
+      p_invoice_url: String(invoiceUrl),
+      p_payment_url: String(invoiceUrl),
+      p_supplier_code: String(vendor.myfatoorah_supplier_code),
+      p_provider_response: provider?.Data ?? {},
+    });
+    if (recordError) throw recordError;
 
     return json({
       orderId: order.id,
-      invoiceId: mfJson.Data.InvoiceId,
-      paymentUrl: mfJson.Data.InvoiceURL,
+      invoiceId: String(invoiceId),
+      paymentUrl: String(invoiceUrl),
     });
-  } catch (err) {
-    console.error('create-payment failed', err);
+  } catch (error) {
+    console.error('create-payment failed', String(error));
     return json({ error: 'server_error' }, 500);
   }
 });
