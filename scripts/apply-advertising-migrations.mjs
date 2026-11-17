@@ -20,6 +20,7 @@ const migrations = [
   ['0115', 'advertising_manual_payment_off', 'supabase/migrations/0115_advertising_manual_payment_off.sql'],
   ['0116', 'advertising_two_minute_hold', 'supabase/migrations/0116_advertising_two_minute_hold.sql'],
   ['0117', 'advertising_slotless_drafts', 'supabase/migrations/0117_advertising_slotless_drafts.sql'],
+  ['0118', 'advertising_slot_availability_labels', 'supabase/migrations/0118_advertising_slot_availability_labels.sql'],
 ];
 
 async function runQuery(query) {
@@ -33,7 +34,12 @@ async function runQuery(query) {
   return text;
 }
 
+// Optional versions on the command line apply just those migrations, so a new
+// one can be rolled out without replaying the older, data-touching ones.
+const requested = new Set(process.argv.slice(2));
+
 for (const [version, name, path] of migrations) {
+  if (requested.size > 0 && !requested.has(version)) continue;
   const sql = await readFile(path, 'utf8');
   await runQuery(`begin;\n${sql}\ncommit;`);
   console.log(`applied ${version}_${name}`);

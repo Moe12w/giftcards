@@ -1,10 +1,17 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+export interface AdvertisingSlotBooking {
+  starts_at: string;
+  ends_at: string;
+}
+
 export interface AdvertisingSlot {
   slot_number: number;
   state: 'free' | 'occupied' | 'reserved';
   occupied_until: string | null;
   next_free_at: string | null;
+  /** Every window already booked into the slot, so the next start can be shown. */
+  booked: AdvertisingSlotBooking[];
 }
 
 export type AdvertisingSlotMap = Record<string, AdvertisingSlot[]>;
@@ -26,11 +33,20 @@ export async function loadAdvertisingSlotMap(supabase: SupabaseClient): Promise<
     const key = String(row.placement_key ?? '');
     if (!key) continue;
     const state = row.state === 'occupied' || row.state === 'reserved' ? row.state : 'free';
+    const booked: AdvertisingSlotBooking[] = Array.isArray(row.booked)
+      ? (row.booked as Array<Record<string, any>>)
+          .map((entry) => ({
+            starts_at: String(entry?.starts_at ?? ''),
+            ends_at: String(entry?.ends_at ?? ''),
+          }))
+          .filter((entry) => entry.starts_at && entry.ends_at)
+      : [];
     (map[key] ??= []).push({
       slot_number: Number(row.slot_number),
       state,
       occupied_until: row.occupied_until ?? null,
       next_free_at: row.next_free_at ?? null,
+      booked,
     });
   }
   return map;

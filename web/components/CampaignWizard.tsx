@@ -68,6 +68,43 @@ export interface WizardSlot {
   state: 'free' | 'occupied' | 'reserved';
   occupied_until: string | null;
   next_free_at: string | null;
+  /** Windows already booked into the slot, used to show the real next start. */
+  booked?: { starts_at: string; ends_at: string }[] | null;
+}
+
+const PERIOD_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Mirrors `advertising_next_slot_window`: walks the bookings already in the slot
+ * until a run of `lengthMs` fits. A label must never promise a start that the
+ * checkout will push back, so a slot free only for a short gap is not "free now".
+ */
+function nextBookableStart(fromMs: number, lengthMs: number, slot?: WizardSlot): number {
+  const booked = (slot?.booked ?? [])
+    .map((row) => ({ start: new Date(row.starts_at).getTime(), end: new Date(row.ends_at).getTime() }))
+    .filter((row) => Number.isFinite(row.start) && Number.isFinite(row.end));
+
+  if (booked.length === 0) {
+    // Older deployments only expose when each queue in the slot ends, so the
+    // safest truthful answer is the end of the booked queue.
+    const queueEnd = Math.max(
+      slot?.occupied_until ? new Date(slot.occupied_until).getTime() : 0,
+      slot?.next_free_at ? new Date(slot.next_free_at).getTime() : 0,
+    );
+    return Number.isFinite(queueEnd) && queueEnd > fromMs ? queueEnd : fromMs;
+  }
+
+  let start = fromMs;
+  for (let guard = 0; guard < 500; guard += 1) {
+    const end = start + lengthMs;
+    const conflictEnd = booked.reduce(
+      (latest, row) => (row.start < end && row.end > start ? Math.max(latest, row.end) : latest),
+      start,
+    );
+    if (conflictEnd <= start) return start;
+    start = conflictEnd;
+  }
+  return start;
 }
 
 /** Groups placements by the surface they run on, so the list stays readable. */
@@ -168,17 +205,29 @@ export function CampaignWizard({
   const visiblePlacements = placements.filter((row) => surfaceFor(row.key) === surface);
   const slots = placement ? slotsByPlacement[placement.key] ?? [] : [];
 
-  // A booking is a single six-hour window. The server picks the first free one,
-  // so the wizard only shows when that is.
+  // A booking is a run of six-hour periods, and the server places it in the
+  // first window that fits between the bookings already in the slot. The wizard
+  // uses the same rule so it never says a slot starts sooner than it can.
+  const bookingLengthMs = periods * PERIOD_MS;
+  const slotStartTimes = useMemo(() => {
+    const now = Date.now();
+    const bySlot = new Map<number, number>();
+    for (const row of slots) {
+      bySlot.set(row.slot_number, nextBookableStart(now, bookingLengthMs, row));
+    }
+    return bySlot;
+  }, [slots, bookingLengthMs]);
   const nextSlotStart = useMemo(() => {
     const info = slots.find((row) => row.slot_number === slotNumber);
-    const occupiedUntil = info?.occupied_until ? new Date(info.occupied_until).getTime() : 0;
-    return new Date(Math.max(Date.now(), Number.isFinite(occupiedUntil) ? occupiedUntil : 0));
-  }, [slots, slotNumber]);
+    const known = slotStartTimes.get(slotNumber);
+    return new Date(known !== undefined ? known : nextBookableStart(Date.now(), bookingLengthMs, info));
+  }, [slots, slotNumber, slotStartTimes, bookingLengthMs]);
   const hoursToNextSlot = Math.max(
-    0,
+    1,
     Math.ceil((nextSlotStart.getTime() - Date.now()) / (60 * 60 * 1000)),
   );
+  // The server starts a booking immediately when the slot has room right now.
+  const startsNow = nextSlotStart.getTime() <= Date.now() + 60 * 1000;
 
   // A paid booking keeps the window it bought. An unpaid one follows the live
   // slot map, so a draft whose time has passed is booked into the next free
@@ -383,9 +432,8 @@ export function CampaignWizard({
                   const chosen = slotNumber === slot;
                   const info = slots.find((row) => row.slot_number === slot);
                   const occupied = info?.state === 'occupied';
-                  const freeIn = info?.occupied_until
-                    ? Math.max(1, Math.ceil((new Date(info.occupied_until).getTime() - Date.now()) / (60 * 60 * 1000)))
-                    : 0;
+                  const startAt = slotStartTimes.get(slot) ?? nextBookableStart(Date.now(), bookingLengthMs, info);
+                  const freeIn = Math.max(1, Math.ceil((startAt - Date.now()) / (60 * 60 * 1000)));
                   return (
                     <button
                       key={slot}
@@ -399,11 +447,7 @@ export function CampaignWizard({
                       <span>{slot === 1 ? 'Slot 1 · first' : `Slot ${slot}`}</span>
                       <span className="small" style={{ opacity: 0.8 }}>{formatMoney(slotPriceMinor)} / 6h</span>
                       <span className="small" style={{ opacity: 0.8 }}>
-                        {occupied && info?.occupied_until
-                          ? `Free in ${freeIn}h`
-                          : info?.state === 'reserved'
-                            ? 'Free now · booked later'
-                            : 'Available now'}
+                        {startAt <= Date.now() + 60 * 1000 ? 'Available now' : `Free in ${freeIn}h`}
                       </span>
                     </button>
                   );
@@ -411,7 +455,7 @@ export function CampaignWizard({
               </div>
               <div className="callout info" style={{ marginTop: 10 }}>
                 <Clock size={16} />{' '}
-                {hoursToNextSlot <= 0
+                {startsNow
                   ? 'This slot is free now, so your ad starts as soon as it is paid and approved.'
                   : `The next available time for your ad in this slot is in ${hoursToNextSlot} hour${hoursToNextSlot === 1 ? '' : 's'} — ${nextSlotStart.toLocaleString(locale === 'ar' ? 'ar-QA' : 'en-QA', { numberingSystem: 'latn' })}.`}
               </div>
