@@ -52,3 +52,6 @@ supabase/.temp/
 # local Expo helpers (device login + QR image)
 expo-login.ps1
 expo-qr.png
+
+.vercel
+.env*

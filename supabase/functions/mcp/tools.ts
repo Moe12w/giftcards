@@ -7,6 +7,7 @@
 // filtered by `buyer_id`, so one customer can never read another's order.
 
 import { adminClient, sha256Hex } from '../_shared/clients.ts';
+import { getPaymentStatus, mfConfig, sendPayment } from '../_shared/myfatoorah.ts';
 import { ToolError } from './protocol.ts';
 import {
   asRecord,
@@ -144,10 +145,9 @@ const PRODUCT_FIELDS =
 const ORDER_FIELDS =
   'id,order_ref,status,payment_status,currency,subtotal_minor,discount_minor,fee_minor,total_minor,created_at,updated_at,paid_at,delivery_method,scheduled_for,recipient_name,order_items(id,product_id,product_variant_id,quantity,unit_price_minor,total_minor,currency,gift_message,recipient_name,product:products(title,fulfilment_type,vendor:vendors(name)))';
 
-const SITE_URL = (Deno.env.get('GIFTLY_SITE_URL') ?? 'https://giftly.qa').replace(
-  /\/$/,
-  '',
-);
+const SITE_URL = (
+  Deno.env.get('GIFTLY_SITE_URL') ?? 'https://giftcards-jade.vercel.app'
+).replace(/\/$/, '');
 
 const DELIVERY_METHODS = ['email', 'sms', 'link', 'in_app', 'whatsapp'] as const;
 type DeliveryMethod = (typeof DELIVERY_METHODS)[number];
@@ -393,14 +393,108 @@ export const TOOLS = [
       openWorldHint: false,
     },
   },
+  {
+    name: 'create_payment_link',
+    title: 'Create a secure payment link',
+    description:
+      'Turn an existing pending Giftly order into a payable MyFatoorah link. Requires the customer access token as a Bearer token. Use the same idempotency_key when retrying the same order. Never invent an amount; the server uses the order total and the selling businesses\' supplier allocations. Default channel is link: share the returned payment_url with the customer in the chat. Set channel to email, sms or all only when the customer explicitly asks Giftly/MyFatoorah to send it.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        order_id: { type: 'string', format: 'uuid' },
+        order_ref: { type: 'string', maxLength: 60 },
+        channel: {
+          type: 'string',
+          enum: ['link', 'email', 'sms', 'all'],
+          default: 'link',
+        },
+        send_to: {
+          type: 'string',
+          maxLength: 254,
+          description: 'Email or +974 phone for email/sms/all. Defaults to the customer account.',
+        },
+        idempotency_key: {
+          type: 'string',
+          minLength: 8,
+          maxLength: 100,
+          description: 'Unique key for this link. Reuse it when retrying the same order.',
+        },
+      },
+      required: ['idempotency_key'],
+      additionalProperties: false,
+    },
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
+  },
+  {
+    name: 'get_payment_link',
+    title: 'Check a payment link',
+    description:
+      'Read the status of a payment link for one of the signed-in customer\'s orders: active, paid, expired or cancelled. Requires the customer access token as a Bearer token. Never returns card data, supplier codes or full contact details.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        order_id: { type: 'string', format: 'uuid' },
+        order_ref: { type: 'string', maxLength: 60 },
+      },
+      additionalProperties: false,
+    },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
+    name: 'send_payment_link',
+    title: 'Send a payment link',
+    description:
+      'Create a payment link and, optionally, ask MyFatoorah to email or SMS it. With channel=link (default), just return the URL for the assistant to share in the chat. Requires the customer access token as a Bearer token.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        order_id: { type: 'string', format: 'uuid' },
+        order_ref: { type: 'string', maxLength: 60 },
+        channel: { type: 'string', enum: ['link', 'email', 'sms', 'all'], default: 'link' },
+        send_to: { type: 'string', maxLength: 254 },
+        idempotency_key: { type: 'string', minLength: 8, maxLength: 100 },
+      },
+      required: ['idempotency_key'],
+      additionalProperties: false,
+    },
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
+  },
 ] as const;
 
 export const PROTECTED_TOOLS = new Set([
   'create_gift_card_order',
   'check_order_status',
+  'create_payment_link',
+  'get_payment_link',
+  'send_payment_link',
 ]);
 
-export const WRITE_TOOLS = new Set(['create_gift_card_order']);
+export const WRITE_TOOLS = new Set([
+  'create_gift_card_order',
+  'create_payment_link',
+  'send_payment_link',
+]);
+
+export const USER_LIMIT_TOOLS = new Set([
+  'create_payment_link',
+  'get_payment_link',
+  'send_payment_link',
+]);
 
 function futureOrNull(value: string | null | undefined): boolean {
   return !value || Date.parse(value) > Date.now();
@@ -1342,6 +1436,299 @@ async function checkOrderStatus(ctx: ToolContext, args: Record<string, unknown>)
   };
 }
 
+// ---------------------------------------------------------------------------
+// Payment links (MCP)
+// ---------------------------------------------------------------------------
+
+const PAYMENT_LINK_TTL_MS = 30 * 60 * 1000;
+
+function maskContact(value: string | null): string | null {
+  if (!value) return null;
+  if (value.includes('@')) {
+    const [name, domain] = value.split('@');
+    return `${name.slice(0, 1)}***@${domain}`;
+  }
+  const digits = value.replace(/\D/g, '');
+  return digits.length >= 4 ? `+974****${digits.slice(-4)}` : '***';
+}
+
+function major(minor: number): number {
+  return Number((Number(minor) / 100).toFixed(2));
+}
+
+async function resolveBuyerOrder(ctx: ToolContext, args: Record<string, unknown>) {
+  const orderId = uuidField(args, 'order_id');
+  const orderRef = stringField(args, 'order_ref', { max: 60 });
+  if (!orderId && !orderRef) {
+    throw new ToolError('order_required', 'Provide order_id or order_ref from create_gift_card_order.');
+  }
+  let query = ctx.admin.from('orders').select(
+    'id,order_ref,status,payment_status,currency,total_minor,buyer_id,recipient_email,recipient_phone,recipient_name,payment_reference',
+  ).eq('buyer_id', ctx.userId!);
+  query = orderId ? query.eq('id', orderId) : query.eq('order_ref', orderRef!);
+  const { data, error } = await query.maybeSingle();
+  if (error || !data) {
+    throw new ToolError('order_not_found', 'That order is not available for this account.');
+  }
+  return data as any;
+}
+
+async function allocationForOrder(admin: Admin, orderId: string) {
+  const { data: items, error: itemError } = await admin
+    .from('order_items')
+    .select('id, product_id, total_minor, quantity')
+    .eq('order_id', orderId);
+  if (itemError || !items?.length) {
+    throw new ToolError('order_has_no_items', 'This order has no gift cards to pay for.');
+  }
+
+  const productIds = [...new Set(items.map((item: any) => item.product_id))];
+  const { data: products, error: productError } = await admin
+    .from('products')
+    .select('id, vendor_id, partner_id, vendors(id,status,myfatoorah_supplier_code,myfatoorah_supplier_status,payment_eligibility), enterprise_partners(id,status,myfatoorah_supplier_code,myfatoorah_supplier_status,payment_eligibility)')
+    .in('id', productIds);
+  if (productError) throw new ToolError('catalogue_unavailable', 'Could not verify the gift cards right now.');
+
+  const byId = new Map<string, any>(((products ?? []) as any[]).map((product) => [product.id, product]));
+  const shares = new Map<string, number>();
+  let amountMinor = 0;
+
+  for (const item of items as any[]) {
+    const product = byId.get(item.product_id);
+    const vendor = Array.isArray(product?.vendors) ? product?.vendors[0] : product?.vendors;
+    const partner = Array.isArray(product?.enterprise_partners)
+      ? product?.enterprise_partners[0]
+      : product?.enterprise_partners;
+    const supplier = vendor ?? partner;
+    const platformStatusOk = vendor ? vendor.status === 'approved' : partner?.status === 'active';
+    if (
+      !supplier ||
+      !platformStatusOk ||
+      !supplier.myfatoorah_supplier_code ||
+      String(supplier.myfatoorah_supplier_status).toLowerCase() !== 'active' ||
+      !supplier.payment_eligibility
+    ) {
+      throw new ToolError(
+        'supplier_not_ready',
+        'The business selling this gift card is not ready to accept payments yet. Choose another gift or try again later.',
+      );
+    }
+    const code = String(supplier.myfatoorah_supplier_code);
+    shares.set(code, (shares.get(code) ?? 0) + Number(item.total_minor ?? 0));
+    amountMinor += Number(item.total_minor ?? 0);
+  }
+
+  if (!Number.isFinite(amountMinor) || amountMinor <= 0) {
+    throw new ToolError('invalid_order_total', 'This order has no payable amount.');
+  }
+
+  return {
+    amountMinor,
+    suppliers: [...shares.entries()].map(([code, amount]) => ({
+      SupplierCode: Number(code),
+      InvoiceShare: major(amount),
+    })),
+    firstSupplierCode: [...shares.keys()][0],
+  };
+}
+
+async function createPaymentLink(ctx: ToolContext, args: Record<string, unknown>) {
+  const order = await resolveBuyerOrder(ctx, args);
+  if (order.payment_status === 'paid') {
+    throw new ToolError('order_already_paid', 'This order has already been paid.');
+  }
+  if (order.payment_status !== 'unpaid' || order.status !== 'pending') {
+    throw new ToolError('order_not_payable', 'This order cannot be paid. Prepare a new order.');
+  }
+
+  const idempotencyKey = stringField(args, 'idempotency_key', { required: true, min: 8, max: 100 })!;
+  const channel = enumField(args, 'channel', ['link', 'email', 'sms', 'all']) ?? 'link';
+
+  const { data: existing } = await ctx.admin
+    .from('payment_links')
+    .select('id, payment_url, amount_minor, currency, status, expires_at, channel, send_to_masked')
+    .eq('order_id', order.id)
+    .eq('idempotency_key', idempotencyKey)
+    .maybeSingle();
+  if (existing && existing.status === 'active' && new Date(existing.expires_at).getTime() > Date.now()) {
+    return {
+      order_ref: order.order_ref,
+      status: 'active',
+      amount_minor: existing.amount_minor,
+      amount: money(existing.amount_minor, existing.currency),
+      payment_url: existing.payment_url,
+      expires_at: existing.expires_at,
+      delivery: { channel: existing.channel, sent_to: existing.send_to_masked },
+      existing: true,
+    };
+  }
+
+  const allocation = await allocationForOrder(ctx.admin, order.id);
+  const config = await mfConfig();
+  if (!config.apiKey) {
+    throw new ToolError('payments_unavailable', 'Online payments are not configured yet.');
+  }
+
+  const sendTo = stringField(args, 'send_to', { max: 254 });
+  const customerEmail =
+    channel === 'email' || channel === 'all'
+      ? sendTo?.includes('@') ? sendTo : order.recipient_email
+      : null;
+  const customerPhone =
+    channel === 'sms' || channel === 'all'
+      ? sendTo && !sendTo.includes('@') ? sendTo : order.recipient_phone
+      : null;
+  if ((channel === 'email' || channel === 'all') && !customerEmail) {
+    throw new ToolError('email_required', 'An email address is needed to send the link by email.');
+  }
+  if ((channel === 'sms' || channel === 'all') && !customerPhone) {
+    throw new ToolError('phone_required', 'A phone number is needed to send the link by SMS.');
+  }
+
+  const payload: Record<string, unknown> = {
+    CustomerName: order.recipient_name || 'Giftly customer',
+    NotificationOption: channel === 'email' ? 'EML' : channel === 'sms' ? 'SMS' : channel === 'all' ? 'ALL' : 'LNK',
+    InvoiceValue: major(allocation.amountMinor),
+    DisplayCurrencyIso: order.currency || 'QAR',
+    CustomerReference: order.payment_reference || order.id,
+    UserDefinedField: order.id,
+    CallBackUrl: `${SITE_URL}/api/merchant-payment/callback?order=${order.id}`,
+    ErrorUrl: `${SITE_URL}/api/merchant-payment/callback?order=${order.id}&failed=1`,
+    WebhookUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/payment-webhook`,
+    Suppliers: allocation.suppliers,
+  };
+  if (customerEmail) payload.CustomerEmail = customerEmail;
+  if (customerPhone) payload.CustomerMobile = customerPhone.replace(/[^\d+]/g, '');
+
+  let invoice: any;
+  try {
+    invoice = await sendPayment(payload);
+  } catch (error) {
+    console.error('[mcp] SendPayment failed', String(error));
+    throw new ToolError('payment_provider_error', 'The payment provider could not create a link. Please try again.');
+  }
+  const invoiceId = String(invoice?.InvoiceId ?? '');
+  const paymentUrl = String(invoice?.InvoiceURL ?? '');
+  if (!invoiceId || !paymentUrl) {
+    throw new ToolError('payment_provider_error', 'The payment provider did not return a payment link.');
+  }
+
+  const { error: recordError } = await ctx.admin.rpc('myfatoorah_payment_recorded', {
+    p_order_id: order.id,
+    p_invoice_id: invoiceId,
+    p_invoice_url: paymentUrl,
+    p_payment_url: paymentUrl,
+    p_supplier_code: allocation.firstSupplierCode,
+    p_provider_response: {},
+  });
+  if (recordError) throw new ToolError('payment_record_failed', 'Could not record the payment link safely.');
+
+  const { data: payment } = await ctx.admin
+    .from('myfatoorah_payments')
+    .select('id')
+    .eq('order_id', order.id)
+    .maybeSingle();
+  const expiresAt = new Date(Date.now() + PAYMENT_LINK_TTL_MS).toISOString();
+  const sentToMasked = maskContact(customerEmail ?? customerPhone);
+
+  const { data: link, error: linkError } = await ctx.admin
+    .from('payment_links')
+    .upsert(
+      {
+        order_id: order.id,
+        payment_id: payment?.id ?? null,
+        invoice_id: invoiceId,
+        payment_url: paymentUrl,
+        amount_minor: allocation.amountMinor,
+        currency: order.currency || 'QAR',
+        status: 'active',
+        channel,
+        send_to_masked: sentToMasked,
+        idempotency_key: idempotencyKey,
+        expires_at: expiresAt,
+        created_by: ctx.userId,
+        metadata: { source: 'mcp' },
+      },
+      { onConflict: 'order_id,idempotency_key' },
+    )
+    .select('id, payment_url, amount_minor, currency, status, expires_at, channel, send_to_masked')
+    .single();
+  if (linkError || !link) {
+    throw new ToolError('link_record_failed', 'The link was created but could not be saved. Retry with the same key.');
+  }
+
+  return {
+    order_ref: order.order_ref,
+    status: 'active',
+    amount_minor: link.amount_minor,
+    amount: money(link.amount_minor, link.currency),
+    payment_url: link.payment_url,
+    expires_at: link.expires_at,
+    delivery: { channel: link.channel, sent_to: link.send_to_masked },
+    existing: false,
+  };
+}
+
+async function getPaymentLink(ctx: ToolContext, args: Record<string, unknown>) {
+  const order = await resolveBuyerOrder(ctx, args);
+  const { data: link, error } = await ctx.admin
+    .from('payment_links')
+    .select('id, payment_url, amount_minor, currency, status, expires_at, last_checked_at, channel, send_to_masked')
+    .eq('order_id', order.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !link) {
+    throw new ToolError('link_not_found', 'No payment link has been created for this order yet.');
+  }
+
+  let status = String(link.status);
+  if (order.payment_status === 'paid') status = 'paid';
+  else if (status === 'active' && new Date(link.expires_at).getTime() <= Date.now()) status = 'expired';
+
+  if (
+    status === 'active' &&
+    (!link.last_checked_at || Date.now() - new Date(link.last_checked_at).getTime() > 2 * 60 * 1000)
+  ) {
+    try {
+      const provider = await getPaymentStatus({ key: order.payment_reference || order.id, keyType: 'CustomerReference' });
+      if (provider?.InvoiceStatus === 'Paid' || provider?.InvoiceStatus === 'paid') status = 'paid';
+      await ctx.admin
+        .from('payment_links')
+        .update({ last_checked_at: new Date().toISOString(), status })
+        .eq('id', link.id);
+    } catch (refreshError) {
+      console.error('[mcp] payment link refresh failed', String(refreshError));
+    }
+  }
+
+  return {
+    order_ref: order.order_ref,
+    status,
+    payment_status: order.payment_status,
+    amount_minor: link.amount_minor,
+    amount: money(link.amount_minor, link.currency),
+    payment_url: status === 'active' ? link.payment_url : null,
+    expires_at: link.expires_at,
+    delivery: { channel: link.channel, sent_to: link.send_to_masked },
+    note:
+      status === 'paid'
+        ? 'Payment is confirmed by provider status. Gift card issuance follows the verified webhook.'
+        : undefined,
+  };
+}
+
+async function sendPaymentLink(ctx: ToolContext, args: Record<string, unknown>) {
+  const result = await createPaymentLink(ctx, args);
+  return {
+    ...result,
+    delivery_note:
+      result.delivery.channel === 'link'
+        ? 'Share this URL with the customer in the chat. The assistant must not claim the gift card is issued.'
+        : 'MyFatoorah was asked to send the link. Confirm delivery with the customer.',
+  };
+}
+
 export async function callTool(
   name: string,
   rawArgs: unknown,
@@ -1365,6 +1752,12 @@ export async function callTool(
       return createGiftCardOrder(ctx, args);
     case 'check_order_status':
       return checkOrderStatus(ctx, args);
+    case 'create_payment_link':
+      return createPaymentLink(ctx, args);
+    case 'get_payment_link':
+      return getPaymentLink(ctx, args);
+    case 'send_payment_link':
+      return sendPaymentLink(ctx, args);
     default:
       throw new ToolError('unknown_tool', `Unknown tool: ${name}`);
   }

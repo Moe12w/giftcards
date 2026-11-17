@@ -30,7 +30,7 @@ The endpoint is stateless. It accepts JSON-RPC `POST` requests and returns JSON
    public site URL differs from the fallback. `SUPABASE_URL` and
    `SUPABASE_SERVICE_ROLE_KEY` are provided by the Edge Function runtime.
 
-No MyFatoorah, payment-link, invoice, webhook or issuance code is used.
+Payment links are created through MyFatoorah's v2 `SendPayment` endpoint using admin-managed credentials. The MCP function never sees card data and never returns supplier codes or raw provider responses. Issuance still happens through the verified payment webhook, not directly from these tools.
 
 ## Tools
 
@@ -42,6 +42,9 @@ No MyFatoorah, payment-link, invoice, webhook or issuance code is used.
 | `get_gift_card_details` | Public | One gift card in full, including denominations, restrictions and buying guidance. |
 | `create_gift_card_order` | Customer JWT | Prepare a pending order. Server validates the catalogue and calculates the price. No payment. |
 | `check_order_status` | Customer JWT | Read one order belonging to the signed-in customer. |
+| `create_payment_link` | Customer JWT | Turn a pending order into a secure MyFatoorah link. Returns the URL, amount and expiry. Reuses an active link for the same idempotency key. |
+| `get_payment_link` | Customer JWT | Read link/order payment status (`active`, `paid`, `expired`, `cancelled`). |
+| `send_payment_link` | Customer JWT | Create a link and optionally ask MyFatoorah to email/SMS it. Default `link` just returns the URL for the assistant to share. |
 
 ### Customer authentication
 
@@ -51,9 +54,10 @@ Send the customer's Supabase access token:
 Authorization: Bearer <customer access token>
 ```
 
-`create_gift_card_order` and `check_order_status` filter every order query by
-`buyer_id = auth user id`. A missing or invalid token returns a tool error with
-code `auth_required`; no order data is returned.
+All order and payment-link tools filter every query by `buyer_id = auth user id`.
+A missing or invalid token returns a tool error with code `auth_required`; no
+order data is returned. Link creation/sending is rate-limited to 5/minute/user
+and status reads to 60/minute/user via `mcp_rate_limits`.
 
 ## Client configuration
 

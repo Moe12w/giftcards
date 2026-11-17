@@ -152,9 +152,12 @@ const en = {
       'get_gift_card_details',
       'create_gift_card_order',
       'check_order_status',
+      'create_payment_link',
+      'get_payment_link',
+      'send_payment_link',
     ],
     note:
-      'The public catalogue tools work without a Giftly account. Preparing an order requires a signed-in Giftly customer; the assistant then sends a secure payment link in the chat. Payment happens through the Giftly checkout, and the gift card is issued after payment.',
+      'The public catalogue tools work without a Giftly account. Preparing an order and creating a payment link require a signed-in Giftly customer; the assistant shares a secure MyFatoorah link in the chat. Payment happens through the Giftly checkout, and the gift card is issued after verified payment.',
     docsCta: 'Connection details for platforms',
   },
   faq: {
@@ -358,9 +361,12 @@ const ar: AiCopy = {
       'get_gift_card_details',
       'create_gift_card_order',
       'check_order_status',
+      'create_payment_link',
+      'get_payment_link',
+      'send_payment_link',
     ],
     note:
-      'أدوات الكتالوج العامة تعمل دون حساب Giftly. تجهيز الطلب يتطلب عميلاً مسجّلاً في Giftly؛ ثم يرسل المساعد رابط دفع آمن في المحادثة. الدفع يتم عبر تجربة Giftly، ويُصدر بعد الدفع.',
+      'أدوات الكتالوج العامة تعمل دون حساب Giftly. تجهيز الطلب وإنشاء رابط الدفع يتطلبان عميلاً مسجّلاً في Giftly؛ ثم يشارك المساعد رابط MyFatoorah آمن في المحادثة. الدفع يتم عبر تجربة Giftly، ويُصدر بعد تأكيد الدفع.',
     docsCta: 'تفاصيل الاتصال للمنصات',
   },
   faq: {

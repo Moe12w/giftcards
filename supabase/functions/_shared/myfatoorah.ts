@@ -133,6 +133,15 @@ async function mfRequest(path: string, init: RequestInit = {}): Promise<any> {
   }
 }
 
+/** Creates a hosted MyFatoorah invoice (v2 SendPayment). */
+export async function sendPayment(payload: Record<string, unknown>): Promise<any> {
+  const response = await mfRequest('/v2/SendPayment', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return response.Data ?? response;
+}
+
 export interface SupplierInput {
   SupplierName: string;
   Mobile: string;

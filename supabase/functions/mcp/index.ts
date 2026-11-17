@@ -22,6 +22,7 @@ import {
 import {
   PROTECTED_TOOLS,
   TOOLS,
+  USER_LIMIT_TOOLS,
   WRITE_TOOLS,
   callTool,
 } from './tools.ts';
@@ -40,8 +41,12 @@ Rules:
 - Never invent a business, gift card, variant, amount or price. Use the IDs and prices returned by the tools.
 - Prices are in QAR and are stored in fils: 1 QAR = 100 fils.
 - Monetary gift cards are ordered with amount_minor. Experience gift cards are ordered with variant_id.
-- create_gift_card_order only prepares a pending order. It does not take payment, create a payment link, or issue a gift card. Never tell the customer that a purchase is complete.
-- create_gift_card_order and check_order_status need the customer's Giftly access token as an Authorization: Bearer header.
+- create_gift_card_order only prepares a pending order. It does not take payment or issue a gift card.
+- After the customer confirms the prepared order, call create_payment_link (or send_payment_link) to get a secure MyFatoorah URL, then share that URL in the chat. The customer pays through the Giftly checkout; the gift card is issued only after verified payment.
+- Default channel is link: share the returned payment_url in the chat. Use email/sms/all only when the customer explicitly asks Giftly or MyFatoorah to send it.
+- Reuse the same idempotency_key when retrying the same order; never create a second link for one intent.
+- Never claim a gift card has been purchased or issued until check_order_status or get_payment_link confirms paid.
+- Order tools need the customer's Giftly access token as an Authorization: Bearer header.
 - Confirm the business, gift card, amount or package, quantity and recipient with the customer before preparing an order.`;
 
 const corsHeaders = {
@@ -314,6 +319,30 @@ Deno.serve(async (req) => {
                 toolErrorResult(
                   'auth_required',
                   'Sign in to Giftly first. This tool needs the customer\'s Giftly access token as a Bearer token. No order data is available without it.',
+                ),
+              ),
+              200,
+            );
+          }
+        }
+
+        // Money actions are limited per customer rather than by IP, so a user
+        // cannot create many links by rotating networks.
+        if (userId && USER_LIMIT_TOOLS.has(name)) {
+          const limit = name === 'get_payment_link' ? 60 : 5;
+          const withinUserLimit = await takeRateLimit(
+            admin,
+            `mcp:user:${userId}:${name}`,
+            limit,
+            60_000,
+          );
+          if (!withinUserLimit) {
+            return jsonResponse(
+              rpcResult(
+                id,
+                toolErrorResult(
+                  'rate_limited',
+                  'Too many payment link requests. Wait a minute and try again.',
                 ),
               ),
               200,
