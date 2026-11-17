@@ -1,0 +1,9 @@
+-- 0111_merchant_onboarding.sql
+--
+-- This migration already exists on the hosted project
+-- (supabase_migrations.schema_migrations version 0111, name merchant_onboarding)
+-- but its SQL was applied outside this repository and was not stored.
+--
+-- This file is a placeholder so the local migration list matches the remote
+-- history and `supabase db push` no longer sees a gap. Do not add other work to
+-- this version; new migrations continue from 0114.
