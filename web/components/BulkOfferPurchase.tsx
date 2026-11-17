@@ -1,6 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { addToBulkBasket } from '@/lib/bulk-basket';
 import { formatMoney } from '@/lib/money';
 
 type Tier = { min_quantity: number; max_quantity: number | null; unit_price_minor: number; sort_order?: number };
@@ -16,6 +19,8 @@ export interface BulkPurchaseLabels {
   totalPay: string;
   youSave: string;
   placeOrder: string;
+  payWithMyFatoorah: string;
+  addToBasket: string;
   note: string;
   cards: string;
   card: string;
@@ -34,6 +39,8 @@ const EN: BulkPurchaseLabels = {
   totalPay: 'Total amount to pay',
   youSave: 'You save',
   placeOrder: 'Place bulk order',
+  payWithMyFatoorah: 'Pay with MyFatoorah',
+  addToBasket: 'Add to basket',
   note: 'The agreed unit price and tier are stored on the order, so later price changes never affect it.',
   cards: 'cards',
   card: 'card',
@@ -63,7 +70,6 @@ export function BulkOfferPurchase({
   maxQuantity,
   availableQuantity,
   tiers,
-  action,
   currency = 'QAR',
   labels,
 }: {
@@ -74,13 +80,47 @@ export function BulkOfferPurchase({
   maxQuantity: number | null;
   availableQuantity: number | null;
   tiers: Tier[];
-  action: (formData: FormData) => void | Promise<void>;
   currency?: string;
   labels?: Partial<BulkPurchaseLabels>;
 }) {
+  const router = useRouter();
   const t: BulkPurchaseLabels = { ...EN, ...(labels ?? {}) };
   const initial = Math.max(minQuantity || 1, 1);
   const [qty, setQty] = useState(initial);
+  const [paying, setPaying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function pay() {
+    if (paying) return;
+    setPaying(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const { data, error: invokeError } = await supabase.functions.invoke('create-bulk-payment', {
+        body: {
+          items: [{ offerId, quantity: qty }],
+          idempotencyKey: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        },
+      });
+      if (invokeError) throw invokeError;
+      const paymentUrl = String((data as any)?.paymentUrl ?? '');
+      if (!paymentUrl) throw new Error((data as any)?.error ?? 'payment_link_unavailable');
+      window.location.assign(paymentUrl);
+    } catch (paymentError) {
+      setError(
+        paymentError instanceof Error && paymentError.message.includes('supplier')
+          ? 'This business is not ready to accept payments yet. Try again later.'
+          : 'We could not start the payment. Please try again.',
+      );
+    } finally {
+      setPaying(false);
+    }
+  }
+
+  function addToBasket() {
+    addToBulkBasket(offerId, qty);
+    router.push('/business/cart');
+  }
 
   const calc = useMemo(() => {
     const unit = unitPriceForQuantity(baseUnitPriceMinor, tiers, qty);
@@ -99,8 +139,7 @@ export function BulkOfferPurchase({
       <h3>{t.title}</h3>
       <p className="small muted">{t.description}</p>
 
-      <form action={action} className="form" style={{ marginTop: 12 }}>
-        <input type="hidden" name="offer_id" value={offerId} />
+      <div className="form" style={{ marginTop: 12 }}>
         <div className="field">
           <label htmlFor="quantity">{t.quantity}</label>
           <input
@@ -137,11 +176,17 @@ export function BulkOfferPurchase({
         </div>
 
         <div className="callout info" style={{ marginTop: 12 }}>{t.note}</div>
+        {error ? <div className="callout error">{error}</div> : null}
 
-        <button className="btn primary block" type="submit" style={{ marginTop: 12 }}>
-          {t.placeOrder} ({qty} {qty === 1 ? t.card : t.cards})
-        </button>
-      </form>
+        <div className="btn-row" style={{ marginTop: 12 }}>
+          <button className="btn primary" type="button" onClick={pay} disabled={paying}>
+            {paying ? 'Opening payment…' : `${t.payWithMyFatoorah} (${qty} ${qty === 1 ? t.card : t.cards})`}
+          </button>
+          <button className="btn ghost" type="button" onClick={addToBasket}>
+            {t.addToBasket}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

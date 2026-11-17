@@ -1,10 +1,9 @@
-import { headers } from 'next/headers';
-import { Mail, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { ShieldCheck, UserPlus, Users } from 'lucide-react';
 import { requireVendor } from '@/lib/auth';
 import { formatDate, initials, titleCase } from '@/lib/format';
-import { inviteStaff, removeStaff, updateStaffRole } from '@/lib/actions/vendor';
-import { CopyField } from '@/components/CopyField';
-import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { removeStaff, updateStaffRole } from '@/lib/actions/vendor';
+import { vendorCreateStaff } from '@/lib/actions/team';
+import { Notice, PageHead, StatusTag } from '@/components/ui';
 import { fill, pick } from '@/lib/i18n';
 import { common } from '@/lib/i18n/common';
 import { getLocale } from '@/lib/i18n/server';
@@ -21,34 +20,14 @@ export default async function VendorStaffPage({
   const t = pick(vendorCopy, locale).staff;
   const c = pick(common, locale);
 
-  const [membersResult, invitesResult] = await Promise.all([
-    ctx.supabase
-      .from('vendor_members')
-      .select('user_id, role, active, created_at, profiles(full_name, email)')
-      .eq('vendor_id', ctx.vendor.id)
-      .order('created_at', { ascending: true }),
-    ctx.supabase
-      .from('vendor_invites')
-      .select('id, email, role, token, expires_at, accepted_at, created_at')
-      .eq('vendor_id', ctx.vendor.id)
-      .is('accepted_at', null)
-      .order('created_at', { ascending: false }),
-  ]);
+  const { data: memberRows } = await ctx.supabase
+    .from('vendor_members')
+    .select('user_id, role, active, created_at, profiles(full_name, email)')
+    .eq('vendor_id', ctx.vendor.id)
+    .order('created_at', { ascending: true });
 
-  const members = (membersResult.data ?? []).filter((member) => member.active);
-  const invites = (invitesResult.data ?? []).filter(
-    (invite) => new Date(invite.expires_at).getTime() > Date.now(),
-  );
-
-  const headerStore = await headers();
-  const host = headerStore.get('x-forwarded-host') ?? headerStore.get('host') ?? 'localhost:3000';
-  const proto =
-    headerStore.get('x-forwarded-proto') ?? (host.startsWith('localhost') ? 'http' : 'https');
-  const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? `${proto}://${host}`;
-
+  const members = (memberRows ?? []).filter((member) => member.active);
   const canManage = ctx.role === 'owner' || ctx.role === 'manager';
-  const invitedToken = params.invited ?? '';
-  const invitedLink = invitedToken ? `${origin}/vendor/join?token=${invitedToken}` : '';
 
   return (
     <div className="dash-content">
@@ -60,18 +39,8 @@ export default async function VendorStaffPage({
 
       <Notice
         error={params.error}
-        success={params.saved === '1' ? t.teamUpdated : null}
+        success={params.saved === '1' ? 'Team member created. Share the email and password with them.' : null}
       />
-
-      {invitedLink ? (
-        <div className="callout" style={{ display: 'grid', gap: 10 }}>
-          <strong>
-            <UserPlus size={16} style={{ display: 'inline', verticalAlign: '-3px' }} /> {t.inviteCreated}
-          </strong>
-          <span className="small">{t.inviteCreatedBody}</span>
-          <CopyField value={invitedLink} />
-        </div>
-      ) : null}
 
       <div className="kpi-grid">
         <div className="kpi">
@@ -83,10 +52,10 @@ export default async function VendorStaffPage({
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
-            <Mail size={17} />
+            <ShieldCheck size={17} />
           </span>
-          <strong>{invites.length}</strong>
-          <span>{t.pendingInvites}</span>
+          <strong>{members.filter((member) => member.role === 'manager').length}</strong>
+          <span>Managers</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
@@ -107,28 +76,38 @@ export default async function VendorStaffPage({
       {canManage ? (
         <section className="panel">
           <div className="panel-head">
-            <h3>{t.inviteSomeone}</h3>
-            <span className="tag mint">{t.emailMustMatch}</span>
+            <h3>Add a team member</h3>
+            <span className="tag mint">Instant access</span>
           </div>
           <div className="panel-body">
-            <form action={inviteStaff} className="inline-form">
-              <div className="field" style={{ flex: '1 1 260px' }}>
-                <label htmlFor="email">{t.emailAddress}</label>
+            <form action={vendorCreateStaff} className="form" style={{ display: 'grid', gap: 14 }}>
+              <div className="field">
+                <label htmlFor="full_name">Full name</label>
+                <input id="full_name" name="full_name" required placeholder="e.g. Sara Ahmed" />
+              </div>
+              <div className="field">
+                <label htmlFor="email">Email address</label>
                 <input id="email" name="email" type="email" required placeholder="teammate@business.qa" />
               </div>
               <div className="field">
-                <label htmlFor="role">{t.role}</label>
+                <label htmlFor="password">Temporary password</label>
+                <input id="password" name="password" type="password" required minLength={8} autoComplete="new-password" />
+                <span className="hint">At least 8 characters. Share it with them after creating the account.</span>
+              </div>
+              <div className="field">
+                <label htmlFor="role">Role</label>
                 <select id="role" name="role" defaultValue="redemption_staff">
                   <option value="redemption_staff">{c.roles.redemption_staff}</option>
                   {ctx.role === 'owner' ? <option value="manager">{c.roles.manager}</option> : null}
                 </select>
               </div>
               <button className="btn primary" type="submit">
-                <UserPlus size={15} /> {t.createInvite}
+                <UserPlus size={15} /> Create account
               </button>
             </form>
             <p className="small muted" style={{ marginTop: 10 }}>
-              {t.inviteExpiry}
+              They can sign in immediately at /vendor/login with this email and password. Existing accounts cannot be
+              overwritten — ask Giftly support if the person already has one.
             </p>
           </div>
         </section>
@@ -221,42 +200,6 @@ export default async function VendorStaffPage({
         </div>
       </section>
 
-      <section className="panel">
-        <div className="panel-head">
-          <h3>{t.pendingInvitesTitle}</h3>
-          <span className="small muted">{t.expireAfter}</span>
-        </div>
-        <div className="panel-body flush">
-          {invites.length === 0 ? (
-            <div className="table-empty">{t.noInvites}</div>
-          ) : (
-            <div className="table-wrap">
-              <table className="data">
-                <thead>
-                  <tr>
-                    <th>{c.labels.email}</th>
-                    <th>{t.role}</th>
-                    <th>{t.expires}</th>
-                    <th>{t.inviteLink}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invites.map((invite) => (
-                    <tr key={invite.id}>
-                      <td className="strong">{invite.email}</td>
-                      <td>{titleCase(invite.role, locale)}</td>
-                      <td className="small muted">{formatDate(invite.expires_at, locale)}</td>
-                      <td style={{ minWidth: 320 }}>
-                        <CopyField value={`${origin}/vendor/join?token=${invite.token}`} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </section>
     </div>
   );
 }

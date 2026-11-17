@@ -27,7 +27,9 @@ export async function submitContact(formData: FormData) {
     kind: 'contact',
     subject: subject || `Website contact from ${name}`,
     body: `From: ${name} <${email}>\n\n${message}`,
-    reference: email,
+    // `reference` is a ticket reference, not the submitter's email. Keeping
+    // the email only in the body avoids showing two conflicting identities.
+    reference: `CONTACT-${Date.now().toString(36).toUpperCase()}`,
     status: 'open',
   });
   if (error) back('/contact', error.message);
@@ -63,7 +65,7 @@ export async function submitEnterpriseEnquiry(formData: FormData) {
     ]
       .filter(Boolean)
       .join('\n'),
-    reference: email,
+    reference: `ENQUIRY-${Date.now().toString(36).toUpperCase()}`,
     status: 'open',
   });
   if (error) back('/enterprise', error.message);
@@ -81,7 +83,7 @@ export async function joinLaunchList(formData: FormData) {
     kind: 'launch_list',
     subject: 'App launch list',
     body: `Please tell me when the Giftly app is available: ${email}`,
-    reference: email,
+    reference: `LAUNCH-${Date.now().toString(36).toUpperCase()}`,
     status: 'open',
   });
   if (error) back('/download', error.message);

@@ -4,7 +4,6 @@ import { ArrowLeft, Calendar, Package } from 'lucide-react';
 import { requireApprovedBusinessBuyer } from '@/lib/auth';
 import { formatMoney } from '@/lib/money';
 import { Notice, PageHead } from '@/components/ui';
-import { createBulkOrder } from '@/lib/actions/business';
 import { BulkOfferPurchase } from '@/components/BulkOfferPurchase';
 import { businessCopy } from '@/lib/i18n/business';
 import { pick } from '@/lib/i18n';
@@ -129,7 +128,6 @@ export default async function BusinessOfferDetailPage({
           maxQuantity={offer.max_quantity}
           availableQuantity={offer.available_quantity}
           tiers={tiers}
-          action={createBulkOrder}
           currency={offer.currency || 'QAR'}
           labels={{
             title: t.checkout.title,
@@ -142,6 +140,8 @@ export default async function BusinessOfferDetailPage({
             totalPay: t.checkout.totalPay,
             youSave: t.checkout.youSave,
             placeOrder: t.checkout.placeOrder,
+            payWithMyFatoorah: t.checkout.payWithMyFatoorah,
+            addToBasket: t.checkout.addToBasket,
             note: t.checkout.note,
             cards: t.checkout.cards,
             card: t.checkout.card,

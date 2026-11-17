@@ -658,16 +658,30 @@ export async function createSupportRequest(input: {
   reference?: string | null;
 }): Promise<void> {
   if (!hasSupabaseConfig) return;
-  const { error } = await getSupabase().from('support_requests').insert(input);
+  const {
+    data: { user },
+  } = await getSupabase().auth.getUser();
+  const { error } = await getSupabase().from('support_requests').insert({
+    ...input,
+    // Without this, RLS hides the ticket from the person who sent it and only
+    // admins can see it.
+    customer_id: user?.id ?? null,
+    requester_kind: user ? 'customer' : 'visitor',
+  });
   if (error) throw error;
 }
 
 /** The support requests the customer sent. */
 export async function listSupportRequests(): Promise<SupportRequest[]> {
   if (!hasSupabaseConfig) return [];
+  const {
+    data: { user },
+  } = await getSupabase().auth.getUser();
+  if (!user) return [];
   const { data, error } = await getSupabase()
     .from('support_requests')
     .select('id, kind, subject, body, reference, status, created_at')
+    .eq('customer_id', user.id)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as SupportRequest[];
@@ -676,10 +690,15 @@ export async function listSupportRequests(): Promise<SupportRequest[]> {
 /** One support request, scoped by RLS to the signed-in customer. */
 export async function getSupportRequest(id: string): Promise<SupportRequest | null> {
   if (!hasSupabaseConfig) return null;
+  const {
+    data: { user },
+  } = await getSupabase().auth.getUser();
+  if (!user) return null;
   const { data, error } = await getSupabase()
     .from('support_requests')
     .select('id, kind, subject, body, reference, status, created_at')
     .eq('id', id)
+    .eq('customer_id', user.id)
     .maybeSingle();
   if (error) throw error;
   return (data as SupportRequest | null) ?? null;
@@ -698,6 +717,19 @@ export interface SupportMessage {
 /** The full conversation on one of the customer's own tickets. */
 export async function listSupportMessages(requestId: string): Promise<SupportMessage[]> {
   if (!hasSupabaseConfig) return [];
+  const {
+    data: { user },
+  } = await getSupabase().auth.getUser();
+  if (!user) return [];
+  // Explicit ownership check so an admin account cannot read every thread
+  // through the customer app just because RLS grants admins global access.
+  const { data: ticket } = await getSupabase()
+    .from('support_requests')
+    .select('id')
+    .eq('id', requestId)
+    .eq('customer_id', user.id)
+    .maybeSingle();
+  if (!ticket) return [];
   const { data, error } = await getSupabase()
     .from('support_ticket_messages')
     .select('id, request_id, author_role, author_name, body, created_at')
@@ -713,6 +745,14 @@ export async function replyToSupportRequest(requestId: string, body: string): Pr
   const {
     data: { user },
   } = await getSupabase().auth.getUser();
+  if (!user) throw new Error('Sign in to reply.');
+  const { data: ticket } = await getSupabase()
+    .from('support_requests')
+    .select('id')
+    .eq('id', requestId)
+    .eq('customer_id', user.id)
+    .maybeSingle();
+  if (!ticket) throw new Error('That request is not available for this account.');
   const authorName =
     (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? 'Requester';
   const { error } = await getSupabase().from('support_ticket_messages').insert({

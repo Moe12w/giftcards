@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Building2, ShieldCheck, Users, Image } from 'lucide-react';
 import { requireEnterprise } from '@/lib/auth';
 import { saveEnterpriseProfile } from '@/lib/actions/enterprise';
+import { enterpriseCreateMember } from '@/lib/actions/team';
 import { uploadPartnerImage, removePartnerImage } from '@/lib/actions/partner';
 import { formatDate, initials, titleCase } from '@/lib/format';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
@@ -218,17 +219,44 @@ export default async function EnterpriseSettingsPage({
                   })}
                 </div>
               )}
-              <div className="callout info" style={{ marginTop: 14 }}>
-                {t.addColleagueNote}
-              </div>
-              <div className="btn-row" style={{ marginTop: 14 }}>
-                <Link className="btn sm" href="/contact">
-                  {t.contactGiftly}
-                </Link>
-                <Link className="btn sm ghost" href="/corporate#enquiry">
-                  {t.corporateSite}
-                </Link>
-              </div>
+              {canManage ? (
+                <form
+                  action={enterpriseCreateMember}
+                  className="form"
+                  style={{ display: 'grid', gap: 12, marginTop: 16 }}
+                >
+                  <div className="field">
+                    <label htmlFor="member_name">Full name</label>
+                    <input id="member_name" name="full_name" required placeholder="e.g. Noura Ali" />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="member_email">Email address</label>
+                    <input id="member_email" name="email" type="email" required placeholder="colleague@company.qa" />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="member_password">Temporary password</label>
+                    <input id="member_password" name="password" type="password" required minLength={8} autoComplete="new-password" />
+                    <span className="hint">At least 8 characters. Share it with them after creating the account.</span>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="member_role">Role</label>
+                    <select id="member_role" name="role" defaultValue="analyst">
+                      <option value="analyst">Analyst (read-only)</option>
+                      <option value="manager">Manager</option>
+                    </select>
+                  </div>
+                  <button className="btn primary" type="submit">
+                    Create account
+                  </button>
+                  <p className="small muted" style={{ margin: 0 }}>
+                    They can sign in immediately at /enterprise/login. Existing accounts cannot be overwritten.
+                  </p>
+                </form>
+              ) : (
+                <div className="callout info" style={{ marginTop: 14 }}>
+                  {t.addColleagueNote}
+                </div>
+              )}
             </div>
           </section>
         </div>

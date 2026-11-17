@@ -118,6 +118,8 @@ const en = {
     totalPay: 'Total amount to pay',
     youSave: 'You save',
     placeOrder: 'Place bulk order',
+    payWithMyFatoorah: 'Pay with MyFatoorah',
+    addToBasket: 'Add to basket',
     cards: 'cards',
     card: 'card',
     note:
@@ -395,6 +397,8 @@ const ar: BusinessCopy = {
     totalPay: 'إجمالي المبلغ المستحق',
     youSave: 'توفّرك',
     placeOrder: 'أرسل طلب الجملة',
+    payWithMyFatoorah: 'الدفع عبر MyFatoorah',
+    addToBasket: 'أضف إلى السلة',
     cards: 'بطاقات',
     card: 'بطاقة',
     note:

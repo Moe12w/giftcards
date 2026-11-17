@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Trash2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { readBulkBasket, writeBulkBasket, type BasketLine } from '@/lib/bulk-basket';
 import { unitPriceForQuantity } from '@/lib/bulk';
 import { formatMoney } from '@/lib/money';
 
@@ -25,11 +26,6 @@ export interface BulkCartOffer {
   }>;
 }
 
-interface Line {
-  offerId: string;
-  quantity: number;
-}
-
 const ERROR_COPY: Record<string, string> = {
   supplier_not_ready: 'One of these vendors is not ready to accept payments yet. Remove that gift and try again.',
   buyer_not_approved: 'Your business account is not approved for bulk buying.',
@@ -42,9 +38,13 @@ const ERROR_COPY: Record<string, string> = {
 };
 
 export function BulkCart({ offers }: { offers: BulkCartOffer[] }) {
-  const [lines, setLines] = useState<Line[]>([]);
+  const [lines, setLines] = useState<BasketLine[]>([]);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLines(readBulkBasket());
+  }, []);
 
   const byId = useMemo(() => new Map(offers.map((offer) => [offer.id, offer])), [offers]);
   const selected = lines.filter((line) => line.quantity > 0 && byId.has(line.offerId));
@@ -56,10 +56,12 @@ export function BulkCart({ offers }: { offers: BulkCartOffer[] }) {
 
   function update(offerId: string, quantity: number) {
     setError(null);
-    setLines((current) => {
-      const rest = current.filter((line) => line.offerId !== offerId);
-      return quantity > 0 ? [...rest, { offerId, quantity }] : rest;
-    });
+    const next = [
+      ...readBulkBasket().filter((line) => line.offerId !== offerId),
+      ...(quantity > 0 ? [{ offerId, quantity }] : []),
+    ];
+    writeBulkBasket(next);
+    setLines(next);
   }
 
   async function pay() {
