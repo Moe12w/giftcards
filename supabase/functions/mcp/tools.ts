@@ -7,7 +7,8 @@
 // filtered by `buyer_id`, so one customer can never read another's order.
 
 import { adminClient, sha256Hex } from '../_shared/clients.ts';
-import { getPaymentStatus, mfConfig, sendPayment } from '../_shared/myfatoorah.ts';
+import { getPaymentStatus } from '../_shared/myfatoorah.ts';
+import { createInvoiceForOrder, InvoiceError } from '../_shared/invoices.ts';
 import { ToolError } from './protocol.ts';
 import {
   asRecord,
@@ -1452,10 +1453,6 @@ function maskContact(value: string | null): string | null {
   return digits.length >= 4 ? `+974****${digits.slice(-4)}` : '***';
 }
 
-function major(minor: number): number {
-  return Number((Number(minor) / 100).toFixed(2));
-}
-
 async function resolveBuyerOrder(ctx: ToolContext, args: Record<string, unknown>) {
   const orderId = uuidField(args, 'order_id');
   const orderRef = stringField(args, 'order_ref', { max: 60 });
@@ -1471,65 +1468,6 @@ async function resolveBuyerOrder(ctx: ToolContext, args: Record<string, unknown>
     throw new ToolError('order_not_found', 'That order is not available for this account.');
   }
   return data as any;
-}
-
-async function allocationForOrder(admin: Admin, orderId: string) {
-  const { data: items, error: itemError } = await admin
-    .from('order_items')
-    .select('id, product_id, total_minor, quantity')
-    .eq('order_id', orderId);
-  if (itemError || !items?.length) {
-    throw new ToolError('order_has_no_items', 'This order has no gift cards to pay for.');
-  }
-
-  const productIds = [...new Set(items.map((item: any) => item.product_id))];
-  const { data: products, error: productError } = await admin
-    .from('products')
-    .select('id, vendor_id, partner_id, vendors(id,status,myfatoorah_supplier_code,myfatoorah_supplier_status,payment_eligibility), enterprise_partners(id,status,myfatoorah_supplier_code,myfatoorah_supplier_status,payment_eligibility)')
-    .in('id', productIds);
-  if (productError) throw new ToolError('catalogue_unavailable', 'Could not verify the gift cards right now.');
-
-  const byId = new Map<string, any>(((products ?? []) as any[]).map((product) => [product.id, product]));
-  const shares = new Map<string, number>();
-  let amountMinor = 0;
-
-  for (const item of items as any[]) {
-    const product = byId.get(item.product_id);
-    const vendor = Array.isArray(product?.vendors) ? product?.vendors[0] : product?.vendors;
-    const partner = Array.isArray(product?.enterprise_partners)
-      ? product?.enterprise_partners[0]
-      : product?.enterprise_partners;
-    const supplier = vendor ?? partner;
-    const platformStatusOk = vendor ? vendor.status === 'approved' : partner?.status === 'active';
-    if (
-      !supplier ||
-      !platformStatusOk ||
-      !supplier.myfatoorah_supplier_code ||
-      String(supplier.myfatoorah_supplier_status).toLowerCase() !== 'active' ||
-      !supplier.payment_eligibility
-    ) {
-      throw new ToolError(
-        'supplier_not_ready',
-        'The business selling this gift card is not ready to accept payments yet. Choose another gift or try again later.',
-      );
-    }
-    const code = String(supplier.myfatoorah_supplier_code);
-    shares.set(code, (shares.get(code) ?? 0) + Number(item.total_minor ?? 0));
-    amountMinor += Number(item.total_minor ?? 0);
-  }
-
-  if (!Number.isFinite(amountMinor) || amountMinor <= 0) {
-    throw new ToolError('invalid_order_total', 'This order has no payable amount.');
-  }
-
-  return {
-    amountMinor,
-    suppliers: [...shares.entries()].map(([code, amount]) => ({
-      SupplierCode: Number(code),
-      InvoiceShare: major(amount),
-    })),
-    firstSupplierCode: [...shares.keys()][0],
-  };
 }
 
 async function createPaymentLink(ctx: ToolContext, args: Record<string, unknown>) {
@@ -1563,12 +1501,6 @@ async function createPaymentLink(ctx: ToolContext, args: Record<string, unknown>
     };
   }
 
-  const allocation = await allocationForOrder(ctx.admin, order.id);
-  const config = await mfConfig();
-  if (!config.apiKey) {
-    throw new ToolError('payments_unavailable', 'Online payments are not configured yet.');
-  }
-
   const sendTo = stringField(args, 'send_to', { max: 254 });
   const customerEmail =
     channel === 'email' || channel === 'all'
@@ -1585,43 +1517,32 @@ async function createPaymentLink(ctx: ToolContext, args: Record<string, unknown>
     throw new ToolError('phone_required', 'A phone number is needed to send the link by SMS.');
   }
 
-  const payload: Record<string, unknown> = {
-    CustomerName: order.recipient_name || 'Giftly customer',
-    NotificationOption: channel === 'email' ? 'EML' : channel === 'sms' ? 'SMS' : channel === 'all' ? 'ALL' : 'LNK',
-    InvoiceValue: major(allocation.amountMinor),
-    DisplayCurrencyIso: order.currency || 'QAR',
-    CustomerReference: order.payment_reference || order.id,
-    UserDefinedField: order.id,
-    CallBackUrl: `${SITE_URL}/api/merchant-payment/callback?order=${order.id}`,
-    ErrorUrl: `${SITE_URL}/api/merchant-payment/callback?order=${order.id}&failed=1`,
-    WebhookUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/payment-webhook`,
-    Suppliers: allocation.suppliers,
-  };
-  if (customerEmail) payload.CustomerEmail = customerEmail;
-  if (customerPhone) payload.CustomerMobile = customerPhone.replace(/[^\d+]/g, '');
-
-  let invoice: any;
+  let invoice;
   try {
-    invoice = await sendPayment(payload);
+    invoice = await createInvoiceForOrder(ctx.admin, {
+      orderId: order.id,
+      reference: order.payment_reference || order.id,
+      customerName: order.recipient_name || 'Giftly customer',
+      customerEmail,
+      customerMobile: customerPhone ? customerPhone.replace(/[^\d+]/g, '') : null,
+      notificationOption:
+        channel === 'email' ? 'EML' : channel === 'sms' ? 'SMS' : channel === 'all' ? 'ALL' : 'LNK',
+      callbackUrl: `${SITE_URL}/api/merchant-payment/callback?order=${order.id}`,
+      errorUrl: `${SITE_URL}/api/merchant-payment/callback?order=${order.id}&failed=1`,
+      webhookUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/payment-webhook`,
+    });
   } catch (error) {
+    if (error instanceof InvoiceError) {
+      throw new ToolError(error.code, 'The payment link could not be created. Please try again.');
+    }
+    if (String(error).includes('myfatoorah_not_configured')) {
+      throw new ToolError('payments_unavailable', 'Online payments are not configured yet.');
+    }
     console.error('[mcp] SendPayment failed', String(error));
     throw new ToolError('payment_provider_error', 'The payment provider could not create a link. Please try again.');
   }
-  const invoiceId = String(invoice?.InvoiceId ?? '');
-  const paymentUrl = String(invoice?.InvoiceURL ?? '');
-  if (!invoiceId || !paymentUrl) {
-    throw new ToolError('payment_provider_error', 'The payment provider did not return a payment link.');
-  }
-
-  const { error: recordError } = await ctx.admin.rpc('myfatoorah_payment_recorded', {
-    p_order_id: order.id,
-    p_invoice_id: invoiceId,
-    p_invoice_url: paymentUrl,
-    p_payment_url: paymentUrl,
-    p_supplier_code: allocation.firstSupplierCode,
-    p_provider_response: {},
-  });
-  if (recordError) throw new ToolError('payment_record_failed', 'Could not record the payment link safely.');
+  const invoiceId = invoice.invoiceId;
+  const paymentUrl = invoice.invoiceUrl;
 
   const { data: payment } = await ctx.admin
     .from('myfatoorah_payments')
@@ -1639,7 +1560,7 @@ async function createPaymentLink(ctx: ToolContext, args: Record<string, unknown>
         payment_id: payment?.id ?? null,
         invoice_id: invoiceId,
         payment_url: paymentUrl,
-        amount_minor: allocation.amountMinor,
+        amount_minor: invoice.amountMinor,
         currency: order.currency || 'QAR',
         status: 'active',
         channel,

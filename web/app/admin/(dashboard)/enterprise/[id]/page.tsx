@@ -23,6 +23,7 @@ import {
 import { formatDate, formatDateTime, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
+import { AdminSupplierPanel } from '@/components/AdminSupplierPanel';
 import { adminCopy } from '@/lib/i18n/admin';
 import { common } from '@/lib/i18n/common';
 import { fill, pick } from '@/lib/i18n';
@@ -176,132 +177,31 @@ export default async function AdminEnterpriseDetailPage({
         }
       />
 
-      <section className="panel">
-        <div className="panel-head">
-          <h3>MyFatoorah payment management</h3>
-          <StatusTag
-            status={
-              partner.myfatoorah_supplier_status === 'active'
-                ? 'approved'
-                : partner.myfatoorah_supplier_status === 'rejected'
-                  ? 'rejected'
-                  : partner.myfatoorah_supplier_status
-                    ? 'pending'
-                    : 'not_started'
-            }
-          />
-        </div>
-        <div className="panel-body" style={{ display: 'grid', gap: 14 }}>
-          <div className="split-list">
-            <div>
-              <span className="k">Payment application</span>
-              <span className="v">{merchantApplication?.status ?? 'Not started'}</span>
-            </div>
-            <div>
-              <span className="k">Supplier code</span>
-              <span className="v mono">{partner.myfatoorah_supplier_code ?? 'Not created'}</span>
-            </div>
-            <div>
-              <span className="k">Provider status</span>
-              <span className="v">{partner.myfatoorah_supplier_status ?? 'Not created'}</span>
-            </div>
-            <div>
-              <span className="k">Partner status</span>
-              <span className="v">{partner.status}</span>
-            </div>
-            <div>
-              <span className="k">Deposit terms</span>
-              <span className="v">{partner.myfatoorah_deposit_terms ?? 'Provider-managed'}</span>
-            </div>
-            <div>
-              <span className="k">Provider commission</span>
-              <span className="v">
-                {partner.myfatoorah_commission_percentage != null
-                  ? `${partner.myfatoorah_commission_percentage}%`
-                  : 'Provider-managed'}
-              </span>
-            </div>
-            <div>
-              <span className="k">Last synchronised</span>
-              <span className="v">
-                {partner.myfatoorah_last_synced_at ? formatDateTime(partner.myfatoorah_last_synced_at, locale) : 'Never'}
-              </span>
-            </div>
-            <div>
-              <span className="k">Live payments</span>
-              <span className="v">
-                {partner.payment_eligibility ? <span className="tag success">Enabled</span> : <span className="tag neutral">Disabled</span>}
-              </span>
-            </div>
-          </div>
-
-          {partner.myfatoorah_rejection_comment ? (
-            <div className="callout error">MyFatoorah rejection: {partner.myfatoorah_rejection_comment}</div>
-          ) : null}
-          {partner.myfatoorah_last_error ? (
-            <div className="callout warn">Last provider error: {partner.myfatoorah_last_error}</div>
-          ) : null}
-
-          <div className="btn-row">
-            {!partner.myfatoorah_supplier_code ? (
-              <form action={adminCreatePartnerSupplier}>
-                <input type="hidden" name="partner_id" value={id} />
-                <button className="btn sm primary" type="submit">
-                  Create MyFatoorah supplier
-                </button>
-              </form>
-            ) : null}
-            <form action={adminSyncPartnerSuppliers}>
-              <input type="hidden" name="partner_id" value={id} />
-              <button className="btn sm ghost" type="submit">
-                Sync provider status
-              </button>
-            </form>
-            <form action={adminSetPartnerPaymentEligibility}>
-              <input type="hidden" name="partner_id" value={id} />
-              <input type="hidden" name="eligible" value={partner.payment_eligibility ? 'false' : 'true'} />
-              <input type="hidden" name="note" value={partner.payment_eligibility ? 'Disabled by administrator' : 'Enabled by administrator'} />
-              <button className="btn sm" type="submit">
-                {partner.payment_eligibility ? 'Disable live payments' : 'Enable live payments'}
-              </button>
-            </form>
-            {merchantApplication ? (
-              <Link className="btn sm ghost" href={`/admin/merchant-onboarding/${merchantApplication.id}`}>
-                Review application
-              </Link>
-            ) : null}
-          </div>
-
-          {(merchantDocuments ?? []).length > 0 ? (
-            <div className="split-list">
-              {(merchantDocuments ?? []).map((document) => (
-                <div key={document.id}>
-                  <span className="k">{document.doc_type.replace(/_/g, ' ')}</span>
-                  <span className="v small" style={{ display: 'grid', gap: 4, justifyItems: 'end' }}>
-                    <StatusTag status={document.status} />
-                    <span className="muted">
-                      {document.provider_submission_status === 'submitted'
-                        ? `Sent to MyFatoorah · FileType ${document.myfatoorah_file_type ?? '—'}`
-                        : document.provider_submission_status === 'failed'
-                          ? 'Provider submission failed'
-                          : 'Not sent to provider'}
-                    </span>
-                    {document.provider_submission_status !== 'submitted' && partner.myfatoorah_supplier_code ? (
-                      <form action={adminResubmitPartnerDocument}>
-                        <input type="hidden" name="partner_id" value={id} />
-                        <input type="hidden" name="document_id" value={document.id} />
-                        <button className="btn sm ghost" type="submit">
-                          Submit to MyFatoorah
-                        </button>
-                      </form>
-                    ) : null}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </section>
+      <AdminSupplierPanel
+        ownerType="partner"
+        ownerId={id}
+        applicationStatus={merchantApplication?.status ?? null}
+        applicationId={merchantApplication?.id ?? null}
+        supplier={{
+          code: partner.myfatoorah_supplier_code ?? null,
+          status: partner.myfatoorah_supplier_status ?? null,
+          platformStatus: partner.status,
+          depositTerms: partner.myfatoorah_deposit_terms ?? null,
+          commissionPercentage: partner.myfatoorah_commission_percentage ?? null,
+          lastSyncedAt: partner.myfatoorah_last_synced_at ?? null,
+          rejectionComment: partner.myfatoorah_rejection_comment ?? null,
+          lastError: partner.myfatoorah_last_error ?? null,
+          eligibility: Boolean(partner.payment_eligibility),
+        }}
+        documents={merchantDocuments ?? []}
+        actions={{
+          create: adminCreatePartnerSupplier,
+          sync: adminSyncPartnerSuppliers,
+          setEligibility: adminSetPartnerPaymentEligibility,
+          resubmitDocument: adminResubmitPartnerDocument,
+        }}
+        locale={locale}
+      />
 
       <div className="kpi-grid">
         <div className="kpi">

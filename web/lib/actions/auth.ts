@@ -341,16 +341,6 @@ export async function registerEnterpriseAccount(formData: FormData) {
   return createMerchantAccount(formData, 'partner');
 }
 
-export async function acceptVendorInvite(formData: FormData) {
-  const token = String(formData.get('token') ?? '').trim();
-  if (!token) fail('/vendor/join', 'This invite link is missing its token.');
-
-  const supabase = await createClient();
-  const { error } = await supabase.rpc('accept_vendor_invite', { p_token: token });
-  if (error) fail(`/vendor/join?token=${encodeURIComponent(token)}`, error.message);
-  redirect('/vendor?joined=1');
-}
-
 export async function businessSignIn(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');

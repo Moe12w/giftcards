@@ -14,6 +14,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { adminClient, sha256Hex } from '../_shared/clients.ts';
 import { mfConfig } from '../_shared/myfatoorah.ts';
+import { createInvoiceForOrder, InvoiceError } from '../_shared/invoices.ts';
 
 interface Body {
   productId: string;
@@ -220,9 +221,7 @@ Deno.serve(async (req) => {
     }
 
     const config = await mfConfig();
-    const baseUrl = config.baseUrl;
     const appUrl = config.appPublicUrl;
-    const apiKey = config.apiKey;
     // Only allow our own app scheme or the configured site as a return target.
     const requestedReturn = String(body.returnUrl ?? '').trim();
     const trustedReturn =
@@ -232,75 +231,39 @@ Deno.serve(async (req) => {
     const returnTo = trustedReturn && config.appPublicUrl
       ? `&return_to=${encodeURIComponent(requestedReturn)}`
       : '';
-    if (!apiKey || !appUrl) {
+    if (!config.apiKey || !appUrl) {
       await admin.from('orders').update({ status: 'failed', payment_status: 'failed' }).eq('id', order.id);
       return json({ error: 'payment_provider_not_configured' }, 503);
     }
 
-    const payload: Record<string, unknown> = {
-      CustomerName: body.recipientName.trim(),
-      NotificationOption: 'LNK',
-      InvoiceValue: Number((unitPriceMinor / 100).toFixed(2)),
-      DisplayCurrencyIso: currency,
-      Language: body.language === 'ar' ? 'AR' : 'EN',
-      CustomerEmail: body.recipientEmail.trim(),
-      CustomerReference: order.id,
-      UserDefinedField: order.id,
-      CallBackUrl: `${appUrl}/api/merchant-payment/callback?order=${order.id}${returnTo}`,
-      ErrorUrl: `${appUrl}/api/merchant-payment/callback?order=${order.id}&failed=1${returnTo}`,
-      WebhookUrl: `${supabaseUrl}/functions/v1/payment-webhook`,
-      Suppliers: [
-        {
-          SupplierCode: Number(supplierCode),
-          InvoiceShare: Number((unitPriceMinor / 100).toFixed(2)),
-        },
-      ],
-    };
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 20_000);
-    let response: Response;
     try {
-      response = await fetch(`${baseUrl}/v2/SendPayment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
+      const invoice = await createInvoiceForOrder(admin, {
+        orderId: order.id,
+        reference: order.id,
+        customerName: body.recipientName.trim(),
+        customerEmail: body.recipientEmail.trim(),
+        language: body.language,
+        callbackUrl: `${appUrl}/api/merchant-payment/callback?order=${order.id}${returnTo}`,
+        errorUrl: `${appUrl}/api/merchant-payment/callback?order=${order.id}&failed=1${returnTo}`,
+        webhookUrl: `${supabaseUrl}/functions/v1/payment-webhook`,
       });
-    } finally {
-      clearTimeout(timer);
-    }
-
-    const provider = await response.json().catch(() => null);
-    const invoiceId = provider?.Data?.InvoiceId;
-    const invoiceUrl = provider?.Data?.InvoiceURL;
-    if (!response.ok || provider?.IsSuccess !== true && String(provider?.IsSuccess).toLowerCase() !== 'true' || !invoiceId || !invoiceUrl) {
+      return json({
+        orderId: order.id,
+        invoiceId: invoice.invoiceId,
+        paymentUrl: invoice.invoiceUrl,
+      });
+    } catch (error) {
       await admin
         .from('orders')
         .update({ status: 'failed', payment_status: 'failed' })
         .eq('id', order.id);
-      console.error('MyFatoorah SendPayment failed', String(provider?.Message ?? `HTTP ${response.status}`));
-      return json({ error: 'payment_provider_error' }, 502);
+      if (error instanceof InvoiceError) {
+        console.error('create-payment failed', error.code, error.message);
+        const conflict = ['supplier_not_ready', 'supplier_not_active', 'payments_not_enabled'].includes(error.code);
+        return json({ error: error.code }, conflict ? 409 : 502);
+      }
+      throw error;
     }
-
-    const { error: recordError } = await admin.rpc('myfatoorah_payment_recorded', {
-      p_order_id: order.id,
-      p_invoice_id: String(invoiceId),
-      p_invoice_url: String(invoiceUrl),
-      p_payment_url: String(invoiceUrl),
-      p_supplier_code: String(supplierCode),
-      p_provider_response: provider?.Data ?? {},
-    });
-    if (recordError) throw recordError;
-
-    return json({
-      orderId: order.id,
-      invoiceId: String(invoiceId),
-      paymentUrl: String(invoiceUrl),
-    });
   } catch (error) {
     console.error('create-payment failed', String(error));
     return json({ error: 'server_error' }, 500);

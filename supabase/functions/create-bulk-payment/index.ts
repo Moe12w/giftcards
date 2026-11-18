@@ -8,6 +8,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { adminClient } from '../_shared/clients.ts';
 import { mfConfig } from '../_shared/myfatoorah.ts';
+import { createInvoiceForOrder, InvoiceError } from '../_shared/invoices.ts';
 
 interface Body {
   items: Array<{ offerId: string; quantity: number }>;
@@ -71,76 +72,41 @@ Deno.serve(async (req) => {
       });
     }
 
-    const suppliers = Array.isArray((checkout as any).suppliers) ? (checkout as any).suppliers : [];
-    if (suppliers.length === 0) return json({ error: 'no_suppliers' }, 409);
-
     const config = await mfConfig();
     if (!config.apiKey || !config.appPublicUrl) {
       return json({ error: 'payment_provider_not_configured' }, 503);
     }
 
-    const payload: Record<string, unknown> = {
-      CustomerName: userData.user.email || 'Bulk buyer',
-      NotificationOption: 'LNK',
-      InvoiceValue: Number((Number((checkout as any).totalMinor) / 100).toFixed(2)),
-      DisplayCurrencyIso: 'QAR',
-      Language: body.language === 'ar' ? 'AR' : 'EN',
-      CustomerEmail: userData.user.email,
-      CustomerReference: reference,
-      UserDefinedField: checkoutOrderId,
-      CallBackUrl: `${config.appPublicUrl}/api/merchant-payment/callback?order=${checkoutOrderId}`,
-      ErrorUrl: `${config.appPublicUrl}/api/merchant-payment/callback?order=${checkoutOrderId}&failed=1`,
-      WebhookUrl: `${supabaseUrl}/functions/v1/payment-webhook`,
-      Suppliers: suppliers.map((supplier: any) => ({
-        SupplierCode: Number(supplier.SupplierCode),
-        InvoiceShare: Number((Number(supplier.InvoiceShareMinor) / 100).toFixed(2)),
-      })),
-    };
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 20_000);
-    let response: Response;
     try {
-      response = await fetch(`${config.baseUrl}/v2/SendPayment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
+      const invoice = await createInvoiceForOrder(admin, {
+        orderId: checkoutOrderId,
+        reference,
+        customerName: userData.user.email || 'Bulk buyer',
+        customerEmail: userData.user.email,
+        language: body.language,
+        callbackUrl: `${config.appPublicUrl}/api/merchant-payment/callback?order=${checkoutOrderId}`,
+        errorUrl: `${config.appPublicUrl}/api/merchant-payment/callback?order=${checkoutOrderId}&failed=1`,
+        webhookUrl: `${supabaseUrl}/functions/v1/payment-webhook`,
       });
-    } finally {
-      clearTimeout(timer);
-    }
-
-    const provider = await response.json().catch(() => null);
-    const invoiceId = provider?.Data?.InvoiceId;
-    const invoiceUrl = provider?.Data?.InvoiceURL;
-    const ok = response.ok && (provider?.IsSuccess === true || String(provider?.IsSuccess).toLowerCase() === 'true');
-    if (!ok || !invoiceId || !invoiceUrl) {
+      return json({
+        checkoutOrderId,
+        invoiceId: invoice.invoiceId,
+        paymentUrl: invoice.invoiceUrl,
+        bulkOrderIds: (checkout as any).bulkOrderIds ?? [],
+      });
+    } catch (error) {
       await admin.from('orders').update({ status: 'failed', payment_status: 'failed' }).eq('id', checkoutOrderId);
       await admin
         .from('bulk_orders')
         .update({ status: 'failed', payment_status: 'failed' })
         .eq('checkout_order_id', checkoutOrderId);
-      console.error('bulk SendPayment failed', String(provider?.Message ?? response.status));
-      return json({ error: 'payment_provider_error' }, 502);
+      if (error instanceof InvoiceError) {
+        console.error('create-bulk-payment failed', error.code, error.message);
+        const conflict = ['supplier_not_ready', 'supplier_not_active', 'payments_not_enabled'].includes(error.code);
+        return json({ error: error.code }, conflict ? 409 : 502);
+      }
+      throw error;
     }
-
-    const { error: recordError } = await admin.rpc('myfatoorah_payment_recorded', {
-      p_order_id: checkoutOrderId,
-      p_invoice_id: String(invoiceId),
-      p_invoice_url: String(invoiceUrl),
-      p_payment_url: String(invoiceUrl),
-      p_supplier_code: String(suppliers[0]?.SupplierCode ?? ''),
-      p_provider_response: provider?.Data ?? {},
-    });
-    if (recordError) throw recordError;
-
-    return json({
-      checkoutOrderId,
-      invoiceId: String(invoiceId),
-      paymentUrl: String(invoiceUrl),
-      bulkOrderIds: (checkout as any).bulkOrderIds ?? [],
-    });
   } catch (error) {
     console.error('create-bulk-payment failed', String(error));
     return json({ error: 'server_error' }, 500);
