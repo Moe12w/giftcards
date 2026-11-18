@@ -201,7 +201,6 @@ export function CampaignWizard({
   const PERIOD_CHOICES = [1, 2, 3, 4, 5, 6, 8, 12];
   const paidCampaign = Boolean(campaign && campaign.payment_status === 'paid');
   const periodsLocked = paidCampaign;
-  const needsImage = placement?.format === 'banner' || placement?.format === 'carousel';
   const visiblePlacements = placements.filter((row) => surfaceFor(row.key) === surface);
   const slots = placement ? slotsByPlacement[placement.key] ?? [] : [];
 
@@ -285,10 +284,6 @@ export function CampaignWizard({
     if (step === 1) {
       if (!headline.trim()) {
         setMessage('Add a headline so the ad can be reviewed.');
-        return;
-      }
-      if (needsImage && !imageUrl.trim()) {
-        setMessage('This placement needs a banner image. Upload one to continue.');
         return;
       }
       if (destinationType === 'url') {
@@ -542,27 +537,23 @@ export function CampaignWizard({
               <label htmlFor="body_ar">Body (Arabic)</label>
               <textarea id="body_ar" name="body_ar" rows={3} dir="rtl" defaultValue={String(creative.body_ar ?? '')} />
             </div>
-            {needsImage ? (
-              <>
-                <div className="field full">
-                  <label>Creative image (required)</label>
-                  <AdvertisingCreativeImage kind="image" currentUrl={imageUrl || null} locale={locale} onUploaded={setImageUrl} />
-                </div>
-                <div className="field full">
-                  <label>Mobile image</label>
-                  <AdvertisingCreativeImage kind="mobile_image" currentUrl={mobileImageUrl || null} locale={locale} onUploaded={setMobileImageUrl} />
-                </div>
-                <div className="field">
-                  <label htmlFor="image_alt">Image alt text</label>
-                  <input id="image_alt" name="image_alt" defaultValue={String(creative.image_alt ?? '')} />
-                </div>
-                <div className="field">
-                  <label htmlFor="image_alt_ar">Image alt text (Arabic)</label>
-                  <input id="image_alt_ar" name="image_alt_ar" dir="rtl" defaultValue={String(creative.image_alt_ar ?? '')} />
-                </div>
-              </>
-            ) : null}
-            <input type="hidden" name="image_url" value={needsImage ? imageUrl : ''} />
+            <div className="field full">
+              <label>Creative image (optional)</label>
+              <AdvertisingCreativeImage kind="image" currentUrl={imageUrl || null} locale={locale} onUploaded={setImageUrl} />
+            </div>
+            <div className="field full">
+              <label>Mobile image</label>
+              <AdvertisingCreativeImage kind="mobile_image" currentUrl={mobileImageUrl || null} locale={locale} onUploaded={setMobileImageUrl} />
+            </div>
+            <div className="field">
+              <label htmlFor="image_alt">Image alt text</label>
+              <input id="image_alt" name="image_alt" defaultValue={String(creative.image_alt ?? '')} />
+            </div>
+            <div className="field">
+              <label htmlFor="image_alt_ar">Image alt text (Arabic)</label>
+              <input id="image_alt_ar" name="image_alt_ar" dir="rtl" defaultValue={String(creative.image_alt_ar ?? '')} />
+            </div>
+            <input type="hidden" name="image_url" value={imageUrl} />
             <input type="hidden" name="mobile_image_url" value={mobileImageUrl} />
             <div className="field">
               <label htmlFor="cta_label">Button label</label>
