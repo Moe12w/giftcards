@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
 
       if (invoiceStatus === 'PAID' && txStatus === 'SUCCESS' && invoiceId) {
         const appUrl = config.appPublicUrl;
-        const internalKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+        const internalKey = Deno.env.get('INTERNAL_API_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
         if (!appUrl || !internalKey) throw new Error('confirmation_endpoint_not_configured');
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 40_000);

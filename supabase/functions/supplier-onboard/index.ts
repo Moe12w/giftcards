@@ -15,7 +15,9 @@ import {
 } from '../_shared/myfatoorah.ts';
 
 function internalRequest(req: Request): boolean {
-  const expected = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  // Supabase reserves SUPABASE_* env names and may inject a newer key format
+  // there, so prefer our own secret that matches the web app's internal key.
+  const expected = Deno.env.get('INTERNAL_API_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const provided = req.headers.get('x-internal-key') ?? '';
   return Boolean(expected && provided && provided === expected);
 }

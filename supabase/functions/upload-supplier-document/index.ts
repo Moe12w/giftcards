@@ -35,7 +35,7 @@ const ALLOWED_MIME: Record<string, string> = {
 };
 
 function internalRequest(req: Request): boolean {
-  const expected = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const expected = Deno.env.get('INTERNAL_API_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const provided = req.headers.get('x-internal-key') ?? '';
   return Boolean(expected && provided && provided === expected);
 }
