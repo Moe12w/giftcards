@@ -21,6 +21,7 @@ export async function GET(request: Request) {
     url.searchParams.get('invoiceId') ??
     url.searchParams.get('InvoiceId');
   const failed = url.searchParams.get('failed') === '1';
+  const surface = url.searchParams.get('surface') === 'enterprise' ? 'enterprise' : 'vendor';
 
   const base = (await getAppPublicUrl()) || url.origin;
 
@@ -31,6 +32,7 @@ export async function GET(request: Request) {
         paymentId,
         invoiceId,
         source: 'callback',
+        surface,
       });
     } catch (error) {
       console.error('[advertising] callback failed', error);

@@ -303,8 +303,8 @@ export async function payAdvertisingWithMyFatoorah(formData: FormData) {
       customerEmail: ctx.user.email,
       reference: campaign.id,
       description: `Advertising booking - ${campaign.name}`,
-      callbackUrl: `${appUrl}/api/advertising/myfatoorah/callback`,
-      errorUrl: `${appUrl}/api/advertising/myfatoorah/callback?failed=1`,
+      callbackUrl: `${appUrl}/api/advertising/myfatoorah/callback?surface=${ctx.kind}`,
+      errorUrl: `${appUrl}/api/advertising/myfatoorah/callback?surface=${ctx.kind}&failed=1`,
       webhookUrl: `${appUrl}/api/advertising/myfatoorah/webhook`,
     });
   } catch (error) {

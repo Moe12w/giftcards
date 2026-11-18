@@ -30,8 +30,9 @@ export async function confirmMyFatoorahAdvertisingPayment(input: {
   paymentId?: string | null;
   invoiceId?: string | null;
   source: 'callback' | 'webhook';
+  surface?: AdvertiserSurface;
 }): Promise<AdvertisingPaymentResult> {
-  const surface: AdvertiserSurface = 'vendor';
+  const surface: AdvertiserSurface = input.surface ?? 'vendor';
   const fail = (reason: string): AdvertisingPaymentResult => ({
     ok: false,
     paid: false,
