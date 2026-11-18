@@ -23,7 +23,7 @@ export function CopyField({ value }: { value: string }) {
 
   return (
     <div className="copy-field">
-      <input readOnly value={value} aria-label={t.inviteLink} onFocus={(event) => event.currentTarget.select()} />
+      <input readOnly value={value} aria-label="Copy value" onFocus={(event) => event.currentTarget.select()} />
       <button className="btn sm" type="button" onClick={copy}>
         {copied ? <Check size={14} /> : <Copy size={14} />}
         {copied ? t.copied : t.copy}

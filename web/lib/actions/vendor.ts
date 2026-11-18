@@ -601,38 +601,6 @@ export async function redeemVoucher(formData: FormData) {
   redirect(`/vendor/redeem?${query.toString()}`);
 }
 
-export async function inviteStaff(formData: FormData) {
-  const ctx = await requireVendor();
-  if (ctx.role === 'redemption_staff') {
-    back('/vendor/staff', 'Only owners and managers can invite staff.');
-  }
-
-  const email = str(formData, 'email');
-  const role = str(formData, 'role') || 'redemption_staff';
-  if (!email) back('/vendor/staff', 'Enter the email address to invite.');
-  if (!['manager', 'redemption_staff'].includes(role)) {
-    back('/vendor/staff', 'Choose manager or redemption staff.');
-  }
-  if (ctx.role === 'manager' && role === 'manager') {
-    back('/vendor/staff', 'Only the owner can invite another manager.');
-  }
-
-  const { data, error } = await ctx.supabase.rpc('create_vendor_invite', {
-    p_vendor_id: ctx.vendor.id,
-    p_email: email,
-    p_role: role,
-  });
-  if (error) back('/vendor/staff', error.message);
-
-  const result = (Array.isArray(data) ? data[0] : data) as
-    | { invite_token?: string; invite_id?: string }
-    | null;
-  if (!result?.invite_token) back('/vendor/staff', 'The invite could not be created.');
-
-  revalidatePath('/vendor/staff');
-  redirect(`/vendor/staff?invited=${encodeURIComponent(result.invite_token)}`);
-}
-
 export async function removeStaff(formData: FormData) {
   const ctx = await requireVendor();
   const userId = str(formData, 'user_id');

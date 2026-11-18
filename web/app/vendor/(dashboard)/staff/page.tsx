@@ -12,7 +12,7 @@ import { vendorCopy } from '@/lib/i18n/vendor';
 export default async function VendorStaffPage({
   searchParams,
 }: {
-  searchParams: Promise<{ invited?: string; saved?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const ctx = await requireVendor();
