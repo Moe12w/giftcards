@@ -1,27 +1,33 @@
 # Giftly — Gift Card Marketplace
 
-A gift card marketplace built with Expo + React Native + Expo Router and Supabase.
-This repository currently focuses on the **customer app**, with the database
-schema and payment/wallet Edge Functions scaffolded.
+Giftly is a Qatari gift-card marketplace with three apps in one repository:
 
-Read `PROJECT_BRIEF.md` first — it is the source of truth for rules and scope.
+- `app/` + `src/` — Expo / React Native **customer app**
+- `web/` — Next.js **website and dashboards** for vendors, enterprise partners,
+  bulk buyers and admins
+- `supabase/` — database migrations and Edge Functions
+
+**Start here:** `docs/handover/00-START-HERE.md`. It explains the product, where
+each feature lives, how to make changes safely and which verification commands
+to run. `PROJECT_BRIEF.md` is the original product brief, not the current
+technical source of truth.
 
 ## What works today
 
-- Customer app: Explore home, offer detail + single-screen gift compose and
-  checkout, My Gifts, card detail with a large QR code, Orders, Account.
-- Collaborative gift baskets: create, invite, per-card contributions (a card
-  joins the box only after its payment), and a creator "send gift box" step.
-- English + Arabic strings with device-locale detection and RTL support.
-- Shared design system in `src/theme.ts` and `src/components/`.
-- Money helpers that only use integer minor units (fils).
-- **Demo mode**: the app runs with sample offers and cards before Supabase is
-  connected. Any valid email + 8-character password "signs in".
-- Database migrations (schema, RLS, append-only ledger, atomic redemption).
-- Edge Function scaffolds for payment creation, webhook, claim, and wallet pass.
-- Vitest tests for the money rules.
+- Customer app: gift discovery, checkout through MyFatoorah, claim/redemption,
+  baskets, support and notifications.
+- Web dashboards: vendor, enterprise, bulk buyer and admin, including payment
+  applications, MyFatoorah supplier onboarding, advertising, team access and
+  financial reporting.
+- Multi-vendor payments: gift cards, bulk baskets and MCP payment links share
+  one invoice helper and are confirmed by a signed webhook.
+- English + Arabic bilingual web and app copy.
+- Private document storage, RLS, audit log and append-only ledgers.
+- 57 automated tests plus Expo and web typechecks.
 
-Vendor and admin areas are placeholders for the next phase.
+Historical planning documents (`payment-processing-architecture.md`,
+`ADVERTISING_SYSTEM_PLAN.md`, `docs/HANDOVER-REVIEW.md`) are kept for context but
+should not be followed as current instructions.
 
 ## Prerequisites
 

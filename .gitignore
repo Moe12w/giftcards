@@ -22,6 +22,7 @@ expo-env.d.ts
 .metro-health-check*
 
 # debug
+*.log
 npm-debug.*
 yarn-debug.*
 yarn-error.*
@@ -54,4 +55,3 @@ expo-login.ps1
 expo-qr.png
 
 .vercel
-.env*

@@ -1,5 +1,11 @@
 This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
 
+This repository also contains a Next.js web app in `web/` (public site plus
+vendor, enterprise, bulk-buyer and admin dashboards) and a Supabase backend in
+`supabase/`. For cross-cutting product and architecture context, read
+`docs/handover/00-START-HERE.md` and `web/AGENTS.md` before working outside the
+mobile app.
+
 ## Expo has changed — do not trust your training data
 
 Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:

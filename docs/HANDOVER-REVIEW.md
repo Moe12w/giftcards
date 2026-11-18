@@ -1,4 +1,11 @@
-# Handover review
+# Handover review — HISTORICAL SNAPSHOT
+
+> This review describes an earlier state of the repository. Several issues it
+> lists (legacy `create-payment`, `payment-webhook` reading `gift_cards`, missing
+> `order_items`, test counts) have since been fixed. For current behavior read
+> `docs/handover/00-START-HERE.md` and `docs/handover/02-payments.md`. The
+> security note about the universal test account may still be relevant and must
+> be checked against production before relying on this document.
 
 Prepared for the developer taking over payments and onboarding. Read
 `PROJECT_BRIEF.md` first — it is still the source of truth. This document lists

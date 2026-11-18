@@ -2,6 +2,8 @@
 
 Last updated: 2026-11-18
 
+For a full handover guide, start at `docs/handover/00-START-HERE.md`. This file is the compact technical map.
+
 This is the map to read before changing anything that touches money or permissions.
 
 ## Entry points → Edge Functions

@@ -1,5 +1,10 @@
 # Giftly Payments Architecture — MyFatoorah Multi-Vendor
 
+> **HISTORICAL PLANNING DOCUMENT — DO NOT USE AS CURRENT INSTRUCTION.**
+> The migration numbers and proposed file names below do not match what was
+> actually applied. For current behavior read `docs/handover/00-START-HERE.md`,
+> `docs/handover/02-payments.md` and `docs/architecture/current-flows.md`.
+
 *Implementation guide for supplier onboarding, payment routing, embedded checkout, and MCP payment links.*
 *Version 2.0 · November 2026 · Replaces the earlier sub-merchant draft.*
 

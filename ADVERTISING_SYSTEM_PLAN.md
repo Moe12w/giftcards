@@ -1,3 +1,8 @@
+> **HISTORICAL DOCUMENT — DO NOT USE AS CURRENT INSTRUCTION.**
+> Manual bank transfer is disabled, duration is N × 6-hour periods, and
+> MyFatoorah is the primary payment method. For current behavior read
+> `docs/handover/03-advertising.md`.
+
 ADVERTISING & PROMOTIONS — CURRENT STATE
 
 === Model ===
