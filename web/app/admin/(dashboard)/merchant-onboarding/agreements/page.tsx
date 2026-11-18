@@ -3,6 +3,7 @@ import { ArrowLeft, FileText, Upload } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
 import { EmptyState, Notice, PageHead } from '@/components/ui';
 import { adminDeactivateAgreement, adminPublishAgreement } from '@/lib/actions/admin-merchant';
+import { AgreementPdfInput } from '@/components/AgreementPdfInput';
 import type { MerchantAgreement } from '@/lib/merchant';
 import { formatDate } from '@/lib/format';
 
@@ -78,8 +79,7 @@ export default async function AdminMerchantAgreementsPage({
               </div>
               <div className="field">
                 <label htmlFor="file">Agreement PDF</label>
-                <input id="file" name="file" type="file" accept="application/pdf" required />
-                <span className="hint">PDF only, up to 5 MB. Publishing a new version deactivates the previous one.</span>
+                <AgreementPdfInput />
               </div>
               <div className="btn-row">
                 <button className="btn primary" type="submit">

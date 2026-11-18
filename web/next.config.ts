@@ -20,9 +20,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      // Uploads are resized in the browser first, but a little headroom
-      // keeps a phone photo from being rejected.
-      bodySizeLimit: '4mb',
+      // Images are resized in the browser first, but the admin agreement form
+      // accepts PDFs up to 5 MB, so the request limit must leave room for that
+      // plus multipart overhead or the upload is rejected before it lands here.
+      bodySizeLimit: '8mb',
     },
   },
 };
