@@ -12,6 +12,7 @@
 // service role client; never import this module from a client component.
 import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { escapeHtml } from '@/lib/security';
 
 export const DEFAULT_EMAIL_FROM = 'Giftly <gifts@giftly.qa>';
 
@@ -132,14 +133,6 @@ export async function sendEmail({
   } catch (error) {
     return { delivered: false, error: error instanceof Error ? error.message : 'Email send failed' };
   }
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 /**
