@@ -8,6 +8,7 @@ import { adminCopy } from '@/lib/i18n/admin';
 import { common } from '@/lib/i18n/common';
 import { fill, pick } from '@/lib/i18n';
 import { getUserLocale } from '@/lib/i18n/server';
+import { supplierListStatus } from '@/lib/supplier-status';
 
 export default async function AdminVendorsPage({
   searchParams,
@@ -24,7 +25,7 @@ export default async function AdminVendorsPage({
 
   const { data, error } = await ctx.supabase
     .from('vendors')
-    .select('id, name, slug, status, email, phone, city, area, rating, commission_bps, is_featured, created_at, approved_at, logo_url, banner_url, myfatoorah_supplier_code, myfatoorah_supplier_status, payment_eligibility, products(id), vendor_applications(status)')
+    .select('id, name, slug, status, email, phone, city, area, rating, commission_bps, is_featured, created_at, approved_at, logo_url, banner_url, myfatoorah_supplier_code, myfatoorah_supplier_status, myfatoorah_last_error, myfatoorah_creation_claimed_at, payment_eligibility, products(id), vendor_applications(status)')
     .order('created_at', { ascending: false })
     .limit(500);
 
@@ -161,11 +162,12 @@ export default async function AdminVendorsPage({
                         </td>
                         <td>
                           <StatusTag
-                            status={
-                              vendor.myfatoorah_supplier_code
-                                ? vendor.myfatoorah_supplier_status || 'pending'
-                                : 'not_started'
-                            }
+                            status={supplierListStatus({
+                              code: vendor.myfatoorah_supplier_code,
+                              status: vendor.myfatoorah_supplier_status,
+                              lastError: vendor.myfatoorah_last_error,
+                              claimedAt: vendor.myfatoorah_creation_claimed_at,
+                            })}
                           />
                           {vendor.payment_eligibility ? (
                             <span className="sub">· Live</span>

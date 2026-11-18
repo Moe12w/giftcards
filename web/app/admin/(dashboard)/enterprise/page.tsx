@@ -8,6 +8,7 @@ import { adminCopy } from '@/lib/i18n/admin';
 import { common } from '@/lib/i18n/common';
 import { fill, pick } from '@/lib/i18n';
 import { getUserLocale } from '@/lib/i18n/server';
+import { supplierListStatus } from '@/lib/supplier-status';
 
 export default async function AdminEnterprisePage({
   searchParams,
@@ -232,11 +233,12 @@ export default async function AdminEnterprisePage({
                         </td>
                         <td>
                           <StatusTag
-                            status={
-                              partner.myfatoorah_supplier_code
-                                ? partner.myfatoorah_supplier_status || 'pending'
-                                : 'not_started'
-                            }
+                            status={supplierListStatus({
+                              code: partner.myfatoorah_supplier_code,
+                              status: partner.myfatoorah_supplier_status,
+                              lastError: partner.myfatoorah_last_error,
+                              claimedAt: partner.myfatoorah_creation_claimed_at,
+                            })}
                           />
                           {partner.payment_eligibility ? (
                             <span className="sub">· Live</span>
