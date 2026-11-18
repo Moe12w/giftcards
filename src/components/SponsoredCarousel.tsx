@@ -24,7 +24,7 @@ import { pushOnce } from '../lib/navigation';
 import { ArrowRight, Megaphone } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
-import { listSponsoredAds, trackSponsoredClick } from '../lib/data';
+import { getOffer, listSponsoredAds, trackSponsoredClick } from '../lib/data';
 import type { SponsoredAd, SponsoredPlacement } from '../lib/types';
 import { colors, edges, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Card } from './Card';
@@ -338,6 +338,9 @@ export function SponsoredStrip({
 }) {
   const { t, i18n } = useTranslation();
   const [placement, setPlacement] = useState<SponsoredPlacement | null>(null);
+  // Ads that point at a gift card but have no creative image of their own can
+  // still show the uploaded gift artwork instead of a blank placeholder.
+  const [giftImages, setGiftImages] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let active = true;
@@ -348,6 +351,41 @@ export function SponsoredStrip({
       active = false;
     };
   }, [placementKey, limit]);
+
+  useEffect(() => {
+    let active = true;
+    const missing = (placement?.ads ?? []).filter(
+      (ad) =>
+        !ad.mobile_image_url &&
+        !ad.image_url &&
+        ad.destination_type === 'gift_card' &&
+        Boolean(ad.destination_id),
+    );
+    if (missing.length === 0) {
+      setGiftImages({});
+      return () => {
+        active = false;
+      };
+    }
+    void Promise.all(
+      missing.map(async (ad) => {
+        try {
+          const offer = await getOffer(ad.destination_id as string);
+          return [ad.impression_id, offer?.image_url ?? ''] as const;
+        } catch {
+          return [ad.impression_id, ''] as const;
+        }
+      }),
+    ).then((entries) => {
+      if (!active) return;
+      const next: Record<string, string> = {};
+      for (const [id, url] of entries) if (url) next[id] = url;
+      setGiftImages(next);
+    });
+    return () => {
+      active = false;
+    };
+  }, [placement]);
 
   const ads = placement?.ads ?? [];
   const title =
@@ -373,7 +411,7 @@ export function SponsoredStrip({
         contentContainerStyle={styles.hScroll}
       >
         {ads.map((ad) => {
-          const image = ad.mobile_image_url || ad.image_url;
+          const image = ad.mobile_image_url || ad.image_url || giftImages[ad.impression_id];
           const label = labelFor(ad, i18n.language);
           return (
             <Pressable
