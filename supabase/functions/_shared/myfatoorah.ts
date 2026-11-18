@@ -83,10 +83,15 @@ function isSuccess(payload: any): boolean {
 /** Provider messages are logged, but never contain credentials. */
 function failureMessage(payload: any, status: number): string {
   const message = String(payload?.Message ?? '').trim();
-  const errors = Array.isArray(payload?.ValidationErrors)
+  const validation = Array.isArray(payload?.ValidationErrors)
     ? payload.ValidationErrors.map((e: any) => `${e?.Name ?? ''}: ${e?.Error ?? ''}`).join('; ')
     : '';
-  return (message || errors || `HTTP ${status}`).slice(0, 500);
+  // CreateSupplier reports per-field problems in FieldsErrors while Message is
+  // often just "Invalid data"; keep the detail so admins can fix the record.
+  const fields = Array.isArray(payload?.FieldsErrors)
+    ? payload.FieldsErrors.map((e: any) => `${e?.Name ?? ''}: ${e?.Error ?? ''}`).join('; ')
+    : '';
+  return (validation || fields || message || `HTTP ${status}`).slice(0, 500);
 }
 
 async function mfRequest(path: string, init: RequestInit = {}): Promise<any> {

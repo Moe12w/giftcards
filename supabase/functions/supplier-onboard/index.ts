@@ -134,7 +134,18 @@ Deno.serve(async (req) => {
     const account = digits(application.bank_account_number);
     if (account) input.BankAccount = account;
     const iban = String(application.bank_iban ?? '').replace(/[\s-]/g, '').toUpperCase();
-    if (/^QA\d{2}[A-Z0-9]{11,30}$/.test(iban)) input.Iban = iban;
+    if (iban) {
+      if (!/^QA\d{2}[A-Z0-9]{22}$/.test(iban)) {
+        return json(
+          {
+            error:
+              'The business IBAN is not a valid Qatar IBAN (QA, two check digits and 22 letters or numbers). Update the banking details and retry.',
+          },
+          409,
+        );
+      }
+      input.Iban = iban;
+    }
     // Commission / deposit terms come from the provider's configuration.
 
     try {
