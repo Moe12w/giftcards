@@ -119,6 +119,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
+        if (denied) {
+          throw new Error('Too many sign-in attempts. Please wait a few minutes and try again.');
+        }
+
         const { error } = await getSupabase().auth.signInWithPassword({ email, password });
         const success = !error;
 
