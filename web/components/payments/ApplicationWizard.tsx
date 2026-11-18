@@ -368,8 +368,15 @@ export function ApplicationWizard({ bundle, basePath, step, error, success, tone
                 </div>
                 <div className="field">
                   <label htmlFor="bank_iban">IBAN</label>
-                  <input id="bank_iban" name="bank_iban" defaultValue={application.bank_iban ?? ''} placeholder="QA…" />
-                  <span className="hint">Provide an account number, an IBAN, or both.</span>
+                  <input
+                    id="bank_iban"
+                    name="bank_iban"
+                    defaultValue={application.bank_iban ?? ''}
+                    placeholder="QA00XXXXXXXXXXXXXXXXXXXXXX"
+                  />
+                  <span className="hint">
+                    Qatar IBAN: QA, two check digits and 22 letters or numbers (29 characters). Provide an account number, an IBAN, or both.
+                  </span>
                 </div>
                 <div className="field">
                   <label htmlFor="bank_currency">Currency</label>
