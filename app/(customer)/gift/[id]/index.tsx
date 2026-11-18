@@ -17,9 +17,9 @@ import { GiftSkeleton } from '@/src/components/Skeleton';
 import { formatDate } from '@/src/lib/time';
 import {
   offerBusinessId,
-  offerBusinessLogo,
   offerBusinessName,
   offerIcon,
+  offerImage,
   offerIsFixedAmount,
   offerPackages,
   offerStartingPriceMinor,
@@ -123,7 +123,7 @@ export default function GiftDetailScreen() {
         <View style={styles.heroTop}>
           <IconTile
             icon={offerIcon(offer)}
-            imageUrl={offerBusinessLogo(offer)}
+            imageUrl={offerImage(offer)}
             size={72}
             tone={tone as IconTileTone}
           />

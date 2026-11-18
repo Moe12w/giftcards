@@ -21,7 +21,7 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
-import { CATEGORIES, offerBusinessLogo, offerBusinessName, offerIsFixedAmount, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
+import { CATEGORIES, offerBusinessName, offerImage, offerIsFixedAmount, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { listActiveOffers } from '@/src/lib/data';
 import { searchOffers } from '@/src/lib/search';
@@ -192,7 +192,7 @@ export default function PickGiftsScreen() {
               <View key={offer.id} style={styles.selectedRow}>
                 <IconTile
                   icon={offer.icon}
-                  imageUrl={offerBusinessLogo(offer)}
+                  imageUrl={offerImage(offer)}
                   size={34}
                   tone={(offerTone(offer) as AccentTone) as IconTileTone}
                 />
@@ -269,7 +269,7 @@ export default function PickGiftsScreen() {
                 <View style={styles.offerRow}>
                   <IconTile
                     icon={offer.icon}
-                    imageUrl={offerBusinessLogo(offer)}
+                    imageUrl={offerImage(offer)}
                     size={56}
                     tone={tone}
                   />

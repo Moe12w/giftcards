@@ -81,6 +81,7 @@ export default function GiftFilterScreen() {
               key={card.id}
               title={card.partner_name ?? card.vendor_name ?? card.offer_title ?? t('gift.detailsTitle')}
               icon={card.icon}
+              logoUrl={card.image_url}
               tone={card.tone}
               amountMinor={valueLeft(card)}
               sessionsTotal={isSessionCard(card) ? card.total_sessions ?? 1 : undefined}

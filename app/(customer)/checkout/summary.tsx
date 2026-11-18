@@ -11,7 +11,7 @@ import { IconTile } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
-import { offerBusinessName, offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerBusinessName, offerIcon, offerImage, offerTitle, offerTone } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { getOffer, validatePromoCode } from '@/src/lib/data';
 import { useGiftDraft } from '@/src/lib/gift-draft';
@@ -92,7 +92,7 @@ export default function CheckoutSummaryScreen() {
 
       <Card tone={tone === 'sky' ? 'sky' : tone}>
         <View style={styles.offerRow}>
-          <IconTile icon={offerIcon(offer)} size={56} tone={tone === 'sky' ? 'sky' : tone} />
+          <IconTile icon={offerIcon(offer)} imageUrl={offerImage(offer)} size={56} tone={tone === 'sky' ? 'sky' : tone} />
           <View style={styles.offerCopy}>
             <Text style={styles.offerTitle}>{offerTitle(offer, i18n.language)}</Text>
             <Text style={styles.offerVendor}>{offerBusinessName(offer)}</Text>

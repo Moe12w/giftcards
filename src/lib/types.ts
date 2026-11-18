@@ -134,6 +134,8 @@ export interface GiftCard {
   offer_title?: string;
   /** Semantic glyph key from `src/lib/glyphs.ts`. */
   icon?: string;
+  /** Image uploaded for the gift card, when the product has one. */
+  image_url?: string | null;
   tone?: AccentTone;
   delivery_status?: 'scheduled' | 'delivered' | 'opened';
   scheduled_for?: string | null;

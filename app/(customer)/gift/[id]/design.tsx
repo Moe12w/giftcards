@@ -13,7 +13,7 @@ import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
-import { offerBusinessLogo, offerIcon, offerIsFixedAmount, offerPackages, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerIcon, offerImage, offerIsFixedAmount, offerPackages, offerTitle, offerTone } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft, type DeliveryMethod } from '@/src/lib/gift-draft';
@@ -284,7 +284,7 @@ export default function GiftComposeScreen() {
         compact
         title={offerTitle(offer, i18n.language)}
         icon={offerIcon(offer)}
-        logoUrl={offerBusinessLogo(offer)}
+        logoUrl={offerImage(offer)}
         tone={previewTone}
         amountMinor={isExperience ? undefined : amount}
         sessionsTotal={

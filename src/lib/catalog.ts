@@ -158,6 +158,16 @@ export function offerBusinessLogo(offer: Offer): string | undefined {
   return offer.partner?.logo_url ?? offer.vendor?.logo_url ?? undefined;
 }
 
+/**
+ * Artwork for a gift card itself. The image uploaded by the vendor or partner
+ * takes priority; the business logo is only a fallback for older gifts that
+ * were created before image uploads existed. Use this for product artwork, and
+ * offerBusinessLogo() when you specifically need the business identity.
+ */
+export function offerImage(offer: Offer): string | undefined {
+  return offer.image_url ?? offerBusinessLogo(offer) ?? undefined;
+}
+
 export function offerBusinessBanner(offer: Offer): string | undefined {
   return offer.partner?.banner_url ?? offer.vendor?.banner_url ?? undefined;
 }

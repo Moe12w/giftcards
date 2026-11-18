@@ -8,6 +8,7 @@ import {
   offerBusinessLogo,
   offerBusinessName,
   offerIcon,
+  offerImage,
   offerStartingPriceMinor,
   offerTitle,
   offerTone,
@@ -51,7 +52,7 @@ export function OfferCard({ offer, index = 0, onPress, vendorLink = true }: Offe
         <View style={styles.row}>
           <IconTile
             icon={offerIcon(offer, index)}
-            imageUrl={businessLogo}
+            imageUrl={offerImage(offer)}
             size={64}
             tone={tone as IconTileTone}
           />
@@ -122,7 +123,7 @@ export function OfferTile({ offer, index = 0, onPress }: OfferCardProps) {
       <Card tone={tone as CardTone} style={styles.tileCard}>
         <IconTile
           icon={offerIcon(offer, index)}
-          imageUrl={offerBusinessLogo(offer)}
+          imageUrl={offerImage(offer)}
           size={52}
           tone={tone as IconTileTone}
         />

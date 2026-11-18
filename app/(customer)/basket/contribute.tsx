@@ -14,7 +14,7 @@ import { PaymentMethods } from '@/src/components/PaymentMethods';
 import { Screen } from '@/src/components/Screen';
 import { useBaskets } from '@/src/lib/baskets';
 import { useThemeRefresh } from '@/src/lib/theme';
-import { offerBusinessLogo, offerBusinessName, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerBusinessName, offerImage, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
 import { formatMoney } from '@/src/lib/money';
 import type { AccentTone, Offer, OccasionId } from '@/src/lib/types';
@@ -209,7 +209,7 @@ export default function ContributeScreen() {
           <View key={offer.id} style={styles.itemRow}>
             <IconTile
               icon={offer.icon}
-              imageUrl={offerBusinessLogo(offer)}
+              imageUrl={offerImage(offer)}
               size={42}
               tone={(offerTone(offer) as AccentTone) as IconTileTone}
             />

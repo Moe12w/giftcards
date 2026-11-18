@@ -12,7 +12,7 @@ import { Screen } from '@/src/components/Screen';
 import { getOffer } from '@/src/lib/data';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { useGiftDraft } from '@/src/lib/gift-draft';
-import { offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerIcon, offerImage, offerTitle, offerTone } from '@/src/lib/catalog';
 import type { Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
@@ -74,6 +74,7 @@ export default function SendPreviewScreen() {
       <GiftCardVisual
         title={title}
         icon={offerIcon(offer)}
+        logoUrl={offerImage(offer)}
         tone={offerTone(offer)}
         amountMinor={draft.amountMinor}
         message={draft.message || undefined}

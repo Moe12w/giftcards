@@ -9,8 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, Check, Plus, Star } from 'lucide-react-native';
 
 import {
-  offerBusinessLogo,
   offerBusinessName,
+  offerImage,
   offerStartingPriceMinor,
   offerTitle,
   offerTone,
@@ -240,7 +240,7 @@ export function TrendingGiftCard({
         <View style={styles.trendingTop}>
           <IconTile
             icon={offer.icon}
-            imageUrl={offerBusinessLogo(offer)}
+            imageUrl={offerImage(offer)}
             size={46}
             tone={tone as IconTileTone}
           />
@@ -304,7 +304,7 @@ export function RecommendationRow({ offer, reason, onPress }: RecommendationRowP
         <View style={styles.recommendRow}>
           <IconTile
             icon={offer.icon}
-            imageUrl={offerBusinessLogo(offer)}
+            imageUrl={offerImage(offer)}
             size={54}
             tone={tone as IconTileTone}
           />

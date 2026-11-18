@@ -64,6 +64,7 @@ interface VoucherProduct {
   title: string | null;
   icon: string | null;
   tone: string | null;
+  image_url: string | null;
   partner?:
     | { name: string | null; logo_url: string | null }
     | { name: string | null; logo_url: string | null }[]
@@ -144,6 +145,7 @@ export function mapVoucher(row: VoucherRow): GiftCard {
     partner_name: partner?.name ?? undefined,
     offer_title: product?.title ?? undefined,
     icon: product?.icon ?? 'gift',
+    image_url: product?.image_url ?? undefined,
     tone: resolveTone(product?.tone),
     delivery_status: (row.delivery_status as GiftCard['delivery_status']) ?? undefined,
     scheduled_for: row.scheduled_for,
@@ -162,7 +164,7 @@ export async function listMyVouchers(): Promise<GiftCard[]> {
   const { data, error } = await getSupabase()
     .from('vouchers')
     .select(
-      'id, voucher_code, qr_payload, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
+      'id, voucher_code, qr_payload, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, image_url, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
     )
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -537,7 +539,7 @@ export async function getMyCard(id: string): Promise<GiftCard | null> {
   const { data, error } = await getSupabase()
     .from('vouchers')
     .select(
-      'id, voucher_code, qr_payload, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
+      'id, voucher_code, qr_payload, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, image_url, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
     )
     .eq('id', id)
     .maybeSingle();
