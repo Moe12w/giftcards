@@ -27,7 +27,14 @@ export async function adminCreateMyFatoorahSupplier(formData: FormData) {
   if (!vendorId) back('/admin/vendors', 'Vendor not found.');
 
   const result = await callSupplierFunction('supplier-onboard', { vendorId });
-  if (!result.ok && !result.skipped) back(path, result.error ?? 'Supplier creation failed.');
+  if (!result.ok) {
+    back(
+      path,
+      result.skipped
+        ? 'Supplier service is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the web app.'
+        : (result.error ?? 'Supplier creation failed.'),
+    );
+  }
   revalidate(vendorId);
   redirect(`${path}?supplier=1`);
 }
@@ -39,7 +46,14 @@ export async function adminSyncMyFatoorahSuppliers(formData: FormData) {
   const path = vendorId ? `/admin/vendors/${vendorId}` : '/admin/merchant-onboarding';
 
   const result = await callSupplierFunction('sync-myfatoorah-suppliers');
-  if (!result.ok && !result.skipped) back(path, result.error ?? 'Supplier sync failed.');
+  if (!result.ok) {
+    back(
+      path,
+      result.skipped
+        ? 'Supplier service is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the web app.'
+        : (result.error ?? 'Supplier sync failed.'),
+    );
+  }
   revalidate(vendorId);
   redirect(`${path}?synced=1`);
 }
@@ -74,7 +88,14 @@ export async function adminCreatePartnerSupplier(formData: FormData) {
   if (!partnerId) back('/admin/enterprise', 'Partner not found.');
 
   const result = await callSupplierFunction('supplier-onboard', { partnerId });
-  if (!result.ok && !result.skipped) back(path, result.error ?? 'Supplier creation failed.');
+  if (!result.ok) {
+    back(
+      path,
+      result.skipped
+        ? 'Supplier service is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the web app.'
+        : (result.error ?? 'Supplier creation failed.'),
+    );
+  }
   revalidatePath(path);
   revalidatePath('/admin/merchant-onboarding');
   redirect(`${path}?supplier=1`);
@@ -87,7 +108,14 @@ export async function adminSyncPartnerSuppliers(formData: FormData) {
   const path = partnerId ? `/admin/enterprise/${partnerId}` : '/admin/enterprise';
 
   const result = await callSupplierFunction('sync-myfatoorah-suppliers');
-  if (!result.ok && !result.skipped) back(path, result.error ?? 'Supplier sync failed.');
+  if (!result.ok) {
+    back(
+      path,
+      result.skipped
+        ? 'Supplier service is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the web app.'
+        : (result.error ?? 'Supplier sync failed.'),
+    );
+  }
   revalidate(path);
   redirect(`${path}?synced=1`);
 }
