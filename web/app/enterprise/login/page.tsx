@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight } from 'lucide-react';
 import { AuthShell } from '@/components/AuthShell';
+import { SubmitButton } from '@/components/SubmitButton';
 import { Notice } from '@/components/ui';
 import { enterpriseSignIn } from '@/lib/actions/auth';
 import { createClient } from '@/lib/supabase/server';
 import { pick } from '@/lib/i18n';
+import { common } from '@/lib/i18n/common';
 import { enterpriseCopy } from '@/lib/i18n/enterprise';
 import { getLocale } from '@/lib/i18n/server';
 
@@ -23,6 +24,7 @@ export default async function EnterpriseLoginPage({
   const params = await searchParams;
   const locale = await getLocale();
   const t = pick(enterpriseCopy, locale).login;
+  const c = pick(common, locale);
   const supabase = await createClient();
   const {
     data: { user },
@@ -87,9 +89,12 @@ export default async function EnterpriseLoginPage({
             placeholder="••••••••"
           />
         </div>
-        <button className="btn lavender block" type="submit">
-          {t.signIn} <ArrowRight size={16} />
-        </button>
+        <SubmitButton
+          className="btn lavender block"
+          label={t.signIn}
+          pendingLabel={c.actions.signingIn}
+          arrow
+        />
       </form>
       <div className="auth-links" style={{ marginTop: 16 }}>
         <Link href="/enterprise/forgot-password">{t.forgotPassword}</Link>

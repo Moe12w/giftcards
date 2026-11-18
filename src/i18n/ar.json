@@ -45,6 +45,8 @@
     "fullName": "الاسم الكامل",
     "phone": "رقم الهاتف",
     "signInCta": "تسجيل الدخول",
+    "signingIn": "جارٍ تسجيل الدخول…",
+    "creatingAccount": "جارٍ إنشاء الحساب…",
     "signUpCta": "إنشاء حساب",
     "haveAccount": "لديك حساب بالفعل؟",
     "noAccount": "جديد هنا؟",

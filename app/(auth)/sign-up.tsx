@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -109,7 +109,12 @@ export default function SignUpScreen() {
         </View>
       ) : null}
 
-      <Button label={t('auth.signUpCta')} onPress={onSubmit} loading={submitting} />
+      <Button
+        label={t('auth.signUpCta')}
+        loadingLabel={t('auth.creatingAccount')}
+        onPress={onSubmit}
+        loading={submitting}
+      />
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>{t('auth.haveAccount')} </Text>

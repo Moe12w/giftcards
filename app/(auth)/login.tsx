@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -34,10 +34,19 @@ export default function LoginScreen() {
     setSubmitting(true);
     setFormError(null);
     setNeedsAccount(false);
+    const startedAt = Date.now();
+    // Keep the pending animation on screen long enough to be noticed, even
+    // when the request resolves almost instantly.
+    const showFeedback = () => {
+      const remaining = 450 - (Date.now() - startedAt);
+      return remaining > 0 ? new Promise<void>((resolve) => setTimeout(resolve, remaining)) : Promise.resolve();
+    };
     try {
       await signIn(email.trim(), password);
+      await showFeedback();
       router.replace('/(customer)/(tabs)');
     } catch (error) {
+      await showFeedback();
       const message = error instanceof Error ? error.message : '';
       if (/invalid login credentials/i.test(message)) {
         // Supabase gives the same answer for an unknown address and for a wrong
@@ -114,7 +123,12 @@ export default function LoginScreen() {
         </View>
       ) : null}
 
-      <Button label={t('auth.signInCta')} onPress={onSubmit} loading={submitting} />
+      <Button
+        label={t('auth.signInCta')}
+        loadingLabel={t('auth.signingIn')}
+        onPress={onSubmit}
+        loading={submitting}
+      />
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>{t('auth.noAccount')} </Text>

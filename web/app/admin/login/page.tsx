@@ -3,10 +3,12 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
 import { AuthShell } from '@/components/AuthShell';
+import { SubmitButton } from '@/components/SubmitButton';
 import { Notice } from '@/components/ui';
 import { adminSignIn } from '@/lib/actions/auth';
 import { createClient } from '@/lib/supabase/server';
 import { adminCopy } from '@/lib/i18n/admin';
+import { common } from '@/lib/i18n/common';
 import { pick } from '@/lib/i18n';
 import { getLocale } from '@/lib/i18n/server';
 
@@ -23,6 +25,7 @@ export default async function AdminLoginPage({
   const params = await searchParams;
   const locale = await getLocale();
   const t = pick(adminCopy, locale).login;
+  const c = pick(common, locale);
   const supabase = await createClient();
   const {
     data: { user },
@@ -82,9 +85,11 @@ export default async function AdminLoginPage({
             placeholder="••••••••"
           />
         </div>
-        <button className="btn coral block" type="submit">
-          {t.signInButton}
-        </button>
+        <SubmitButton
+          className="btn coral block"
+          label={t.signInButton}
+          pendingLabel={c.actions.signingIn}
+        />
       </form>
       <div className="auth-links" style={{ marginTop: 16 }}>
         <Link href="/admin/forgot-password">{t.forgotPassword}</Link>

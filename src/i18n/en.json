@@ -45,6 +45,8 @@
     "fullName": "Full name",
     "phone": "Phone number",
     "signInCta": "Sign in",
+    "signingIn": "Signing in…",
+    "creatingAccount": "Creating account…",
     "signUpCta": "Create account",
     "haveAccount": "Already have an account?",
     "noAccount": "New here?",

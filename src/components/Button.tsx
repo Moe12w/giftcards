@@ -1,9 +1,9 @@
 // src/components/Button.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
-  StyleSheet,
   Text,
   View,
   type StyleProp,
@@ -58,6 +58,8 @@ interface ButtonProps {
   variant?: Variant;
   disabled?: boolean;
   loading?: boolean;
+  /** Optional label shown while `loading` is true (e.g. "Signing in…"). */
+  loadingLabel?: string;
   fullWidth?: boolean;
   style?: StyleProp<ViewStyle>;
   testID?: string;
@@ -69,12 +71,33 @@ export function Button({
   variant = 'primary',
   disabled = false,
   loading = false,
+  loadingLabel,
   fullWidth = true,
   style,
   testID,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
   const palette = variants()[variant];
+
+  // A soft pulse makes a pending button unmistakable, even when the action
+  // finishes in a fraction of a second.
+  const [pulse] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (!loading) {
+      pulse.setValue(0);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 520, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 520, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [loading, pulse]);
+
+  const pendingOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.55, 1] });
 
   return (
     <View
@@ -103,7 +126,10 @@ export function Button({
         ]}
       >
         {loading ? (
-          <ActivityIndicator color={palette.spinner} />
+          <Animated.View style={[styles.content, { opacity: pendingOpacity }]}>
+            <ActivityIndicator color={palette.spinner} />
+            <Text style={[styles.label, { color: palette.label }]}>{loadingLabel ?? label}</Text>
+          </Animated.View>
         ) : (
           <View style={styles.content}>
             <Text style={[styles.label, { color: palette.label }]}>{label}</Text>

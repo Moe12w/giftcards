@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight } from 'lucide-react';
 import { AuthShell } from '@/components/AuthShell';
+import { SubmitButton } from '@/components/SubmitButton';
 import { Notice } from '@/components/ui';
 import { vendorSignIn } from '@/lib/actions/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -86,9 +86,12 @@ export default async function VendorLoginPage({
             placeholder="••••••••"
           />
         </div>
-        <button className="btn primary block" type="submit">
-          {t.signIn} <ArrowRight size={16} />
-        </button>
+        <SubmitButton
+          className="btn primary block"
+          label={t.signIn}
+          pendingLabel={c.actions.signingIn}
+          arrow
+        />
       </form>
       <div className="auth-links" style={{ marginTop: 16 }}>
         <Link href="/vendor/forgot-password">{t.forgotPassword}</Link>
