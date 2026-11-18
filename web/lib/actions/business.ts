@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireApprovedBusinessBuyer } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { sendEmail, claimUrl, appClaimUrl, emailProviderReady } from '@/lib/email';
+import { sendEmail, claimUrl, appClaimUrl } from '@/lib/email';
 import { unitPriceForQuantity, parseRecipientRows } from '@/lib/bulk';
 
 function fail(path: string, message: string): never {
@@ -321,45 +321,4 @@ export async function sendBulkGiftLinks(formData: FormData) {
   redirect(
     `/business/orders/${orderId}?sent=1&summary=${encodeURIComponent(`${sent} sent · ${queued} queued · ${failed} failed`)}`,
   );
-}
-
-/** Whether a real email provider is configured (used by the UI). */
-export async function isEmailProviderReady() {
-  return await emailProviderReady();
-}
-
-/**
- * Cancels a bulk order that has not been paid for yet.
- * Cards that were already issued stay valid for the people holding them.
- */
-export async function cancelBulkOrder(formData: FormData) {
-  const ctx = await requireApprovedBusinessBuyer();
-  const orderId = str(formData, 'order_id');
-  if (!orderId) fail('/business/orders', 'Missing order.');
-
-  const { data: order } = await ctx.supabase
-    .from('bulk_orders')
-    .select('id, status, payment_status')
-    .eq('id', orderId)
-    .eq('buyer_user_id', ctx.user.id)
-    .maybeSingle();
-  if (!order) fail('/business/orders', 'Order not found.');
-  if (order.payment_status === 'paid') {
-    fail(`/business/orders/${orderId}`, 'This order was paid, so it cannot be cancelled here. Talk to our team.');
-  }
-
-  const { error } = await ctx.supabase
-    .from('bulk_orders')
-    .update({ status: 'cancelled', cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-    .eq('id', orderId)
-    .eq('buyer_user_id', ctx.user.id);
-  if (error) fail(`/business/orders/${orderId}`, error.message);
-
-  await ctx.supabase
-    .from('bulk_order_vouchers')
-    .update({ delivery_status: 'cancelled' })
-    .eq('bulk_order_id', orderId);
-
-  revalidatePath('/business/orders');
-  redirect('/business/orders?saved=1');
 }

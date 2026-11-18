@@ -131,23 +131,6 @@ export async function saveVendorProfile(formData: FormData) {
   redirect(`${destination}?saved=1`);
 }
 
-export async function submitVendorApplication(formData: FormData) {
-  const ctx = await requireVendor();
-  const { error } = await ctx.supabase
-    .from('vendor_applications')
-    .update({
-      status: 'pending_review',
-      step: 'submitted',
-      submitted_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('vendor_id', ctx.vendor.id);
-
-  if (error) back('/vendor/onboarding', error.message);
-  revalidatePath('/vendor/onboarding');
-  redirect('/vendor/onboarding?submitted=1');
-}
-
 const ONBOARDING_STEPS = ['business', 'profile', 'preferences', 'done'] as const;
 type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 

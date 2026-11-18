@@ -508,12 +508,6 @@ export const ADMIN_SCRIPT: TutorialScript = {
   ],
 };
 
-export function tutorialScript(id: 'vendor' | 'enterprise' | 'admin'): TutorialScript {
-  if (id === 'enterprise') return ENTERPRISE_SCRIPT;
-  if (id === 'admin') return ADMIN_SCRIPT;
-  return VENDOR_SCRIPT;
-}
-
 /**
  * The advertising walkthrough for a vendor or an enterprise partner.
  *

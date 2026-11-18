@@ -1,7 +1,6 @@
 import type { Product, ProductVariant } from '@/lib/types';
 import { formatMoney } from '@/lib/money';
-import { fill, pick, type Locale } from '@/lib/i18n';
-import { common } from '@/lib/i18n/common';
+import { fill, type Locale } from '@/lib/i18n';
 import { labelFor } from '@/lib/i18n/labels';
 
 export function activeVariants(product: Pick<Product, 'variants'>): ProductVariant[] {
@@ -9,12 +8,6 @@ export function activeVariants(product: Pick<Product, 'variants'>): ProductVaria
     .filter((variant) => variant.active)
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order || a.price_minor - b.price_minor);
-}
-
-export function startingPriceMinor(product: Product): number {
-  const variants = activeVariants(product);
-  if (variants.length > 0) return Math.min(...variants.map((variant) => variant.price_minor));
-  return product.min_amount_minor;
 }
 
 export function priceLabel(product: Product, locale: Locale = 'en'): string {
@@ -84,11 +77,3 @@ export function productTone(product: Pick<Product, 'tone' | 'fulfilment_type'>):
   return tone;
 }
 
-export function packageSummary(variant: ProductVariant, locale: Locale = 'en'): string {
-  const copy = pick(common, locale);
-  const sessions =
-    variant.session_count && variant.session_count > 0
-      ? `${variant.session_count} ${variant.session_count === 1 ? copy.time.session : copy.time.sessions}`
-      : null;
-  return sessions ? `${variant.label} · ${sessions}` : variant.label;
-}

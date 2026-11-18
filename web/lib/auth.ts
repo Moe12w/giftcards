@@ -15,62 +15,6 @@ import type {
 
 export const VENDOR_COOKIE = 'gv_vendor';
 
-export interface Viewer {
-  user: User;
-  profile: Profile | null;
-  isAdmin: boolean;
-}
-
-export async function getViewer(): Promise<Viewer | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const [{ data: profile }, { data: role }] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
-    supabase.from('user_roles').select('role').eq('user_id', user.id).maybeSingle(),
-  ]);
-
-  return {
-    user,
-    profile: (profile as Profile | null) ?? null,
-    isAdmin: role?.role === 'admin' || Boolean(profile?.is_admin),
-  };
-}
-
-export async function getViewerRole(): Promise<'admin' | 'vendor' | 'enterprise' | 'customer' | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const [{ data: role }, { data: vendor }, { data: partner }] = await Promise.all([
-    supabase.from('user_roles').select('role').eq('user_id', user.id).maybeSingle(),
-    supabase
-      .from('vendor_members')
-      .select('vendor_id')
-      .eq('user_id', user.id)
-      .eq('active', true)
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('enterprise_members')
-      .select('partner_id')
-      .eq('user_id', user.id)
-      .eq('active', true)
-      .limit(1)
-      .maybeSingle(),
-  ]);
-
-  if (role?.role === 'admin') return 'admin';
-  if (vendor) return 'vendor';
-  if (partner) return 'enterprise';
-  return 'customer';
-}
-
 interface VendorContext {
   supabase: SupabaseClient;
   user: User;

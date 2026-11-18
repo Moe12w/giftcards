@@ -1,6 +1,4 @@
 import type { Locale } from '@/lib/i18n';
-import { fill, pick } from '@/lib/i18n';
-import { common } from '@/lib/i18n/common';
 import { labelFor } from '@/lib/i18n/labels';
 
 /** Arabic uses Arabic-Indic digits and its own month names. */
@@ -42,25 +40,6 @@ export function formatDateTime(
   }).format(date);
 }
 
-export function relativeTime(
-  value: string | Date | null | undefined,
-  locale: Locale = 'en',
-): string {
-  if (!value) return '—';
-  const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) return '—';
-  const copy = pick(common, locale);
-  const diff = Date.now() - date.getTime();
-  const minutes = Math.round(diff / 60000);
-  if (minutes < 1) return copy.time.justNow;
-  if (minutes < 60) return fill(copy.time.minutesAgo, { count: minutes });
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return fill(copy.time.hoursAgo, { count: hours });
-  const days = Math.round(hours / 24);
-  if (days < 30) return fill(copy.time.daysAgo, { count: days });
-  return formatDate(date, locale);
-}
-
 export function initials(name: string | null | undefined): string {
   const parts = (name ?? '?')
     .trim()
@@ -83,6 +62,3 @@ export function slugify(value: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-export function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}

@@ -21,20 +21,3 @@ export async function completeTutorial() {
 
   revalidatePath('/', 'layout');
 }
-
-/** Switches the dashboard between English and Arabic. */
-export async function setDashboardLanguage(formData: FormData) {
-  const locale = String(formData.get('locale') ?? 'en') === 'ar' ? 'ar' : 'en';
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
-
-  await supabase
-    .from('profiles')
-    .update({ preferred_language: locale })
-    .eq('id', user.id);
-
-  revalidatePath('/', 'layout');
-}

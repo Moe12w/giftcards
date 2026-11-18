@@ -195,11 +195,6 @@ export function appClaimUrl(token: string): string {
   return `giftly://claim/${token}`;
 }
 
-/** The sender line, shown in the admin email panel so nobody has to guess. */
-export async function emailFrom(): Promise<string> {
-  return (await getEmailConfig()).from;
-}
-
 /**
  * A masked hint of the saved key, so an admin can tell which key is in use
  * without the key ever reaching the page.

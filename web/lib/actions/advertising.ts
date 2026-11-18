@@ -419,21 +419,6 @@ export async function renewAdvertisingCampaign(formData: FormData) {
   redirect(`${ctx.home}/checkout/${data}`);
 }
 
-export async function markAdvertisingNotificationRead(formData: FormData) {
-  const ctx = await requireAdvertiser();
-  const id = str(formData, 'notification_id');
-  if (id) {
-    const { error } = await ctx.supabase
-      .from('advertising_notifications')
-      .update({ read_at: new Date().toISOString() })
-      .eq('id', id)
-      .eq('vendor_id', ctx.vendor.id);
-    if (error) back(ctx.home, 'Could not update that notification right now.');
-  }
-  refreshAdvertiser(ctx.kind);
-  redirect(ctx.home);
-}
-
 export interface CreativeImageActionResult {
   ok: boolean;
   error?: string;

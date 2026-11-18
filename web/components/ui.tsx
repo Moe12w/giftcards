@@ -139,26 +139,6 @@ export function Kpi({
   );
 }
 
-export function Field({
-  label,
-  children,
-  hint,
-  className,
-}: {
-  label: string;
-  children: ReactNode;
-  hint?: string;
-  className?: string;
-}) {
-  return (
-    <div className={`field${className ? ` ${className}` : ''}`}>
-      <label>{label}</label>
-      {children}
-      {hint ? <span className="hint">{hint}</span> : null}
-    </div>
-  );
-}
-
 export function ReadRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>

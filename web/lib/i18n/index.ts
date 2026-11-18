@@ -7,8 +7,6 @@
 
 export type Locale = 'en' | 'ar';
 
-export const LOCALES: Locale[] = ['en', 'ar'];
-
 export const LOCALE_COOKIE = 'giftly.locale';
 
 export interface Copy<T> {

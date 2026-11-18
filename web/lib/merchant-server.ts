@@ -135,6 +135,3 @@ export async function loadMerchantBundle(
   };
 }
 
-export function documentByType(documents: MerchantDocument[], docType: string): MerchantDocument | null {
-  return documents.find((document) => document.doc_type === docType) ?? null;
-}

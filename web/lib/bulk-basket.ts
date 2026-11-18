@@ -39,8 +39,3 @@ export function addToBulkBasket(offerId: string, quantity: number): BasketLine[]
   return lines;
 }
 
-export function removeFromBulkBasket(offerId: string): BasketLine[] {
-  const lines = readBulkBasket().filter((line) => line.offerId !== offerId);
-  writeBulkBasket(lines);
-  return lines;
-}
