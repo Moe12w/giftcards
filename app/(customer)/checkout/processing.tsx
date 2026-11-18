@@ -40,7 +40,10 @@ export default function ProcessingScreen() {
         if (error) throw error;
         const status = data as { paid?: boolean; failed?: boolean } | null;
         if (status?.paid) {
-          router.replace('/(customer)/checkout/success');
+          router.replace({
+            pathname: '/(customer)/checkout/success',
+            params: { orderId },
+          });
           return;
         }
         if (status?.failed) {

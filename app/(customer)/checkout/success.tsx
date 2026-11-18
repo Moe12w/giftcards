@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/components/Button';
@@ -8,6 +8,7 @@ import { Card } from '@/src/components/Card';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { useGiftDraft } from '@/src/lib/gift-draft';
+import { getSupabase, hasSupabaseConfig } from '@/src/lib/supabase';
 import { formatDate } from '@/src/lib/time';
 import { formatMoney } from '@/src/lib/money';
 import { useThemeRefresh } from '@/src/lib/theme';
@@ -19,8 +20,40 @@ export default function CheckoutSuccessScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { draft, reset } = useGiftDraft();
+  const { orderId } = useLocalSearchParams<{ orderId?: string }>();
   const scheduled = Boolean(draft.deliveryDate);
   const [whatsappState, setWhatsappState] = useState<'idle' | 'sent' | 'error'>('idle');
+  // The receipt reads the confirmed order from the backend when an order id is
+  // present; the local draft is only a fallback for old/demo flows.
+  const [confirmed, setConfirmed] = useState<{
+    paid: boolean;
+    amountMinor: number;
+    currency: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!orderId || !hasSupabaseConfig) return;
+    void (async () => {
+      try {
+        const { data, error } = await getSupabase().rpc('myfatoorah_payment_status', {
+          p_order_id: orderId,
+        });
+        if (!active || error || !data) return;
+        const row = data as { paid?: boolean; amount_minor?: number; currency?: string };
+        setConfirmed({
+          paid: Boolean(row.paid),
+          amountMinor: Number(row.amount_minor ?? draft.amountMinor ?? 0),
+          currency: row.currency || 'QAR',
+        });
+      } catch {
+        // Keep the draft fallback if the status check is unavailable.
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [orderId]);
 
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
   const wantsWhatsapp = draft.deliveryMethod === 'whatsapp';
@@ -68,7 +101,7 @@ export default function CheckoutSuccessScreen() {
         <Card style={styles.receipt}>
           <View style={styles.receiptRow}>
             <Text style={styles.receiptLabel}>{t('checkout.total')}</Text>
-            <Money minor={draft.amountMinor} style={styles.receiptValue} />
+            <Money minor={confirmed?.amountMinor ?? draft.amountMinor} style={styles.receiptValue} />
           </View>
           <View style={styles.receiptRow}>
             <Text style={styles.receiptLabel}>{t('send.recipientTitle')}</Text>
@@ -76,7 +109,9 @@ export default function CheckoutSuccessScreen() {
           </View>
           <View style={styles.receiptRow}>
             <Text style={styles.receiptLabel}>{t('checkout.paymentTitle')}</Text>
-            <Text style={styles.receiptText}>{t('orders.paid')}</Text>
+            <Text style={styles.receiptText}>
+              {confirmed && !confirmed.paid ? t('orders.pending') : t('orders.paid')}
+            </Text>
           </View>
         </Card>
       </View>
