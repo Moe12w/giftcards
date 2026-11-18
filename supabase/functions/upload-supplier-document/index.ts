@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
     const { data: application, error: applicationError } = await admin
       .from('merchant_applications')
-      .select('vendor_id')
+      .select('vendor_id, partner_id')
       .eq('id', document.application_id)
       .maybeSingle();
     if (applicationError) throw applicationError;
