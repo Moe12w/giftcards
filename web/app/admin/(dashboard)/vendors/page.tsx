@@ -24,7 +24,7 @@ export default async function AdminVendorsPage({
 
   const { data, error } = await ctx.supabase
     .from('vendors')
-    .select('id, name, slug, status, email, phone, city, area, rating, commission_bps, is_featured, created_at, approved_at, logo_url, banner_url, products(id), vendor_applications(status)')
+    .select('id, name, slug, status, email, phone, city, area, rating, commission_bps, is_featured, created_at, approved_at, logo_url, banner_url, myfatoorah_supplier_code, myfatoorah_supplier_status, payment_eligibility, products(id), vendor_applications(status)')
     .order('created_at', { ascending: false })
     .limit(500);
 
@@ -108,6 +108,7 @@ export default async function AdminVendorsPage({
                     <th className="num">{t.commission}</th>
                     <th className="num">{t.products}</th>
                     <th>{c.labels.status}</th>
+                    <th>MyFatoorah</th>
                     <th>{t.joined}</th>
                     <th style={{ textAlign: 'right' }}>{t.actions}</th>
                   </tr>
@@ -157,6 +158,18 @@ export default async function AdminVendorsPage({
                         <td className="num">{products.length}</td>
                         <td>
                           <StatusTag status={vendor.status} />
+                        </td>
+                        <td>
+                          <StatusTag
+                            status={
+                              vendor.myfatoorah_supplier_code
+                                ? vendor.myfatoorah_supplier_status || 'pending'
+                                : 'not_started'
+                            }
+                          />
+                          {vendor.payment_eligibility ? (
+                            <span className="sub">· Live</span>
+                          ) : null}
                         </td>
                         <td className="small muted">{formatDate(vendor.created_at, locale)}</td>
                         <td>

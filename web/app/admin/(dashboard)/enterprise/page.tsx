@@ -183,6 +183,7 @@ export default async function AdminEnterprisePage({
                     <th className="num">{t.redeemed}</th>
                     <th className="num">{t.team}</th>
                     <th>{c.labels.status}</th>
+                    <th>MyFatoorah</th>
                     <th>{t.since}</th>
                     <th style={{ textAlign: 'right' }}>{t.actions}</th>
                   </tr>
@@ -228,6 +229,18 @@ export default async function AdminEnterprisePage({
                         <td className="num">{memberCounts.get(partner.id) ?? 0}</td>
                         <td>
                           <StatusTag status={partner.status} />
+                        </td>
+                        <td>
+                          <StatusTag
+                            status={
+                              partner.myfatoorah_supplier_code
+                                ? partner.myfatoorah_supplier_status || 'pending'
+                                : 'not_started'
+                            }
+                          />
+                          {partner.payment_eligibility ? (
+                            <span className="sub">· Live</span>
+                          ) : null}
                         </td>
                         <td className="small muted">{formatDate(partner.created_at, locale)}</td>
                         <td>
