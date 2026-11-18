@@ -3,21 +3,27 @@ import { Plus, Pencil } from 'lucide-react';
 import { requireVendor } from '@/lib/auth';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { Pager } from '@/components/Pager';
+import { pageBounds, parsePage } from '@/lib/pagination';
 import { setBulkOfferStatus } from '@/lib/actions/vendor';
 
 export default async function VendorBulkProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ page?: string; saved?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const ctx = await requireVendor();
+  const page = parsePage(params.page);
+  const { from, to } = pageBounds(page);
 
-  const { data, error } = await ctx.supabase
+  const { data, error, count } = await ctx.supabase
     .from('bulk_offers')
-    .select('*, products(id,title), bulk_offer_price_tiers(*)')
+    .select('*, products(id,title), bulk_offer_price_tiers(*)', { count: 'exact' })
     .eq('vendor_id', ctx.vendor.id)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: true })
+    .range(from, to);
 
   const offers = data ?? [];
 
@@ -106,6 +112,7 @@ export default async function VendorBulkProductsPage({
                 </tbody>
               </table>
             </div>
+            <Pager page={page} total={count ?? 0} basePath="/vendor/bulk-products" />
           </div>
         </section>
       )}

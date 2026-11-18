@@ -4,6 +4,8 @@ import { formatDate, initials, titleCase } from '@/lib/format';
 import { removeStaff, updateStaffRole } from '@/lib/actions/vendor';
 import { vendorCreateStaff } from '@/lib/actions/team';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
+import { Pager } from '@/components/Pager';
+import { pageBounds, parsePage } from '@/lib/pagination';
 import { fill, pick } from '@/lib/i18n';
 import { common } from '@/lib/i18n/common';
 import { getLocale } from '@/lib/i18n/server';
@@ -12,21 +14,38 @@ import { vendorCopy } from '@/lib/i18n/vendor';
 export default async function VendorStaffPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ page?: string; saved?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const ctx = await requireVendor();
+  const page = parsePage(params.page);
+  const { from, to } = pageBounds(page);
   const locale = await getLocale();
   const t = pick(vendorCopy, locale).staff;
   const c = pick(common, locale);
 
-  const { data: memberRows } = await ctx.supabase
-    .from('vendor_members')
-    .select('user_id, role, active, created_at, profiles(full_name, email)')
-    .eq('vendor_id', ctx.vendor.id)
-    .order('created_at', { ascending: true });
+  // The table is paged, but the two KPI counts cover everyone, so they stay
+  // accurate no matter which page is open.
+  const [membersResult, managersResult] = await Promise.all([
+    ctx.supabase
+      .from('vendor_members')
+      .select('user_id, role, active, created_at, profiles(full_name, email)', { count: 'exact' })
+      .eq('vendor_id', ctx.vendor.id)
+      .eq('active', true)
+      .order('created_at', { ascending: true })
+      .order('user_id', { ascending: true })
+      .range(from, to),
+    ctx.supabase
+      .from('vendor_members')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('vendor_id', ctx.vendor.id)
+      .eq('active', true)
+      .eq('role', 'manager'),
+  ]);
 
-  const members = (memberRows ?? []).filter((member) => member.active);
+  const members = membersResult.data ?? [];
+  const memberTotal = membersResult.count ?? 0;
+  const managerTotal = managersResult.count ?? 0;
   const canManage = ctx.role === 'owner' || ctx.role === 'manager';
 
   return (
@@ -47,14 +66,14 @@ export default async function VendorStaffPage({
           <span className="kpi-icon">
             <Users size={17} />
           </span>
-          <strong>{members.length}</strong>
+          <strong>{memberTotal}</strong>
           <span>{t.activeMembers}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <ShieldCheck size={17} />
           </span>
-          <strong>{members.filter((member) => member.role === 'manager').length}</strong>
+          <strong>{managerTotal}</strong>
           <span>Managers</span>
         </div>
         <div className="kpi">
@@ -197,6 +216,7 @@ export default async function VendorStaffPage({
               </table>
             </div>
           )}
+          <Pager page={page} total={memberTotal} basePath="/vendor/staff" />
         </div>
       </section>
 

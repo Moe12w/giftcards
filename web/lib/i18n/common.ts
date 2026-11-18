@@ -152,6 +152,11 @@ const en = {
     switchToArabic: 'Switch to Arabic',
     switchToEnglish: 'Switch to English',
   },
+  pagination: {
+    next: 'Next',
+    pageOf: 'Page {page} of {total}',
+    previous: 'Previous',
+  },
 };
 
 type CopyShape = {
@@ -305,6 +310,11 @@ const ar: CopyShape = {
     arabic: 'العربية',
     switchToArabic: 'التبديل إلى العربية',
     switchToEnglish: 'التبديل إلى الإنجليزية',
+  },
+  pagination: {
+    next: 'التالي',
+    pageOf: 'صفحة {page} من {total}',
+    previous: 'السابق',
   },
 };
 

@@ -10,7 +10,7 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
 import { claimShareUrl } from '@/src/lib/claim-link';
-import { buyerClaimLink, listNotifications, markNotificationRead } from '@/src/lib/data';
+import { buyerClaimLink, getNotification, markNotificationRead } from '@/src/lib/data';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import type { AppNotification, NotificationKind } from '@/src/lib/types';
@@ -52,8 +52,7 @@ export default function NotificationDetailScreen() {
       return;
     }
     try {
-      const rows = await listNotifications();
-      const found = rows.find((row) => row.id === id) ?? null;
+      const found = await getNotification(id);
       setItem(found);
       if (found && !found.read) {
         await markNotificationRead(found.id);

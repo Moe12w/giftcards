@@ -156,30 +156,78 @@ export function mapVoucher(row: VoucherRow): GiftCard {
   };
 }
 
+/**
+ * Rows to ask for. Screens pass `offset` to fetch the next page, so the server
+ * does the skipping and a large history never lands in one response.
+ */
+export interface PageOptions {
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Default page sizes. They sit well above what a normal customer accumulates
+ * today, so list screens keep showing a full history, while a runaway one
+ * (thousands of orders or notifications) is bounded to a single page.
+ */
+export const PAGE_SIZE = {
+  vouchers: 100,
+  redemptions: 200,
+  orders: 50,
+  notifications: 50,
+  support: 50,
+  favourites: 50,
+  catalog: 200,
+  businesses: 100,
+} as const;
+
+/** No single response should ever grow past this, whatever a caller asks for. */
+const MAX_PAGE_SIZE = 500;
+
+/** Turns page options into a PostgREST range, whose `to` is inclusive. */
+function pageWindow(options: PageOptions | undefined, fallback: number) {
+  const requested = Math.trunc(options?.limit ?? fallback);
+  const limit = Math.min(
+    Math.max(Number.isFinite(requested) ? requested : fallback, 1),
+    MAX_PAGE_SIZE,
+  );
+  const requestedOffset = Math.trunc(options?.offset ?? 0);
+  const offset = Number.isFinite(requestedOffset) ? Math.max(requestedOffset, 0) : 0;
+  return { limit, offset, from: offset, to: offset + limit - 1 };
+}
+
 /** Every voucher the signed in customer can see, newest first. */
-export async function listMyVouchers(): Promise<GiftCard[]> {
+export async function listMyVouchers(options?: PageOptions): Promise<GiftCard[]> {
   if (!hasSupabaseConfig) {
     return MOCK_CARDS;
   }
+  const page = pageWindow(options, PAGE_SIZE.vouchers);
   const { data, error } = await getSupabase()
     .from('vouchers')
     .select(
       'id, voucher_code, qr_payload, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, image_url, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
     )
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(page.from, page.to);
   if (error) throw error;
   return ((data ?? []) as unknown as VoucherRow[]).map(mapVoucher);
 }
 
 /** The redemption history for the given vouchers. */
-export async function listRedemptionsFor(voucherIds: string[]): Promise<RedemptionEntry[]> {
+export async function listRedemptionsFor(
+  voucherIds: string[],
+  options?: PageOptions,
+): Promise<RedemptionEntry[]> {
   if (!hasSupabaseConfig) return MOCK_REDEMPTIONS;
   if (voucherIds.length === 0) return [];
+  const page = pageWindow(options, PAGE_SIZE.redemptions);
   const { data, error } = await getSupabase()
     .from('ledger_entries')
     .select('id, voucher_id, entry_type, amount_minor, sessions, created_at')
     .in('voucher_id', voucherIds)
-    .neq('entry_type', 'issue');
+    .neq('entry_type', 'issue')
+    .order('created_at', { ascending: false })
+    .range(page.from, page.to);
   if (error) throw error;
 
   return ((data ?? []) as LedgerEntryRow[]).map((row) => ({
@@ -370,14 +418,24 @@ export async function getPartner(idOrSlug: string): Promise<MarketplaceBusiness 
 }
 
 /** The public business directory: vendors and partners combined. */
-export async function listMarketplaceBusinesses(): Promise<MarketplaceBusiness[]> {
+export async function listMarketplaceBusinesses(
+  options?: PageOptions,
+): Promise<MarketplaceBusiness[]> {
   if (!hasSupabaseConfig) return [];
-  return cached('businesses:all', 60_000, async () => {
+  const page = pageWindow(options, PAGE_SIZE.businesses);
+  // The first page keeps the existing key so the bootstrap cache and
+  // peekBusinesses() still hit it; later pages get an entry of their own.
+  const key =
+    page.offset === 0 && page.limit === PAGE_SIZE.businesses
+      ? 'businesses:all'
+      : `businesses:all:${page.limit}:${page.offset}`;
+  return cached(key, 60_000, async () => {
     const { data, error } = await getSupabase()
       .from('marketplace_businesses')
       .select(BUSINESS_COLUMNS)
       .order('gift_count', { ascending: false })
-      .order('rating', { ascending: false });
+      .order('rating', { ascending: false })
+      .range(page.from, page.to);
     if (error) throw error;
     const rows = (data ?? []) as MarketplaceBusiness[];
     primeBusinesses(rows);
@@ -402,14 +460,16 @@ export async function getPublicSettings(): Promise<Record<string, unknown>> {
   });
 }
 
-export async function listFavourites(): Promise<Offer[]> {
+export async function listFavourites(options?: PageOptions): Promise<Offer[]> {
   if (!hasSupabaseConfig) return [];
+  const page = pageWindow(options, PAGE_SIZE.favourites);
   const { data, error } = await getSupabase()
     .from('favourites')
     .select(
       'product_id, vendor_id, product:products(*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)), vendor:vendors(*)',
     )
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(page.from, page.to);
   if (error) throw error;
 
   return ((data ?? []) as unknown[])
@@ -457,11 +517,17 @@ function mapOffer(row: OfferRow): Offer {
   return { ...row, category: category?.slug, variants } as Offer;
 }
 
-export async function listActiveOffers(): Promise<Offer[]> {
+export async function listActiveOffers(options?: PageOptions): Promise<Offer[]> {
   if (!hasSupabaseConfig) {
     return MOCK_OFFERS.filter((o) => o.is_active);
   }
-  return cached('offers:active', 60_000, async () => {
+  const page = pageWindow(options, PAGE_SIZE.catalog);
+  // Keeps 'offers:active' as the key the bootstrap and peekOffers() read.
+  const key =
+    page.offset === 0 && page.limit === PAGE_SIZE.catalog
+      ? 'offers:active'
+      : `offers:active:${page.limit}:${page.offset}`;
+  return cached(key, 60_000, async () => {
     const { data, error } = await getSupabase()
       .from('products')
       .select(
@@ -469,7 +535,8 @@ export async function listActiveOffers(): Promise<Offer[]> {
       )
       .eq('is_active', true)
       .eq('status', 'published')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(page.from, page.to);
     if (error) throw error;
     const rows = ((data ?? []) as OfferRow[]).map(mapOffer);
     primeOffers(rows);
@@ -547,14 +614,16 @@ export async function getMyCard(id: string): Promise<GiftCard | null> {
   return data ? mapVoucher(data as unknown as VoucherRow) : null;
 }
 
-export async function listMyOrders(): Promise<Order[]> {
+export async function listMyOrders(options?: PageOptions): Promise<Order[]> {
   if (!hasSupabaseConfig) {
     return MOCK_ORDERS;
   }
+  const page = pageWindow(options, PAGE_SIZE.orders);
   const { data, error } = await getSupabase()
     .from('orders')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(page.from, page.to);
   if (error) throw error;
 
   // Catalogue orders (including MCP-prepared ones) carry their total on the
@@ -583,21 +652,21 @@ export async function listMyOrders(): Promise<Order[]> {
   });
 }
 
-/**
- * The notification centre reads straight from the database, so "mark as read"
- * survives leaving the screen.
- */
-export async function listNotifications(): Promise<AppNotification[]> {
+/** How many orders the customer has, without downloading their rows. */
+export async function countMyOrders(): Promise<number> {
   if (!hasSupabaseConfig) {
-    return MOCK_NOTIFICATIONS;
+    return MOCK_ORDERS.length;
   }
-  const { data, error } = await getSupabase()
-    .from('notifications')
-    .select('id, kind, title_key, body_key, payload, read_at, created_at')
-    .order('created_at', { ascending: false });
+  const { count, error } = await getSupabase()
+    .from('orders')
+    .select('id', { count: 'exact', head: true });
   if (error) throw error;
+  return count ?? 0;
+}
 
-  return ((data ?? []) as NotificationRow[]).map((row) => ({
+/** Maps a notification row onto the shape a screen renders. */
+function mapNotification(row: NotificationRow): AppNotification {
+  return {
     id: row.id,
     kind: row.kind as NotificationKind,
     titleKey: row.title_key,
@@ -607,7 +676,40 @@ export async function listNotifications(): Promise<AppNotification[]> {
     gift_id: (row.payload as { gift_id?: string } | null)?.gift_id,
     support_request_id: (row.payload as { support_request_id?: string } | null)
       ?.support_request_id,
-  }));
+  };
+}
+
+/**
+ * The notification centre reads straight from the database, so "mark as read"
+ * survives leaving the screen.
+ */
+export async function listNotifications(options?: PageOptions): Promise<AppNotification[]> {
+  if (!hasSupabaseConfig) {
+    return MOCK_NOTIFICATIONS;
+  }
+  const page = pageWindow(options, PAGE_SIZE.notifications);
+  const { data, error } = await getSupabase()
+    .from('notifications')
+    .select('id, kind, title_key, body_key, payload, read_at, created_at')
+    .order('created_at', { ascending: false })
+    .range(page.from, page.to);
+  if (error) throw error;
+
+  return ((data ?? []) as NotificationRow[]).map(mapNotification);
+}
+
+/** One notification by id, for a detail screen that only needs that row. */
+export async function getNotification(id: string): Promise<AppNotification | null> {
+  if (!hasSupabaseConfig) {
+    return MOCK_NOTIFICATIONS.find((item) => item.id === id) ?? null;
+  }
+  const { data, error } = await getSupabase()
+    .from('notifications')
+    .select('id, kind, title_key, body_key, payload, read_at, created_at')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? mapNotification(data as NotificationRow) : null;
 }
 
 /**
@@ -793,17 +895,19 @@ export async function createSupportRequest(input: {
 }
 
 /** The support requests the customer sent. */
-export async function listSupportRequests(): Promise<SupportRequest[]> {
+export async function listSupportRequests(options?: PageOptions): Promise<SupportRequest[]> {
   if (!hasSupabaseConfig) return [];
   const {
     data: { user },
   } = await getSupabase().auth.getUser();
   if (!user) return [];
+  const page = pageWindow(options, PAGE_SIZE.support);
   const { data, error } = await getSupabase()
     .from('support_requests')
     .select('id, kind, subject, body, reference, status, created_at')
     .eq('customer_id', user.id)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(page.from, page.to);
   if (error) throw error;
   return (data ?? []) as SupportRequest[];
 }

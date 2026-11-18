@@ -4,6 +4,8 @@ import { requireAdmin } from '@/lib/auth';
 import { EmptyState, Notice, PageHead } from '@/components/ui';
 import { adminDeactivateAgreement, adminPublishAgreement } from '@/lib/actions/admin-merchant';
 import { AgreementPdfInput } from '@/components/AgreementPdfInput';
+import { Pager } from '@/components/Pager';
+import { pageBounds, parsePage } from '@/lib/pagination';
 import type { MerchantAgreement } from '@/lib/merchant';
 import { formatDate } from '@/lib/format';
 
@@ -14,21 +16,50 @@ interface SignatureCount {
 export default async function AdminMerchantAgreementsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ published?: string; deactivated?: string; error?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    published?: string;
+    deactivated?: string;
+    error?: string;
+  }>;
 }) {
   const params = await searchParams;
   const ctx = await requireAdmin();
+  const page = parsePage(params.page);
+  const { from, to } = pageBounds(page);
 
-  const [agreementsResult, signaturesResult] = await Promise.all([
-    ctx.supabase.from('merchant_agreements').select('*').order('created_at', { ascending: false }),
-    ctx.supabase.from('merchant_agreement_signatures').select('agreement_version'),
+  const [agreementsResult, activeResult] = await Promise.all([
+    ctx.supabase
+      .from('merchant_agreements')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, to),
+    ctx.supabase.from('merchant_agreements').select('*').eq('is_active', true).maybeSingle(),
   ]);
 
   const agreements = (agreementsResult.data ?? []) as MerchantAgreement[];
+  const activeAgreement = (activeResult.data ?? null) as MerchantAgreement | null;
+  const agreementTotal = agreementsResult.count ?? 0;
+
+  // Signature counts are only needed for the versions on this page (and the
+  // active one), so this never walks the whole signature history.
+  const versions = [
+    ...new Set([
+      ...agreements.map((agreement) => agreement.version),
+      ...(activeAgreement ? [activeAgreement.version] : []),
+    ]),
+  ];
+  const signaturesResult = versions.length
+    ? await ctx.supabase
+        .from('merchant_agreement_signatures')
+        .select('agreement_version')
+        .in('agreement_version', versions)
+    : { data: [] as SignatureCount[] };
   const signatures = (signaturesResult.data ?? []) as SignatureCount[];
 
-  const signedCount = (version: string) => signatures.filter((row) => row.agreement_version === version).length;
-  const active = agreements.find((agreement) => agreement.is_active) ?? null;
+  const signedCount = (version: string) =>
+    signatures.filter((row) => row.agreement_version === version).length;
 
   return (
     <div className="dash-content">
@@ -93,26 +124,28 @@ export default async function AdminMerchantAgreementsPage({
         <section className="panel">
           <div className="panel-head">
             <h3>Active agreement</h3>
-            <span className={`tag ${active ? 'success' : 'neutral'}`}>{active ? 'Active' : 'None'}</span>
+            <span className={`tag ${activeAgreement ? 'success' : 'neutral'}`}>
+              {activeAgreement ? 'Active' : 'None'}
+            </span>
           </div>
           <div className="panel-body">
-            {active ? (
+            {activeAgreement ? (
               <div className="split-list">
                 <div>
                   <span className="k">Version</span>
-                  <span className="v">{active.version}</span>
+                  <span className="v">{activeAgreement.version}</span>
                 </div>
                 <div>
                   <span className="k">Title</span>
-                  <span className="v">{active.title}</span>
+                  <span className="v">{activeAgreement.title}</span>
                 </div>
                 <div>
                   <span className="k">File</span>
-                  <span className="v small">{active.file_name}</span>
+                  <span className="v small">{activeAgreement.file_name}</span>
                 </div>
                 <div>
                   <span className="k">Signed by</span>
-                  <span className="v">{signedCount(active.version)} merchant(s)</span>
+                  <span className="v">{signedCount(activeAgreement.version)} merchant(s)</span>
                 </div>
               </div>
             ) : (
@@ -127,7 +160,7 @@ export default async function AdminMerchantAgreementsPage({
       <section className="panel">
         <div className="panel-head">
           <h3>All versions</h3>
-          <span className="tag neutral">{agreements.length}</span>
+          <span className="tag neutral">{agreementTotal}</span>
         </div>
         <div className="panel-body">
           {agreements.length === 0 ? (
@@ -186,6 +219,11 @@ export default async function AdminMerchantAgreementsPage({
               </table>
             </div>
           )}
+          <Pager
+            page={page}
+            total={agreementTotal}
+            basePath="/admin/merchant-onboarding/agreements"
+          />
         </div>
       </section>
     </div>

@@ -1,5 +1,7 @@
 import { requireAdmin } from '@/lib/auth';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
+import { Pager } from '@/components/Pager';
+import { pageBounds, parsePage } from '@/lib/pagination';
 import { formatDate, initials } from '@/lib/format';
 import { adminCreateTeamMember } from '@/lib/actions/team';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -9,19 +11,23 @@ export const dynamic = 'force-dynamic';
 export default async function AdminTeamPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ page?: string; saved?: string; error?: string }>;
 }) {
   await requireAdmin();
   const params = await searchParams;
   const admin = createAdminClient();
+  const page = parsePage(params.page);
+  const { from, to } = pageBounds(page);
 
-  const { data: roles } = await admin
+  const { data: roles, count } = await admin
     .from('user_roles')
-    .select('user_id, role, profiles(full_name, email, status)')
+    .select('user_id, role, profiles(full_name, email, status)', { count: 'exact' })
     .eq('role', 'admin')
-    .order('user_id');
+    .order('user_id', { ascending: true })
+    .range(from, to);
 
   const admins = roles ?? [];
+  const adminTotal = count ?? 0;
 
   return (
     <div className="dash-content">
@@ -71,7 +77,7 @@ export default async function AdminTeamPage({
         <section className="panel">
           <div className="panel-head">
             <h3>Current admins</h3>
-            <span className="tag neutral">{admins.length}</span>
+            <span className="tag neutral">{adminTotal}</span>
           </div>
           <div className="panel-body">
             {admins.length === 0 ? (
@@ -102,6 +108,7 @@ export default async function AdminTeamPage({
                 })}
               </div>
             )}
+            <Pager page={page} total={adminTotal} basePath="/admin/team" />
             <p className="small muted" style={{ marginTop: 14 }}>
               Admin access is stored in user_roles and is separate from vendor/enterprise team roles.
             </p>

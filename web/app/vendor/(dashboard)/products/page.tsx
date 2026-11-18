@@ -5,6 +5,8 @@ import { mapProducts } from '@/lib/data';
 import { formatDate } from '@/lib/format';
 import { fulfilmentLabel, priceLabel } from '@/lib/catalog';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { Pager } from '@/components/Pager';
+import { pageBounds, parsePage } from '@/lib/pagination';
 import { setProductStatus } from '@/lib/actions/vendor';
 import { pick } from '@/lib/i18n';
 import { common } from '@/lib/i18n/common';
@@ -14,7 +16,14 @@ import { vendorCopy } from '@/lib/i18n/vendor';
 export default async function VendorProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; type?: string; status?: string; saved?: string; error?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    type?: string;
+    status?: string;
+    page?: string;
+    saved?: string;
+    error?: string;
+  }>;
 }) {
   const params = await searchParams;
   const ctx = await requireVendor();
@@ -24,18 +33,21 @@ export default async function VendorProductsPage({
   const locale = await getLocale();
   const t = pick(vendorCopy, locale).products;
   const c = pick(common, locale);
+  const page = parsePage(params.page);
+  const { from, to } = pageBounds(page);
 
   let query = ctx.supabase
     .from('products')
-    .select('*, product_variants(*)')
+    .select('*, product_variants(*)', { count: 'exact' })
     .eq('vendor_id', ctx.vendor.id)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: true });
 
   if (q) query = query.ilike('title', `%${q}%`);
   if (type) query = query.eq('fulfilment_type', type);
   if (status) query = query.eq('status', status);
 
-  const { data, error } = await query;
+  const { data, error, count } = await query.range(from, to);
   const products = mapProducts(data);
 
   return (
@@ -176,6 +188,12 @@ export default async function VendorProductsPage({
                 </tbody>
               </table>
             </div>
+            <Pager
+              page={page}
+              total={count ?? 0}
+              basePath="/vendor/products"
+              params={{ q: params.q, type, status }}
+            />
           </div>
         </section>
       )}

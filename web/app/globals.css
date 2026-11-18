@@ -1947,6 +1947,18 @@ table.data .sub {
   font-weight: 800;
 }
 
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 16px;
+}
+
+.pager .small {
+  white-space: nowrap;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;

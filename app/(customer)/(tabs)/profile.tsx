@@ -13,10 +13,9 @@ import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
 import { useCards } from '@/src/lib/cards';
 import { useThemeRefresh } from '@/src/lib/theme';
-import { listMyOrders } from '@/src/lib/data';
+import { countMyOrders } from '@/src/lib/data';
 import { getLegalBundle } from '@/src/legal';
 import { setLanguage, type Language } from '@/src/i18n';
-import type { Order } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function ProfileScreen() {
@@ -27,12 +26,12 @@ export default function ProfileScreen() {
   // The wallet provider already loaded the vouchers; reading them here again
   // would download and map the same rows a second time.
   const { cards } = useCards();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orderCount, setOrderCount] = useState(0);
 
   useEffect(() => {
     let active = true;
-    listMyOrders()
-      .then((data) => active && setOrders(data))
+    countMyOrders()
+      .then((count) => active && setOrderCount(count))
       .catch(() => undefined);
     return () => {
       active = false;
@@ -106,7 +105,7 @@ export default function ProfileScreen() {
           <Text style={styles.statLabel}>{t('gifts.active')}</Text>
         </Card>
         <Card tone="gold" style={styles.statCard}>
-          <Text style={styles.statValue}>{orders.length}</Text>
+          <Text style={styles.statValue}>{orderCount}</Text>
           <Text style={styles.statLabel}>{t('orders.title')}</Text>
         </Card>
       </View>
