@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { requireVendor } from '@/lib/auth';
 import { slugify } from '@/lib/format';
 import { normalizeTone } from '@/lib/catalog';
@@ -272,6 +273,29 @@ function parseOccasions(raw: string): string[] {
     .filter(Boolean);
 }
 
+/** Uploads a product image under the vendor's own folder in the public media bucket. */
+export async function uploadProductImage(
+  formData: FormData,
+): Promise<{ ok: boolean; url?: string; error?: string }> {
+  const ctx = await requireVendor();
+  if (ctx.role === 'redemption_staff') return { ok: false, error: 'Only owners and managers can upload images.' };
+
+  const file = formData.get('file');
+  if (!(file instanceof File)) return { ok: false, error: 'Choose an image to upload.' };
+  const image = validateImageUpload(file);
+  if (!image.ok) return { ok: false, error: image.error };
+
+  const path = `${ctx.vendor.id}/product-${Date.now()}.${image.extension}`;
+  const admin = createAdminClient();
+  const { error } = await admin.storage.from('vendor-media').upload(path, file, {
+    contentType: file.type,
+    upsert: true,
+  });
+  if (error) return { ok: false, error: 'The image could not be saved. Try again.' };
+  const { data } = admin.storage.from('vendor-media').getPublicUrl(path);
+  return { ok: true, url: data.publicUrl };
+}
+
 export async function createProduct(formData: FormData) {
   const ctx = await requireVendor();
   if (ctx.role === 'redemption_staff') {
@@ -280,6 +304,8 @@ export async function createProduct(formData: FormData) {
 
   const title = str(formData, 'title');
   if (!title) back('/vendor/products/new', 'Give the gift a title.');
+  const imageUrl = str(formData, 'image_url');
+  if (!imageUrl) back('/vendor/products/new', 'Upload an image for the gift.');
 
   const fulfilmentType = str(formData, 'fulfilment_type') === 'experience' ? 'experience' : 'monetary';
   const status = str(formData, 'status') === 'published' ? 'published' : 'draft';
@@ -338,7 +364,7 @@ export async function createProduct(formData: FormData) {
       ),
       location: optional(formData, 'location'),
       occasions: parseOccasions(str(formData, 'occasions')),
-      image_url: optional(formData, 'image_url'),
+      image_url: imageUrl,
     })
     .select('id')
     .single();
@@ -386,6 +412,8 @@ export async function updateProduct(formData: FormData) {
 
   const title = str(formData, 'title');
   if (!title) back(`/vendor/products/${id}`, 'Give the gift a title.');
+  const imageUrl = str(formData, 'image_url');
+  if (!imageUrl) back(`/vendor/products/${id}`, 'Upload an image for the gift.');
   const status = str(formData, 'status') === 'published' ? 'published' : 'draft';
 
   const patch: Record<string, unknown> = {
@@ -405,7 +433,7 @@ export async function updateProduct(formData: FormData) {
     tone: normalizeTone(str(formData, 'tone')),
     location: optional(formData, 'location'),
     occasions: parseOccasions(str(formData, 'occasions')),
-    image_url: optional(formData, 'image_url'),
+    image_url: imageUrl,
     updated_at: new Date().toISOString(),
   };
 

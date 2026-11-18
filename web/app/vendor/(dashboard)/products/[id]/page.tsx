@@ -3,7 +3,13 @@ import { notFound } from 'next/navigation';
 import { Archive, ArrowLeft, Plus, Power } from 'lucide-react';
 import { requireVendor } from '@/lib/auth';
 import { mapProduct } from '@/lib/data';
-import { addProductVariant, setProductStatus, toggleProductVariant, updateProduct } from '@/lib/actions/vendor';
+import {
+  addProductVariant,
+  setProductStatus,
+  toggleProductVariant,
+  updateProduct,
+  uploadProductImage,
+} from '@/lib/actions/vendor';
 import { ProductForm } from '@/components/ProductForm';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
 import { formatMoney } from '@/lib/money';
@@ -69,6 +75,7 @@ export default async function EditVendorProductPage({
 
       <ProductForm
         action={updateProduct}
+        uploadAction={uploadProductImage}
         product={product}
         categories={(categories ?? []) as { id: string; name: string }[]}
         mode="edit"

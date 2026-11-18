@@ -6,12 +6,15 @@ import { minorToInput } from '@/lib/money';
 import { useLocale } from '@/components/I18nProvider';
 import { pick } from '@/lib/i18n';
 import { componentsCopy } from '@/lib/i18n/components';
+import { ProductImageUpload } from '@/components/ProductImageUpload';
 
 export function EnterpriseProductForm({
   action,
+  uploadAction,
   product,
 }: {
   action: (formData: FormData) => void | Promise<void>;
+  uploadAction: (formData: FormData) => Promise<{ ok: boolean; url?: string; error?: string }>;
   product?: EnterpriseProduct | null;
 }) {
   const locale = useLocale();
@@ -116,6 +119,14 @@ export function EnterpriseProductForm({
             name="redemption_instructions"
             defaultValue={product?.redemption_instructions ?? ''}
             placeholder={t.placeholders.redemption}
+          />
+        </div>
+        <div className="field full">
+          <label>{t.image}</label>
+          <ProductImageUpload
+            uploadAction={uploadAction}
+            currentUrl={product?.image_url ?? null}
+            locale={locale}
           />
         </div>
       </div>

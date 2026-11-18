@@ -8,14 +8,17 @@ import { normalizeTone } from '@/lib/catalog';
 import { useLocale } from '@/components/I18nProvider';
 import { pick } from '@/lib/i18n';
 import { componentsCopy } from '@/lib/i18n/components';
+import { ProductImageUpload } from '@/components/ProductImageUpload';
 
 export function ProductForm({
   action,
+  uploadAction,
   product,
   categories,
   mode,
 }: {
   action: (formData: FormData) => void | Promise<void>;
+  uploadAction: (formData: FormData) => Promise<{ ok: boolean; url?: string; error?: string }>;
   product?: Product | null;
   categories: { id: string; name: string }[];
   mode: 'create' | 'edit';
@@ -214,13 +217,12 @@ export function ProductForm({
           </select>
           <span className="hint">{t.toneHint}</span>
         </div>
-        <div className="field">
-          <label htmlFor="image_url">{t.imageUrl}</label>
-          <input
-            id="image_url"
-            name="image_url"
-            defaultValue={product?.image_url ?? ''}
-            placeholder="https://…"
+        <div className="field full">
+          <label>{t.imageUrl}</label>
+          <ProductImageUpload
+            uploadAction={uploadAction}
+            currentUrl={product?.image_url ?? null}
+            locale={locale}
           />
         </div>
       </div>

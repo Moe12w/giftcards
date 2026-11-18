@@ -2,12 +2,13 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { requireEnterprise } from '@/lib/auth';
 import { parseMoneyToMinor } from '@/lib/money';
 import { slugify } from '@/lib/format';
 import { normalizeTone } from '@/lib/catalog';
 import { parseBulkTiers } from '@/lib/bulk';
-import { normalizeWebsite } from '@/lib/security';
+import { normalizeWebsite, validateImageUpload } from '@/lib/security';
 
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
@@ -103,6 +104,7 @@ async function syncCatalogueProduct(
     active: boolean;
     terms: string | null;
     instructions: string | null;
+    imageUrl: string;
   },
 ) {
   const slug = slugify(`${values.name}-${enterpriseProductId.slice(0, 6)}`);
@@ -110,6 +112,7 @@ async function syncCatalogueProduct(
     title: values.name,
     slug,
     description: values.instructions ?? values.terms,
+    image_url: values.imageUrl,
     fulfilment_type: 'enterprise_code',
     vendor_id: null,
     partner_id: ctx.partner.id,
@@ -147,6 +150,31 @@ async function syncCatalogueProduct(
   return inserted?.id ?? null;
 }
 
+/** Uploads a partner product image under the partner's own folder in the public media bucket. */
+export async function uploadPartnerProductImage(
+  formData: FormData,
+): Promise<{ ok: boolean; url?: string; error?: string }> {
+  const ctx = await requireEnterprise();
+  if (ctx.role === 'analyst') return { ok: false, error: 'Analysts have read-only access.' };
+
+  const file = formData.get('file');
+  if (!(file instanceof File)) return { ok: false, error: 'Choose an image to upload.' };
+  const image = validateImageUpload(file);
+  if (!image.ok) return { ok: false, error: image.error };
+
+  const path = `${ctx.partner.id}/product-${Date.now()}.${image.extension}`;
+  // Enterprise partners have no vendor_members row, so the session client is
+  // blocked by the bucket's vendor-folder RLS. Authorization is done above.
+  const admin = createAdminClient();
+  const { error } = await admin.storage.from('vendor-media').upload(path, file, {
+    contentType: file.type,
+    upsert: true,
+  });
+  if (error) return { ok: false, error: 'The image could not be saved. Try again.' };
+  const { data } = admin.storage.from('vendor-media').getPublicUrl(path);
+  return { ok: true, url: data.publicUrl };
+}
+
 export async function saveEnterpriseProduct(formData: FormData) {
   const ctx = await requireEnterprise();
   if (ctx.role === 'analyst') {
@@ -169,6 +197,10 @@ export async function saveEnterpriseProduct(formData: FormData) {
   if (sellingPrice === null || sellingPrice <= 0) {
     back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Enter a valid price.');
   }
+  const imageUrl = str(formData, 'image_url');
+  if (!imageUrl) {
+    back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Upload an image for the gift.');
+  }
   if (commissionBps < 0 || commissionBps > 10_000) {
     back(id ? `/enterprise/products/${id}` : '/enterprise/products', "Giftly's cut must be between 0 and 100%.");
   }
@@ -185,6 +217,7 @@ export async function saveEnterpriseProduct(formData: FormData) {
     redemption_instructions: optional(formData, 'redemption_instructions'),
     expiry_days: intField(formData, 'expiry_days'),
     is_active: checkbox(formData, 'is_active'),
+    image_url: imageUrl,
     updated_at: new Date().toISOString(),
   };
 
@@ -205,6 +238,7 @@ export async function saveEnterpriseProduct(formData: FormData) {
       active: checkbox(formData, 'is_active'),
       terms: patch.terms_and_conditions,
       instructions: patch.redemption_instructions,
+      imageUrl,
     });
     revalidatePath('/enterprise/products');
     revalidatePath(`/enterprise/products/${id}`);
@@ -226,6 +260,7 @@ export async function saveEnterpriseProduct(formData: FormData) {
     active: checkbox(formData, 'is_active'),
     terms: patch.terms_and_conditions,
     instructions: patch.redemption_instructions,
+    imageUrl,
   });
   revalidatePath('/enterprise/products');
   revalidatePath('/admin/products');

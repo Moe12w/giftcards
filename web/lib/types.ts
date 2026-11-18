@@ -265,6 +265,7 @@ export interface EnterpriseProduct {
   redemption_instructions: string | null;
   expiry_days: number | null;
   is_active: boolean;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
   partner?: Pick<EnterprisePartner, 'id' | 'name' | 'commission_bps' | 'slug'> | null;

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Boxes, Upload } from 'lucide-react';
 import { requireEnterprise } from '@/lib/auth';
-import { saveEnterpriseProduct } from '@/lib/actions/enterprise';
+import { saveEnterpriseProduct, uploadPartnerProductImage } from '@/lib/actions/enterprise';
 import { EnterpriseProductForm } from '@/components/EnterpriseProductForm';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
 import { formatMoney } from '@/lib/money';
@@ -106,7 +106,11 @@ export default async function EditEnterpriseProductPage({
           {t.readOnly}
         </div>
       ) : (
-        <EnterpriseProductForm action={saveEnterpriseProduct} product={product} />
+        <EnterpriseProductForm
+          action={saveEnterpriseProduct}
+          uploadAction={uploadPartnerProductImage}
+          product={product}
+        />
       )}
     </div>
   );
