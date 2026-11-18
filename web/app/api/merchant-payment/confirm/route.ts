@@ -3,6 +3,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getPaymentMyFatoorahConfig, getMyFatoorahPaymentStatus } from '@/lib/myfatoorah';
 import { deliverClaimLinks } from '@/lib/merchant-payment-delivery';
+import { mapVoucherClaims } from '@/lib/claim-links';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -109,8 +110,12 @@ export async function POST(request: Request) {
       delivered: false,
       reason: 'not_attempted',
     };
-    if (hashes.length > 0) {
-      delivery = await deliverClaimLinks(payment.order_id, hashes[0].claimToken);
+    const voucherIds = Array.isArray((fulfilment as any)?.voucher_ids)
+      ? (fulfilment as any).voucher_ids.map(String)
+      : [];
+    const claims = mapVoucherClaims(voucherIds, hashes.map((hash) => hash.claimToken));
+    if (claims.length > 0) {
+      delivery = await deliverClaimLinks(payment.order_id, claims);
     }
 
     return NextResponse.json({

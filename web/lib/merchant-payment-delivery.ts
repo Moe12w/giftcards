@@ -1,9 +1,10 @@
 import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendClaimLinkEmail } from '@/lib/email';
+import type { VoucherClaim } from '@/lib/claim-links';
 
-/** Sends the claim link once for every voucher on a confirmed order. */
-export async function deliverClaimLinks(orderId: string, claimToken: string) {
+/** Sends each voucher its own claim link on a confirmed order. */
+export async function deliverClaimLinks(orderId: string, claims: VoucherClaim[]) {
   const admin = createAdminClient();
   const { data: order } = await admin
     .from('orders')
@@ -17,9 +18,10 @@ export async function deliverClaimLinks(orderId: string, claimToken: string) {
     .select('id, delivery_status')
     .eq('order_id', orderId);
   if (!vouchers?.length) return { delivered: false, reason: 'voucher_not_found' };
-  if (vouchers.every((voucher: any) => voucher.delivery_status === 'sent')) {
-    return { delivered: false, reason: 'already_sent' };
-  }
+
+  const sent = new Set(vouchers.filter((v: any) => v.delivery_status === 'sent').map((v: any) => v.id));
+  const pending = claims.filter((claim) => sent.has(claim.voucherId) === false);
+  if (pending.length === 0) return { delivered: false, reason: 'already_sent' };
 
   const { data: item } = await admin
     .from('order_items')
@@ -32,30 +34,27 @@ export async function deliverClaimLinks(orderId: string, claimToken: string) {
   const appUrl = (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/+$/, '');
 
   const results = await Promise.all(
-    vouchers.map((voucher: any) =>
+    pending.map((claim) =>
       sendClaimLinkEmail({
         to: String(order.recipient_email),
         name: order.recipient_name,
         senderName: 'Giftly',
         title: String(product?.title ?? 'Gift card'),
         amountLabel: `${order.currency || 'QAR'} ${(Number(order.total_minor || 0) / 100).toFixed(2)}`,
-        link: `${appUrl}/claim/${claimToken}`,
-        appLink: `giftly://claim/${claimToken}`,
+        link: `${appUrl}/claim/${claim.claimToken}`,
+        appLink: `giftly://claim/${claim.claimToken}`,
         message: order.gift_message,
-      }),
+      }).then((result) => ({ result, voucherId: claim.voucherId })),
     ),
   );
 
-  if (results.some((result: any) => result?.delivered !== true)) {
+  if (results.some(({ result }: any) => result?.delivered !== true)) {
     return { delivered: false, reason: 'email_provider_unavailable' };
   }
 
   await admin
     .from('vouchers')
     .update({ delivery_status: 'sent' })
-    .in(
-      'id',
-      vouchers.map((voucher: any) => voucher.id),
-    );
-  return { delivered: true, count: vouchers.length };
+    .in('id', results.map(({ voucherId }: any) => voucherId));
+  return { delivered: true, count: results.length };
 }

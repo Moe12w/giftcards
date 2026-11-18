@@ -13,8 +13,8 @@ export async function GET(request: Request) {
   const orderId = url.searchParams.get('order') ?? '';
   const paymentId = url.searchParams.get('paymentId') ?? '';
   const failed = url.searchParams.get('failed') === '1';
-  const appUrl = (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/+$/, '');
-  const target = `${appUrl || '/'}${appUrl ? '/' : ''}`;
+  const appUrl = (process.env.NEXT_PUBLIC_SITE_URL || url.origin).replace(/\/+$/, '');
+  const target = `${appUrl}/`;
 
   // A mobile checkout passes its app scheme here; the browser closes itself
   // when MyFatoorah follows this redirect. Never trust an arbitrary URL.
