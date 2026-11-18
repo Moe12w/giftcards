@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin, requireAdvertiser } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { parseMoneyToMinor } from '@/lib/money';
 import { validateImageUpload } from '@/lib/security';
 import {
@@ -445,13 +446,17 @@ export async function uploadAdvertisingCreativeImage(formData: FormData): Promis
 
   const path = `${ctx.vendor.id}/ad-creative-${kind}-${Date.now()}.${extension}`;
 
-  const { error } = await ctx.supabase.storage.from(AD_CREATIVE_MEDIA_BUCKET).upload(path, file, {
+  // requireAdvertiser() has already authorized this caller. Enterprise
+  // advertisers use a shell vendor with no vendor_members row, so the session
+  // client is blocked by the bucket's vendor-folder RLS; upload as the owner.
+  const admin = createAdminClient();
+  const { error } = await admin.storage.from(AD_CREATIVE_MEDIA_BUCKET).upload(path, file, {
     contentType: file.type,
     upsert: true,
   });
   if (error) return { ok: false, error: error.message };
 
-  const { data } = ctx.supabase.storage.from(AD_CREATIVE_MEDIA_BUCKET).getPublicUrl(path);
+  const { data } = admin.storage.from(AD_CREATIVE_MEDIA_BUCKET).getPublicUrl(path);
 
   return { ok: true, url: data.publicUrl };
 }
