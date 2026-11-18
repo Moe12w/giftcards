@@ -80,7 +80,7 @@ Secrets are set in Supabase, never in Git:
 
 ```bash
 npx supabase secrets set MYFATOORAH_API_KEY=... MYFATOORAH_WEBHOOK_SECRET=... APP_PUBLIC_URL=...
-npx supabase functions deploy create-payment payment-webhook claim-gift wallet-pass
+npx supabase functions deploy create-payment create-bulk-payment payment-webhook mcp supplier-onboard upload-supplier-document sync-myfatoorah-suppliers
 ```
 
 ## Tests and checks
