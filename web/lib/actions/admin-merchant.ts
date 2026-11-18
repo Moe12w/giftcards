@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { callSupplierFunction } from '@/lib/myfatoorah-supplier';
 import { merchantErrorMessage } from '@/lib/merchant';
 
 const BUCKET = 'merchant-documents';
@@ -52,15 +53,37 @@ export async function adminReviewMerchantApplication(formData: FormData) {
   const note = str(formData, 'note');
   const path = `/admin/merchant-onboarding/${applicationId}`;
 
-  const { error } = await ctx.supabase.rpc('merchant_application_review', {
+  const { data: application, error } = await ctx.supabase.rpc('merchant_application_review', {
     p_application_id: applicationId,
     p_status: status,
     p_note: note || null,
   });
   if (error) back(path, merchantErrorMessage(error.message));
 
+  // Approving used to stop at an internal decision, so vendors finished
+  // onboarding with no MyFatoorah supplier. Create it here, idempotently; the
+  // edge function refuses duplicates and reuses an in-progress claim.
+  if (status === 'approved' || status === 'active') {
+    const owner = application as { vendor_id?: string | null; partner_id?: string | null } | null;
+    const body = owner?.vendor_id ? { vendorId: owner.vendor_id } : { partnerId: owner?.partner_id };
+    if (owner?.vendor_id || owner?.partner_id) {
+      const result = await callSupplierFunction('supplier-onboard', body);
+      if (!result.ok) {
+        const reason = result.skipped
+          ? 'the supplier service is not configured'
+          : (result.error ?? 'the provider request failed');
+        back(
+          path,
+          `Application approved, but the MyFatoorah supplier was not created because ${reason}. Use the supplier panel to retry.`,
+        );
+      }
+    }
+  }
+
   revalidatePath(path);
   revalidatePath('/admin/merchant-onboarding');
+  revalidatePath('/admin/vendors');
+  revalidatePath('/admin/enterprise');
   redirect(`${path}?decided=1`);
 }
 
