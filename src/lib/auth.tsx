@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import * as Linking from 'expo-linking';
 import type { Session, User } from '@supabase/supabase-js';
 import { handleAuthUrl, passwordResetLink } from './auth-link';
+import { invalidateCache } from './cache';
 import { env, hasSupabaseConfig } from './env';
 import { getSupabase } from './supabase';
 import { registerPushToken } from './push';
@@ -164,6 +165,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (__DEV__) console.warn('[auth] sign out failed', error.message);
           throw error;
         }
+        // Personal data must never survive a sign-out on this device.
+        invalidateCache('profile:');
       },
       async resetPassword(email) {
         if (!hasSupabaseConfig) return;

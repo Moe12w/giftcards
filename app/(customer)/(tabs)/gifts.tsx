@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { Badge, type BadgeTone } from '@/src/components/Badge';
+import type { BadgeTone } from '@/src/components/Badge';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Chip } from '@/src/components/Chip';
@@ -15,11 +15,12 @@ import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { useCards } from '@/src/lib/cards';
 import { isGiftWaiting } from '@/src/lib/delivery';
+import { cardHref, prefetchCard } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import { isSessionCard } from '@/src/lib/sessions';
 import type { CardStatus, GiftCard } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const statusTone: Record<CardStatus, BadgeTone> = {
   issued: 'warning',
@@ -93,7 +94,15 @@ export default function GiftsScreen() {
             ? { label: t('gifts.scheduled'), tone: 'warning' as BadgeTone }
             : { label: t(`cards.${card.status}`), tone: statusTone[card.status] }
         }
-        onPress={() => router.push(`/(customer)/card/${card.id}`)}
+        onPressIn={() => prefetchCard(card.id)}
+        onPress={() =>
+          router.push(
+            cardHref({
+              id: card.id,
+              name: card.partner_name ?? card.vendor_name ?? card.offer_title,
+            }) as never,
+          )
+        }
       />
     );
   }

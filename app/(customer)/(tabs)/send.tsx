@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, BackHandler } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View, BackHandler } from 'react-native';
 import { router } from 'expo-router';
+import { giftHref } from '@/src/lib/navigation';
 import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/src/components/Avatar';
@@ -47,7 +48,7 @@ export default function SendScreen() {
       return true;
     });
     return () => backHandler.remove();
-  }, [router]);
+  }, []);
 
   const draftOffer = offers.find((offer) => offer.id === draft.offerId) ?? null;
 
@@ -179,7 +180,7 @@ export default function SendScreen() {
               key={offer.id}
               offer={offer}
               index={index}
-              onPress={() => router.push(`/(customer)/gift/${offer.id}`)}
+              onPress={() => router.push(giftHref(offer) as never)}
             />
           ))}
         </View>

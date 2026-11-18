@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -8,11 +8,13 @@ import { Card } from '@/src/components/Card';
 import { EmptyState } from '@/src/components/EmptyState';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
-import { listMyCards } from '@/src/lib/data';
+import { SkeletonList } from '@/src/components/Skeleton';
+import { useCards } from '@/src/lib/cards';
+import { cardHref, prefetchCard } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatMoney } from '@/src/lib/money';
-import type { CardStatus, GiftCard } from '@/src/lib/types';
-import { colors, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
+import type { CardStatus } from '@/src/lib/types';
+import { colors, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const statusTone: Record<CardStatus, BadgeTone> = {
   issued: 'warning',
@@ -25,19 +27,10 @@ const statusTone: Record<CardStatus, BadgeTone> = {
 export default function CardsScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
-  const [cards, setCards] = useState<GiftCard[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    listMyCards()
-      .then((data) => active && setCards(data))
-      .catch(() => undefined)
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
-  }, []);
+  // The wallet provider already loaded these rows for the app; re-querying
+  // here would download the same vouchers a second time.
+  const { ready, cards } = useCards();
+  const loading = !ready;
 
   return (
     <Screen>
@@ -47,7 +40,7 @@ export default function CardsScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={colors.primary} style={styles.loader} />
+        <SkeletonList rows={3} />
       ) : cards.length === 0 ? (
         <EmptyState title={t('cards.noCards')} body={t('cards.noCardsBody')} icon="gift" />
       ) : (
@@ -55,7 +48,15 @@ export default function CardsScreen() {
           {cards.map((card) => (
             <Pressable
               key={card.id}
-              onPress={() => router.push(`/(customer)/card/${card.id}`)}
+              onPressIn={() => prefetchCard(card.id)}
+              onPress={() =>
+                router.push(
+                  cardHref({
+                    id: card.id,
+                    name: card.partner_name ?? card.vendor_name ?? card.offer_title,
+                  }) as never,
+                )
+              }
               accessibilityRole="button"
               style={({ pressed }) => pressed && styles.pressed}
             >
@@ -85,7 +86,6 @@ const styles = themedStyles(() => ({
   header: { gap: spacing.xs, marginTop: spacing.sm },
   title: { fontSize: fontSizes.display, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: fontSizes.md, color: colors.textMuted },
-  loader: { marginTop: spacing.xl },
   list: { gap: spacing.md },
   card: { gap: spacing.xs },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

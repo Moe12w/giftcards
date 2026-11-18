@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import {
   ArrowLeft,
   CalendarRange,
-  Copy,
   Eye,
   MousePointerClick,
   Pause,
@@ -19,7 +18,6 @@ import { formatDate, formatDateTime } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Notice, PageHead, ReadRow, StatusTag } from '@/components/ui';
 import {
-  duplicateAdvertisingCampaign,
   pauseAdvertisingCampaign,
   renewAdvertisingCampaign,
   resumeAdvertisingCampaign,
@@ -268,16 +266,10 @@ export default async function VendorAdvertisingCampaignPage({
         <section className="panel">
           <div className="panel-head">
             <h3>Manage</h3>
-            <span className="small muted">Duplicating or renewing creates a new unpaid campaign.</span>
+            <span className="small muted">Renewing creates a new unpaid campaign.</span>
           </div>
           <div className="panel-body">
             <div className="row-actions" style={{ flexWrap: 'wrap' }}>
-              <form action={duplicateAdvertisingCampaign}>
-                <input type="hidden" name="campaign_id" value={campaign.id} />
-                <button className="btn sm" type="submit">
-                  <Copy size={15} /> Duplicate
-                </button>
-              </form>
               {canRenew ? (
                 <form action={renewAdvertisingCampaign}>
                   <input type="hidden" name="campaign_id" value={campaign.id} />

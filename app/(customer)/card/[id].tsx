@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -12,6 +12,7 @@ import { Money } from '@/src/components/Money';
 import { QRCode } from '@/src/components/QRCode';
 import { Screen } from '@/src/components/Screen';
 import { SessionMeter } from '@/src/components/SessionMeter';
+import { GiftSkeleton } from '@/src/components/Skeleton';
 import { useCards } from '@/src/lib/cards';
 import { isGiftWaiting } from '@/src/lib/delivery';
 import { formatDate } from '@/src/lib/time';
@@ -32,7 +33,7 @@ const statusTone: Record<CardStatus, BadgeTone> = {
 export default function CardDetailScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, name: paramName } = useLocalSearchParams<{ id: string; name?: string }>();
   const { ready, getCard, sessionsLeft, valueLeft, canRedeem, revealPartnerCode, markPartnerCodeUsed } =
     useCards();
   const [card, setCard] = useState<GiftCard | null>(null);
@@ -44,6 +45,9 @@ export default function CardDetailScreen() {
     if (!id) return;
     setCard(getCard(id));
   }, [getCard, id]);
+
+  const cardName =
+    card?.partner_name ?? card?.vendor_name ?? card?.offer_title ?? paramName ?? t('cards.details');
 
   const isPartnerCode = card?.fulfilment_type === 'enterprise_code';
 
@@ -87,7 +91,8 @@ export default function CardDetailScreen() {
   if (!ready) {
     return (
       <Screen>
-        <ActivityIndicator color={colors.teal} style={styles.loader} />
+        <FlowHeader title={cardName} onBack={() => router.back()} />
+        <GiftSkeleton />
       </Screen>
     );
   }
@@ -95,7 +100,7 @@ export default function CardDetailScreen() {
   if (!card) {
     return (
       <Screen>
-        <FlowHeader title={t('cards.details')} onBack={() => router.back()} />
+        <FlowHeader title={cardName} onBack={() => router.back()} />
         <Text style={styles.title}>{t('common.errorGeneric')}</Text>
       </Screen>
     );
@@ -103,7 +108,7 @@ export default function CardDetailScreen() {
 
   return (
     <Screen>
-      <FlowHeader title={t('cards.details')} onBack={() => router.back()} />
+      <FlowHeader title={cardName} onBack={() => router.back()} />
 
       <Card style={styles.hero}>
         <View style={styles.heroTop}>

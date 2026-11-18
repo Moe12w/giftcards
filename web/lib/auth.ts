@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
@@ -28,7 +29,7 @@ interface VendorContext {
  * Guards every /vendor page. Resolves the vendor the user is currently working
  * in from the `gv_vendor` cookie, falling back to their first membership.
  */
-export async function requireVendor(): Promise<VendorContext> {
+async function loadVendorContext(): Promise<VendorContext> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -86,7 +87,9 @@ interface AdvertiserContext {
  * the vendor campaign lifecycle behind a partner -> vendor link, so they get the
  * exact same wizard, checkout, lifecycle and tracking flows.
  */
-export async function requireAdvertiser(options?: { prefer?: 'vendor' | 'enterprise' }): Promise<AdvertiserContext> {
+async function loadAdvertiserContext(options?: {
+  prefer?: 'vendor' | 'enterprise';
+}): Promise<AdvertiserContext> {
   const prefer = options?.prefer ?? 'vendor';
   const supabase = await createClient();
   const {
@@ -176,7 +179,7 @@ interface EnterpriseContext {
   role: EnterpriseMember['role'];
 }
 
-export async function requireEnterprise(): Promise<EnterpriseContext> {
+async function loadEnterpriseContext(): Promise<EnterpriseContext> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -218,7 +221,7 @@ interface AdminContext {
   profile: Profile | null;
 }
 
-export async function requireAdmin(): Promise<AdminContext> {
+async function loadAdminContext(): Promise<AdminContext> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -251,7 +254,7 @@ export interface BusinessBuyerContext {
  * Loads the signed-in user's business/bulk-buyer account (if any).
  * Used for registration status pages and the bulk buyer portal.
  */
-export async function getBusinessBuyerContext(): Promise<BusinessBuyerContext | null> {
+async function loadBusinessBuyerContext(): Promise<BusinessBuyerContext | null> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -271,11 +274,29 @@ export async function getBusinessBuyerContext(): Promise<BusinessBuyerContext | 
   };
 }
 
+// React's cache() memoises these guards for the lifetime of one server
+// request. Layouts and pages both call the same guard, and a server action
+// re-renders both, so this collapses what used to be two (or more) auth
+// round trips into one.
+export const getBusinessBuyerContext = cache(loadBusinessBuyerContext);
+
+/** Resolves the vendor the user is currently working in. */
+export const requireVendor = cache(loadVendorContext);
+
+/** Resolves either a vendor member or an enterprise advertiser. */
+export const requireAdvertiser = cache(loadAdvertiserContext);
+
+/** Guards the enterprise dashboard. */
+export const requireEnterprise = cache(loadEnterpriseContext);
+
+/** Guards the admin dashboard. */
+export const requireAdmin = cache(loadAdminContext);
+
 /**
  * Guards /business pages. Requires an approved business account to access
  * restricted bulk offers, pricing and bulk purchasing.
  */
-export async function requireApprovedBusinessBuyer(): Promise<
+export const requireApprovedBusinessBuyer = cache(async function requireApprovedBusinessBuyer(): Promise<
   Omit<BusinessBuyerContext, 'account'> & { account: BusinessAccount }
 > {
   const ctx = await getBusinessBuyerContext();
@@ -287,4 +308,4 @@ export async function requireApprovedBusinessBuyer(): Promise<
   }
 
   return { ...ctx, account: ctx.account };
-}
+});

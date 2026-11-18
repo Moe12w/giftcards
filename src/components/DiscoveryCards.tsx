@@ -3,7 +3,8 @@
 // editorial collections, featured businesses, trending gift cards and
 // personalised recommendations. All share the sticker-style visual language.
 import React from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, Check, Plus, Star } from 'lucide-react-native';
 
@@ -15,6 +16,7 @@ import {
   offerTone,
 } from '../lib/catalog';
 import { glyphIcon } from '../lib/glyphs';
+import { prefetchGift } from '../lib/navigation';
 import type { AccentTone, MarketplaceBusiness, Offer } from '../lib/types';
 import { colors, edges, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Card, type CardTone } from './Card';
@@ -138,9 +140,15 @@ interface FeaturedBusinessCardProps {
   business: MarketplaceBusiness;
   index?: number;
   onPress: () => void;
+  onPressIn?: () => void;
 }
 
-export function FeaturedBusinessCard({ business, index = 0, onPress }: FeaturedBusinessCardProps) {
+export function FeaturedBusinessCard({
+  business,
+  index = 0,
+  onPress,
+  onPressIn,
+}: FeaturedBusinessCardProps) {
   const { t } = useTranslation();
   const tone = FEATURED_TONES[index % FEATURED_TONES.length];
   const location = business.area ?? business.city;
@@ -151,12 +159,19 @@ export function FeaturedBusinessCard({ business, index = 0, onPress }: FeaturedB
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={onPressIn}
       accessibilityRole="button"
       accessibilityLabel={business.name}
       style={({ pressed }) => [styles.businessEdge, { backgroundColor: EDGES[tone] }, pressed && styles.pressed]}
     >
       <View style={styles.businessCard}>
-        <Image source={{ uri: banner }} style={styles.businessBanner} resizeMode="cover" />
+        <Image
+          source={banner}
+          style={styles.businessBanner}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={160}
+        />
         <View style={styles.businessBody}>
           <View style={styles.businessLogo}>
             <IconTile
@@ -216,6 +231,7 @@ export function TrendingGiftCard({
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={() => prefetchGift(offer, i18n.language)}
       accessibilityRole="button"
       accessibilityLabel={title}
       style={({ pressed }) => [styles.trendingWrap, pressed && styles.pressed]}

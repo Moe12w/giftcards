@@ -1,6 +1,6 @@
 // src/components/OfferCard.tsx
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { ArrowLeft, ArrowRight, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import {
@@ -12,7 +12,7 @@ import {
   offerTitle,
   offerTone,
 } from '../lib/catalog';
-import { pushOnce } from '../lib/navigation';
+import { businessHref, prefetchGift, pushOnce } from '../lib/navigation';
 import type { AccentTone, Offer } from '../lib/types';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Card, type CardTone } from './Card';
@@ -42,6 +42,7 @@ export function OfferCard({ offer, index = 0, onPress, vendorLink = true }: Offe
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={() => prefetchGift(offer, i18n.language)}
       accessibilityRole="button"
       accessibilityLabel={title}
       style={({ pressed }) => pressed && styles.pressed}
@@ -60,7 +61,9 @@ export function OfferCard({ offer, index = 0, onPress, vendorLink = true }: Offe
             </Text>
             {vendorLink && businessId ? (
               <Pressable
-                onPress={() => pushOnce(`/(customer)/business/${businessId}`)}
+                onPress={() =>
+                  pushOnce(businessHref({ id: businessId, name: businessName, logo_url: businessLogo }))
+                }
                 accessibilityRole="button"
                 accessibilityLabel={businessName}
                 hitSlop={6}
@@ -111,6 +114,7 @@ export function OfferTile({ offer, index = 0, onPress }: OfferCardProps) {
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={() => prefetchGift(offer, i18n.language)}
       accessibilityRole="button"
       accessibilityLabel={title}
       style={({ pressed }) => [styles.tileWrap, pressed && styles.pressed]}

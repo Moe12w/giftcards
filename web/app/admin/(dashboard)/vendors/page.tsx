@@ -3,6 +3,7 @@ import { Search, Store } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
 import { formatDate, initials } from '@/lib/format';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import { adminCopy } from '@/lib/i18n/admin';
 import { common } from '@/lib/i18n/common';
 import { fill, pick } from '@/lib/i18n';
@@ -119,10 +120,13 @@ export default async function AdminVendorsPage({
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             {vendor.logo_url ? (
-                              <img
+                              <OptimizedImage
                                 className="table-logo"
                                 src={vendor.logo_url}
-                                alt=""
+                                alt={vendor.name ?? ''}
+                                width={32}
+                                height={32}
+                                sizes="32px"
                               />
                             ) : (
                               <span className="avatar" style={{ width: 32, height: 32, fontSize: '0.7rem' }}>

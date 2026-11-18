@@ -1,12 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Bell, Gift, Globe, Heart } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -31,8 +24,8 @@ import {
 } from '@/src/components/DiscoveryCards';
 import { CATEGORIES, CURATED_COLLECTIONS, offerStartingPriceMinor, offerTitle, offersForCollection } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
-import { countUnreadNotifications, listActiveOffers, listMarketplaceBusinesses } from '@/src/lib/data';
-import { pushOnce } from '@/src/lib/navigation';
+import { countUnreadNotifications, listActiveOffers, listMarketplaceBusinesses, peekBusinesses, peekOffers } from '@/src/lib/data';
+import { businessHref, giftHref, prefetchBusiness, pushOnce } from '@/src/lib/navigation';
 import { hasSeenTutorial } from '@/src/lib/tutorial';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
 import { useAuth } from '@/src/lib/auth';
@@ -44,9 +37,14 @@ export default function ExploreHomeScreen() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { activeBasket, baskets } = useBaskets();
-  const [offers, setOffers] = useState<Offer[]>([]);
-  const [businesses, setBusinesses] = useState<MarketplaceBusiness[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [offers, setOffers] = useState<Offer[]>(() => peekOffers());
+  const [businesses, setBusinesses] = useState<MarketplaceBusiness[]>(() => {
+    const rows = peekBusinesses();
+    const partners = rows.filter((row) => row.business_kind === 'partner');
+    const vendors = rows.filter((row) => row.business_kind === 'vendor');
+    return [...partners, ...vendors].slice(0, 6);
+  });
+  const [loading, setLoading] = useState(offers.length === 0 && businesses.length === 0);
   const [error, setError] = useState(false);
   const [pickerOffer, setPickerOffer] = useState<Offer | null>(null);
   const tutorialPrompted = useRef(false);
@@ -67,7 +65,6 @@ export default function ExploreHomeScreen() {
 
   useEffect(() => {
     let active = true;
-    setError(false);
     Promise.all([listActiveOffers(), listMarketplaceBusinesses()])
       .then(([offerRows, businessRows]) => {
         if (!active) return;
@@ -242,7 +239,8 @@ export default function ExploreHomeScreen() {
                 key={business.id}
                 business={business}
                 index={index}
-                onPress={() => pushOnce(`/(customer)/business/${business.id}`)}
+                onPressIn={() => prefetchBusiness(business)}
+                onPress={() => pushOnce(businessHref(business))}
               />
             ))}
           </ScrollView>
@@ -379,7 +377,7 @@ export default function ExploreHomeScreen() {
                 key={offer.id}
                 offer={offer}
                 added={basketOfferIds.has(offer.id)}
-                onPress={() => router.push(`/(customer)/gift/${offer.id}`)}
+                onPress={() => router.push(giftHref(offer) as never)}
                 onAdd={() => quickAdd(offer)}
                 addLabel={t('discovery.quickAdd')}
               />
@@ -399,7 +397,7 @@ export default function ExploreHomeScreen() {
               key={offer.id}
               offer={offer}
               reason={reasonFor(offer, index)}
-              onPress={() => router.push(`/(customer)/gift/${offer.id}`)}
+              onPress={() => router.push(giftHref(offer) as never)}
             />
           ))}
         </View>

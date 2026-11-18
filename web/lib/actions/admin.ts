@@ -1,7 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { CACHE_TAGS } from '@/lib/public-cache';
 import { requireAdmin } from '@/lib/auth';
 import { parseMoneyToMinor } from '@/lib/money';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -88,6 +89,7 @@ export async function adminSetVendorStatus(formData: FormData) {
   revalidatePath('/admin');
   revalidatePath('/admin/vendors');
   revalidatePath(`/admin/vendors/${vendorId}`);
+  revalidateTag(CACHE_TAGS.marketplace, 'max');
   redirect(`${returnTo}?saved=1`);
 }
 
@@ -125,6 +127,7 @@ export async function adminSaveVendor(formData: FormData) {
   });
 
   revalidatePath(`/admin/vendors/${vendorId}`);
+  revalidateTag(CACHE_TAGS.marketplace, 'max');
   redirect(`${returnTo}?saved=1`);
 }
 
@@ -145,6 +148,7 @@ export async function adminSetProductStatus(formData: FormData) {
 
   await record(ctx.supabase, `product.status.${status}`, 'product', productId, {});
   revalidatePath('/admin/products');
+  revalidateTag(CACHE_TAGS.marketplace, 'max');
   redirect(`${returnTo}?saved=1`);
 }
 

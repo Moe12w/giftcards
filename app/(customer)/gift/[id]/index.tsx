@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MapPin, Star, Ticket } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,7 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { ListRow } from '@/src/components/ListRow';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
+import { GiftSkeleton } from '@/src/components/Skeleton';
 import { formatDate } from '@/src/lib/time';
 import {
   offerBusinessId,
@@ -25,7 +26,7 @@ import {
   offerTitle,
   offerTone,
 } from '@/src/lib/catalog';
-import { getOffer } from '@/src/lib/data';
+import { getOffer, peekOffer } from '@/src/lib/data';
 import { pushOnce } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { useGiftDraft } from '@/src/lib/gift-draft';
@@ -36,32 +37,32 @@ import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/th
 export default function GiftDetailScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, title: paramTitle } = useLocalSearchParams<{ id: string; title?: string }>();
   const { update } = useGiftDraft();
-  const [offer, setOffer] = useState<Offer | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [offer, setOffer] = useState<Offer | null>(() => (id ? peekOffer(id) : null));
+  const [loading, setLoading] = useState(Boolean(id) && !offer);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let active = true;
-    if (!id) {
-      setLoading(false);
-      return;
-    }
+    if (!id) return;
     getOffer(id)
-      .then((data) => active && setOffer(data))
-      .catch(() => active && setError(true))
+      .then((data) => active && data && setOffer(data))
+      .catch(() => active && !peekOffer(id) && setError(true))
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
     };
   }, [id]);
 
+  // The route and the cache usually know the title before the network does.
+  const headerTitle = offer ? offerTitle(offer, i18n.language) : paramTitle ?? t('gift.detailsTitle');
+
   if (loading) {
     return (
       <Screen>
-        <FlowHeader title={t('gift.detailsTitle')} onBack={() => router.back()} />
-        <ActivityIndicator color={colors.teal} style={styles.loader} />
+        <FlowHeader title={headerTitle} onBack={() => router.back()} />
+        <GiftSkeleton />
       </Screen>
     );
   }
@@ -69,7 +70,7 @@ export default function GiftDetailScreen() {
   if (error) {
     return (
       <Screen>
-        <FlowHeader title={t('gift.detailsTitle')} onBack={() => router.back()} />
+        <FlowHeader title={headerTitle} onBack={() => router.back()} />
         <EmptyState
           title={t('states.error.title')}
           body={t('states.error.body')}
@@ -84,7 +85,7 @@ export default function GiftDetailScreen() {
   if (!offer) {
     return (
       <Screen>
-        <FlowHeader title={t('gift.detailsTitle')} onBack={() => router.back()} />
+        <FlowHeader title={headerTitle} onBack={() => router.back()} />
         <EmptyState
           title={t('states.not-found.title')}
           body={t('states.not-found.body')}
@@ -116,7 +117,7 @@ export default function GiftDetailScreen() {
 
   return (
     <Screen>
-      <FlowHeader title={t('gift.detailsTitle')} onBack={() => router.back()} />
+      <FlowHeader title={headerTitle} onBack={() => router.back()} />
 
       <Card tone={tone === 'sky' ? 'sky' : tone}>
         <View style={styles.heroTop}>

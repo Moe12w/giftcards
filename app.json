@@ -32,7 +32,10 @@
         {
           "supportsRTL": true,
           "forcesRTL": false,
-          "supportedLocales": ["en", "ar"]
+          "supportedLocales": [
+            "en",
+            "ar"
+          ]
         }
       ],
       [
@@ -42,7 +45,10 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

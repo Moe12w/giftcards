@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, ArrowRight, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -10,9 +10,10 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
+import { SkeletonList } from '@/src/components/Skeleton';
 import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
-import { listMarketplaceBusinesses } from '@/src/lib/data';
-import { pushOnce } from '@/src/lib/navigation';
+import { listMarketplaceBusinesses, peekBusinesses } from '@/src/lib/data';
+import { businessHref, prefetchBusiness, pushOnce } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
 import type { MarketplaceBusiness } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
@@ -22,22 +23,24 @@ const TONES: IconTileTone[] = ['teal', 'gold', 'pink', 'lavender', 'sky'];
 export default function BusinessesScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
-  const [businesses, setBusinesses] = useState<MarketplaceBusiness[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [businesses, setBusinesses] = useState<MarketplaceBusiness[]>(() => peekBusinesses());
+  const [loading, setLoading] = useState(businesses.length === 0);
+  const request = useRef(0);
 
   const load = useCallback(async () => {
-    setLoading(true);
+    const token = ++request.current;
     try {
-      setBusinesses(await listMarketplaceBusinesses());
+      const rows = await listMarketplaceBusinesses();
+      if (request.current === token) setBusinesses(rows);
     } catch {
-      setBusinesses([]);
+      // A failed refresh keeps whatever the cache already painted.
     } finally {
-      setLoading(false);
+      if (request.current === token) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   const rtl = i18n.language === 'ar';
@@ -48,7 +51,7 @@ export default function BusinessesScreen() {
       <FlowHeader title={t('discovery.allBusinesses')} onBack={() => router.back()} />
 
       {loading ? (
-        <ActivityIndicator color={colors.teal} style={styles.loader} />
+        <SkeletonList rows={6} />
       ) : businesses.length === 0 ? (
         <EmptyState
           title={t('home.noOffers')}
@@ -66,7 +69,8 @@ export default function BusinessesScreen() {
             return (
               <Pressable
                 key={business.id}
-                onPress={() => pushOnce(`/(customer)/business/${business.id}`)}
+                onPressIn={() => prefetchBusiness(business)}
+                onPress={() => pushOnce(businessHref(business))}
                 accessibilityRole="button"
                 accessibilityLabel={business.name}
                 style={({ pressed }) => pressed && styles.pressed}
@@ -121,7 +125,6 @@ export default function BusinessesScreen() {
 }
 
 const styles = themedStyles(() => ({
-  loader: { marginTop: spacing.xxl },
   list: { gap: spacing.sm },
   pressed: { opacity: 0.9 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

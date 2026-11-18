@@ -16,8 +16,8 @@ import {
   Ticket,
   Wallet,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
-import { mapProducts } from '@/lib/data';
+import { OptimizedImage } from '@/components/OptimizedImage';
+import { getMarketplaceSnapshot } from '@/lib/public-cache';
 import { formatMoney } from '@/lib/money';
 import { initials } from '@/lib/format';
 import { fulfilmentLabel, priceLabel, productTone } from '@/lib/catalog';
@@ -31,38 +31,11 @@ export default async function HomePage() {
   const copy = pick(site, locale);
   const t = copy.home;
   const c = pick(common, locale);
-  const supabase = await createClient();
-
-  const [businessCount, productCount, categoryResult, featuredResult, offersResult] =
-    await Promise.all([
-      supabase.from('marketplace_businesses').select('id', { count: 'exact', head: true }),
-      supabase
-        .from('products')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'published')
-        .eq('is_active', true),
-      supabase.from('categories').select('id, name, slug').eq('active', true),
-      supabase
-        .from('marketplace_businesses')
-        .select('id, business_kind, name, slug, logo_url, city, area, rating, description, gift_count')
-        .order('business_kind', { ascending: true })
-        .order('gift_count', { ascending: false })
-        .order('rating', { ascending: false })
-        .limit(6),
-      supabase
-        .from('products')
-        .select('*, vendors(id, name, slug, logo_url, status), partner:enterprise_partners(id, name, slug, logo_url), product_variants(*)')
-        .eq('status', 'published')
-        .eq('is_active', true)
-        .order('rating', { ascending: false })
-        .limit(6),
-    ]);
-
-  const businesses = featuredResult.data ?? [];
-  const offers = mapProducts(offersResult.data);
-  const categories = categoryResult.data ?? [];
-  const businessTotal = businessCount.count ?? 0;
-  const productTotal = productCount.count ?? 0;
+  // Public catalogue data is cached across requests (and refreshed in the
+  // background), so the marketing homepage no longer re-queries Supabase for
+  // every visitor.
+  const { businesses, offers, categories, businessTotal, productTotal } =
+    await getMarketplaceSnapshot();
 
   return (
     <>
@@ -249,7 +222,7 @@ export default async function HomePage() {
                 <div className="vendor-top">
                   <span className="vendor-logo">
                     {business.logo_url ? (
-                      <img src={business.logo_url} alt="" />
+                      <OptimizedImage src={business.logo_url} alt={business.name} width={52} height={52} sizes="52px" />
                     ) : (
                       initials(business.name)
                     )}

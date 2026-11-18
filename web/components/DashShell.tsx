@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -33,6 +33,8 @@ import {
   X,
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
+import { NavProgress } from '@/components/NavProgress';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import { TutorialProvider, useTutorial } from '@/components/TutorialProvider';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { signOut } from '@/lib/actions/auth';
@@ -353,7 +355,7 @@ function DashShellInner({
           <span className="label">{portalLabel}</span>
           <div className="dash-workspace-name">
             {workspaceLogoUrl ? (
-              <img className="dash-workspace-logo" src={workspaceLogoUrl} alt="" />
+              <OptimizedImage className="dash-workspace-logo" src={workspaceLogoUrl} alt="" width={36} height={36} sizes="36px" />
             ) : null}
             <strong>{workspaceName}</strong>
           </div>
@@ -462,7 +464,7 @@ function DashShellInner({
             <span>{portalLabel}</span>
             <span className="dash-top-name">
               {workspaceLogoUrl ? (
-                <img className="dash-top-logo" src={workspaceLogoUrl} alt="" />
+                <OptimizedImage className="dash-top-logo" src={workspaceLogoUrl} alt="" width={34} height={34} sizes="34px" />
               ) : null}
               <strong>{workspaceName}</strong>
             </span>
@@ -489,6 +491,9 @@ function DashShellInner({
         </header>
         {children}
       </div>
+      <Suspense fallback={null}>
+        <NavProgress />
+      </Suspense>
     </div>
   );
 }

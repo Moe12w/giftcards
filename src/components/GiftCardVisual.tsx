@@ -1,6 +1,6 @@
 // src/components/GiftCardVisual.tsx
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { AccentTone } from '../lib/types';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '../theme';
@@ -24,6 +24,7 @@ interface GiftCardVisualProps {
   message?: string;
   badge?: { label: string; tone: BadgeTone };
   onPress?: () => void;
+  onPressIn?: () => void;
   compact?: boolean;
 }
 
@@ -47,6 +48,7 @@ export function GiftCardVisual({
   message,
   badge,
   onPress,
+  onPressIn,
   compact = false,
 }: GiftCardVisualProps) {
   const { t } = useTranslation();
@@ -101,6 +103,7 @@ export function GiftCardVisual({
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={onPressIn}
       accessibilityRole="button"
       accessibilityLabel={title}
       style={({ pressed }) => pressed && styles.pressed}

@@ -2,7 +2,8 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { CACHE_TAGS } from '@/lib/public-cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireVendor } from '@/lib/auth';
@@ -391,6 +392,7 @@ export async function createProduct(formData: FormData) {
   }
 
   revalidatePath('/vendor/products');
+  revalidateTag(CACHE_TAGS.marketplace, 'max');
   redirect(`/vendor/products/${inserted.id}?saved=1`);
 }
 
@@ -454,6 +456,7 @@ export async function updateProduct(formData: FormData) {
   if (error) back(`/vendor/products/${id}`, error.message);
 
   revalidatePath('/vendor/products');
+  revalidateTag(CACHE_TAGS.marketplace, 'max');
   revalidatePath(`/vendor/products/${id}`);
   redirect(`/vendor/products/${id}?saved=1`);
 }
@@ -479,6 +482,7 @@ export async function setProductStatus(formData: FormData) {
   if (error) back(destination, error.message);
 
   revalidatePath('/vendor/products');
+  revalidateTag(CACHE_TAGS.marketplace, 'max');
   redirect(`${destination}?saved=1`);
 }
 
@@ -959,6 +963,7 @@ export async function uploadVendorImage(formData: FormData): Promise<ImageAction
   revalidatePath('/vendor');
   if (ctx.vendor.slug) revalidatePath(`/vendors/${ctx.vendor.slug}`);
   revalidatePath('/vendors');
+  revalidateTag(CACHE_TAGS.marketplace, 'max');
 
   return { ok: true, url: publicUrl };
 }
@@ -985,6 +990,7 @@ export async function removeVendorImage(kind: 'logo' | 'banner'): Promise<ImageA
   revalidatePath('/vendor');
   if (ctx.vendor.slug) revalidatePath(`/vendors/${ctx.vendor.slug}`);
   revalidatePath('/vendors');
+  revalidateTag(CACHE_TAGS.marketplace, 'max');
 
   return { ok: true };
 }

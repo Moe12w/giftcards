@@ -1,4 +1,5 @@
 import React from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Redirect, Stack } from 'expo-router';
 
 import { useAuth } from '@/src/lib/auth';
@@ -12,7 +13,13 @@ export default function CustomerLayout() {
   useThemeRefresh();
   const { user, loading } = useAuth();
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color={colors.teal} />
+      </View>
+    );
+  }
   if (hasSupabaseConfig && !user) {
     return <Redirect href="/(auth)/login" />;
   }
@@ -33,3 +40,12 @@ export default function CustomerLayout() {
     </BasketProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
+});

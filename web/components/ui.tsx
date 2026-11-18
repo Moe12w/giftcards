@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Inbox } from 'lucide-react';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import { labelFor } from '@/lib/i18n/labels';
 import { pick } from '@/lib/i18n';
 import { common } from '@/lib/i18n/common';
@@ -66,7 +67,9 @@ export function PageHead({
       <div className="copy">
         {eyebrow ? <span className="eyebrow mint">{eyebrow}</span> : null}
         <h1 className={logoUrl ? 'page-title-logo' : undefined}>
-          {logoUrl ? <img className="page-logo" src={logoUrl} alt="" /> : null}
+          {logoUrl ? (
+            <OptimizedImage src={logoUrl} alt="" width={54} height={54} sizes="54px" />
+          ) : null}
           {title}
         </h1>
         {description ? <p>{description}</p> : null}

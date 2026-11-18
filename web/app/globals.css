@@ -4470,3 +4470,184 @@ table.data .sub {
   }
 }
 
+
+/* ---------------------------------------------------------------------------
+   Navigation and form feedback
+   A server action keeps the old screen mounted until the next route is ready.
+   These styles make the wait visible instead of looking like a dead click.
+--------------------------------------------------------------------------- */
+.nav-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 3px;
+  z-index: 200;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 160ms ease 120ms;
+}
+
+body.nav-pending .nav-progress {
+  opacity: 1;
+}
+
+.nav-progress::before {
+  content: '';
+  display: block;
+  width: 34%;
+  height: 100%;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(90deg, var(--mint), var(--lavender), var(--gold));
+  box-shadow: 0 0 10px rgba(114, 194, 184, 0.55);
+  animation: nav-progress-run 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes nav-progress-run {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(310%);
+  }
+}
+
+body.nav-pending,
+body.nav-pending * {
+  cursor: progress !important;
+}
+
+/* The pressed submit button shows its own spinner, so the feedback sits
+   exactly where the user clicked. */
+button[data-pending] {
+  position: relative;
+  opacity: 0.72;
+}
+
+button[data-pending]::before {
+  content: '';
+  display: inline-block;
+  width: 0.72em;
+  height: 0.72em;
+  margin-inline-end: 0.45em;
+  vertical-align: -0.08em;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: giftly-spin 0.7s linear infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   Route skeletons
+   Used by loading.tsx so a dashboard paints its shape instantly.
+--------------------------------------------------------------------------- */
+.skeleton-page {
+  display: grid;
+  gap: 24px;
+  padding: 32px;
+}
+
+.skeleton-line,
+.skeleton-block,
+.skeleton-kpi,
+.skeleton-row span {
+  display: block;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-soft) 20%,
+    #fffdf8 38%,
+    var(--surface-soft) 56%
+  );
+  background-size: 300% 100%;
+  animation: skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+.skeleton-head {
+  display: grid;
+  gap: 10px;
+}
+
+.skeleton-line {
+  height: 14px;
+}
+
+.skeleton-line.title {
+  width: min(320px, 55%);
+  height: 30px;
+}
+
+.skeleton-line.sub {
+  width: min(460px, 80%);
+}
+
+.skeleton-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.skeleton-kpi {
+  height: 104px;
+  border: 2px solid var(--line-soft);
+}
+
+.skeleton-panel {
+  border: 2px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 22px;
+  display: grid;
+  gap: 16px;
+}
+
+.skeleton-rows {
+  display: grid;
+  gap: 12px;
+}
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.skeleton-row span {
+  height: 16px;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .skeleton-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .skeleton-page {
+    padding: 20px;
+  }
+
+  .skeleton-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress::before,
+  .skeleton-line,
+  .skeleton-block,
+  .skeleton-kpi,
+  .skeleton-row span,
+  button[data-pending]::before {
+    animation: none;
+  }
+}

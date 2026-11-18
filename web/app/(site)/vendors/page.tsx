@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, MapPin, Search, Star } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
+import { OptimizedImage } from '@/components/OptimizedImage';
+import { getCachedBusinessDirectory } from '@/lib/public-cache';
 import { initials } from '@/lib/format';
 import { EmptyState } from '@/components/ui';
 import { site } from '@/lib/i18n/site';
@@ -26,28 +27,7 @@ export default async function VendorsPage({
   const locale = await getLocale();
   const t = pick(site, locale).vendors;
   const c = pick(common, locale);
-  const supabase = await createClient();
-
-  let query = supabase
-    .from('marketplace_businesses')
-    .select('id, business_kind, name, slug, logo_url, banner_url, city, area, rating, description, gift_count')
-    .order('gift_count', { ascending: false })
-    .order('rating', { ascending: false });
-
-  const { data: businesses } = await query;
-  const rows = (businesses ?? []) as Array<{
-    id: string;
-    business_kind: string;
-    name: string;
-    slug: string | null;
-    logo_url: string | null;
-    banner_url: string | null;
-    city: string | null;
-    area: string | null;
-    rating: number | null;
-    description: string | null;
-    gift_count: number;
-  }>;
+  const rows = await getCachedBusinessDirectory();
 
   // Fuzzy, bilingual (EN/AR) search across name, description, area and city.
   const results = (q ? searchBusinesses(rows, q) : rows) as typeof rows;
@@ -96,7 +76,7 @@ export default async function VendorsPage({
                   <div className="vendor-top">
                     <span className="vendor-logo">
                       {business.logo_url ? (
-                        <img src={business.logo_url} alt="" />
+                        <OptimizedImage src={business.logo_url} alt={business.name} width={52} height={52} sizes="52px" />
                       ) : (
                         initials(business.name)
                       )}

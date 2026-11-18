@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Image } from 'expo-image';
+import { Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { giftHref } from '@/src/lib/navigation';
 import { MapPin, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -13,46 +15,83 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
+import { BusinessSkeleton, SkeletonList } from '@/src/components/Skeleton';
 import { offerBusinessId, offerTone } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
-import { getBusiness, listActiveOffers, listVendorLocations } from '@/src/lib/data';
+import {
+  getBusiness,
+  listOffersForBusiness,
+  listVendorLocations,
+  peekBusiness,
+  peekLocations,
+  peekOffersForBusiness,
+} from '@/src/lib/data';
 import type { AccentTone, BusinessLocation, MarketplaceBusiness, Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function BusinessScreen() {
   useThemeRefresh();
   const { t } = useTranslation();
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const [offers, setOffers] = useState<Offer[]>([]);
-  const [business, setBusiness] = useState<MarketplaceBusiness | null>(null);
-  const [locations, setLocations] = useState<BusinessLocation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { id, name: paramName, logo } = useLocalSearchParams<{
+    id: string;
+    name?: string;
+    logo?: string;
+  }>();
+
+  // The home feed and the business list already hold this record. Start from
+  // that copy (or the name passed in the route) so the title is right on the
+  // first frame, then refresh quietly.
+  const known = id ? peekBusiness(id) : null;
+  const [offers, setOffers] = useState<Offer[]>(() => (id ? peekOffersForBusiness(id) : []));
+  const [business, setBusiness] = useState<MarketplaceBusiness | null>(known);
+  const [locations, setLocations] = useState<BusinessLocation[]>(() =>
+    known ? peekLocations(known.id) : [],
+  );
+  const [loading, setLoading] = useState(Boolean(id) && !known);
+  const [offersLoading, setOffersLoading] = useState(Boolean(id) && offers.length === 0);
+  const request = useRef(0);
 
   const load = useCallback(async () => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
+    const token = ++request.current;
+    const isActive = () => request.current === token;
+
+    if (!id) return;
+
     try {
-      const [data, found] = await Promise.all([listActiveOffers(), getBusiness(id)]);
-      setOffers(data);
+      // Start both requests together. The business one is usually served from
+      // memory; the offer query only asks for this business, not the whole
+      // marketplace.
+      const offersPromise = listOffersForBusiness(id);
+      const found = await getBusiness(id);
+      if (!isActive()) return;
+
       setBusiness(found);
-      if (found?.business_kind === 'vendor') {
-        setLocations(await listVendorLocations(found.id));
-      } else {
-        setLocations([]);
-      }
+      setLoading(false);
+
+      const locationsPromise =
+        found?.business_kind === 'vendor'
+          ? listVendorLocations(found.id)
+          : Promise.resolve<BusinessLocation[]>([]);
+
+      const [offerRows, locationRows] = await Promise.all([offersPromise, locationsPromise]);
+      if (!isActive()) return;
+
+      setOffers(offerRows);
+      setLocations(locationRows);
     } catch {
-      setBusiness(null);
+      if (!isActive()) return;
+      setBusiness((current) => current ?? null);
       setLocations([]);
     } finally {
-      setLoading(false);
+      if (isActive()) {
+        setLoading(false);
+        setOffersLoading(false);
+      }
     }
   }, [id]);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   const businessId = business?.id ?? id ?? '';
@@ -60,8 +99,9 @@ export default function BusinessScreen() {
   const primary = offersMatching[0];
   const tone = primary ? (offerTone(primary) as AccentTone) : 'lavender';
   const isPartner = business?.business_kind === 'partner';
-  const name = business?.name ?? t('business.title');
+  const name = business?.name ?? paramName ?? t('business.title');
   const location = business?.area ?? business?.city ?? primary?.location ?? null;
+  const logoUrl = business?.logo_url ?? logo ?? null;
 
   return (
     <Screen>
@@ -71,8 +111,8 @@ export default function BusinessScreen() {
         onBack={() => router.back()}
       />
 
-      {loading ? (
-        <ActivityIndicator color={colors.teal} style={styles.loader} />
+      {loading && !business ? (
+        <BusinessSkeleton />
       ) : !business ? (
         <EmptyState
           title={t('states.not-found.title')}
@@ -84,7 +124,13 @@ export default function BusinessScreen() {
         <>
           {business.banner_url ? (
             <Card tone="surface" padded={false} style={styles.banner}>
-              <Image source={{ uri: business.banner_url }} style={styles.bannerImage} resizeMode="cover" />
+              <Image
+                source={business.banner_url}
+                style={styles.bannerImage}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                transition={160}
+              />
             </Card>
           ) : null}
 
@@ -92,7 +138,7 @@ export default function BusinessScreen() {
             <View style={styles.heroRow}>
               <IconTile
                 icon="store"
-                imageUrl={business.logo_url ?? undefined}
+                imageUrl={logoUrl ?? undefined}
                 size={72}
                 tone={tone === 'sky' ? 'sky' : (tone as IconTileTone)}
               />
@@ -142,7 +188,9 @@ export default function BusinessScreen() {
           ) : null}
 
           <SectionHeader title={t('business.giftCards')} />
-          {offersMatching.length === 0 ? (
+          {offersLoading && offersMatching.length === 0 ? (
+            <SkeletonList rows={2} />
+          ) : offersMatching.length === 0 ? (
             <EmptyState
               title={t('home.noOffers')}
               body={t('home.noOffersBody')}
@@ -157,7 +205,7 @@ export default function BusinessScreen() {
                   offer={offer}
                   index={index}
                   vendorLink={false}
-                  onPress={() => router.push(`/(customer)/gift/${offer.id}`)}
+                  onPress={() => router.push(giftHref(offer) as never)}
                 />
               ))}
             </View>
@@ -185,7 +233,7 @@ export default function BusinessScreen() {
             <Button
               label={t('gift.buyNow')}
               fullWidth
-              onPress={() => router.push(`/(customer)/gift/${primary.id}`)}
+              onPress={() => router.push(giftHref(primary) as never)}
             />
           ) : null}
         </>

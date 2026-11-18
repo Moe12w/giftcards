@@ -11,6 +11,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -64,33 +65,61 @@ export interface CardsContextValue {
 
 const CardsContext = createContext<CardsContextValue | null>(null);
 
+/** Stable empties so a signed-out render does not allocate new arrays. */
+const NO_CARDS: GiftCard[] = [];
+const NO_ENTRIES: RedemptionEntry[] = [];
+
 export function CardProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const userId = user?.id ?? null;
-  const [cards, setCards] = useState<GiftCard[]>([]);
-  const [entries, setEntries] = useState<RedemptionEntry[]>([]);
-  const [ready, setReady] = useState(false);
+  // Demo builds have no account but still show the sample wallet.
+  const scope = hasSupabaseConfig ? userId : 'demo';
+  const [cards, setCards] = useState<GiftCard[]>(NO_CARDS);
+  const [entries, setEntries] = useState<RedemptionEntry[]>(NO_ENTRIES);
+  const [loadedScope, setLoadedScope] = useState<string | null>(null);
+  const walletRef = useRef<{ scope: string; cards: GiftCard[] }>({ scope: '', cards: [] });
 
-  const load = useCallback(async (userId: string | null) => {
-    if (!hasSupabaseConfig) {
-      setReady(true);
-      return;
-    }
-    if (!userId) {
-      setCards([]);
-      setEntries([]);
-      setReady(true);
-      return;
-    }
+  // Data belongs to one account. When the account changes (or the user signs
+  // out) the old wallet is hidden immediately instead of leaking through, and
+  // the tab shows its skeleton until the new rows land.
+  const hasWallet = scope !== null && loadedScope === scope;
+  const ready = !scope || hasWallet;
+  const visibleCards = hasWallet ? cards : NO_CARDS;
+  const visibleEntries = hasWallet ? entries : NO_ENTRIES;
+
+  const load = useCallback(async (requestedUserId: string | null) => {
+    const target = hasSupabaseConfig ? requestedUserId : 'demo';
+    if (!target) return;
     try {
+      // On a refresh we already know the voucher ids, so both reads can run
+      // together. On the first load the history needs the ids, but the wallet
+      // is painted as soon as the vouchers arrive — the history streams in
+      // behind it and the stored balances already cover the wait.
+      const previousIds =
+        walletRef.current.scope === target
+          ? walletRef.current.cards.map((card) => card.id)
+          : [];
+      const history = previousIds.length
+        ? listRedemptionsFor(previousIds).catch(() => null)
+        : null;
+
       const rows = await listMyVouchers();
+      walletRef.current = { scope: target, cards: rows };
       setCards(rows);
-      setEntries(await listRedemptionsFor(rows.map((row) => row.id)));
+      setLoadedScope(target);
+
+      if (history) {
+        const entries = await history;
+        if (entries) setEntries(entries);
+      } else {
+        setEntries(await listRedemptionsFor(rows.map((row) => row.id)));
+      }
     } catch {
-      setCards([]);
-      setEntries([]);
+      walletRef.current = { scope: target, cards: [] };
+      setCards(NO_CARDS);
+      setEntries(NO_ENTRIES);
     } finally {
-      setReady(true);
+      setLoadedScope(target);
     }
   }, []);
 
@@ -99,18 +128,18 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
   }, [load, userId]);
 
   const getCard = useCallback(
-    (id: string) => cards.find((card) => card.id === id) ?? null,
-    [cards],
+    (id: string) => visibleCards.find((card) => card.id === id) ?? null,
+    [visibleCards],
   );
 
   const entriesFor = useCallback(
-    (cardId: string) => entries.filter((entry) => entry.card_id === cardId),
-    [entries],
+    (cardId: string) => visibleEntries.filter((entry) => entry.card_id === cardId),
+    [visibleEntries],
   );
 
   const cardsForVendor = useCallback(
-    (vendorId: string) => cards.filter((card) => card.vendor_id === vendorId),
-    [cards],
+    (vendorId: string) => visibleCards.filter((card) => card.vendor_id === vendorId),
+    [visibleCards],
   );
 
   const sessionsLeft = useCallback(
@@ -187,34 +216,34 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
   // A voucher the customer received was claimed by them. A voucher they sent
   // was bought by them for somebody else.
   const receivedCards = useMemo(
-    () => cards.filter((card) => Boolean(userId) && card.claimed_by === userId),
-    [cards, userId],
+    () => visibleCards.filter((card) => Boolean(userId) && card.claimed_by === userId),
+    [visibleCards, userId],
   );
 
   const sentCards = useMemo(
     () =>
-      cards.filter(
+      visibleCards.filter(
         (card) => Boolean(userId) && card.buyer_id === userId && card.claimed_by !== userId,
       ),
-    [cards, userId],
+    [visibleCards, userId],
   );
 
   const usableCards = useMemo(
     () =>
-      cards.filter(
+      visibleCards.filter(
         (card) =>
           card.status !== 'redeemed' &&
           card.status !== 'expired' &&
           card.status !== 'voided',
       ),
-    [cards],
+    [visibleCards],
   );
 
   const value = useMemo<CardsContextValue>(
     () => ({
       ready,
-      cards,
-      entries,
+      cards: visibleCards,
+      entries: visibleEntries,
       receivedCards,
       sentCards,
       usableCards,
@@ -232,8 +261,8 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       ready,
-      cards,
-      entries,
+      visibleCards,
+      visibleEntries,
       receivedCards,
       sentCards,
       usableCards,

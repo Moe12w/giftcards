@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { giftHref } from '@/src/lib/navigation';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/src/components/EmptyState';
@@ -64,7 +65,7 @@ export default function CategoryScreen() {
                 key={offer.id}
                 offer={offer}
                 index={index}
-                onPress={() => router.push(`/(customer)/gift/${offer.id}`)}
+                onPress={() => router.push(giftHref(offer) as never)}
               />
             ))}
           </View>

@@ -4,12 +4,11 @@
 // renders whatever the delivery function returns. An empty response hides the
 // whole section, so the customer app degrades cleanly when no campaign is live.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Image } from 'expo-image';
 import {
-  Image,
   Linking,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
   useWindowDimensions,
@@ -84,11 +83,25 @@ async function openSponsoredAd(ad: SponsoredAd): Promise<void> {
     return;
   }
   if (destinationType === 'business' && destinationId) {
-    pushOnce(`/(customer)/business/${destinationId}`);
+    // The ad already carries the business name and logo: carry them so the
+    // screen paints the right title instead of a generic "Business" header.
+    const params = new URLSearchParams();
+    const name = canonical?.vendor_name ?? ad.vendor_name ?? ad.headline;
+    const logo = canonical?.vendor_logo ?? ad.vendor_logo;
+    if (name) params.set('name', name);
+    if (logo) params.set('logo', logo);
+    const query = params.toString();
+    pushOnce(`/(customer)/business/${destinationId}${query ? `?${query}` : ''}`);
     return;
   }
   if (destinationType === 'gift_card' && destinationId) {
-    router.push(`/(customer)/gift/${destinationId}` as never);
+    const params = new URLSearchParams();
+    const title = canonical?.headline ?? ad.headline;
+    if (title) params.set('title', title);
+    const logo = canonical?.vendor_logo ?? ad.vendor_logo;
+    if (logo) params.set('logo', logo);
+    const query = params.toString();
+    router.push(`/(customer)/gift/${destinationId}${query ? `?${query}` : ''}` as never);
     return;
   }
   if (destinationType === 'category') {
@@ -252,10 +265,11 @@ export function SponsoredCarousel({
                     <View style={styles.media}>
                       {image ? (
                         <Image
-                          source={{ uri: image }}
+                          source={image}
                           style={[styles.image, { aspectRatio: ratio }]}
-                          resizeMode="cover"
-                          accessibilityIgnoresInvertColors
+                          contentFit="cover"
+                          cachePolicy="memory-disk"
+                          transition={160}
                         />
                       ) : (
                         <View style={[styles.imageFallback, { aspectRatio: ratio }]}>
@@ -373,10 +387,11 @@ export function SponsoredStrip({
                 <View style={styles.nativeMedia}>
                   {image ? (
                     <Image
-                      source={{ uri: image }}
+                      source={image}
                       style={styles.nativeImage}
-                      resizeMode="cover"
-                      accessibilityIgnoresInvertColors
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                      transition={160}
                     />
                   ) : (
                     <View style={styles.nativeFallback}>

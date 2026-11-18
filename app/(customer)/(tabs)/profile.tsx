@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -11,11 +11,12 @@ import { ListRow } from '@/src/components/ListRow';
 import { PageHeader } from '@/src/components/PageHeader';
 import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
+import { useCards } from '@/src/lib/cards';
 import { useThemeRefresh } from '@/src/lib/theme';
-import { listMyCards, listMyOrders } from '@/src/lib/data';
+import { listMyOrders } from '@/src/lib/data';
 import { getLegalBundle } from '@/src/legal';
 import { setLanguage, type Language } from '@/src/i18n';
-import type { GiftCard, Order } from '@/src/lib/types';
+import type { Order } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function ProfileScreen() {
@@ -23,17 +24,15 @@ export default function ProfileScreen() {
   const { t, i18n } = useTranslation();
   const legal = getLegalBundle(i18n.language === 'ar' ? 'ar' : 'en').ui;
   const { user, signOut, isDemo } = useAuth();
-  const [cards, setCards] = useState<GiftCard[]>([]);
+  // The wallet provider already loaded the vouchers; reading them here again
+  // would download and map the same rows a second time.
+  const { cards } = useCards();
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     let active = true;
-    Promise.all([listMyCards(), listMyOrders()])
-      .then(([cardData, orderData]) => {
-        if (!active) return;
-        setCards(cardData);
-        setOrders(orderData);
-      })
+    listMyOrders()
+      .then((data) => active && setOrders(data))
       .catch(() => undefined);
     return () => {
       active = false;

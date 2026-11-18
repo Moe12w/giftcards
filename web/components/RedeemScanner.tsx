@@ -354,6 +354,7 @@ export function RedeemScanner({ locale = 'en' }: { locale?: 'en' | 'ar' }) {
 
       <form
         className="scan-paste"
+        data-pending="off"
         onSubmit={(event) => {
           event.preventDefault();
           if (pasted.trim()) void handleScan(pasted.trim());

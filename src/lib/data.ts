@@ -4,6 +4,7 @@
 // added, they fall back to demo data so the UI can be built and tested.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { cached, peekCache, primeCache } from './cache';
 import { hasSupabaseConfig } from './env';
 import {
   MOCK_CARDS,
@@ -18,7 +19,6 @@ import {
 import { getSupabase } from './supabase';
 import { resolveTone } from './tone';
 import type {
-  AccentTone,
   CustomerAddress,
   CustomerPreferences,
   SupportRequest,
@@ -26,7 +26,6 @@ import type {
   BusinessLocation,
   CardStatus,
   GiftCard,
-  LedgerEntry,
   MarketplaceBusiness,
   NotificationKind,
   Offer,
@@ -48,8 +47,6 @@ interface LedgerEntryRow {
   sessions: number;
   created_at: string;
 }
-
-export interface OfferWithBalance extends Offer {}
 
 /** The notification row as it is stored in the database. */
 interface NotificationRow {
@@ -274,32 +271,94 @@ export async function listVendorLocations(vendorId: string): Promise<BusinessLoc
   if (!hasSupabaseConfig) {
     return MOCK_LOCATIONS.filter((location) => location.vendorId === vendorId);
   }
-  const { data, error } = await getSupabase()
-    .from('vendor_locations')
-    .select('id, area, address, hours')
-    .eq('vendor_id', vendorId)
-    .order('is_primary', { ascending: false });
-  if (error) throw error;
-  return ((data ?? []) as { id: string; area: string | null; address: string | null; hours: string | null }[]).map(
-    (row) => ({
-      id: row.id,
-      vendorId,
-      area: row.area ?? '',
-      address: row.address ?? '',
-      hours: row.hours ?? '',
-    }),
-  );
+  return cached(`locations:${vendorId}`, 5 * 60_000, async () => {
+    const { data, error } = await getSupabase()
+      .from('vendor_locations')
+      .select('id, area, address, hours')
+      .eq('vendor_id', vendorId)
+      .order('is_primary', { ascending: false });
+    if (error) throw error;
+    return ((data ?? []) as { id: string; area: string | null; address: string | null; hours: string | null }[]).map(
+      (row) => ({
+        id: row.id,
+        vendorId,
+        area: row.area ?? '',
+        address: row.address ?? '',
+        hours: row.hours ?? '',
+      }),
+    );
+  });
+}
+
+/** Business fields every catalog screen reads. Avoids `select *` on a view. */
+const BUSINESS_COLUMNS =
+  'id, business_kind, name, slug, logo_url, banner_url, city, area, rating, description, status, gift_count';
+
+/** Seeds the cache from a list the screen already has in hand. */
+export function primeBusinesses(rows: MarketplaceBusiness[]): void {
+  for (const business of rows) {
+    primeCache(`business:${business.id}`, business);
+    if (business.slug) primeCache(`business:${business.slug}`, business);
+  }
+  primeCache('businesses:all', rows);
+}
+
+/** The cached copy of a business, if this launch has seen it. */
+export function peekBusiness(idOrSlug: string): MarketplaceBusiness | null {
+  return peekCache<MarketplaceBusiness>(`business:${idOrSlug}`) ?? null;
+}
+
+/** The cached business directory, if this launch has seen it. */
+export function peekBusinesses(): MarketplaceBusiness[] {
+  return peekCache<MarketplaceBusiness[]>('businesses:all') ?? [];
+}
+
+/** Seeds every offer, plus the catalog, so a gift page opens instantly. */
+export function primeOffers(rows: Offer[]): void {
+  for (const offer of rows) primeCache(`offer:${offer.id}`, offer);
+  primeCache('offers:active', rows);
+}
+
+/** The cached copy of an offer, if this launch has seen it. */
+export function peekOffer(id: string): Offer | null {
+  return peekCache<Offer>(`offer:${id}`) ?? null;
+}
+
+/** The cached active catalog, if this launch has seen it. */
+export function peekOffers(): Offer[] {
+  return peekCache<Offer[]>('offers:active') ?? [];
+}
+
+/** The cached locations for a vendor, if this launch has seen them. */
+export function peekLocations(vendorId: string): BusinessLocation[] {
+  return peekCache<BusinessLocation[]>(`locations:${vendorId}`) ?? [];
+}
+
+/** Offers already cached for one business, used to paint before the network. */
+export function peekOffersForBusiness(businessId: string): Offer[] {
+  const specific = peekCache<Offer[]>(`offers:business:${businessId}`);
+  if (specific) return specific;
+  const rows = peekCache<Offer[]>('offers:active') ?? [];
+  return rows.filter((offer) => offerBusinessId(offer) === businessId);
+}
+
+function offerBusinessId(offer: Offer): string {
+  return offer.partner?.id ?? offer.vendor_id ?? offer.partner_id ?? '';
 }
 
 /** Fetches one business (vendor or partner) by id or slug. */
 export async function getBusiness(idOrSlug: string): Promise<MarketplaceBusiness | null> {
   if (!hasSupabaseConfig) return null;
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
-  let query = getSupabase().from('marketplace_businesses').select('*');
-  query = isUuid ? query.eq('id', idOrSlug) : query.eq('slug', idOrSlug);
-  const { data, error } = await query.maybeSingle();
-  if (error) throw error;
-  return (data ?? null) as MarketplaceBusiness | null;
+  return cached(`business:${idOrSlug}`, 5 * 60_000, async () => {
+    let query = getSupabase().from('marketplace_businesses').select(BUSINESS_COLUMNS);
+    query = isUuid ? query.eq('id', idOrSlug) : query.eq('slug', idOrSlug);
+    const { data, error } = await query.maybeSingle();
+    if (error) throw error;
+    const business = (data ?? null) as MarketplaceBusiness | null;
+    if (business) primeBusinesses([business]);
+    return business;
+  });
 }
 
 /** Kept for older callers: a partner is one kind of business. */
@@ -311,14 +370,36 @@ export async function getPartner(idOrSlug: string): Promise<MarketplaceBusiness 
 /** The public business directory: vendors and partners combined. */
 export async function listMarketplaceBusinesses(): Promise<MarketplaceBusiness[]> {
   if (!hasSupabaseConfig) return [];
-  const { data, error } = await getSupabase()
-    .from('marketplace_businesses')
-    .select('id, business_kind, name, slug, logo_url, banner_url, city, area, rating, description, status, gift_count')
-    .order('gift_count', { ascending: false })
-    .order('rating', { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as MarketplaceBusiness[];
+  return cached('businesses:all', 60_000, async () => {
+    const { data, error } = await getSupabase()
+      .from('marketplace_businesses')
+      .select(BUSINESS_COLUMNS)
+      .order('gift_count', { ascending: false })
+      .order('rating', { ascending: false });
+    if (error) throw error;
+    const rows = (data ?? []) as MarketplaceBusiness[];
+    primeBusinesses(rows);
+    return rows;
+  });
 }
+
+/** Public marketplace configuration (feature flags, copy, thresholds). */
+export async function getPublicSettings(): Promise<Record<string, unknown>> {
+  return cached('settings:public', 60 * 60_000, async () => {
+    if (!hasSupabaseConfig) return {};
+    const { data, error } = await getSupabase()
+      .from('system_settings')
+      .select('key, value')
+      .eq('is_public', true);
+    if (error) throw error;
+    const settings: Record<string, unknown> = {};
+    for (const row of (data ?? []) as { key: string; value: unknown }[]) {
+      settings[row.key] = row.value;
+    }
+    return settings;
+  });
+}
+
 export async function listFavourites(): Promise<Offer[]> {
   if (!hasSupabaseConfig) return [];
   const { data, error } = await getSupabase()
@@ -378,31 +459,69 @@ export async function listActiveOffers(): Promise<Offer[]> {
   if (!hasSupabaseConfig) {
     return MOCK_OFFERS.filter((o) => o.is_active);
   }
-  const { data, error } = await getSupabase()
-    .from('products')
-    .select(
-      '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
-    )
-    .eq('is_active', true)
-    .eq('status', 'published')
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return ((data ?? []) as OfferRow[]).map(mapOffer);
+  return cached('offers:active', 60_000, async () => {
+    const { data, error } = await getSupabase()
+      .from('products')
+      .select(
+        '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
+      )
+      .eq('is_active', true)
+      .eq('status', 'published')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    const rows = ((data ?? []) as OfferRow[]).map(mapOffer);
+    primeOffers(rows);
+    return rows;
+  });
+}
+
+/**
+ * The offers belonging to one business. The home feed already holds the full
+ * catalog, so use that copy when it exists; otherwise ask for just this
+ * business instead of downloading every product on the marketplace.
+ */
+export async function listOffersForBusiness(businessId: string): Promise<Offer[]> {
+  if (!hasSupabaseConfig) {
+    return MOCK_OFFERS.filter((offer) => offer.is_active && offerBusinessId(offer) === businessId);
+  }
+  const fromCatalog = peekOffersForBusiness(businessId);
+  if (fromCatalog.length > 0) return fromCatalog;
+
+  return cached(`offers:business:${businessId}`, 60_000, async () => {
+    const { data, error } = await getSupabase()
+      .from('products')
+      .select(
+        '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
+      )
+      .eq('is_active', true)
+      .eq('status', 'published')
+      .or(`vendor_id.eq.${businessId},partner_id.eq.${businessId}`)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    const rows = ((data ?? []) as OfferRow[]).map(mapOffer);
+    primeOffers(rows);
+    return rows;
+  });
 }
 
 export async function getOffer(id: string): Promise<Offer | null> {
   if (!hasSupabaseConfig) {
     return MOCK_OFFERS.find((o) => o.id === id) ?? null;
   }
-  const { data, error } = await getSupabase()
-    .from('products')
-    .select(
-      '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
-    )
-    .eq('id', id)
-    .maybeSingle();
-  if (error) throw error;
-  return data ? mapOffer(data as OfferRow) : null;
+  return cached(`offer:${id}`, 5 * 60_000, async () => {
+    const { data, error } = await getSupabase()
+      .from('products')
+      .select(
+        '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
+      )
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    const offer = mapOffer(data as OfferRow);
+    primeCache(`offer:${offer.id}`, offer);
+    return offer;
+  });
 }
 
 export async function listMyCards(): Promise<GiftCard[]> {

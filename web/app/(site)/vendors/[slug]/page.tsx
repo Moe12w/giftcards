@@ -12,8 +12,8 @@ import {
   Phone,
   Star,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
-import { mapProducts } from '@/lib/data';
+import { OptimizedImage } from '@/components/OptimizedImage';
+import { getCachedBusiness, getCachedBusinessCatalog } from '@/lib/public-cache';
 import { activeVariants, fulfilmentLabel, priceLabel, productTone } from '@/lib/catalog';
 import { formatMoney } from '@/lib/money';
 import { initials } from '@/lib/format';
@@ -24,20 +24,11 @@ import { getLocale } from '@/lib/i18n/server';
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-async function getBusiness(slug: string) {
-  const supabase = await createClient();
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
-  let query = supabase.from('marketplace_businesses').select('*');
-  query = isUuid ? query.eq('id', slug) : query.eq('slug', slug);
-  const { data } = await query.maybeSingle();
-  return data;
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const locale = await getLocale();
   const t = pick(site, locale).vendorDetail;
-  const business = await getBusiness(slug);
+  const business = await getCachedBusiness(slug);
   if (!business) return { title: t.notFound };
   return {
     title: business.name,
@@ -47,35 +38,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BusinessDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const business = await getBusiness(slug);
+  const business = await getCachedBusiness(slug);
   if (!business) notFound();
 
   const locale = await getLocale();
   const t = pick(site, locale).vendorDetail;
   const c = pick(common, locale);
 
-  const supabase = await createClient();
   const isPartner = business.business_kind === 'partner';
-
-  const [productsResult, locationsResult] = await Promise.all([
-    supabase
-      .from('products')
-      .select('*, product_variants(*)')
-      .eq(isPartner ? 'partner_id' : 'vendor_id', business.id)
-      .eq('status', 'published')
-      .eq('is_active', true)
-      .order('rating', { ascending: false }),
-    isPartner
-      ? Promise.resolve({ data: null, error: null })
-      : supabase
-          .from('vendor_locations')
-          .select('*')
-          .eq('vendor_id', business.id)
-          .order('is_primary', { ascending: false }),
-  ]);
-
-  const products = mapProducts(productsResult.data ?? []);
-  const locations = locationsResult.data ?? [];
+  const { products, locations } = await getCachedBusinessCatalog(business.id, isPartner);
 
   return (
     <>
@@ -86,7 +57,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
           </Link>
           <div className="vendor-hero-card">
             <span className="vendor-logo xl">
-              {business.logo_url ? <img src={business.logo_url} alt="" /> : initials(business.name)}
+              {business.logo_url ? <OptimizedImage src={business.logo_url} alt={business.name} width={96} height={96} sizes="96px" priority /> : initials(business.name)}
             </span>
             <div className="vendor-hero-copy">
               <div className="pill-row">

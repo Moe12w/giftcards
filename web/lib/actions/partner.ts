@@ -1,7 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { CACHE_TAGS } from '@/lib/public-cache';
 import { requireEnterprise } from '@/lib/auth';
 import { validateImageUpload } from '@/lib/security';
 
@@ -69,6 +70,7 @@ export async function uploadPartnerImage(formData: FormData): Promise<{ ok: bool
   revalidatePath('/enterprise');
   revalidatePath('/vendors');
   if (ctx.partner.slug) revalidatePath(`/vendors/${ctx.partner.slug}`);
+  revalidateTag(CACHE_TAGS.marketplace, 'max');
 
   return { ok: true, url: publicUrl };
 }
@@ -106,6 +108,7 @@ export async function removePartnerImage(kind: 'logo' | 'banner'): Promise<{ ok:
   revalidatePath('/enterprise');
   revalidatePath('/vendors');
   if (ctx.partner.slug) revalidatePath(`/vendors/${ctx.partner.slug}`);
+  revalidateTag(CACHE_TAGS.marketplace, 'max');
 
   return { ok: true };
 }

@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   images: {
+    // Modern formats plus a long minimum TTL keep unchanged logos from being
+    // downloaded again on every visit.
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24,
     remotePatterns: [
       { protocol: 'https', hostname: 'placehold.co' },
       { protocol: 'https', hostname: 'images.unsplash.com' },

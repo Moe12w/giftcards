@@ -1,6 +1,7 @@
 // src/components/IconTile.tsx
 import React from 'react';
-import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { glyphIcon } from '../lib/glyphs';
 import { colors, radii, themedStyles } from '../theme';
@@ -44,7 +45,13 @@ export function IconTile({ icon, imageUrl, size = 64, tone = 'lavender', style }
       ]}
     >
       {imageUrl ? (
-        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="contain" />
+        <Image
+          source={imageUrl}
+          style={styles.image}
+          contentFit="contain"
+          cachePolicy="memory-disk"
+          transition={120}
+        />
       ) : (
         <Icon size={size * 0.48} color={colors.ink} strokeWidth={2} />
       )}
