@@ -93,17 +93,26 @@ export function sessionProgress(
   return Math.max(0, Math.min(1, 1 - remaining / total));
 }
 
-/** Money still outstanding on a value card. */
+/**
+ * Money still outstanding on a value card.
+ *
+ * `balance_minor` comes straight from the voucher's remaining_value_minor, so
+ * the database has already applied every redemption. Subtracting the history
+ * again would spend each purchase twice. The log is only used as a fallback
+ * for older/mock cards that have no stored balance.
+ */
 export function valueRemaining(
   card: Pick<GiftCard, 'balance_minor' | 'original_value_minor'>,
   entries: RedemptionEntry[] = [],
 ): number {
+  if (typeof card.balance_minor === 'number') {
+    return Math.max(0, card.balance_minor);
+  }
   const spent = entries.reduce(
     (sum, entry) => (entry.kind === 'monetary' ? sum + (entry.amount_minor ?? 0) : sum),
     0,
   );
-  if (spent === 0) return card.balance_minor ?? card.original_value_minor;
-  return Math.max(0, (card.balance_minor ?? card.original_value_minor) - spent);
+  return Math.max(0, card.original_value_minor - spent);
 }
 
 /** The card is finished once its last session is used. */

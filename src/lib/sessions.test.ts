@@ -118,7 +118,23 @@ describe('value cards', () => {
     ];
     expect(sessionsUsed(entries)).toBe(0);
     expect(sessionsRemaining(coffee, entries)).toBe(0);
-    expect(valueRemaining(coffee, entries)).toBe(15000);
+    // The stored balance already reflects the redemption; the log is history.
+    expect(valueRemaining(coffee, entries)).toBe(20000);
+  });
+
+  it('falls back to the original value minus history when no balance is stored', () => {
+    const coffee = card({ balance_minor: undefined });
+    const entries: RedemptionEntry[] = [
+      {
+        id: 'value-fallback',
+        card_id: 'card-test',
+        kind: 'monetary',
+        amount_minor: 5000,
+        actor: 'The Coffee House',
+        created_at: '2026-01-03T00:00:00.000Z',
+      },
+    ];
+    expect(valueRemaining(coffee, entries)).toBe(45000);
   });
 
   it('keeps the stored balance when nothing was redeemed', () => {
