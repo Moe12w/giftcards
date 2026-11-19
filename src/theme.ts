@@ -39,6 +39,9 @@ const light = {
   textMuted: '#6E6E6E',
   textOnInk: '#FFFFFF',
   textOnAccent: '#FFFFFF',
+  // Pastel plates and pills stay light in both themes, so anything drawn on
+  // one must stay dark ink even in dark mode.
+  textOnPastel: '#1C1C1C',
 
   // Primary teal
   primary: '#72C2B8',
@@ -96,7 +99,7 @@ export const darkColors: Palette = {
   border: '#F2F3F5',
   borderSoft: '#343946',
 
-  blobA: 'rgba(205, 184, 242, 0.16)',
+  blobA: 'rgba(205, 184, 242, 0.22)',
   blobB: 'rgba(127, 209, 198, 0.14)',
   blobRing: 'rgba(242, 243, 245, 0.12)',
 
@@ -104,6 +107,7 @@ export const darkColors: Palette = {
   textMuted: '#A7AEBC',
   textOnInk: '#14161B',
   textOnAccent: '#14161B',
+  textOnPastel: '#1C1C1C',
 
   primary: '#7FD1C6',
   primaryDark: '#4B9C93',

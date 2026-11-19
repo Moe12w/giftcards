@@ -78,7 +78,7 @@ export function AuthHero({
                 },
               ]}
             >
-              <Glyph name={glyph} size={Math.round(plateSize * 0.44)} />
+              <Glyph name={glyph} size={Math.round(plateSize * 0.44)} color={colors.textOnPastel} />
             </View>
           </View>
           {plateSize >= 84 ? (
