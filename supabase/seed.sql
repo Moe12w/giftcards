@@ -108,16 +108,16 @@ on conflict (user_id) do update set role = excluded.role;
 -- ---------------------------------------------------------------------
 -- Categories
 -- ---------------------------------------------------------------------
-insert into public.categories (id, slug, name, name_ar, icon, sort_order) values
-  ('42280d18-ab46-4209-9d2b-e4f3b2ea054f', 'coffee', 'Coffee', 'قهوة', 'coffee', 1),
-  ('56fbcea3-b02c-4322-9aca-c63010156a66', 'dining', 'Dining', 'مطاعم', 'dining', 2),
-  ('c5f10f32-ef04-4930-9336-ea659f0581dc', 'desserts', 'Desserts', 'حلويات', 'dessert', 3),
-  ('0a017db6-a633-4b21-b870-f4286da3793d', 'wellness', 'Wellness', 'عافية', 'wellness', 4),
-  ('7e48017f-3145-46b5-9c70-b4a5973f9d85', 'shopping', 'Shopping', 'تسوق', 'shopping', 5),
-  ('857d79f0-85e3-4333-864d-c4ef7b92f7d0', 'experiences', 'Experiences', 'تجارب', 'experiences', 6),
-  ('7657fe8a-c670-4ca4-bb78-20b499b645b5', 'beauty', 'Beauty', 'جمال', 'beauty', 7),
-  ('8ea15bb8-35ef-4fda-be7e-2b1a4f97a83e', 'fitness', 'Fitness', 'لياقة', 'fitness', 8),
-  ('3f629d4c-b477-4ea8-bdc0-ef01cd381121', 'entertainment', 'Entertainment', 'ترفيه', 'entertainment', 9);
+insert into public.categories (id, slug, name, name_ar, icon, sort_order, tone, show_on_home) values
+  ('42280d18-ab46-4209-9d2b-e4f3b2ea054f', 'coffee', 'Coffee', 'قهوة', 'coffee', 1, 'gold', true),
+  ('56fbcea3-b02c-4322-9aca-c63010156a66', 'dining', 'Dining', 'مطاعم', 'dining', 2, 'pink', true),
+  ('c5f10f32-ef04-4930-9336-ea659f0581dc', 'desserts', 'Desserts', 'حلويات', 'dessert', 3, 'pink', true),
+  ('0a017db6-a633-4b21-b870-f4286da3793d', 'wellness', 'Wellness', 'عافية', 'wellness', 4, 'teal', true),
+  ('7e48017f-3145-46b5-9c70-b4a5973f9d85', 'shopping', 'Shopping', 'تسوق', 'shopping', 5, 'lavender', true),
+  ('857d79f0-85e3-4333-864d-c4ef7b92f7d0', 'experiences', 'Experiences', 'تجارب', 'experiences', 6, 'sky', true),
+  ('7657fe8a-c670-4ca4-bb78-20b499b645b5', 'beauty', 'Beauty', 'جمال', 'beauty', 7, 'lavender', true),
+  ('8ea15bb8-35ef-4fda-be7e-2b1a4f97a83e', 'fitness', 'Fitness', 'لياقة', 'fitness', 8, 'teal', true),
+  ('3f629d4c-b477-4ea8-bdc0-ef01cd381121', 'entertainment', 'Entertainment', 'ترفيه', 'entertainment', 9, 'pink', true);
 
 -- ---------------------------------------------------------------------
 -- Vendors
