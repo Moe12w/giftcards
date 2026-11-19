@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { ArrowLeft, Globe } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
-import { CollectionTile } from '@/src/components/CollectionTile';
-import { FlowHeader } from '@/src/components/FlowHeader';
+import { CategoryShortcut, CuratedCollectionCard } from '@/src/components/DiscoveryCards';
 import { Screen } from '@/src/components/Screen';
+import { SearchBar } from '@/src/components/SearchBar';
 import { SectionHeader } from '@/src/components/SectionHeader';
-import { OCCASIONS } from '@/src/lib/catalog';
+import { SplashText } from '@/src/components/SplashText';
+import { configuredCollections, useAppConfig } from '@/src/lib/app-config';
+import { CURATED_COLLECTIONS, OCCASIONS } from '@/src/lib/catalog';
 import {
   categoryLabel,
   listAppCategories,
@@ -20,6 +23,7 @@ import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 export default function CategoriesScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
+  const { config } = useAppConfig();
   const [categories, setCategories] = useState<AppCategory[]>(() => peekAppCategories());
 
   useEffect(() => {
@@ -34,41 +38,113 @@ export default function CategoriesScreen() {
     };
   }, []);
 
+  const collections = useMemo(
+    () => configuredCollections(config.collections, CURATED_COLLECTIONS),
+    [config.collections],
+  );
+
   return (
     <Screen>
-      <FlowHeader title={t('home.categories')} onBack={() => router.back()} splash />
-
-      <SectionHeader title={t('explore.categories')} />
-      <View style={styles.grid}>
-        {categories.map((category) => (
-          <View key={category.slug} style={styles.item}>
-            <CollectionTile
-              label={categoryLabel(
-                category,
-                i18n.language,
-                category.titleKey ? t(category.titleKey) : '',
-              )}
-              icon={category.icon}
-              tone={category.tone}
-              onPress={() => router.push(`/(customer)/category/${category.slug}`)}
-            />
-          </View>
-        ))}
+      <View style={styles.headerRow}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back')}
+          style={styles.iconButton}
+        >
+          <ArrowLeft size={22} color={colors.ink} />
+        </Pressable>
+        <View style={styles.greetingWrap}>
+          <SplashText fontSize={fontSizes.xxl} style={styles.title}>
+            {t('home.categories')}
+          </SplashText>
+          <Text style={styles.subtitle}>{t('explore.categories')}</Text>
+        </View>
+        <Pressable
+          onPress={() => router.push('/(customer)/profile/language')}
+          accessibilityRole="button"
+          accessibilityLabel={t('profile.language')}
+          style={styles.iconButton}
+        >
+          <Globe size={21} color={colors.ink} />
+        </Pressable>
       </View>
 
-      <SectionHeader title={t('explore.occasions')} />
-      <View style={styles.grid}>
+      <SearchBar
+        value=""
+        onChangeText={() => undefined}
+        onPress={() => router.push('/(customer)/search')}
+        placeholder={t('discovery.searchPlaceholder')}
+        accessibilityLabel={t('common.search')}
+        style={styles.search}
+      />
+
+      {categories.length > 0 ? (
+        <>
+          <SectionHeader title={t('discovery.featuredCategories')} splash />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.hScrollOuter}
+            contentContainerStyle={styles.hScroll}
+          >
+            {categories.map((category) => (
+              <CategoryShortcut
+                key={category.slug}
+                label={categoryLabel(
+                  category,
+                  i18n.language,
+                  category.titleKey ? t(category.titleKey) : '',
+                )}
+                icon={category.icon}
+                tone={category.tone}
+                onPress={() => router.push(`/(customer)/category/${category.slug}`)}
+              />
+            ))}
+          </ScrollView>
+        </>
+      ) : null}
+
+      {collections.length > 0 ? (
+        <>
+          <SectionHeader title={t('discovery.featuredCollections')} splash />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.hScrollOuter}
+            contentContainerStyle={styles.hScroll}
+          >
+            {collections.map((collection) => (
+              <CuratedCollectionCard
+                key={collection.slug}
+                label={t(collection.titleKey)}
+                subtitle={t(collection.subtitleKey)}
+                icon={collection.icon}
+                tone={collection.tone}
+                onPress={() => router.push(`/(customer)/collection/${collection.slug}`)}
+              />
+            ))}
+          </ScrollView>
+        </>
+      ) : null}
+
+      <SectionHeader title={t('explore.occasions')} splash />
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.hScrollOuter}
+        contentContainerStyle={styles.hScroll}
+      >
         {OCCASIONS.map((occasion) => (
-          <View key={occasion.slug} style={styles.item}>
-            <CollectionTile
-              label={t(occasion.titleKey)}
-              icon={occasion.icon}
-              tone={occasion.tone}
-              onPress={() => router.push(`/(customer)/collection/${occasion.slug}`)}
-            />
-          </View>
+          <CategoryShortcut
+            key={occasion.slug}
+            label={t(occasion.titleKey)}
+            icon={occasion.icon}
+            tone={occasion.tone}
+            onPress={() => router.push(`/(customer)/collection/${occasion.slug}`)}
+          />
         ))}
-      </View>
+      </ScrollView>
 
       <Text style={styles.note}>{t('explore.browseBusinesses')}</Text>
     </Screen>
@@ -76,13 +152,18 @@ export default function CategoriesScreen() {
 }
 
 const styles = themedStyles(() => ({
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    rowGap: spacing.sm,
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  iconButton: { padding: spacing.xs },
+  greetingWrap: { flex: 1, gap: 2 },
+  title: { fontFamily: fonts.extrabold, color: colors.text },
+  subtitle: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
   },
-  item: { width: '48.5%' },
+  search: { marginTop: spacing.xs },
+  hScrollOuter: { marginHorizontal: -spacing.gutter },
+  hScroll: { gap: spacing.sm, paddingHorizontal: spacing.gutter },
   note: {
     fontFamily: fonts.regular,
     fontSize: fontSizes.sm,
