@@ -510,7 +510,9 @@
     "scheduled": "Scheduled",
     "scheduledTitle": "Scheduled gift",
     "scheduledBody": "This gift arrives on {{date}}. You can use it from then.",
-    "scheduledSoon": "This gift has not arrived yet. It will appear here once it does."
+    "scheduledSoon": "This gift has not arrived yet. It will appear here once it does.",
+    "scannedTitle": "Gift scanned",
+    "scannedBody": "The balance has been updated. Returning to your wallet."
   },
   "gifts": {
     "title": "My gifts",
@@ -548,8 +550,6 @@
     "scheduledFor": "Arrives {{date}}",
     "openedOn": "Opened {{date}}",
     "redeemedOn": "Redeemed {{date}}",
-    "scannedTitle": "Gift scanned",
-    "scannedBody": "The balance has been updated. Returning to your wallet.",
     "expiresOn": "Expires {{date}}",
     "noHistory": "No transactions yet",
     "transactionIssue": "Gift card issued",
