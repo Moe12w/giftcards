@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { AuthHero } from '@/src/components/AuthHero';
 import { Avatar } from '@/src/components/Avatar';
 import { BackButton } from '@/src/components/BackButton';
 import { Button } from '@/src/components/Button';
+import { Card } from '@/src/components/Card';
+import { LanguageToggle } from '@/src/components/LanguageToggle';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
@@ -44,11 +47,22 @@ export default function ProfileSetupScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
+      <View style={styles.topBar}>
         <BackButton onPress={() => router.back()} />
-        <Text style={styles.title}>{t('authExtra.profileSetupTitle')}</Text>
+        <LanguageToggle />
       </View>
-      <Text style={styles.body}>{t('authExtra.profileSetupBody')}</Text>
+
+      <AuthHero
+        eyebrow={t('auth.badgeProfile')}
+        title={t('authExtra.profileSetupTitle')}
+        subtitle={t('authExtra.profileSetupBody')}
+        glyph="user"
+        tone="lavender"
+        align="start"
+        plateSize={72}
+        titleSize={fontSizes.xxl}
+        tilt={false}
+      />
 
       <View style={styles.avatarRow}>
         {AVATAR_TONES.map((avatarTone) => {
@@ -61,52 +75,47 @@ export default function ProfileSetupScreen() {
               accessibilityState={{ selected: active }}
               style={[styles.avatarWrap, active && styles.avatarActive]}
             >
-              <Avatar name={fullName || email || 'Giftly'} size={62} tone={avatarTone} />
+              <Avatar name={fullName || email || 'Giftly'} size={54} tone={avatarTone} />
             </Pressable>
           );
         })}
       </View>
       <Text style={styles.avatarLabel}>{t('authExtra.chooseAvatar')}</Text>
 
-      <TextField
-        label={t('auth.fullName')}
-        value={fullName}
-        onChangeText={setFullName}
-        autoCapitalize="words"
-        error={error ?? undefined}
-      />
-      <TextField
-        label={t('auth.phone')}
-        value={phone}
-        onChangeText={setPhone}
-        placeholder={t('authExtra.phonePlaceholder')}
-        keyboardType="phone-pad"
-      />
+      <Card style={styles.form}>
+        <TextField
+          label={t('auth.fullName')}
+          value={fullName}
+          onChangeText={setFullName}
+          autoCapitalize="words"
+          error={error ?? undefined}
+        />
+        <TextField
+          label={t('auth.phone')}
+          value={phone}
+          onChangeText={setPhone}
+          placeholder={t('authExtra.phonePlaceholder')}
+          keyboardType="phone-pad"
+        />
 
-      <Button label={t('authExtra.finishSetup')} onPress={finish} loading={submitting} />
+        <Button label={t('authExtra.finishSetup')} onPress={finish} loading={submitting} />
+      </Card>
     </Screen>
   );
 }
 
 const styles = themedStyles(() => ({
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs },
-  title: {
-    flex: 1,
-    fontFamily: fonts.extrabold,
-    fontSize: fontSizes.xxl,
-    color: colors.text,
-  },
-  body: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.md,
-    color: colors.textMuted,
-    lineHeight: 21,
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
   },
   avatarRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: spacing.md,
-    marginTop: spacing.sm,
+    gap: spacing.sm,
   },
   avatarWrap: {
     padding: spacing.xs,
@@ -121,4 +130,5 @@ const styles = themedStyles(() => ({
     color: colors.textMuted,
     textAlign: 'center',
   },
+  form: { gap: spacing.md },
 }));

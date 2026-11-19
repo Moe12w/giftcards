@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/components/Button';
+import { Eyebrow } from '@/src/components/Eyebrow';
 import { Screen } from '@/src/components/Screen';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
@@ -29,6 +30,7 @@ export default function NotificationsPermissionScreen() {
       </View>
 
       <View style={styles.copy}>
+        <Eyebrow label={t('auth.badgeNotify')} tone="pink" />
         <Text style={styles.title}>{t('authExtra.notificationsTitle')}</Text>
         <Text style={styles.body}>{t('authExtra.notificationsBody')}</Text>
       </View>
@@ -64,7 +66,7 @@ const styles = themedStyles(() => ({
   },
   sparkleA: { position: 'absolute', top: '20%', left: '20%', fontSize: 22, color: colors.ink },
   sparkleB: { position: 'absolute', bottom: '24%', right: '20%', fontSize: 16, color: colors.ink },
-  copy: { gap: spacing.sm },
+  copy: { gap: spacing.sm, alignItems: 'flex-start' },
   title: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.display,

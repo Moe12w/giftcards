@@ -16,17 +16,23 @@
 import { StyleSheet } from 'react-native';
 
 const light = {
-  // Canvas
-  background: '#EEF0F4',
-  backgroundAlt: '#E6E9EF',
+  // Canvas. Warm cream, matching the marketing site, so the pastel stickers
+  // read as playful rather than as a form on a grey admin panel.
+  background: '#FFF8EC',
+  backgroundAlt: '#F7EDD9',
   surface: '#FFFFFF',
-  surfaceAlt: '#F5F6F8',
-  surfaceSunken: '#E3E6EC',
+  surfaceAlt: '#FBF6EC',
+  surfaceSunken: '#F1E7D6',
 
   // Ink & lines
   ink: '#1C1C1C',
   border: '#1C1C1C',
-  borderSoft: '#D9DCE2',
+  borderSoft: '#E7DFD0',
+
+  // Decorative blobs painted behind screen content.
+  blobA: 'rgba(205, 184, 242, 0.50)',
+  blobB: 'rgba(114, 194, 184, 0.34)',
+  blobRing: 'rgba(28, 28, 28, 0.10)',
 
   // Text
   text: '#1C1C1C',
@@ -89,6 +95,10 @@ export const darkColors: Palette = {
   ink: '#F2F3F5',
   border: '#F2F3F5',
   borderSoft: '#343946',
+
+  blobA: 'rgba(205, 184, 242, 0.16)',
+  blobB: 'rgba(127, 209, 198, 0.14)',
+  blobRing: 'rgba(242, 243, 245, 0.12)',
 
   text: '#F2F3F5',
   textMuted: '#A7AEBC',

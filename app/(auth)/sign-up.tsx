@@ -3,13 +3,15 @@ import { Pressable, Text, View } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { AuthHero } from '@/src/components/AuthHero';
 import { Button } from '@/src/components/Button';
+import { Card } from '@/src/components/Card';
+import { LanguageToggle } from '@/src/components/LanguageToggle';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
-import { Glyph } from '@/src/components/Glyph';
 
 export default function SignUpScreen() {
   useThemeRefresh();
@@ -64,57 +66,64 @@ export default function SignUpScreen() {
 
   return (
     <Screen>
-      <View style={styles.hero}>
-        <Glyph name="justBecause" size={38} />
-        <Text style={styles.title}>{t('auth.signUp')}</Text>
-        <Text style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Text>
-      </View>
+      <LanguageToggle style={styles.languageToggle} />
 
-      <TextField
-        label={t('auth.fullName')}
-        value={fullName}
-        onChangeText={setFullName}
-        autoCapitalize="words"
-        error={errors.fullName}
-      />
-      <TextField
-        label={t('auth.email')}
-        value={email}
-        onChangeText={setEmail}
-        placeholder={t('auth.emailPlaceholder')}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-        error={errors.email}
-      />
-      <TextField
-        label={t('auth.password')}
-        value={password}
-        onChangeText={setPassword}
-        placeholder={t('auth.passwordPlaceholder')}
-        secureTextEntry
-        error={errors.password}
+      <AuthHero
+        eyebrow={t('auth.badgeStart')}
+        title={t('auth.signUp')}
+        subtitle={t('auth.welcomeSubtitle')}
+        glyph="gift"
+        tone="teal"
+        titleSize={fontSizes.hero}
       />
 
-      {formError ? (
-        <View style={styles.errorBox}>
-          <Text style={styles.formError}>{formError}</Text>
-          {alreadyRegistered ? (
-            <Link href="/(auth)/login" asChild>
-              <Pressable accessibilityRole="link" hitSlop={8}>
-                <Text style={styles.link}>{t('auth.signInInstead')}</Text>
-              </Pressable>
-            </Link>
-          ) : null}
-        </View>
-      ) : null}
+      <Card style={styles.form}>
+        <TextField
+          label={t('auth.fullName')}
+          value={fullName}
+          onChangeText={setFullName}
+          autoCapitalize="words"
+          error={errors.fullName}
+        />
+        <TextField
+          label={t('auth.email')}
+          value={email}
+          onChangeText={setEmail}
+          placeholder={t('auth.emailPlaceholder')}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          error={errors.email}
+        />
+        <TextField
+          label={t('auth.password')}
+          value={password}
+          onChangeText={setPassword}
+          placeholder={t('auth.passwordPlaceholder')}
+          secureTextEntry
+          error={errors.password}
+        />
 
-      <Button
-        label={t('auth.signUpCta')}
-        loadingLabel={t('auth.creatingAccount')}
-        onPress={onSubmit}
-        loading={submitting}
-      />
+        {formError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.formError}>{formError}</Text>
+            {alreadyRegistered ? (
+              <Link href="/(auth)/login" asChild>
+                <Pressable accessibilityRole="link" hitSlop={8}>
+                  <Text style={styles.link}>{t('auth.signInInstead')}</Text>
+                </Pressable>
+              </Link>
+            ) : null}
+          </View>
+        ) : null}
+
+        <Button
+          label={t('auth.signUpCta')}
+          loadingLabel={t('auth.creatingAccount')}
+          onPress={onSubmit}
+          loading={submitting}
+        />
+      </Card>
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>{t('auth.haveAccount')} </Text>
@@ -129,18 +138,8 @@ export default function SignUpScreen() {
 }
 
 const styles = themedStyles(() => ({
-  hero: { gap: spacing.xs, marginTop: spacing.xl, marginBottom: spacing.md },
-  title: {
-    fontFamily: fonts.extrabold,
-    fontSize: fontSizes.display,
-    color: colors.text,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.md,
-    color: colors.textMuted,
-  },
+  languageToggle: { alignSelf: 'flex-end' },
+  form: { gap: spacing.md },
   formError: {
     fontFamily: fonts.medium,
     fontSize: fontSizes.sm,
@@ -159,6 +158,10 @@ const styles = themedStyles(() => ({
     justifyContent: 'center',
     alignItems: 'center',
     flexWrap: 'wrap',
+    borderTopWidth: 2,
+    borderStyle: 'dashed',
+    borderTopColor: colors.borderSoft,
+    paddingTop: spacing.md,
   },
   footerText: {
     fontFamily: fonts.regular,

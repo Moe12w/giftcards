@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { AuthHero } from '@/src/components/AuthHero';
 import { BackButton } from '@/src/components/BackButton';
 import { Button } from '@/src/components/Button';
+import { Card } from '@/src/components/Card';
+import { LanguageToggle } from '@/src/components/LanguageToggle';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { getSupabase } from '@/src/lib/supabase';
 import { hasSupabaseConfig } from '@/src/lib/env';
-import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
+import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 export default function VerifyEmailScreen() {
   useThemeRefresh();
@@ -76,52 +79,60 @@ export default function VerifyEmailScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
+      <View style={styles.topBar}>
         <BackButton onPress={() => router.back()} />
-        <Text style={styles.title}>{t('authExtra.verifyEmailTitle')}</Text>
+        <LanguageToggle />
       </View>
-      <Text style={styles.body}>{t('authExtra.verifyEmailBody', { email })}</Text>
 
-      {resent ? (
-        <View style={styles.notice}>
-          <Text style={styles.noticeText}>{t('authExtra.codeResent')}</Text>
-        </View>
-      ) : null}
-
-      <TextField
-        label={t('authExtra.code')}
-        value={code}
-        onChangeText={(value) => {
-          setCode(value);
-          setError(null);
-        }}
-        placeholder={t('authExtra.codePlaceholder')}
-        keyboardType="number-pad"
-        maxLength={6}
-        error={error ?? undefined}
+      <AuthHero
+        eyebrow={t('auth.badgeVerify')}
+        title={t('authExtra.verifyEmailTitle')}
+        subtitle={t('authExtra.verifyEmailBody', { email })}
+        glyph="mail"
+        tone="gold"
+        align="start"
+        plateSize={72}
+        titleSize={fontSizes.xxl}
+        tilt={false}
       />
-      <Button label={t('authExtra.verify')} onPress={verify} loading={submitting} />
-      <Button label={t('authExtra.resend')} variant="ghost" onPress={resend} />
+
+      <Card style={styles.form}>
+        {resent ? (
+          <View style={styles.notice}>
+            <Text style={styles.noticeText}>{t('authExtra.codeResent')}</Text>
+          </View>
+        ) : null}
+
+        <TextField
+          label={t('authExtra.code')}
+          value={code}
+          onChangeText={(value) => {
+            setCode(value);
+            setError(null);
+          }}
+          placeholder={t('authExtra.codePlaceholder')}
+          keyboardType="number-pad"
+          maxLength={6}
+          error={error ?? undefined}
+        />
+        <Button label={t('authExtra.verify')} onPress={verify} loading={submitting} />
+        <Button label={t('authExtra.resend')} variant="ghost" onPress={resend} />
+      </Card>
     </Screen>
   );
 }
 
 const styles = themedStyles(() => ({
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs },
-  title: {
-    flex: 1,
-    fontFamily: fonts.extrabold,
-    fontSize: fontSizes.xxl,
-    color: colors.text,
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
   },
-  body: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.md,
-    color: colors.textMuted,
-    lineHeight: 21,
-  },
+  form: { gap: spacing.md },
   notice: {
-    borderRadius: 14,
+    borderRadius: radii.md,
     borderWidth: 2,
     borderColor: colors.ink,
     backgroundColor: colors.tealTint,

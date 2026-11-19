@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { AuthHero } from '@/src/components/AuthHero';
 import { BackButton } from '@/src/components/BackButton';
 import { Button } from '@/src/components/Button';
+import { Card } from '@/src/components/Card';
+import { LanguageToggle } from '@/src/components/LanguageToggle';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
@@ -45,70 +48,78 @@ export default function ForgotPasswordScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
+      <View style={styles.topBar}>
         <BackButton onPress={() => router.back()} />
-        <Text style={styles.title}>{t('authExtra.forgotTitle')}</Text>
+        <LanguageToggle />
       </View>
-      <Text style={styles.body}>{t('authExtra.forgotBody')}</Text>
 
-      {sent ? (
-        <View style={styles.success}>
-          <Glyph name="mail" size={40} />
-          <View style={styles.successCopy}>
-            <Text style={styles.successTitle}>{t('authExtra.resetSentTitle')}</Text>
-            <Text style={styles.successText}>
-              {t('authExtra.resetSentBody', { email: email.trim() })}
-            </Text>
+      <AuthHero
+        eyebrow={t('auth.badgeRecover')}
+        title={t('authExtra.forgotTitle')}
+        subtitle={t('authExtra.forgotBody')}
+        glyph="mail"
+        tone="sky"
+        align="start"
+        plateSize={72}
+        titleSize={fontSizes.xxl}
+        tilt={false}
+      />
+
+      <Card style={styles.form}>
+        {sent ? (
+          <View style={styles.success}>
+            <Glyph name="mail" size={30} />
+            <View style={styles.successCopy}>
+              <Text style={styles.successTitle}>{t('authExtra.resetSentTitle')}</Text>
+              <Text style={styles.successText}>
+                {t('authExtra.resetSentBody', { email: email.trim() })}
+              </Text>
+            </View>
           </View>
-        </View>
-      ) : null}
+        ) : null}
 
-      <TextField
-        label={t('auth.email')}
-        value={email}
-        onChangeText={(value) => {
-          setEmail(value);
-          if (sent) setSent(false);
-          setError(null);
-        }}
-        placeholder={t('auth.emailPlaceholder')}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-        error={error ?? undefined}
-      />
-
-      <Button
-        label={sent ? t('authExtra.resendReset') : t('authExtra.sendReset')}
-        onPress={onSubmit}
-        loading={submitting}
-      />
-
-      {sent ? (
-        <Button
-          label={t('auth.backToSignIn')}
-          variant="secondary"
-          onPress={() => router.replace('/(auth)/login')}
+        <TextField
+          label={t('auth.email')}
+          value={email}
+          onChangeText={(value) => {
+            setEmail(value);
+            if (sent) setSent(false);
+            setError(null);
+          }}
+          placeholder={t('auth.emailPlaceholder')}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          error={error ?? undefined}
         />
-      ) : null}
+
+        <Button
+          label={sent ? t('authExtra.resendReset') : t('authExtra.sendReset')}
+          onPress={onSubmit}
+          loading={submitting}
+        />
+
+        {sent ? (
+          <Button
+            label={t('auth.backToSignIn')}
+            variant="secondary"
+            onPress={() => router.replace('/(auth)/login')}
+          />
+        ) : null}
+      </Card>
     </Screen>
   );
 }
 
 const styles = themedStyles(() => ({
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs },
-  title: {
-    flex: 1,
-    fontFamily: fonts.extrabold,
-    fontSize: fontSizes.xxl,
-    color: colors.text,
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
   },
-  body: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.md,
-    color: colors.textMuted,
-    lineHeight: 21,
-  },
+  form: { gap: spacing.md },
   success: {
     flexDirection: 'row',
     alignItems: 'center',

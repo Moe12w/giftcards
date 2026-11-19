@@ -37,6 +37,7 @@ export function Screen({
   return (
     <SafeAreaView edges={edges} style={[styles.safe, style]}>
       <View pointerEvents="none" style={styles.blobs}>
+        <View style={styles.blobRing} />
         <View style={styles.blobLilac} />
         <View style={styles.blobMint} />
       </View>
@@ -56,22 +57,34 @@ const styles = themedStyles(() => ({
   fill: { flex: 1 },
   tabbed: { paddingBottom: 120 },
   blobs: { ...StyleSheet.absoluteFill, overflow: 'hidden' },
+  // Pastel bubbles that hang off the edges of the canvas, plus one outlined
+  // ring so the decoration reads as stickers rather than a soft gradient.
   blobLilac: {
     position: 'absolute',
-    top: -70,
-    right: -60,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(205, 184, 242, 0.30)',
+    top: -96,
+    right: -84,
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: colors.blobA,
   },
   blobMint: {
     position: 'absolute',
-    bottom: 40,
-    left: -90,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(114, 194, 184, 0.18)',
+    bottom: 16,
+    left: -104,
+    width: 230,
+    height: 230,
+    borderRadius: 115,
+    backgroundColor: colors.blobB,
+  },
+  blobRing: {
+    position: 'absolute',
+    top: 148,
+    right: -48,
+    width: 132,
+    height: 132,
+    borderRadius: 66,
+    borderWidth: 2,
+    borderColor: colors.blobRing,
   },
 }));

@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { AuthHero } from '@/src/components/AuthHero';
 import { BackButton } from '@/src/components/BackButton';
 import { Button } from '@/src/components/Button';
+import { Card } from '@/src/components/Card';
+import { LanguageToggle } from '@/src/components/LanguageToggle';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
-import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
-import { Glyph } from '@/src/components/Glyph';
+import { fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function ResetPasswordScreen() {
   useThemeRefresh();
@@ -49,12 +51,15 @@ export default function ResetPasswordScreen() {
   if (done) {
     return (
       <Screen>
-        <View style={styles.center}>
-          <Glyph name="check" size={40} />
-          <Text style={styles.title}>{t('authExtra.passwordUpdated')}</Text>
-          <Text style={styles.body}>{t('authExtra.passwordUpdatedBody')}</Text>
-          <Button label={t('auth.signIn')} onPress={() => router.replace('/(auth)/login')} />
-        </View>
+        <AuthHero
+          eyebrow={t('auth.badgeAlmost')}
+          title={t('authExtra.passwordUpdated')}
+          subtitle={t('authExtra.passwordUpdatedBody')}
+          glyph="check"
+          tone="teal"
+          titleSize={fontSizes.xxl}
+        />
+        <Button label={t('auth.signIn')} onPress={() => router.replace('/(auth)/login')} />
       </Screen>
     );
   }
@@ -62,10 +67,15 @@ export default function ResetPasswordScreen() {
   if (!hasRecoverySession) {
     return (
       <Screen>
-        <View style={styles.center}>
-          <Glyph name="mail" size={40} />
-          <Text style={styles.title}>{t('authExtra.resetLinkNeededTitle')}</Text>
-          <Text style={styles.body}>{t('authExtra.resetLinkNeededBody')}</Text>
+        <AuthHero
+          eyebrow={t('auth.badgeRecover')}
+          title={t('authExtra.resetLinkNeededTitle')}
+          subtitle={t('authExtra.resetLinkNeededBody')}
+          glyph="mail"
+          tone="sky"
+          titleSize={fontSizes.xxl}
+        />
+        <Card style={styles.form}>
           <Button
             label={t('authExtra.sendReset')}
             onPress={() => router.replace('/(auth)/forgot-password')}
@@ -75,62 +85,59 @@ export default function ResetPasswordScreen() {
             variant="secondary"
             onPress={() => router.replace('/(auth)/login')}
           />
-        </View>
+        </Card>
       </Screen>
     );
   }
 
   return (
     <Screen>
-      <View style={styles.header}>
+      <View style={styles.topBar}>
         <BackButton onPress={() => router.back()} />
-        <Text style={styles.title}>{t('authExtra.resetTitle')}</Text>
+        <LanguageToggle />
       </View>
-      <Text style={styles.body}>{t('authExtra.resetBody')}</Text>
 
-      <TextField
-        label={t('authExtra.newPassword')}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        placeholder={t('auth.passwordPlaceholder')}
-        error={errors.password}
+      <AuthHero
+        eyebrow={t('auth.badgeAlmost')}
+        title={t('authExtra.resetTitle')}
+        subtitle={t('authExtra.resetBody')}
+        glyph="lock"
+        tone="lavender"
+        align="start"
+        plateSize={72}
+        titleSize={fontSizes.xxl}
+        tilt={false}
       />
-      <TextField
-        label={t('authExtra.confirmPassword')}
-        value={confirm}
-        onChangeText={setConfirm}
-        secureTextEntry
-        error={errors.confirm}
-      />
-      <Button label={t('authExtra.resetCta')} onPress={onSubmit} loading={submitting} />
+
+      <Card style={styles.form}>
+        <TextField
+          label={t('authExtra.newPassword')}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          placeholder={t('auth.passwordPlaceholder')}
+          error={errors.password}
+        />
+        <TextField
+          label={t('authExtra.confirmPassword')}
+          value={confirm}
+          onChangeText={setConfirm}
+          secureTextEntry
+          error={errors.confirm}
+        />
+        <Button label={t('authExtra.resetCta')} onPress={onSubmit} loading={submitting} />
+      </Card>
     </Screen>
   );
 }
 
 const styles = themedStyles(() => ({
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs },
-  title: {
-    flex: 1,
-    fontFamily: fonts.extrabold,
-    fontSize: fontSizes.xxl,
-    color: colors.text,
-  },
-  body: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.md,
-    color: colors.textMuted,
-    lineHeight: 21,
-  },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
-  info: {
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radii.md,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    backgroundColor: colors.tealTint,
+    marginTop: spacing.xs,
   },
+  form: { gap: spacing.md },
 }));

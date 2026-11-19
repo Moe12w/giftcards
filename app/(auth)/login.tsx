@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { AuthHero } from '@/src/components/AuthHero';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { LanguageToggle } from '@/src/components/LanguageToggle';
@@ -11,7 +12,6 @@ import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
-import { Glyph } from '@/src/components/Glyph';
 
 export default function LoginScreen() {
   useThemeRefresh();
@@ -68,14 +68,15 @@ export default function LoginScreen() {
   return (
     <Screen>
       <LanguageToggle style={styles.languageToggle} />
-      <View style={styles.hero}>
-        <View style={styles.blob} />
-        <View style={styles.logoCircle}>
-          <Glyph name="gift" size={46} />
-        </View>
-        <Text style={styles.title}>{t('auth.welcomeTitle')}</Text>
-        <Text style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Text>
-      </View>
+
+      <AuthHero
+        eyebrow={t('auth.badgeWelcome')}
+        title={t('auth.welcomeTitle')}
+        subtitle={t('auth.welcomeSubtitle')}
+        glyph="gift"
+        tone="lavender"
+        titleSize={fontSizes.hero}
+      />
 
       {isDemo ? (
         <Card tone="teal">
@@ -83,52 +84,54 @@ export default function LoginScreen() {
         </Card>
       ) : null}
 
-      <TextField
-        label={t('auth.email')}
-        value={email}
-        onChangeText={setEmail}
-        placeholder={t('auth.emailPlaceholder')}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-        error={errors.email}
-      />
-      <TextField
-        label={t('auth.password')}
-        value={password}
-        onChangeText={setPassword}
-        placeholder={t('auth.passwordPlaceholder')}
-        secureTextEntry
-        error={errors.password}
-      />
+      <Card style={styles.form}>
+        <TextField
+          label={t('auth.email')}
+          value={email}
+          onChangeText={setEmail}
+          placeholder={t('auth.emailPlaceholder')}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          error={errors.email}
+        />
+        <TextField
+          label={t('auth.password')}
+          value={password}
+          onChangeText={setPassword}
+          placeholder={t('auth.passwordPlaceholder')}
+          secureTextEntry
+          error={errors.password}
+        />
 
-      <Pressable
-        onPress={() => router.push('/(auth)/forgot-password')}
-        accessibilityRole="button"
-        style={styles.forgot}
-      >
-        <Text style={styles.link}>{t('auth.forgotPassword')}</Text>
-      </Pressable>
+        <Pressable
+          onPress={() => router.push('/(auth)/forgot-password')}
+          accessibilityRole="button"
+          style={styles.forgot}
+        >
+          <Text style={styles.link}>{t('auth.forgotPassword')}</Text>
+        </Pressable>
 
-      {formError ? (
-        <View style={styles.errorBox}>
-          <Text style={styles.formError}>{formError}</Text>
-          {needsAccount ? (
-            <Link href="/(auth)/sign-up" asChild>
-              <Pressable accessibilityRole="link" hitSlop={8}>
-                <Text style={styles.link}>{t('auth.createAccountCta')}</Text>
-              </Pressable>
-            </Link>
-          ) : null}
-        </View>
-      ) : null}
+        {formError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.formError}>{formError}</Text>
+            {needsAccount ? (
+              <Link href="/(auth)/sign-up" asChild>
+                <Pressable accessibilityRole="link" hitSlop={8}>
+                  <Text style={styles.link}>{t('auth.createAccountCta')}</Text>
+                </Pressable>
+              </Link>
+            ) : null}
+          </View>
+        ) : null}
 
-      <Button
-        label={t('auth.signInCta')}
-        loadingLabel={t('auth.signingIn')}
-        onPress={onSubmit}
-        loading={submitting}
-      />
+        <Button
+          label={t('auth.signInCta')}
+          loadingLabel={t('auth.signingIn')}
+          onPress={onSubmit}
+          loading={submitting}
+        />
+      </Card>
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>{t('auth.noAccount')} </Text>
@@ -144,44 +147,7 @@ export default function LoginScreen() {
 
 const styles = themedStyles(() => ({
   languageToggle: { alignSelf: 'flex-end' },
-  hero: {
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  blob: {
-    position: 'absolute',
-    top: -10,
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: colors.pinkTint,
-  },
-  logoCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: radii.pill,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontFamily: fonts.extrabold,
-    fontSize: fontSizes.display,
-    color: colors.text,
-    textAlign: 'center',
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.md,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 21,
-  },
+  form: { gap: spacing.md },
   demoText: {
     fontFamily: fonts.medium,
     fontSize: fontSizes.sm,
@@ -207,6 +173,10 @@ const styles = themedStyles(() => ({
     justifyContent: 'center',
     alignItems: 'center',
     flexWrap: 'wrap',
+    borderTopWidth: 2,
+    borderStyle: 'dashed',
+    borderTopColor: colors.borderSoft,
+    paddingTop: spacing.md,
   },
   footerText: {
     fontFamily: fonts.regular,
