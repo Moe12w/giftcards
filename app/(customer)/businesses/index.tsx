@@ -52,6 +52,8 @@ export default function BusinessesScreen() {
     <Screen>
       <FlowHeader title={t('discovery.allBusinesses')} onBack={() => router.back()} splash />
 
+      <SponsoredStrip placementKey="marketplace_sponsored_business" variant="business" limit={3} />
+
       {loading ? (
         <SkeletonList rows={6} />
       ) : businesses.length === 0 ? (
@@ -120,7 +122,6 @@ export default function BusinessesScreen() {
           })}
         </View>
         {page.hasMore ? <ShowMore expanded={page.expanded} onPress={page.toggle} /> : null}
-        <SponsoredStrip placementKey="marketplace_sponsored_business" variant="business" limit={3} />
       </>
       )}
     </Screen>

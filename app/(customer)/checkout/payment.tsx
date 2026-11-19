@@ -11,7 +11,7 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { PaymentMethods } from '@/src/components/PaymentMethods';
 import { Screen } from '@/src/components/Screen';
-import { offerIcon, offerImage, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerBusinessLogo, offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { getOffer } from '@/src/lib/data';
 import { getSupabase } from '@/src/lib/supabase';
@@ -150,7 +150,7 @@ export default function PaymentScreen() {
         compact
         title={offerTitle(offer, i18n.language)}
         icon={offerIcon(offer)}
-        logoUrl={offerImage(offer)}
+        logoUrl={offerBusinessLogo(offer)}
         tone={offerTone(offer)}
         amountMinor={selectedVariant ? undefined : draft.amountMinor}
         sessionsTotal={selectedVariant?.session_count ?? undefined}

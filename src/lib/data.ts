@@ -345,12 +345,15 @@ export async function listVendorLocations(vendorId: string): Promise<BusinessLoc
 const BUSINESS_COLUMNS =
   'id, business_kind, name, slug, logo_url, banner_url, city, area, rating, description, status, is_featured, gift_count';
 
-/** Seeds the cache from a list the screen already has in hand. */
+/** Seeds one business record without touching the directory cache. */
+export function primeBusiness(business: MarketplaceBusiness): void {
+  primeCache(`business:${business.id}`, business);
+  if (business.slug) primeCache(`business:${business.slug}`, business);
+}
+
+/** Seeds the directory cache from a full list the screen already has. */
 export function primeBusinesses(rows: MarketplaceBusiness[]): void {
-  for (const business of rows) {
-    primeCache(`business:${business.id}`, business);
-    if (business.slug) primeCache(`business:${business.slug}`, business);
-  }
+  for (const business of rows) primeBusiness(business);
   primeCache('businesses:all', rows);
 }
 
@@ -407,7 +410,7 @@ export async function getBusiness(idOrSlug: string): Promise<MarketplaceBusiness
     const { data, error } = await query.maybeSingle();
     if (error) throw error;
     const business = (data ?? null) as MarketplaceBusiness | null;
-    if (business) primeBusinesses([business]);
+    if (business) primeBusiness(business);
     return business;
   });
 }
@@ -459,9 +462,11 @@ export async function listBusinessesByIds(ids: string[]): Promise<MarketplaceBus
     const byId = new Map(
       ((data ?? []) as MarketplaceBusiness[]).map((row) => [row.id, row]),
     );
-    return unique
+    const rows = unique
       .map((id) => byId.get(id))
       .filter((row): row is MarketplaceBusiness => Boolean(row));
+    rows.forEach(primeBusiness);
+    return rows;
   });
 }
 
