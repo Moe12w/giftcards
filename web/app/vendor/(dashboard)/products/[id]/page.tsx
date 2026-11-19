@@ -8,7 +8,6 @@ import {
   setProductStatus,
   toggleProductVariant,
   updateProduct,
-  uploadProductImage,
 } from '@/lib/actions/vendor';
 import { ProductForm } from '@/components/ProductForm';
 import { Notice, PageHead, StatusTag } from '@/components/ui';
@@ -75,7 +74,6 @@ export default async function EditVendorProductPage({
 
       <ProductForm
         action={updateProduct}
-        uploadAction={uploadProductImage}
         product={product}
         categories={(categories ?? []) as { id: string; name: string }[]}
         mode="edit"

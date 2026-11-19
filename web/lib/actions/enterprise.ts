@@ -104,7 +104,6 @@ async function syncCatalogueProduct(
     active: boolean;
     terms: string | null;
     instructions: string | null;
-    imageUrl: string;
   },
 ) {
   const slug = slugify(`${values.name}-${enterpriseProductId.slice(0, 6)}`);
@@ -112,7 +111,7 @@ async function syncCatalogueProduct(
     title: values.name,
     slug,
     description: values.instructions ?? values.terms,
-    image_url: values.imageUrl,
+    image_url: null,
     fulfilment_type: 'enterprise_code',
     vendor_id: null,
     partner_id: ctx.partner.id,
@@ -197,10 +196,6 @@ export async function saveEnterpriseProduct(formData: FormData) {
   if (sellingPrice === null || sellingPrice <= 0) {
     back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Enter a valid price.');
   }
-  const imageUrl = str(formData, 'image_url');
-  if (!imageUrl) {
-    back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Upload an image for the gift.');
-  }
   if (commissionBps < 0 || commissionBps > 10_000) {
     back(id ? `/enterprise/products/${id}` : '/enterprise/products', "Giftly's cut must be between 0 and 100%.");
   }
@@ -217,7 +212,7 @@ export async function saveEnterpriseProduct(formData: FormData) {
     redemption_instructions: optional(formData, 'redemption_instructions'),
     expiry_days: intField(formData, 'expiry_days'),
     is_active: checkbox(formData, 'is_active'),
-    image_url: imageUrl,
+    image_url: null,
     updated_at: new Date().toISOString(),
   };
 
@@ -238,7 +233,6 @@ export async function saveEnterpriseProduct(formData: FormData) {
       active: checkbox(formData, 'is_active'),
       terms: patch.terms_and_conditions,
       instructions: patch.redemption_instructions,
-      imageUrl,
     });
     revalidatePath('/enterprise/products');
     revalidatePath(`/enterprise/products/${id}`);
@@ -260,7 +254,6 @@ export async function saveEnterpriseProduct(formData: FormData) {
     active: checkbox(formData, 'is_active'),
     terms: patch.terms_and_conditions,
     instructions: patch.redemption_instructions,
-    imageUrl,
   });
   revalidatePath('/enterprise/products');
   revalidatePath('/admin/products');

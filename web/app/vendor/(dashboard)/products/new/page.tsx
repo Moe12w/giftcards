@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { requireVendor } from '@/lib/auth';
-import { createProduct, uploadProductImage } from '@/lib/actions/vendor';
+import { createProduct } from '@/lib/actions/vendor';
 import { ProductForm } from '@/components/ProductForm';
 import { PageHead } from '@/components/ui';
 import { pick } from '@/lib/i18n';
@@ -30,7 +30,6 @@ export default async function NewVendorProductPage() {
       />
       <ProductForm
         action={createProduct}
-        uploadAction={uploadProductImage}
         categories={(categories ?? []) as { id: string; name: string }[]}
         mode="create"
       />

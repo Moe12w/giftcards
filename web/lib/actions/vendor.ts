@@ -305,9 +305,6 @@ export async function createProduct(formData: FormData) {
 
   const title = str(formData, 'title');
   if (!title) back('/vendor/products/new', 'Give the gift a title.');
-  const imageUrl = str(formData, 'image_url');
-  if (!imageUrl) back('/vendor/products/new', 'Upload an image for the gift.');
-
   const fulfilmentType = str(formData, 'fulfilment_type') === 'experience' ? 'experience' : 'monetary';
   const status = str(formData, 'status') === 'published' ? 'published' : 'draft';
 
@@ -365,7 +362,7 @@ export async function createProduct(formData: FormData) {
       ),
       location: optional(formData, 'location'),
       occasions: parseOccasions(str(formData, 'occasions')),
-      image_url: imageUrl,
+      image_url: null,
     })
     .select('id')
     .single();
@@ -414,8 +411,6 @@ export async function updateProduct(formData: FormData) {
 
   const title = str(formData, 'title');
   if (!title) back(`/vendor/products/${id}`, 'Give the gift a title.');
-  const imageUrl = str(formData, 'image_url');
-  if (!imageUrl) back(`/vendor/products/${id}`, 'Upload an image for the gift.');
   const status = str(formData, 'status') === 'published' ? 'published' : 'draft';
 
   const patch: Record<string, unknown> = {
@@ -435,7 +430,7 @@ export async function updateProduct(formData: FormData) {
     tone: normalizeTone(str(formData, 'tone')),
     location: optional(formData, 'location'),
     occasions: parseOccasions(str(formData, 'occasions')),
-    image_url: imageUrl,
+    image_url: null,
     updated_at: new Date().toISOString(),
   };
 

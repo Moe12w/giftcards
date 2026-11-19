@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { requireEnterprise } from '@/lib/auth';
-import { saveEnterpriseProduct, uploadPartnerProductImage } from '@/lib/actions/enterprise';
+import { saveEnterpriseProduct } from '@/lib/actions/enterprise';
 import { EnterpriseProductForm } from '@/components/EnterpriseProductForm';
 import { PageHead } from '@/components/ui';
 import { pick } from '@/lib/i18n';
@@ -28,7 +28,7 @@ export default async function NewEnterpriseProductPage() {
           {t.readOnly}
         </div>
       ) : (
-        <EnterpriseProductForm action={saveEnterpriseProduct} uploadAction={uploadPartnerProductImage} />
+        <EnterpriseProductForm action={saveEnterpriseProduct} />
       )}
     </div>
   );
