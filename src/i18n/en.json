@@ -498,6 +498,8 @@
     "voided": "Voided",
     "giftedBy": "Gift from {{name}}",
     "scanHint": "Show this code at the vendor counter",
+    "sentTitle": "This gift was sent",
+    "sentHint": "{{name}} will use it. A gift you sent cannot be spent by you.",
     "codeOnce": "Keep this code private. Anyone with it can spend the card.",
     "walletNotConfigured": "Wallet passes become available once the backend is connected.",
     "details": "Card details",

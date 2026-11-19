@@ -97,16 +97,32 @@ export default function GiftFilterScreen() {
               icon={card.icon}
               logoUrl={card.image_url}
               tone={card.tone}
-              amountMinor={valueLeft(card)}
-              sessionsTotal={isSessionCard(card) ? card.total_sessions ?? 1 : undefined}
-              sessionsRemaining={isSessionCard(card) ? sessionsLeft(card) : undefined}
+              amountMinor={sentCards.some((item) => item.id === card.id) ? undefined : valueLeft(card)}
+              sessionsTotal={
+                sentCards.some((item) => item.id === card.id)
+                  ? undefined
+                  : isSessionCard(card)
+                    ? card.total_sessions ?? 1
+                    : undefined
+              }
+              sessionsRemaining={
+                sentCards.some((item) => item.id === card.id)
+                  ? undefined
+                  : isSessionCard(card)
+                    ? sessionsLeft(card)
+                    : undefined
+              }
               message={card.message ?? undefined}
               meta={
                 card.expires_at
                   ? t('gifts.expiresOn', { date: formatDate(card.expires_at, lang) })
                   : t('cards.noExpiry')
               }
-              badge={{ label: t(`cards.${card.status}`), tone: statusTone[card.status] }}
+              badge={
+                sentCards.some((item) => item.id === card.id)
+                  ? { label: t('gifts.sent'), tone: 'primary' as BadgeTone }
+                  : { label: t(`cards.${card.status}`), tone: statusTone[card.status] }
+              }
               onPress={() => router.push(`/(customer)/card/${card.id}`)}
             />
           ))}

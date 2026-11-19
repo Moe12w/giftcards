@@ -149,14 +149,25 @@ export default function CardDetailScreen() {
       <Card style={styles.hero}>
         <View style={styles.heroTop}>
           <Text style={styles.vendor}>{card.partner_name ?? card.vendor_name ?? card.offer_title ?? 'Gift card'}</Text>
-          {waiting ? (
+          {isSent ? (
+            <Badge label={t('gifts.sent')} tone="primary" />
+          ) : waiting ? (
             <Badge label={t('cards.scheduled')} tone="warning" />
           ) : (
             <Badge label={t(`cards.${card.status}`)} tone={statusTone[card.status]} />
           )}
         </View>
 
-        {sessionCard ? (
+        {isSent ? (
+          <>
+            <Text style={styles.balanceLabel}>{t('cards.sentTitle')}</Text>
+            <Text style={styles.qrHint}>
+              {t('cards.sentHint', {
+                name: card.recipient_name || card.recipient_email || t('gifts.sent'),
+              })}
+            </Text>
+          </>
+        ) : sessionCard ? (
           <>
             <Text style={styles.balanceLabel}>{t('sessions.remaining')}</Text>
             <Text style={styles.sessionCount}>
@@ -258,14 +269,16 @@ export default function CardDetailScreen() {
         </Card>
       ) : null}
 
-      {waiting ? null : (
+      {waiting || isSent ? null : (
         <>
           <Button label={t('cards.appleWallet')} variant="secondary" onPress={walletUnavailable} />
           <Button label={t('cards.googleWallet')} variant="secondary" onPress={walletUnavailable} />
         </>
       )}
 
-      <Text style={styles.privacy}>{sessionCard ? t('sessions.privacy') : t('cards.codeOnce')}</Text>
+      {isSent ? null : (
+        <Text style={styles.privacy}>{sessionCard ? t('sessions.privacy') : t('cards.codeOnce')}</Text>
+      )}
     </Screen>
   );
 }

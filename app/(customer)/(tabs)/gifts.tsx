@@ -96,7 +96,7 @@ export default function GiftsScreen() {
         icon={card.icon}
         logoUrl={card.image_url}
         tone={card.tone}
-        amountMinor={valueLeft(card)}
+        amountMinor={sentCards.some((item) => item.id === card.id) ? undefined : valueLeft(card)}
         sessionsTotal={isSessionCard(card) ? card.total_sessions ?? 1 : undefined}
         sessionsRemaining={isSessionCard(card) ? sessionsLeft(card) : undefined}
         message={card.message ?? undefined}
@@ -108,9 +108,11 @@ export default function GiftsScreen() {
               : t('cards.noExpiry')
         }
         badge={
-          isWaiting
-            ? { label: t('gifts.scheduled'), tone: 'warning' as BadgeTone }
-            : { label: t(`cards.${card.status}`), tone: statusTone[card.status] }
+          sentCards.some((item) => item.id === card.id)
+            ? { label: t('gifts.sent'), tone: 'primary' as BadgeTone }
+            : isWaiting
+              ? { label: t('gifts.scheduled'), tone: 'warning' as BadgeTone }
+              : { label: t(`cards.${card.status}`), tone: statusTone[card.status] }
         }
         onPressIn={() => prefetchCard(card.id)}
         onPress={() =>
