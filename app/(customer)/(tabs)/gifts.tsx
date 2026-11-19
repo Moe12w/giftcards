@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import type { BadgeTone } from '@/src/components/Badge';
@@ -38,9 +38,15 @@ const FILTERS: Filter[] = ['all', 'received', 'sent'];
 export default function GiftsScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
-  const { ready, cards, receivedCards, sentCards, usableCards, entries, sessionsLeft, valueLeft } =
+  const { ready, cards, receivedCards, sentCards, usableCards, entries, sessionsLeft, valueLeft, reload } =
     useCards();
   const [filter, setFilter] = useState<Filter>('all');
+
+  useFocusEffect(
+    useCallback(() => {
+      void reload();
+    }, [reload]),
+  );
 
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
 

@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Text, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Badge, type BadgeTone } from '@/src/components/Badge';
@@ -34,7 +34,7 @@ export default function CardDetailScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { id, name: paramName } = useLocalSearchParams<{ id: string; name?: string }>();
-  const { ready, getCard, sessionsLeft, valueLeft, canRedeem, revealPartnerCode, markPartnerCodeUsed } =
+  const { ready, getCard, sessionsLeft, valueLeft, canRedeem, revealPartnerCode, markPartnerCodeUsed, reload } =
     useCards();
   const [card, setCard] = useState<GiftCard | null>(null);
   const [partnerCode, setPartnerCode] = useState<string | null>(null);
@@ -45,6 +45,12 @@ export default function CardDetailScreen() {
     if (!id) return;
     setCard(getCard(id));
   }, [getCard, id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void reload();
+    }, [reload]),
+  );
 
   const cardName =
     card?.partner_name ?? card?.vendor_name ?? card?.offer_title ?? paramName ?? t('cards.details');

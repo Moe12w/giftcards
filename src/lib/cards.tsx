@@ -16,6 +16,7 @@ import React, {
 } from 'react';
 
 import { hasSupabaseConfig } from './env';
+import { getSupabase } from './supabase';
 import { useAuth } from './auth';
 import {
   closeEnterpriseCode,
@@ -126,6 +127,39 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void load(userId);
   }, [load, userId]);
+
+  // A redemption on the web dashboard changes the voucher row. Realtime pushes
+  // that change to the phone so the balance updates while the app is open.
+  useEffect(() => {
+    if (!hasSupabaseConfig || !userId) return;
+    const supabase = getSupabase();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const refresh = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        void load(userId);
+      }, 250);
+    };
+    const channel = supabase
+      .channel(`wallet:${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'vouchers', filter: `buyer_id=eq.${userId}` },
+        refresh,
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'vouchers', filter: `claimed_by=eq.${userId}` },
+        refresh,
+      )
+      .subscribe();
+    return () => {
+      if (timer) clearTimeout(timer);
+      void supabase.removeChannel(channel);
+    };
+  }, [load, userId]);
+
+  const reload = useCallback(() => load(userId), [load, userId]);
 
   const getCard = useCallback(
     (id: string) => visibleCards.find((card) => card.id === id) ?? null,
@@ -257,7 +291,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       redeemValue,
       revealPartnerCode,
       markPartnerCodeUsed,
-      reload: () => load(userId),
+      reload,
     }),
     [
       ready,
@@ -276,8 +310,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       redeemValue,
       revealPartnerCode,
       markPartnerCodeUsed,
-      load,
-      userId,
+      reload,
     ],
   );
 
