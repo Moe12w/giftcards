@@ -21,6 +21,7 @@ import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
+import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { CATEGORIES, offerBusinessName, offerImage, offerIsFixedAmount, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { listActiveOffers } from '@/src/lib/data';
@@ -82,6 +83,9 @@ export default function PickGiftsScreen() {
     if (category === 'all') return searched;
     return searched.filter((offer) => offer.category === category);
   }, [category, offers, query, i18n.language]);
+
+  // Keep the card list short; a new search or filter starts collapsed again.
+  const page = usePaged(filtered, 6);
 
   const selectedOffers = useMemo(
     () => offers.filter((offer) => selection[offer.id] !== undefined),
@@ -219,7 +223,10 @@ export default function PickGiftsScreen() {
 
       <SearchBar
         value={query}
-        onChangeText={setQuery}
+        onChangeText={(value) => {
+          setQuery(value);
+          page.reset();
+        }}
         placeholder={t('basket.searchPlaceholder')}
         accessibilityLabel={t('common.search')}
       />
@@ -228,14 +235,20 @@ export default function PickGiftsScreen() {
         <Chip
           label={t('basket.allCategories')}
           active={category === 'all'}
-          onPress={() => setCategory('all')}
+          onPress={() => {
+            setCategory('all');
+            page.reset();
+          }}
         />
         {CATEGORIES.map((entry) => (
           <Chip
             key={entry.slug}
             label={t(entry.titleKey)}
             active={category === entry.slug}
-            onPress={() => setCategory(entry.slug as CategoryId)}
+            onPress={() => {
+              setCategory(entry.slug as CategoryId);
+              page.reset();
+            }}
           />
         ))}
       </ScrollView>
@@ -261,7 +274,7 @@ export default function PickGiftsScreen() {
         />
       ) : (
         <View style={styles.list}>
-          {filtered.map((offer) => {
+          {page.visible.map((offer) => {
             const selected = selection[offer.id] !== undefined;
             const tone = (offerTone(offer) as AccentTone) as IconTileTone;
             return (
@@ -348,6 +361,11 @@ export default function PickGiftsScreen() {
               </Card>
             );
           })}
+          {page.hasMore ? (
+            <View style={styles.moreRow}>
+              <ShowMore expanded={page.expanded} onPress={page.toggle} />
+            </View>
+          ) : null}
         </View>
       )}
 
@@ -432,6 +450,7 @@ const styles = themedStyles(() => ({
   loader: { marginVertical: spacing.lg },
   errorCard: { gap: spacing.sm },
   list: { gap: spacing.sm },
+  moreRow: { alignItems: 'center', paddingTop: spacing.xs },
   offerCard: { gap: spacing.sm },
   offerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   offerCopy: { flex: 1, gap: 1 },

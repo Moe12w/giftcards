@@ -10,6 +10,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
+import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { SkeletonList } from '@/src/components/Skeleton';
 import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { listMarketplaceBusinesses, peekBusinesses } from '@/src/lib/data';
@@ -45,6 +46,7 @@ export default function BusinessesScreen() {
 
   const rtl = i18n.language === 'ar';
   const Arrow = rtl ? ArrowLeft : ArrowRight;
+  const page = usePaged(businesses, 8);
 
   return (
     <Screen>
@@ -62,7 +64,7 @@ export default function BusinessesScreen() {
       ) : (
         <>
           <View style={styles.list}>
-            {businesses.map((business, index) => {
+            {page.visible.map((business, index) => {
             const tone = TONES[index % TONES.length];
             const location = business.area ?? business.city;
             const isPartner = business.business_kind === 'partner';
@@ -117,6 +119,7 @@ export default function BusinessesScreen() {
             );
           })}
         </View>
+        {page.hasMore ? <ShowMore expanded={page.expanded} onPress={page.toggle} /> : null}
         <SponsoredStrip placementKey="marketplace_sponsored_business" variant="business" limit={3} />
       </>
       )}
