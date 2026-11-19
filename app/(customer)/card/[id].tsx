@@ -34,7 +34,7 @@ export default function CardDetailScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { id, name: paramName } = useLocalSearchParams<{ id: string; name?: string }>();
-  const { ready, getCard, sessionsLeft, valueLeft, canRedeem, revealPartnerCode, markPartnerCodeUsed, reload } =
+  const { ready, getCard, sentCards, sessionsLeft, valueLeft, canRedeem, revealPartnerCode, markPartnerCodeUsed, reload } =
     useCards();
   const [card, setCard] = useState<GiftCard | null>(null);
   const previousCard = useRef<{ balance: number; sessions: number; status: string } | null>(null);
@@ -112,6 +112,7 @@ export default function CardDetailScreen() {
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
 
   const sessionCard = useMemo(() => (card ? isSessionCard(card) : false), [card]);
+  const isSent = Boolean(card && sentCards.some((item) => item.id === card.id));
   const remaining = card ? sessionsLeft(card) : 0;
   const balance = card ? valueLeft(card) : 0;
   // A gift bought for a future date is in the wallet but must not be spendable yet.
@@ -211,7 +212,7 @@ export default function CardDetailScreen() {
             <Text style={styles.qrHint}>{t('cards.partnerCodeClosed')}</Text>
           ) : null}
           {codeError ? <Text style={styles.qrHint}>{t('cards.partnerCodeMissing')}</Text> : null}
-          {card?.status !== 'redeemed' ? (
+          {card?.status !== 'redeemed' && !isSent ? (
             <View style={styles.partnerActions}>
               {!partnerCode ? (
                 <Button label={t('cards.partnerCodeShow')} onPress={showPartnerCode} />
@@ -224,6 +225,7 @@ export default function CardDetailScreen() {
               />
             </View>
           ) : null}
+          {isSent ? <Text style={styles.qrHint}>{t('gifts.sent')}</Text> : null}
         </Card>
       ) : redeemable ? (
         <Card style={styles.qrCard}>

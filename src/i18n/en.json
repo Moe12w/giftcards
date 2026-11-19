@@ -557,6 +557,7 @@
     "transactionRefund": "Refunded",
     "transactionVoid": "Card voided",
     "giftCardsCount": "Gift cards",
+    "activeGiftCardsCount": "Active gift cards",
     "toUse": "To use",
     "used": "Used up",
     "yourCards": "Your gift cards",

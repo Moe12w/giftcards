@@ -61,10 +61,16 @@ export default function GiftsScreen() {
     return cards;
   }, [cards, filter, receivedCards, sentCards]);
 
-  // The customer's own gift cards come first: the ones they can still use.
+  // Keep sent cards visible in the list for history; canRedeem() blocks them.
   const usable = useMemo(
-    () => visible.filter((card) => usableCards.some((entry) => entry.id === card.id)),
-    [visible, usableCards],
+    () =>
+      visible.filter(
+        (card) =>
+          card.status !== 'redeemed' &&
+          card.status !== 'expired' &&
+          card.status !== 'voided',
+      ),
+    [visible],
   );
   const used = useMemo(
     () => visible.filter((card) => usedCards.some((entry) => entry.id === card.id)),
@@ -132,9 +138,9 @@ export default function GiftsScreen() {
             tag={t('gifts.title')}
             icon="gift"
             artHeight={100}
-            title={String(cards.length)}
+            title={String(usableCards.length)}
             titleStyle={styles.summaryAmount}
-            subtitle={t('gifts.giftCardsCount')}
+            subtitle={t('gifts.activeGiftCardsCount')}
             footer={
               <View style={styles.summaryStats}>
                 <View style={styles.stat}>

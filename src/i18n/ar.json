@@ -557,6 +557,7 @@
     "transactionRefund": "تم الاسترجاع",
     "transactionVoid": "أُلغيت البطاقة",
     "giftCardsCount": "بطاقات الهدايا",
+    "activeGiftCardsCount": "البطاقات النشطة",
     "toUse": "قابلة للاستخدام",
     "used": "مستهلكة",
     "yourCards": "بطاقات هديتك",

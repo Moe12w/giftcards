@@ -188,6 +188,8 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
 
   const canRedeem = useCallback(
     (card: GiftCard) => {
+      // A card bought for somebody else is never spendable by the buyer.
+      if (userId && card.buyer_id === userId && card.claimed_by !== userId) return false;
       if (isSessionCard(card)) return canRedeemSession(card, entriesFor(card.id));
       return (
         card.status !== 'redeemed' &&
@@ -196,7 +198,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
         valueRemaining(card, entriesFor(card.id)) > 0
       );
     },
-    [entriesFor],
+    [entriesFor, userId],
   );
 
   const redeemSession = useCallback(
@@ -248,9 +250,10 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
   );
 
   // A voucher the customer received was claimed by them. A voucher they sent
-  // was bought by them for somebody else.
+  // was bought by them for somebody else. In the offline demo every card is
+  // treated as received.
   const receivedCards = useMemo(
-    () => visibleCards.filter((card) => Boolean(userId) && card.claimed_by === userId),
+    () => visibleCards.filter((card) => !userId || card.claimed_by === userId),
     [visibleCards, userId],
   );
 
@@ -262,15 +265,17 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
     [visibleCards, userId],
   );
 
+  // Only cards the customer actually owns can be spent. Sent cards stay in
+  // the list for history, but never become "to use" or show a redeem code.
   const usableCards = useMemo(
     () =>
-      visibleCards.filter(
+      receivedCards.filter(
         (card) =>
           card.status !== 'redeemed' &&
           card.status !== 'expired' &&
           card.status !== 'voided',
       ),
-    [visibleCards],
+    [receivedCards],
   );
 
   const value = useMemo<CardsContextValue>(
