@@ -548,6 +548,8 @@
     "scheduledFor": "تصل في {{date}}",
     "openedOn": "فُتحت في {{date}}",
     "redeemedOn": "استُبدلت في {{date}}",
+    "scannedTitle": "تم مسح الهدية",
+    "scannedBody": "تم تحديث الرصيد. سنعود إلى محفظتك.",
     "expiresOn": "تنتهي في {{date}}",
     "noHistory": "لا توجد معاملات بعد",
     "transactionIssue": "إصدار بطاقة هدايا",

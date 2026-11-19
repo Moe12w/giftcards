@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +37,8 @@ export default function CardDetailScreen() {
   const { ready, getCard, sessionsLeft, valueLeft, canRedeem, revealPartnerCode, markPartnerCodeUsed, reload } =
     useCards();
   const [card, setCard] = useState<GiftCard | null>(null);
+  const previousCard = useRef<{ balance: number; sessions: number; status: string } | null>(null);
+  const reacted = useRef(false);
   const [partnerCode, setPartnerCode] = useState<string | null>(null);
   const [codeError, setCodeError] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -45,6 +47,33 @@ export default function CardDetailScreen() {
     if (!id) return;
     setCard(getCard(id));
   }, [getCard, id]);
+
+  // The vendor scans the QR on another device. Realtime reloads this card, so
+  // a drop in balance/sessions means the scan just completed.
+  useEffect(() => {
+    if (!card) return;
+    const snapshot = {
+      balance: valueLeft(card),
+      sessions: sessionsLeft(card),
+      status: card.status,
+    };
+    const previous = previousCard.current;
+    previousCard.current = snapshot;
+    if (!previous || reacted.current) return;
+
+    const spent =
+      snapshot.balance < previous.balance || snapshot.sessions < previous.sessions;
+    const completed = snapshot.status === 'redeemed' && previous.status !== 'redeemed';
+    if (!spent && !completed) return;
+
+    reacted.current = true;
+    Alert.alert(
+      t('cards.scannedTitle'),
+      t('cards.scannedBody'),
+      [{ text: t('common.ok'), onPress: () => router.replace('/(customer)/(tabs)/gifts') }],
+      { cancelable: false },
+    );
+  }, [card, sessionsLeft, valueLeft, t]);
 
   useFocusEffect(
     useCallback(() => {

@@ -548,6 +548,8 @@
     "scheduledFor": "Arrives {{date}}",
     "openedOn": "Opened {{date}}",
     "redeemedOn": "Redeemed {{date}}",
+    "scannedTitle": "Gift scanned",
+    "scannedBody": "The balance has been updated. Returning to your wallet.",
     "expiresOn": "Expires {{date}}",
     "noHistory": "No transactions yet",
     "transactionIssue": "Gift card issued",
