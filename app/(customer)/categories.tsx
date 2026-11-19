@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -7,13 +7,32 @@ import { CollectionTile } from '@/src/components/CollectionTile';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
-import { CATEGORIES, OCCASIONS } from '@/src/lib/catalog';
+import { OCCASIONS } from '@/src/lib/catalog';
+import {
+  categoryLabel,
+  listAppCategories,
+  peekAppCategories,
+  type AppCategory,
+} from '@/src/lib/data';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function CategoriesScreen() {
   useThemeRefresh();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [categories, setCategories] = useState<AppCategory[]>(() => peekAppCategories());
+
+  useEffect(() => {
+    let active = true;
+    listAppCategories()
+      .then((rows) => {
+        if (active) setCategories(rows);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <Screen>
@@ -21,10 +40,14 @@ export default function CategoriesScreen() {
 
       <SectionHeader title={t('explore.categories')} />
       <View style={styles.grid}>
-        {CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <View key={category.slug} style={styles.item}>
             <CollectionTile
-              label={t(category.titleKey)}
+              label={categoryLabel(
+                category,
+                i18n.language,
+                category.titleKey ? t(category.titleKey) : '',
+              )}
               icon={category.icon}
               tone={category.tone}
               onPress={() => router.push(`/(customer)/category/${category.slug}`)}

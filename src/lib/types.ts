@@ -293,6 +293,7 @@ export interface MarketplaceBusiness {
   rating: number | null;
   description: string | null;
   status: string;
+  is_featured: boolean;
   gift_count: number;
 }
 

@@ -22,9 +22,15 @@ import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
 import { ShowMore, usePaged } from '@/src/components/ShowMore';
-import { CATEGORIES, offerBusinessName, offerImage, offerIsFixedAmount, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerBusinessName, offerImage, offerIsFixedAmount, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
-import { listActiveOffers } from '@/src/lib/data';
+import {
+  categoryLabel,
+  listActiveOffers,
+  listAppCategories,
+  peekAppCategories,
+  type AppCategory,
+} from '@/src/lib/data';
 import { searchOffers } from '@/src/lib/search';
 import { formatMoney } from '@/src/lib/money';
 import type { AccentTone, CategoryId, OccasionId, Offer } from '@/src/lib/types';
@@ -45,6 +51,7 @@ export default function PickGiftsScreen() {
     preset?: string;
   }>();
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [categories, setCategories] = useState<AppCategory[]>(() => peekAppCategories());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState('');
@@ -59,6 +66,9 @@ export default function PickGiftsScreen() {
       .then((data) => active && setOffers(data))
       .catch(() => active && setError(true))
       .finally(() => active && setLoading(false));
+    listAppCategories()
+      .then((rows) => active && setCategories(rows))
+      .catch(() => undefined);
     return () => {
       active = false;
     };
@@ -240,10 +250,14 @@ export default function PickGiftsScreen() {
             page.reset();
           }}
         />
-        {CATEGORIES.map((entry) => (
+        {categories.map((entry) => (
           <Chip
             key={entry.slug}
-            label={t(entry.titleKey)}
+            label={categoryLabel(
+              entry,
+              i18n.language,
+              entry.titleKey ? t(entry.titleKey) : '',
+            )}
             active={category === entry.slug}
             onPress={() => {
               setCategory(entry.slug as CategoryId);

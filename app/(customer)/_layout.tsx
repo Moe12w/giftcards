@@ -2,6 +2,8 @@ import React from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Redirect, Stack } from 'expo-router';
 
+import { MaintenanceScreen } from '@/src/components/MaintenanceScreen';
+import { useAppConfig } from '@/src/lib/app-config';
 import { useAuth } from '@/src/lib/auth';
 import { hasSupabaseConfig } from '@/src/lib/env';
 import { BasketProvider } from '@/src/lib/baskets';
@@ -12,6 +14,7 @@ import { colors } from '@/src/theme';
 export default function CustomerLayout() {
   useThemeRefresh();
   const { user, loading } = useAuth();
+  const { config } = useAppConfig();
 
   if (loading) {
     return (
@@ -22,6 +25,9 @@ export default function CustomerLayout() {
   }
   if (hasSupabaseConfig && !user) {
     return <Redirect href="/(auth)/login" />;
+  }
+  if (config.controls.maintenance.enabled) {
+    return <MaintenanceScreen setting={config.controls.maintenance} />;
   }
 
   return (

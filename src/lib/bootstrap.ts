@@ -11,10 +11,17 @@
 import { Image } from 'expo-image';
 
 import { CATEGORIES, OCCASIONS, offerBusinessBanner, offerBusinessLogo } from './catalog';
+import {
+  defaultAppConfig,
+  getAppConfig,
+  selectFeaturedBusinesses,
+  type AppConfig,
+} from './app-config';
 import { primeCache } from './cache';
 import {
   getPublicSettings,
   listActiveOffers,
+  listAppCategories,
   listMarketplaceBusinesses,
   primeBusinesses,
   primeOffers,
@@ -27,13 +34,6 @@ import type { MarketplaceBusiness, Offer } from './types';
 const IMAGE_BUDGET = 14;
 let catalogPromise: Promise<void> | null = null;
 const warmedProfiles = new Set<string>();
-
-/** The six businesses the home feed leads with (partners first). */
-function featuredBusinesses(rows: MarketplaceBusiness[]): MarketplaceBusiness[] {
-  const partners = rows.filter((row) => row.business_kind === 'partner');
-  const vendors = rows.filter((row) => row.business_kind === 'vendor');
-  return [...partners, ...vendors].slice(0, 6);
-}
 
 /** The gift cards the "popular" shelf shows first. */
 function popularOffers(rows: Offer[]): Offer[] {
@@ -78,20 +78,24 @@ export function startCatalogBootstrap(): Promise<void> {
     const tasks: Promise<unknown>[] = [
       listActiveOffers().catch(() => [] as Offer[]),
       listMarketplaceBusinesses().catch(() => [] as MarketplaceBusiness[]),
+      listAppCategories().catch(() => []),
+      getAppConfig(),
     ];
     if (hasSupabaseConfig) tasks.push(getPublicSettings().catch(() => null));
 
-    const [offers, businesses, settings] = await Promise.all(tasks);
+    const [offers, businesses, , rawConfig, settings] = await Promise.all(tasks);
+    const config = (rawConfig as AppConfig | undefined) ?? defaultAppConfig();
     const offerRows = Array.isArray(offers) ? (offers as Offer[]) : [];
     const businessRows = Array.isArray(businesses)
       ? (businesses as MarketplaceBusiness[])
       : [];
+    const featured = selectFeaturedBusinesses(businessRows, [], config.featured);
 
     // listActiveOffers/listMarketplaceBusinesses already prime the individual
     // records; these derived shelves make the first screen a pure cache read.
     primeOffers(offerRows);
     primeBusinesses(businessRows);
-    primeCache('businesses:featured', featuredBusinesses(businessRows));
+    primeCache('businesses:featured', featured);
     primeCache('offers:popular', popularOffers(offerRows));
     if (settings) primeCache('settings:public', settings);
 
@@ -100,7 +104,7 @@ export function startCatalogBootstrap(): Promise<void> {
       console.debug('[perf] catalog primed in', perfBetween('bootstrap:start', 'bootstrap:catalog'), 'ms');
     }
     // Images are a separate, lower-priority track.
-    void prefetchImages(offerRows, featuredBusinesses(businessRows));
+    void prefetchImages(offerRows, featured);
   })().catch(() => {
     // Cache hydration already gave us last launch's copy; keep it.
     perfMark('bootstrap:failed');

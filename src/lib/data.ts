@@ -5,6 +5,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { cached, peekCache, primeCache } from './cache';
+import { CATEGORIES, type CatalogEntry } from './catalog';
 import { hasSupabaseConfig } from './env';
 import {
   MOCK_CARDS,
@@ -342,7 +343,7 @@ export async function listVendorLocations(vendorId: string): Promise<BusinessLoc
 
 /** Business fields every catalog screen reads. Avoids `select *` on a view. */
 const BUSINESS_COLUMNS =
-  'id, business_kind, name, slug, logo_url, banner_url, city, area, rating, description, status, gift_count';
+  'id, business_kind, name, slug, logo_url, banner_url, city, area, rating, description, status, is_featured, gift_count';
 
 /** Seeds the cache from a list the screen already has in hand. */
 export function primeBusinesses(rows: MarketplaceBusiness[]): void {
@@ -441,6 +442,106 @@ export async function listMarketplaceBusinesses(
     primeBusinesses(rows);
     return rows;
   });
+}
+
+/** Fetches the businesses an admin chose for the home featured shelf, in order. */
+export async function listBusinessesByIds(ids: string[]): Promise<MarketplaceBusiness[]> {
+  if (!hasSupabaseConfig) return [];
+  const unique = [...new Set(ids.map((id) => id.trim()).filter(Boolean))].slice(0, 24);
+  if (unique.length === 0) return [];
+  const key = `businesses:ids:${unique.join(',')}`;
+  return cached(key, 60_000, async () => {
+    const { data, error } = await getSupabase()
+      .from('marketplace_businesses')
+      .select(BUSINESS_COLUMNS)
+      .in('id', unique);
+    if (error) throw error;
+    const byId = new Map(
+      ((data ?? []) as MarketplaceBusiness[]).map((row) => [row.id, row]),
+    );
+    return unique
+      .map((id) => byId.get(id))
+      .filter((row): row is MarketplaceBusiness => Boolean(row));
+  });
+}
+
+/** A category row plus the presentation metadata the app needs. */
+export interface AppCategory extends CatalogEntry {
+  /** Display name from the dashboard; empty falls back to the translated key. */
+  name: string;
+  nameAr: string | null;
+  showOnHome: boolean;
+  sortOrder: number;
+}
+
+interface CategoryRow {
+  slug: string;
+  name: string;
+  name_ar: string | null;
+  icon: string | null;
+  sort_order: number;
+  show_on_home: boolean;
+  tone: string | null;
+}
+
+const CATEGORY_COLUMNS = 'slug, name, name_ar, icon, sort_order, show_on_home, tone';
+
+function defaultAppCategories(): AppCategory[] {
+  return CATEGORIES.map((entry, index) => ({
+    ...entry,
+    name: '',
+    nameAr: null,
+    showOnHome: true,
+    sortOrder: index + 1,
+  }));
+}
+
+/**
+ * Active categories in the dashboard's order. The table is the source of
+ * truth; the static catalog only supplies the translated title key and the
+ * artwork fallback for the original nine slugs.
+ */
+export async function listAppCategories(): Promise<AppCategory[]> {
+  return cached('categories:app', 60_000, async () => {
+    if (!hasSupabaseConfig) return defaultAppCategories();
+    const { data, error } = await getSupabase()
+      .from('categories')
+      .select(CATEGORY_COLUMNS)
+      .eq('active', true)
+      .order('sort_order', { ascending: true });
+    if (error) throw error;
+    const rows = (data ?? []) as CategoryRow[];
+    if (rows.length === 0) return defaultAppCategories();
+    return rows.map((row) => {
+      const known = CATEGORIES.find((entry) => entry.slug === row.slug);
+      return {
+        slug: row.slug,
+        icon: row.icon || known?.icon || 'gift',
+        tone: resolveTone(row.tone, known?.tone ?? 'lavender'),
+        titleKey: known?.titleKey ?? '',
+        name: row.name,
+        nameAr: row.name_ar,
+        showOnHome: row.show_on_home,
+        sortOrder: row.sort_order,
+      };
+    });
+  });
+}
+
+/** The cached category list, or the built-in nine before the first fetch. */
+export function peekAppCategories(): AppCategory[] {
+  return peekCache<AppCategory[]>('categories:app') ?? defaultAppCategories();
+}
+
+/** Dashboard name first, then the translated static label. */
+export function categoryLabel(
+  category: AppCategory,
+  language: string,
+  fallback = '',
+): string {
+  const localized =
+    language === 'ar' ? category.nameAr || category.name : category.name;
+  return localized || fallback || category.slug.replace(/-/g, ' ');
 }
 
 /** Public marketplace configuration (feature flags, copy, thresholds). */

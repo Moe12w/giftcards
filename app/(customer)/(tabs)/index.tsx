@@ -5,6 +5,7 @@ import { Bell, Gift, Globe, Heart } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/src/components/Avatar';
+import { AnnouncementBanner } from '@/src/components/AnnouncementBanner';
 import { Badge } from '@/src/components/Badge';
 import { BasketPickerModal } from '@/src/components/BasketPickerModal';
 import { Button } from '@/src/components/Button';
@@ -23,9 +24,31 @@ import {
   RecommendationRow,
   TrendingGiftCard,
 } from '@/src/components/DiscoveryCards';
-import { CATEGORIES, CURATED_COLLECTIONS, offerStartingPriceMinor, offerTitle, offersForCollection } from '@/src/lib/catalog';
+import {
+  configuredCollections,
+  selectFeaturedBusinesses,
+  useAppConfig,
+  type HomeSectionKey,
+} from '@/src/lib/app-config';
+import {
+  CURATED_COLLECTIONS,
+  offerStartingPriceMinor,
+  offerTitle,
+  offersForCollection,
+} from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
-import { countUnreadNotifications, listActiveOffers, listMarketplaceBusinesses, peekBusinesses, peekOffers } from '@/src/lib/data';
+import {
+  categoryLabel,
+  countUnreadNotifications,
+  listActiveOffers,
+  listAppCategories,
+  listBusinessesByIds,
+  listMarketplaceBusinesses,
+  peekAppCategories,
+  peekBusinesses,
+  peekOffers,
+  type AppCategory,
+} from '@/src/lib/data';
 import { businessHref, giftHref, prefetchBusiness, pushOnce } from '@/src/lib/navigation';
 import { hasSeenTutorial } from '@/src/lib/tutorial';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
@@ -38,13 +61,11 @@ export default function ExploreHomeScreen() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { activeBasket, baskets } = useBaskets();
+  const { config, refresh: refreshConfig } = useAppConfig();
   const [offers, setOffers] = useState<Offer[]>(() => peekOffers());
-  const [businesses, setBusinesses] = useState<MarketplaceBusiness[]>(() => {
-    const rows = peekBusinesses();
-    const partners = rows.filter((row) => row.business_kind === 'partner');
-    const vendors = rows.filter((row) => row.business_kind === 'vendor');
-    return [...partners, ...vendors].slice(0, 6);
-  });
+  const [businesses, setBusinesses] = useState<MarketplaceBusiness[]>(() => peekBusinesses());
+  const [manualBusinesses, setManualBusinesses] = useState<MarketplaceBusiness[]>([]);
+  const [categories, setCategories] = useState<AppCategory[]>(() => peekAppCategories());
   const [loading, setLoading] = useState(offers.length === 0 && businesses.length === 0);
   const [error, setError] = useState(false);
   const [pickerOffer, setPickerOffer] = useState<Offer | null>(null);
@@ -66,15 +87,12 @@ export default function ExploreHomeScreen() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([listActiveOffers(), listMarketplaceBusinesses()])
-      .then(([offerRows, businessRows]) => {
+    Promise.all([listActiveOffers(), listMarketplaceBusinesses(), listAppCategories()])
+      .then(([offerRows, businessRows, categoryRows]) => {
         if (!active) return;
         setOffers(offerRows);
-        // Partners are first-class businesses, so feature them alongside the
-        // busiest vendors instead of letting the vendor count bury them.
-        const partners = businessRows.filter((row) => row.business_kind === 'partner');
-        const vendors = businessRows.filter((row) => row.business_kind === 'vendor');
-        setBusinesses([...partners, ...vendors].slice(0, 6));
+        setBusinesses(businessRows);
+        setCategories(categoryRows);
       })
       .catch(() => active && setError(true))
       .finally(() => active && setLoading(false));
@@ -82,6 +100,26 @@ export default function ExploreHomeScreen() {
       active = false;
     };
   }, []);
+
+  // Manually featured businesses are loaded by id, so an admin's picks work
+  // even when a business would not rank in the automatic shelf.
+  const manualIds = config.featured.businessIds.join(',');
+  useEffect(() => {
+    let active = true;
+    const ids = manualIds ? manualIds.split(',') : [];
+    const task =
+      ids.length > 0 && config.featured.mode !== 'auto'
+        ? listBusinessesByIds(ids)
+        : Promise.resolve([] as MarketplaceBusiness[]);
+    task
+      .then((rows) => {
+        if (active) setManualBusinesses(rows);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [config.featured.mode, manualIds]);
 
   const name = (user?.user_metadata?.full_name as string | undefined)?.split(' ')[0];
   const [unread, setUnread] = useState(0);
@@ -93,17 +131,34 @@ export default function ExploreHomeScreen() {
       countUnreadNotifications()
         .then(setUnread)
         .catch(() => setUnread(0));
-    }, []),
+      // Admin merchandising changes are picked up whenever the tab is focused.
+      void refreshConfig();
+    }, [refreshConfig]),
   );
 
-  const trending = useMemo(() => offersForCollection(offers, 'trending').slice(0, 8), [offers]);
+  const featuredBusinesses = useMemo(
+    () => selectFeaturedBusinesses(businesses, manualBusinesses, config.featured),
+    [businesses, manualBusinesses, config.featured],
+  );
+  const homeCategories = useMemo(
+    () => categories.filter((row) => row.showOnHome).slice(0, config.categories.homeLimit),
+    [categories, config.categories.homeLimit],
+  );
+  const homeCollections = useMemo(
+    () => configuredCollections(config.collections, CURATED_COLLECTIONS),
+    [config.collections],
+  );
+  const trending = useMemo(
+    () => offersForCollection(offers, 'trending').slice(0, config.home.trendingLimit),
+    [offers, config.home.trendingLimit],
+  );
   const recommended = useMemo(
     () =>
       [...offers]
         .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
         .filter((offer) => !trending.slice(0, 4).some((item) => item.id === offer.id))
-        .slice(0, 3),
-    [offers, trending],
+        .slice(0, config.home.recommendedLimit),
+    [offers, trending, config.home.recommendedLimit],
   );
 
   const basketOfferIds = useMemo(
@@ -154,6 +209,236 @@ export default function ExploreHomeScreen() {
     return t('discovery.reasonNew', { index: index + 1 });
   }
 
+  // Every home section is a node so the admin can hide or reorder shelves
+  // without a new build. Header, search and footer stay fixed.
+  const sectionNodes: Record<HomeSectionKey, React.ReactNode> = {
+    heroCarousel: <SponsoredCarousel placementKey="homepage_hero_carousel" limit={8} />,
+    featuredBusinesses: (
+      <>
+        <SectionHeader
+          title={t('discovery.featuredBusinesses')}
+          actionLabel={t('common.seeAll')}
+          onAction={() => router.push('/(customer)/businesses')}
+        />
+        {loading ? (
+          <ActivityIndicator color={colors.teal} style={styles.loader} />
+        ) : error ? (
+          <Card tone="pink" style={styles.errorCard}>
+            <EmptyState
+              title={t('states.error.title')}
+              body={t('states.error.body')}
+              icon="warning"
+              tone="pink"
+            />
+            <Button label={t('common.retry')} onPress={() => router.replace('/(customer)/(tabs)')} />
+          </Card>
+        ) : featuredBusinesses.length === 0 ? (
+          <EmptyState
+            title={t('home.noOffers')}
+            body={t('home.noOffersBody')}
+            icon="warning"
+            tone="lavender"
+          />
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.hScrollOuter}
+            contentContainerStyle={styles.hScrollFeatured}
+          >
+            {featuredBusinesses.map((business, index) => (
+              <FeaturedBusinessCard
+                key={business.id}
+                business={business}
+                index={index}
+                onPressIn={() => prefetchBusiness(business)}
+                onPress={() => pushOnce(businessHref(business))}
+              />
+            ))}
+          </ScrollView>
+        )}
+      </>
+    ),
+    activeBasket: activeBasket ? (
+      <Pressable
+        onPress={() => router.push(`/(customer)/basket/${activeBasket.id}`)}
+        accessibilityRole="button"
+        accessibilityLabel={activeBasket.name}
+        style={({ pressed }) => pressed && styles.pressed}
+      >
+        <Card tone="teal" style={styles.activeStrip}>
+          <View style={styles.activeIcon}>
+            <Gift size={22} color={colors.ink} />
+          </View>
+          <View style={styles.activeCopy}>
+            <Text style={styles.activeLabel}>{t('discovery.fillingBasket')}</Text>
+            <Text style={styles.activeTitle} numberOfLines={1}>
+              {activeBasket.name}
+            </Text>
+            <Text style={styles.activeMeta}>
+              {t('basket.cardsCount', { count: activeBasket.items.length })} ·{' '}
+              {t('basket.peopleCount', { count: activeBasket.participants.length })}
+            </Text>
+          </View>
+          <Money minor={basketTotal(activeBasket)} style={styles.activeAmount} />
+        </Card>
+      </Pressable>
+    ) : null,
+    heroCard: (
+      <Card tone="lavender" style={styles.hero}>
+        <View style={styles.heroRow}>
+          <View style={styles.heroCopy}>
+            <Badge label={t('discovery.heroBadge')} tone="primary" />
+            <Text style={styles.heroTitle}>{t('discovery.heroTitle')}</Text>
+            <Text style={styles.heroBody}>{t('discovery.heroBody')}</Text>
+          </View>
+          <View style={styles.heroArt}>
+            <View style={styles.heroBlob} />
+            <View style={styles.heroBoxBack} />
+            <View style={styles.heroBoxFront}>
+              <View style={styles.heroRibbonV} />
+              <View style={styles.heroRibbonH} />
+              <Gift size={26} color={colors.ink} />
+            </View>
+            <View style={styles.heroSparkle}>
+              <Heart size={16} color={colors.ink} />
+            </View>
+          </View>
+        </View>
+        <View style={styles.heroActions}>
+          <Button
+            label={t('discovery.heroCta')}
+            fullWidth={false}
+            style={styles.heroButton}
+            onPress={() => router.push('/(customer)/collection/trending')}
+          />
+          <Button
+            label={t('discovery.heroSecondary')}
+            variant="secondary"
+            fullWidth={false}
+            style={styles.heroButton}
+            onPress={() => router.push('/(customer)/basket/create')}
+          />
+        </View>
+      </Card>
+    ),
+    categories: (
+      <>
+        <SectionHeader
+          title={t('discovery.featuredCategories')}
+          actionLabel={t('common.seeAll')}
+          onAction={() => router.push('/(customer)/categories')}
+        />
+        {homeCategories.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.hScrollOuter}
+            contentContainerStyle={styles.hScroll}
+          >
+            {homeCategories.map((category) => (
+              <CategoryShortcut
+                key={category.slug}
+                label={categoryLabel(
+                  category,
+                  i18n.language,
+                  category.titleKey ? t(category.titleKey) : '',
+                )}
+                icon={category.icon}
+                tone={category.tone}
+                onPress={() => router.push(`/(customer)/category/${category.slug}`)}
+              />
+            ))}
+          </ScrollView>
+        ) : null}
+      </>
+    ),
+    collections: (
+      <>
+        <SectionHeader title={t('discovery.featuredCollections')} />
+        {homeCollections.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.hScrollOuter}
+            contentContainerStyle={styles.hScroll}
+          >
+            {homeCollections.map((collection) => (
+              <CuratedCollectionCard
+                key={collection.slug}
+                label={t(collection.titleKey)}
+                subtitle={t(collection.subtitleKey)}
+                icon={collection.icon}
+                tone={collection.tone}
+                onPress={() => router.push(`/(customer)/collection/${collection.slug}`)}
+              />
+            ))}
+          </ScrollView>
+        ) : null}
+      </>
+    ),
+    sponsoredGifts: (
+      <SponsoredStrip placementKey="homepage_featured_gift_card" variant="gift_card" limit={4} />
+    ),
+    trending: (
+      <>
+        <SectionHeader
+          title={t('discovery.trending')}
+          actionLabel={t('common.seeAll')}
+          onAction={() => router.push('/(customer)/collection/trending')}
+        />
+        {loading ? (
+          <ActivityIndicator color={colors.teal} style={styles.loader} />
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.hScrollOuter}
+            contentContainerStyle={styles.hScroll}
+          >
+            {trending.map((offer) => (
+              <TrendingGiftCard
+                key={offer.id}
+                offer={offer}
+                added={basketOfferIds.has(offer.id)}
+                onPress={() => router.push(giftHref(offer) as never)}
+                onAdd={() => quickAdd(offer)}
+                addLabel={t('discovery.quickAdd')}
+              />
+            ))}
+          </ScrollView>
+        )}
+      </>
+    ),
+    recommended: (
+      <>
+        <SectionHeader
+          title={t('discovery.recommended')}
+          actionLabel={t('common.seeAll')}
+          onAction={() => router.push('/(customer)/collection/popular')}
+          splash
+        />
+        <View style={styles.list}>
+          {recommended.map((offer, index) => (
+            <RecommendationRow
+              key={offer.id}
+              offer={offer}
+              reason={reasonFor(offer, index)}
+              onPress={() => router.push(giftHref(offer) as never)}
+            />
+          ))}
+        </View>
+      </>
+    ),
+  };
+
+  const orderedSections = config.home.sections
+    .filter((section) => section.visible)
+    .sort((a, b) => a.order - b.order)
+    .map((section) => (
+      <React.Fragment key={section.key}>{sectionNodes[section.key]}</React.Fragment>
+    ));
+
   return (
     <View style={styles.root}>
       <Screen tabbed>
@@ -200,209 +485,9 @@ export default function ExploreHomeScreen() {
           style={styles.search}
         />
 
-        {/* Sponsored hero carousel — hidden automatically when no campaign is live */}
-        <SponsoredCarousel placementKey="homepage_hero_carousel" limit={8} />
+        <AnnouncementBanner announcement={config.controls.announcement} />
 
-        {/* Featured businesses */}
-        <SectionHeader
-          title={t('discovery.featuredBusinesses')}
-          actionLabel={t('common.seeAll')}
-          onAction={() => router.push('/(customer)/businesses')}
-        />
-        {loading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
-        ) : error ? (
-          <Card tone="pink" style={styles.errorCard}>
-            <EmptyState
-              title={t('states.error.title')}
-              body={t('states.error.body')}
-              icon="warning"
-              tone="pink"
-            />
-            <Button label={t('common.retry')} onPress={() => router.replace('/(customer)/(tabs)')} />
-          </Card>
-        ) : businesses.length === 0 ? (
-          <EmptyState
-            title={t('home.noOffers')}
-            body={t('home.noOffersBody')}
-            icon="warning"
-            tone="lavender"
-          />
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.hScrollOuter}
-            contentContainerStyle={styles.hScrollFeatured}
-          >
-            {businesses.map((business, index) => (
-              <FeaturedBusinessCard
-                key={business.id}
-                business={business}
-                index={index}
-                onPressIn={() => prefetchBusiness(business)}
-                onPress={() => pushOnce(businessHref(business))}
-              />
-            ))}
-          </ScrollView>
-        )}
-
-        {/* Active basket strip */}
-        {activeBasket ? (
-          <Pressable
-            onPress={() => router.push(`/(customer)/basket/${activeBasket.id}`)}
-            accessibilityRole="button"
-            accessibilityLabel={activeBasket.name}
-            style={({ pressed }) => pressed && styles.pressed}
-          >
-            <Card tone="teal" style={styles.activeStrip}>
-              <View style={styles.activeIcon}>
-                <Gift size={22} color={colors.ink} />
-              </View>
-              <View style={styles.activeCopy}>
-                <Text style={styles.activeLabel}>{t('discovery.fillingBasket')}</Text>
-                <Text style={styles.activeTitle} numberOfLines={1}>
-                  {activeBasket.name}
-                </Text>
-                <Text style={styles.activeMeta}>
-                  {t('basket.cardsCount', { count: activeBasket.items.length })} ·{' '}
-                  {t('basket.peopleCount', { count: activeBasket.participants.length })}
-                </Text>
-              </View>
-              <Money minor={basketTotal(activeBasket)} style={styles.activeAmount} />
-            </Card>
-          </Pressable>
-        ) : null}
-
-        {/* Hero */}
-        <Card tone="lavender" style={styles.hero}>
-          <View style={styles.heroRow}>
-            <View style={styles.heroCopy}>
-              <Badge label={t('discovery.heroBadge')} tone="primary" />
-              <Text style={styles.heroTitle}>{t('discovery.heroTitle')}</Text>
-              <Text style={styles.heroBody}>{t('discovery.heroBody')}</Text>
-            </View>
-            <View style={styles.heroArt}>
-              <View style={styles.heroBlob} />
-              <View style={styles.heroBoxBack} />
-              <View style={styles.heroBoxFront}>
-                <View style={styles.heroRibbonV} />
-                <View style={styles.heroRibbonH} />
-                <Gift size={26} color={colors.ink} />
-              </View>
-              <View style={styles.heroSparkle}>
-                <Heart size={16} color={colors.ink} />
-              </View>
-            </View>
-          </View>
-          <View style={styles.heroActions}>
-            <Button
-              label={t('discovery.heroCta')}
-              fullWidth={false}
-              style={styles.heroButton}
-              onPress={() => router.push('/(customer)/collection/trending')}
-            />
-            <Button
-              label={t('discovery.heroSecondary')}
-              variant="secondary"
-              fullWidth={false}
-              style={styles.heroButton}
-              onPress={() => router.push('/(customer)/basket/create')}
-            />
-          </View>
-        </Card>
-
-        {/* Categories */}
-        <SectionHeader
-          title={t('discovery.featuredCategories')}
-          actionLabel={t('common.seeAll')}
-          onAction={() => router.push('/(customer)/categories')}
-        />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.hScrollOuter}
-          contentContainerStyle={styles.hScroll}
-        >
-          {CATEGORIES.map((category) => (
-            <CategoryShortcut
-              key={category.slug}
-              label={t(category.titleKey)}
-              icon={category.icon}
-              tone={category.tone}
-              onPress={() => router.push(`/(customer)/category/${category.slug}`)}
-            />
-          ))}
-        </ScrollView>
-
-        {/* Collections */}
-        <SectionHeader title={t('discovery.featuredCollections')} />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.hScrollOuter}
-          contentContainerStyle={styles.hScroll}
-        >
-          {CURATED_COLLECTIONS.map((collection) => (
-            <CuratedCollectionCard
-              key={collection.slug}
-              label={t(collection.titleKey)}
-              subtitle={t(collection.subtitleKey)}
-              icon={collection.icon}
-              tone={collection.tone}
-              onPress={() => router.push(`/(customer)/collection/${collection.slug}`)}
-            />
-          ))}
-        </ScrollView>
-
-        {/* Sponsored gift cards */}
-        <SponsoredStrip placementKey="homepage_featured_gift_card" variant="gift_card" limit={4} />
-
-        {/* Trending */}
-        <SectionHeader
-          title={t('discovery.trending')}
-          actionLabel={t('common.seeAll')}
-          onAction={() => router.push('/(customer)/collection/trending')}
-        />
-        {loading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.hScrollOuter}
-            contentContainerStyle={styles.hScroll}
-          >
-            {trending.map((offer) => (
-              <TrendingGiftCard
-                key={offer.id}
-                offer={offer}
-                added={basketOfferIds.has(offer.id)}
-                onPress={() => router.push(giftHref(offer) as never)}
-                onAdd={() => quickAdd(offer)}
-                addLabel={t('discovery.quickAdd')}
-              />
-            ))}
-          </ScrollView>
-        )}
-
-        {/* Recommended */}
-        <SectionHeader
-          title={t('discovery.recommended')}
-          actionLabel={t('common.seeAll')}
-          onAction={() => router.push('/(customer)/collection/popular')}
-          splash
-        />
-        <View style={styles.list}>
-          {recommended.map((offer, index) => (
-            <RecommendationRow
-              key={offer.id}
-              offer={offer}
-              reason={reasonFor(offer, index)}
-              onPress={() => router.push(giftHref(offer) as never)}
-            />
-          ))}
-        </View>
+        {orderedSections}
 
         <Text style={styles.footnote}>{t('discovery.footnote', { language: i18n.language })}</Text>
       </Screen>
