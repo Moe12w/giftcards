@@ -49,7 +49,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "lint:web": "npm --prefix web run lint"
   },
   "private": true
 }
