@@ -71,9 +71,10 @@ export default function LoginScreen() {
 
       <AuthHero
         eyebrow={t('auth.badgeWelcome')}
-        title={t('auth.welcomeTitle')}
+        title={t('auth.welcomeTitleLine1')}
+        highlight={t('auth.welcomeTitleLine2')}
         subtitle={t('auth.welcomeSubtitle')}
-        glyph="gift"
+        plateSize={0}
         tone="lavender"
         titleSize={fontSizes.hero}
       />
@@ -164,7 +165,7 @@ const styles = themedStyles(() => ({
     gap: spacing.xs,
     borderRadius: radii.md,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.pinkTint,
     padding: spacing.sm + 2,
   },

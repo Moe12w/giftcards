@@ -182,7 +182,7 @@ const styles = themedStyles(() => ({
   bubble: {
     borderRadius: 14,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     padding: spacing.sm,
     gap: 2,
     maxWidth: '88%',

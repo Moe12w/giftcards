@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -95,6 +95,7 @@ export default function NotificationsScreen() {
         title={t('notifications.title')}
         subtitle={t('notifications.subtitle')}
         onBack={() => router.back()}
+        splash
       />
 
       <View style={styles.actions}>
@@ -164,7 +165,7 @@ const styles = themedStyles(() => ({
     borderRadius: 5,
     backgroundColor: colors.pink,
     borderWidth: 1,
-    borderColor: colors.ink,
+    borderColor: colors.border,
   },
   pressed: { opacity: 0.88 },
 }));

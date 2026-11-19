@@ -108,7 +108,7 @@ const styles = themedStyles(() => ({
     maxWidth: '80%',
     borderRadius: 18,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     padding: spacing.sm,
   },
   userBubble: { alignSelf: 'flex-end', backgroundColor: colors.teal },
@@ -122,7 +122,7 @@ const styles = themedStyles(() => ({
   sendButton: {
     borderRadius: 999,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.plum,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,

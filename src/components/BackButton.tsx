@@ -34,7 +34,7 @@ const styles = themedStyles(() => ({
     height: 46,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.lavenderTint,
     alignItems: 'center',
     justifyContent: 'center',

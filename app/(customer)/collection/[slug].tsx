@@ -8,6 +8,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
+import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { offersForCollection } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
@@ -34,12 +35,13 @@ export default function CollectionScreen() {
   }, []);
 
   const results = slug ? offersForCollection(offers, slug) : [];
+  const page = usePaged(results, 6);
   const title = slug ? t(`catalog.collections.${slug}.title`) : t('explore.trending');
   const subtitle = slug ? t(`catalog.collections.${slug}.subtitle`) : undefined;
 
   return (
     <Screen>
-      <FlowHeader title={title} subtitle={subtitle} onBack={() => router.back()} />
+      <FlowHeader title={title} subtitle={subtitle} onBack={() => router.back()} splash />
 
       {/* Each collection rents its own carousel. Empty slots simply render nothing. */}
       {slug ? (
@@ -58,7 +60,7 @@ export default function CollectionScreen() {
       ) : (
         <>
           <View style={styles.list}>
-            {results.map((offer, index) => (
+            {page.visible.map((offer, index) => (
               <OfferCard
                 key={offer.id}
                 offer={offer}
@@ -67,6 +69,7 @@ export default function CollectionScreen() {
               />
             ))}
           </View>
+          {page.hasMore ? <ShowMore expanded={page.expanded} onPress={page.toggle} /> : null}
         </>
       )}
     </Screen>

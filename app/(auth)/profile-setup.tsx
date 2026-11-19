@@ -20,10 +20,14 @@ const AVATAR_TONES = ['teal', 'pink', 'lavender', 'gold'] as const;
 export default function ProfileSetupScreen() {
   useThemeRefresh();
   const { t } = useTranslation();
-  const { name = '', email = '' } = useLocalSearchParams<{ name?: string; email?: string }>();
+  const { name = '', email = '', phone: initialPhone = '' } = useLocalSearchParams<{
+    name?: string;
+    email?: string;
+    phone?: string;
+  }>();
   const { updateProfile } = useAuth();
   const [fullName, setFullName] = useState(name);
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(initialPhone);
   const [tone, setTone] = useState<(typeof AVATAR_TONES)[number]>('lavender');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -123,7 +127,7 @@ const styles = themedStyles(() => ({
     borderWidth: 2,
     borderColor: 'transparent',
   },
-  avatarActive: { borderColor: colors.ink, backgroundColor: colors.tealTint },
+  avatarActive: { borderColor: colors.border, backgroundColor: colors.tealTint },
   avatarLabel: {
     fontFamily: fonts.medium,
     fontSize: fontSizes.sm,

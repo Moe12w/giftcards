@@ -4,6 +4,7 @@ import { Text, View } from 'react-native';
 
 import { Eyebrow, type EyebrowTone } from './Eyebrow';
 import { Glyph } from './Glyph';
+import { SplashText } from './SplashText';
 import { colors, edges, fonts, fontSizes, spacing, themedStyles } from '../theme';
 
 interface FillStyle {
@@ -23,6 +24,8 @@ interface AuthHeroProps {
   /** Sticker above the title, e.g. "Start here". */
   eyebrow: string;
   title: string;
+  /** Optional second line, painted with the site's lavender title highlight. */
+  highlight?: string;
   subtitle?: string;
   glyph?: string;
   tone?: EyebrowTone;
@@ -42,6 +45,7 @@ interface AuthHeroProps {
 export function AuthHero({
   eyebrow,
   title,
+  highlight,
   subtitle,
   glyph = 'gift',
   tone = 'teal',
@@ -92,15 +96,22 @@ export function AuthHero({
 
       <Eyebrow label={eyebrow} tone={tone} style={centered ? styles.centerEyebrow : undefined} />
 
-      <Text
-        style={[
-          styles.title,
-          { fontSize: titleSize, lineHeight: Math.round(titleSize * 1.16) },
-          centered && styles.centerText,
-        ]}
-      >
-        {title}
-      </Text>
+      <View style={[styles.titleGroup, centered && styles.center]}>
+        <Text
+          style={[
+            styles.title,
+            { fontSize: titleSize, lineHeight: Math.round(titleSize * 1.16) },
+            centered && styles.centerText,
+          ]}
+        >
+          {title}
+        </Text>
+        {highlight ? (
+          <SplashText center={centered} fontSize={titleSize} tone="lavender">
+            {highlight}
+          </SplashText>
+        ) : null}
+      </View>
 
       {subtitle ? (
         <Text style={[styles.subtitle, centered && styles.centerText]}>{subtitle}</Text>
@@ -115,7 +126,7 @@ const styles = themedStyles(() => ({
   plateWrap: { alignItems: 'center', justifyContent: 'center' },
   plateEdge: {
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     paddingBottom: 5,
     paddingHorizontal: 0,
   },
@@ -126,6 +137,7 @@ const styles = themedStyles(() => ({
   sparkleA: { position: 'absolute', top: 0, right: 14 },
   sparkleB: { position: 'absolute', bottom: 8, left: 10 },
   centerEyebrow: { alignSelf: 'center' },
+  titleGroup: { gap: 0 },
   title: {
     fontFamily: fonts.extrabold,
     color: colors.text,

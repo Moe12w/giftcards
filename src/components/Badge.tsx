@@ -32,7 +32,7 @@ const styles = themedStyles(() => ({
     alignSelf: 'flex-start',
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     paddingHorizontal: spacing.sm + 2,
     paddingVertical: 2,
   },

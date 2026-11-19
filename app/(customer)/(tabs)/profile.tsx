@@ -73,6 +73,7 @@ export default function ProfileScreen() {
         title={t('profile.title')}
         subtitle={t('profile.subtitle')}
         right={<LanguageToggle />}
+        splash
       />
 
       <Card tone="pink" style={styles.identity}>

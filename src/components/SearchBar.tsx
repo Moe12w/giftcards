@@ -63,7 +63,7 @@ const styles = themedStyles(() => ({
     minHeight: 54,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
   },

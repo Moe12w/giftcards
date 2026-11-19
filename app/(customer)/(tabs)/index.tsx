@@ -15,6 +15,7 @@ import { Screen } from '@/src/components/Screen';
 import { SearchBar } from '@/src/components/SearchBar';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { SponsoredCarousel, SponsoredStrip } from '@/src/components/SponsoredCarousel';
+import { SplashText } from '@/src/components/SplashText';
 import {
   CategoryShortcut,
   CuratedCollectionCard,
@@ -159,9 +160,9 @@ export default function ExploreHomeScreen() {
         {/* Header */}
         <View style={styles.headerRow}>
           <View style={styles.greetingWrap}>
-            <Text style={styles.greeting}>
+            <SplashText fontSize={fontSizes.xxl} style={styles.greeting}>
               {name ? t('discovery.greeting', { name }) : t('discovery.greetingGeneric')}
-            </Text>
+            </SplashText>
             <Text style={styles.subtitle}>{t('discovery.subtitle')}</Text>
           </View>
           <Pressable
@@ -390,6 +391,7 @@ export default function ExploreHomeScreen() {
           title={t('discovery.recommended')}
           actionLabel={t('common.seeAll')}
           onAction={() => router.push('/(customer)/collection/popular')}
+          splash
         />
         <View style={styles.list}>
           {recommended.map((offer, index) => (
@@ -434,7 +436,7 @@ const styles = themedStyles(() => ({
     height: 46,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -448,7 +450,7 @@ const styles = themedStyles(() => ({
     borderRadius: 4,
     backgroundColor: colors.pink,
     borderWidth: 1,
-    borderColor: colors.ink,
+    borderColor: colors.border,
   },
   search: { marginTop: spacing.xs },
   activeStrip: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm + 2 },
@@ -457,7 +459,7 @@ const styles = themedStyles(() => ({
     height: 44,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -490,7 +492,7 @@ const styles = themedStyles(() => ({
     borderRadius: 52,
     backgroundColor: colors.surface,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     opacity: 0.9,
   },
   heroBoxBack: {
@@ -499,7 +501,7 @@ const styles = themedStyles(() => ({
     height: 54,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.pink,
     transform: [{ rotate: '-10deg' }, { translateX: -8 }, { translateY: 4 }],
   },
@@ -508,7 +510,7 @@ const styles = themedStyles(() => ({
     height: 60,
     borderRadius: 14,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.teal,
     alignItems: 'center',
     justifyContent: 'center',
@@ -523,7 +525,7 @@ const styles = themedStyles(() => ({
     backgroundColor: colors.gold,
     borderLeftWidth: 2,
     borderRightWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
   },
   heroRibbonH: {
     position: 'absolute',
@@ -534,7 +536,7 @@ const styles = themedStyles(() => ({
     backgroundColor: colors.gold,
     borderTopWidth: 2,
     borderBottomWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
   },
   heroSparkle: {
     position: 'absolute',
@@ -544,7 +546,7 @@ const styles = themedStyles(() => ({
     height: 30,
     borderRadius: 15,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',

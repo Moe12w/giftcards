@@ -88,7 +88,7 @@ const styles = themedStyles(() => ({
     padding: spacing.sm,
     borderRadius: radii.md,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     gap: 2,
   },

@@ -25,14 +25,14 @@ const variants = (): Record<Variant, VariantStyle> => ({
   primary: {
     background: colors.teal,
     edge: edges.teal,
-    border: colors.ink,
+    border: colors.border,
     label: colors.textOnAccent,
     spinner: colors.textOnAccent,
   },
   secondary: {
     background: colors.surface,
     edge: edges.ink,
-    border: colors.ink,
+    border: colors.border,
     label: colors.ink,
     spinner: colors.ink,
   },
@@ -46,7 +46,7 @@ const variants = (): Record<Variant, VariantStyle> => ({
   danger: {
     background: colors.pink,
     edge: edges.pink,
-    border: colors.ink,
+    border: colors.border,
     label: colors.ink,
     spinner: colors.ink,
   },
@@ -143,7 +143,7 @@ export function Button({
 const styles = themedStyles(() => ({
   edge: {
     borderRadius: radii.pill,
-    borderColor: colors.ink,
+    borderColor: colors.border,
   },
   base: {
     minHeight: 50,

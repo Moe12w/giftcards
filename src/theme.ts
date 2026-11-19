@@ -34,6 +34,9 @@ const light = {
   blobB: 'rgba(114, 194, 184, 0.34)',
   blobRing: 'rgba(28, 28, 28, 0.10)',
 
+  // Highlighter swipe behind a heading phrase, as on the marketing site.
+  splash: 'rgba(205, 184, 242, 0.92)',
+
   // Text
   text: '#1C1C1C',
   textMuted: '#6E6E6E',
@@ -90,18 +93,24 @@ export const lightColors: Palette = light;
 
 export const darkColors: Palette = {
   background: '#14161B',
-  backgroundAlt: '#191C22',
-  surface: '#1F232B',
-  surfaceAlt: '#262A33',
+  backgroundAlt: '#1A1E25',
+  // Slightly lifted from the background so cards still separate now that the
+  // outlines are softer.
+  surface: '#212630',
+  surfaceAlt: '#282D38',
   surfaceSunken: '#101216',
 
   ink: '#F2F3F5',
-  border: '#F2F3F5',
-  borderSoft: '#343946',
+  // Borders are deliberately much softer than text in dark mode. Reusing the
+  // near-white ink for 2px outlines made every card read like a neon frame.
+  border: '#5A6270',
+  borderSoft: '#3A4150',
 
   blobA: 'rgba(205, 184, 242, 0.22)',
   blobB: 'rgba(127, 209, 198, 0.14)',
   blobRing: 'rgba(242, 243, 245, 0.12)',
+
+  splash: 'rgba(205, 184, 242, 0.34)',
 
   text: '#F2F3F5',
   textMuted: '#A7AEBC',
@@ -153,7 +162,8 @@ const lightEdges = {
 } as const;
 
 const darkEdges = {
-  ink: '#F2F3F5',
+  // The hard bottom edge follows the same softened line as the outlines.
+  ink: '#5A6270',
   teal: '#4B9C93',
   pink: '#D98F8B',
   lavender: '#A98FD6',
@@ -259,6 +269,9 @@ export const radii = {
   sm: 14,
   md: 18,
   lg: 20,
+  // The marketing site's cards use a 24px corner; kept as its own token so
+  // offer-style cards do not drift when the general card radius changes.
+  offer: 24,
   xl: 26,
   pill: 999,
 } as const;
@@ -293,7 +306,7 @@ export const shadows = {
 export const outlines = {
   width: 2,
   get color() {
-    return colors.ink;
+    return colors.border;
   },
 };
 

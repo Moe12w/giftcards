@@ -1,176 +1,85 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { AuthHero } from '@/src/components/AuthHero';
+import { AuthCardArt } from '@/src/components/AuthCardArt';
 import { Button } from '@/src/components/Button';
-import { Card } from '@/src/components/Card';
+import { Eyebrow } from '@/src/components/Eyebrow';
 import { LanguageToggle } from '@/src/components/LanguageToggle';
 import { Screen } from '@/src/components/Screen';
-import { TextField } from '@/src/components/TextField';
-import { useAuth } from '@/src/lib/auth';
+import { SplashText } from '@/src/components/SplashText';
 import { useThemeRefresh } from '@/src/lib/theme';
-import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
+/** The first screen of sign-up: a landing-page-style invitation into the flow. */
 export default function SignUpScreen() {
   useThemeRefresh();
   const { t } = useTranslation();
-  const { signUp } = useAuth();
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
-
-  async function onSubmit() {
-    const next: Record<string, string> = {};
-    if (!fullName.trim()) next.fullName = t('common.required');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) next.email = t('auth.invalidEmail');
-    if (password.length < 8) next.password = t('auth.passwordTooShort');
-    setErrors(next);
-    if (Object.keys(next).length > 0) return;
-
-    setSubmitting(true);
-    setFormError(null);
-    setAlreadyRegistered(false);
-    try {
-      const { session } = await signUp(email.trim(), password, fullName.trim());
-      if (session) {
-        // The project confirms emails automatically, so the account is ready.
-        router.replace('/(customer)/(tabs)');
-        return;
-      }
-      router.push({
-        pathname: '/(auth)/verify-email',
-        params: { email: email.trim(), name: fullName.trim() },
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : '';
-      if (/already registered|already been registered/i.test(message)) {
-        setFormError(t('auth.emailAlreadyRegistered'));
-        setAlreadyRegistered(true);
-      } else if (/rate limit|too many/i.test(message)) {
-        setFormError(t('auth.tooManyAttempts'));
-      } else if (/password/i.test(message)) {
-        setFormError(t('auth.passwordTooShort'));
-      } else {
-        setFormError(t('auth.signUpFailed'));
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  }
 
   return (
-    <Screen>
-      <LanguageToggle style={styles.languageToggle} />
+    <Screen scroll={false} contentStyle={styles.content}>
+      <View style={styles.topBar}>
+        <LanguageToggle />
+      </View>
 
-      <AuthHero
-        eyebrow={t('auth.badgeStart')}
-        title={t('auth.signUp')}
-        subtitle={t('auth.welcomeSubtitle')}
-        glyph="gift"
-        tone="teal"
-        titleSize={fontSizes.hero}
-      />
+      <View style={styles.copy}>
+        <Eyebrow label={t('auth.badgeStart')} tone="lavender" />
+        <View style={styles.titleGroup}>
+          <Text style={styles.title}>{t('auth.welcomeTitleLine1')}</Text>
+          <SplashText fontSize={fontSizes.hero} tone="lavender">
+            {t('auth.welcomeTitleLine2')}
+          </SplashText>
+        </View>
+        <Text style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Text>
+      </View>
 
-      <Card style={styles.form}>
-        <TextField
-          label={t('auth.fullName')}
-          value={fullName}
-          onChangeText={setFullName}
-          autoCapitalize="words"
-          error={errors.fullName}
-        />
-        <TextField
-          label={t('auth.email')}
-          value={email}
-          onChangeText={setEmail}
-          placeholder={t('auth.emailPlaceholder')}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoComplete="email"
-          error={errors.email}
-        />
-        <TextField
-          label={t('auth.password')}
-          value={password}
-          onChangeText={setPassword}
-          placeholder={t('auth.passwordPlaceholder')}
-          secureTextEntry
-          error={errors.password}
-        />
-
-        {formError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.formError}>{formError}</Text>
-            {alreadyRegistered ? (
-              <Link href="/(auth)/login" asChild>
-                <Pressable accessibilityRole="link" hitSlop={8}>
-                  <Text style={styles.link}>{t('auth.signInInstead')}</Text>
-                </Pressable>
-              </Link>
-            ) : null}
-          </View>
-        ) : null}
-
-        <Button
-          label={t('auth.signUpCta')}
-          loadingLabel={t('auth.creatingAccount')}
-          onPress={onSubmit}
-          loading={submitting}
-        />
-      </Card>
+      <AuthCardArt size="hero" />
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>{t('auth.haveAccount')} </Text>
-        <Link href="/(auth)/login" asChild>
-          <Pressable accessibilityRole="link">
-            <Text style={styles.link}>{t('auth.signIn')}</Text>
-          </Pressable>
-        </Link>
+        <Button label={t('auth.signUpCta')} onPress={() => router.push('/(auth)/sign-up-email')} />
+        <View style={styles.footerRow}>
+          <Text style={styles.footerText}>{t('auth.haveAccount')} </Text>
+          <Link href="/(auth)/login" asChild>
+            <Pressable accessibilityRole="link" hitSlop={8}>
+              <Text style={styles.link}>{t('auth.signIn')}</Text>
+            </Pressable>
+          </Link>
+        </View>
       </View>
     </Screen>
   );
 }
 
 const styles = themedStyles(() => ({
-  languageToggle: { alignSelf: 'flex-end' },
-  form: { gap: spacing.md },
-  formError: {
-    fontFamily: fonts.medium,
-    fontSize: fontSizes.sm,
-    color: colors.danger,
+  content: { flex: 1, paddingTop: spacing.md, paddingBottom: spacing.lg },
+  topBar: { alignItems: 'flex-end' },
+  copy: { gap: spacing.sm, alignItems: 'flex-start' },
+  titleGroup: { gap: 0 },
+  title: {
+    fontFamily: fonts.extrabold,
+    fontSize: fontSizes.hero,
+    lineHeight: 42,
+    color: colors.text,
+    letterSpacing: -0.8,
   },
-  errorBox: {
-    gap: spacing.xs,
-    borderRadius: radii.md,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    backgroundColor: colors.pinkTint,
-    padding: spacing.sm + 2,
+  subtitle: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.md,
+    color: colors.textMuted,
+    lineHeight: 22,
   },
-  footer: {
+  footer: { gap: spacing.md, marginTop: 'auto' },
+  footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     flexWrap: 'wrap',
-    borderTopWidth: 2,
-    borderStyle: 'dashed',
-    borderTopColor: colors.borderSoft,
-    paddingTop: spacing.md,
   },
   footerText: {
     fontFamily: fonts.regular,
     fontSize: fontSizes.md,
     color: colors.textMuted,
   },
-  link: {
-    fontFamily: fonts.bold,
-    fontSize: fontSizes.md,
-    color: colors.tealDark,
-  },
+  link: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.tealDark },
 }));

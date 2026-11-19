@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -7,6 +7,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
+import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { offerBusinessId } from '@/src/lib/catalog';
 import { pushOnce } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
@@ -19,6 +20,7 @@ export default function FavouritesScreen() {
   const { t } = useTranslation();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
+  const page = usePaged(offers, 6);
 
   useEffect(() => {
     let active = true;
@@ -33,7 +35,7 @@ export default function FavouritesScreen() {
 
   return (
     <Screen>
-      <FlowHeader title={t('profile.favourites')} onBack={() => router.back()} />
+      <FlowHeader title={t('profile.favourites')} onBack={() => router.back()} splash />
 
       {loading ? (
         <ActivityIndicator color={colors.teal} style={styles.loader} />
@@ -46,7 +48,7 @@ export default function FavouritesScreen() {
         />
       ) : (
         <View style={styles.list}>
-          {offers.map((offer, index) => (
+          {page.visible.map((offer, index) => (
             <OfferCard
               key={offer.id}
               offer={offer}
@@ -56,6 +58,7 @@ export default function FavouritesScreen() {
           ))}
         </View>
       )}
+      {page.hasMore ? <ShowMore expanded={page.expanded} onPress={page.toggle} /> : null}
     </Screen>
   );
 }

@@ -1,8 +1,9 @@
 // src/components/PageHeader.tsx
 import React from 'react';
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '../theme';
 import { BackButton } from './BackButton';
+import { SplashText } from './SplashText';
 
 interface PageHeaderProps {
   title: string;
@@ -10,6 +11,8 @@ interface PageHeaderProps {
   onBack?: () => void;
   right?: React.ReactNode;
   size?: 'display' | 'compact';
+  /** Paints the site's lavender highlighter swipe behind the title. */
+  splash?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -19,6 +22,7 @@ export function PageHeader({
   onBack,
   right,
   size = 'display',
+  splash = false,
   style,
 }: PageHeaderProps) {
   return (
@@ -26,7 +30,16 @@ export function PageHeader({
       <View style={styles.row}>
         {onBack ? <BackButton onPress={onBack} /> : null}
         <View style={styles.text}>
-          <Text style={[styles.title, size === 'compact' && styles.titleCompact]}>{title}</Text>
+          {splash ? (
+            <SplashText
+              fontSize={size === 'compact' ? fontSizes.xxl : fontSizes.display}
+              wrapStyle={styles.splashWrap}
+            >
+              {title}
+            </SplashText>
+          ) : (
+            <Text style={[styles.title, size === 'compact' && styles.titleCompact]}>{title}</Text>
+          )}
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </View>
         {right ? <View style={styles.right}>{right}</View> : null}
@@ -52,4 +65,5 @@ const styles = themedStyles(() => ({
     color: colors.textMuted,
   },
   right: { marginStart: spacing.sm },
+  splashWrap: { alignSelf: 'flex-start' },
 }));

@@ -1,6 +1,6 @@
 import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import type { ColorValue } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Compass, Gift, User, Wallet, type LucideIcon } from 'lucide-react-native';
@@ -43,7 +43,7 @@ export default function CustomerTabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.ink,
-        tabBarInactiveTintColor: 'rgba(28, 28, 28, 0.6)',
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: styles.tabBar,
         tabBarItemStyle: styles.tabItem,
         tabBarLabelStyle: styles.tabLabel,
@@ -90,46 +90,47 @@ export default function CustomerTabsLayout() {
 }
 
 const styles = themedStyles(() => ({
+  // The website's toolbar idiom: a white pill with a 2px ink outline and a
+  // hard ink bottom edge, not a coloured bar with a soft drop shadow.
   tabBar: {
     position: 'absolute',
     left: 16,
     right: 16,
-    bottom: 14,
-    height: 68,
-    paddingTop: 7,
-    paddingBottom: 7,
+    bottom: 0,
+    height: 70,
+    paddingTop: 6,
+    paddingBottom: 4,
     paddingHorizontal: 6,
-    backgroundColor: colors.teal,
+    backgroundColor: colors.surface,
     borderWidth: 2,
-    borderColor: colors.ink,
-    borderBottomWidth: 6,
-    borderBottomColor: edges.teal,
-    borderRadius: 999,
-    shadowColor: edges.teal,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    borderColor: colors.border,
+    borderBottomWidth: 5,
+    borderBottomColor: edges.ink,
+    borderRadius: radii.pill,
+    shadowColor: 'transparent',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   tabItem: {
     backgroundColor: 'transparent',
     marginHorizontal: 2,
   },
   tabLabel: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.extrabold,
     fontSize: fontSizes.xs - 1,
   },
   iconWrap: {
-    width: 44,
+    width: 46,
     height: 30,
     borderRadius: radii.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // A small sticker pill around the active icon instead of a full tab-wide box.
+  // Active tab is a mint sticker with its own ink outline and hard edge.
   iconWrapActive: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.teal,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     borderBottomWidth: 4,
     borderBottomColor: edges.teal,
   },

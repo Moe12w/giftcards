@@ -18,6 +18,7 @@ export default function PersonalizeSlide() {
       icon="mail"
       tone="lavender"
       title={t('onboarding.personalize.title')}
+      highlight={t('onboarding.personalize.titleHighlight')}
       body={t('onboarding.personalize.body')}
       step={2}
       total={4}

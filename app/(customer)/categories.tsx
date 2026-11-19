@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -17,7 +17,7 @@ export default function CategoriesScreen() {
 
   return (
     <Screen>
-      <FlowHeader title={t('home.categories')} onBack={() => router.back()} />
+      <FlowHeader title={t('home.categories')} onBack={() => router.back()} splash />
 
       <SectionHeader title={t('explore.categories')} />
       <View style={styles.grid}>

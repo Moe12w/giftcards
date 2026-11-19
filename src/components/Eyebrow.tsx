@@ -51,7 +51,7 @@ const styles = themedStyles(() => ({
     flexDirection: 'row',
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     paddingBottom: 3,
   },
   pill: {

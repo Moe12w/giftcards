@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -44,6 +44,7 @@ export default function SupportScreen() {
         title={t('support.title')}
         subtitle={t('support.subtitle')}
         onBack={() => router.back()}
+        splash
       />
 
       <Card>

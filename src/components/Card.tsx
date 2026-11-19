@@ -48,7 +48,7 @@ const styles = themedStyles(() => ({
   edge: {
     borderRadius: radii.lg,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     paddingBottom: edgeHeight,
   },
   card: {

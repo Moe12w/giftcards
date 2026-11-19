@@ -18,6 +18,7 @@ export default function DiscoverSlide() {
       icon="compass"
       tone="teal"
       title={t('onboarding.discover.title')}
+      highlight={t('onboarding.discover.titleHighlight')}
       body={t('onboarding.discover.body')}
       step={1}
       total={4}

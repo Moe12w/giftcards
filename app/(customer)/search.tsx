@@ -8,6 +8,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
+import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { SearchBar } from '@/src/components/SearchBar';
 import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { searchOffers } from '@/src/lib/search';
@@ -39,10 +40,16 @@ export default function SearchScreen() {
     () => searchOffers(offers, query, i18n.language),
     [offers, query, i18n.language],
   );
+  const page = usePaged(results, 6);
+  const { reset } = page;
+  // A new query is a new list, so start from the top again.
+  useEffect(() => {
+    reset();
+  }, [query, reset]);
 
   return (
     <Screen>
-      <FlowHeader title={t('common.search')} onBack={() => router.back()} />
+      <FlowHeader title={t('common.search')} onBack={() => router.back()} splash />
 
       <SearchBar
         value={query}
@@ -67,7 +74,7 @@ export default function SearchScreen() {
         <>
           <Text style={styles.count}>{t('explore.results', { count: results.length })}</Text>
           <View style={styles.list}>
-            {results.map((offer, index) => (
+            {page.visible.map((offer, index) => (
               <OfferCard
                 key={offer.id}
                 offer={offer}
@@ -76,6 +83,7 @@ export default function SearchScreen() {
               />
             ))}
           </View>
+          {page.hasMore ? <ShowMore expanded={page.expanded} onPress={page.toggle} /> : null}
         </>
       )}
     </Screen>

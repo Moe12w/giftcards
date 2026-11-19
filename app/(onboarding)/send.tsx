@@ -18,6 +18,7 @@ export default function SendSlide() {
       icon="rocket"
       tone="gold"
       title={t('onboarding.send.title')}
+      highlight={t('onboarding.send.titleHighlight')}
       body={t('onboarding.send.body')}
       step={3}
       total={4}

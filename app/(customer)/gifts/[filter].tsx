@@ -1,14 +1,15 @@
-import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { Badge, type BadgeTone } from '@/src/components/Badge';
+import type { BadgeTone } from '@/src/components/Badge';
 import { Chip } from '@/src/components/Chip';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { Screen } from '@/src/components/Screen';
+import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { useCards } from '@/src/lib/cards';
 import { formatDate } from '@/src/lib/time';
 import { useThemeRefresh } from '@/src/lib/theme';
@@ -45,9 +46,16 @@ export default function GiftFilterScreen() {
     return cards;
   }, [cards, filter, receivedCards, sentCards]);
 
+  const page = usePaged(visible, 4);
+  const { reset } = page;
+  // Switching filters starts the shorter list again.
+  useEffect(() => {
+    reset();
+  }, [filter, reset]);
+
   return (
     <Screen>
-      <FlowHeader title={t('gifts.title')} onBack={() => router.back()} />
+      <FlowHeader title={t('gifts.title')} onBack={() => router.back()} splash />
 
       <ScrollView
         horizontal
@@ -76,7 +84,7 @@ export default function GiftFilterScreen() {
         />
       ) : (
         <View style={styles.list}>
-          {visible.map((card: GiftCard) => (
+          {page.visible.map((card: GiftCard) => (
             <GiftCardVisual
               key={card.id}
               title={card.partner_name ?? card.vendor_name ?? card.offer_title ?? t('gift.detailsTitle')}
@@ -98,6 +106,7 @@ export default function GiftFilterScreen() {
           ))}
         </View>
       )}
+      {page.hasMore ? <ShowMore expanded={page.expanded} onPress={page.toggle} /> : null}
     </Screen>
   );
 }

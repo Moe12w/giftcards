@@ -1,13 +1,14 @@
 // src/components/GiftCardVisual.tsx
 import React from 'react';
+import { Image } from 'expo-image';
 import { Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+
 import type { AccentTone } from '../lib/types';
-import { colors, fonts, fontSizes, spacing, themedStyles } from '../theme';
+import { colors, fonts, fontSizes, radii, themedStyles } from '../theme';
 import { Badge, type BadgeTone } from './Badge';
-import { Card, type CardTone } from './Card';
-import { IconTile, type IconTileTone } from './IconTile';
 import { Money } from './Money';
+import { PosterCard } from './PosterCard';
 
 interface GiftCardVisualProps {
   title: string;
@@ -28,14 +29,11 @@ interface GiftCardVisualProps {
   compact?: boolean;
 }
 
-const cardTones: Record<AccentTone, CardTone> = {
-  teal: 'teal',
-  pink: 'pink',
-  lavender: 'lavender',
-  gold: 'gold',
-  sky: 'sky',
-};
-
+/**
+ * A customer's gift card, drawn with the same art-panel/body card as the
+ * marketplace offers on the website. `compact` is used on checkout and preview
+ * screens where the card sits beside a form.
+ */
 export function GiftCardVisual({
   title,
   icon = 'gift',
@@ -54,51 +52,45 @@ export function GiftCardVisual({
   const { t } = useTranslation();
   const isSession = typeof sessionsTotal === 'number' && sessionsTotal > 0;
 
-  const body = (
-    <Card tone={cardTones[tone] ?? cardTones.lavender} style={compact ? styles.compact : undefined}>
-      <View style={styles.topRow}>
-        <IconTile
-          icon={icon}
-          imageUrl={logoUrl}
-          size={compact ? 42 : 48}
-          tone={tone as IconTileTone}
-        />
-        <View style={styles.titleWrap}>
-          <Text style={styles.title} numberOfLines={1}>
-            {title}
-          </Text>
-          {message ? (
-            <Text style={styles.message} numberOfLines={1}>
-              {message}
+  const card = (
+    <PosterCard
+      tone={tone}
+      icon={icon}
+      iconSize={compact ? 28 : 34}
+      iconNode={logoUrl ? (
+        <View style={compact ? styles.logoCompact : styles.logo}>
+          <Image source={logoUrl} style={styles.logoImage} contentFit="contain" cachePolicy="memory-disk" />
+        </View>
+      ) : undefined}
+      title={title}
+      subtitle={message}
+      titleNumberOfLines={1}
+      artHeight={compact ? 92 : 122}
+      tag={badge ? <Badge label={badge.label} tone={badge.tone} /> : undefined}
+      metaLeft={
+        isSession ? (
+          <View style={styles.balanceWrap}>
+            <Text style={styles.balanceLabel}>{t('sessions.remaining')}</Text>
+            <Text style={styles.sessionCount}>
+              {t('sessions.leftOf', {
+                // Strings, so the digits stay Latin on every engine.
+                remaining: String(sessionsRemaining ?? sessionsTotal ?? 0),
+                total: String(sessionsTotal ?? 0),
+              })}
             </Text>
-          ) : null}
-        </View>
-        {badge ? <Badge label={badge.label} tone={badge.tone} /> : null}
-      </View>
-
-      {isSession ? (
-        <View style={styles.balanceWrap}>
-          <Text style={styles.balanceLabel}>{t('sessions.remaining')}</Text>
-          <Text style={styles.sessionCount}>
-            {t('sessions.leftOf', {
-              // Strings, so the digits stay Latin on every engine.
-              remaining: String(sessionsRemaining ?? sessionsTotal ?? 0),
-              total: String(sessionsTotal ?? 0),
-            })}
-          </Text>
-        </View>
-      ) : typeof amountMinor === 'number' ? (
-        <View style={styles.balanceWrap}>
-          <Text style={styles.balanceLabel}>{t('gifts.balance')}</Text>
-          <Money minor={amountMinor} style={styles.balance} />
-        </View>
-      ) : null}
-
-      {meta ? <Text style={styles.meta}>{meta}</Text> : null}
-    </Card>
+          </View>
+        ) : typeof amountMinor === 'number' ? (
+          <View style={styles.balanceWrap}>
+            <Text style={styles.balanceLabel}>{t('gifts.balance')}</Text>
+            <Money minor={amountMinor} style={styles.balance} />
+          </View>
+        ) : undefined
+      }
+      metaRight={meta ? <Text style={styles.meta}>{meta}</Text> : undefined}
+    />
   );
 
-  if (!onPress) return body;
+  if (!onPress) return card;
 
   return (
     <Pressable
@@ -108,38 +100,50 @@ export function GiftCardVisual({
       accessibilityLabel={title}
       style={({ pressed }) => pressed && styles.pressed}
     >
-      {body}
+      {card}
     </Pressable>
   );
 }
 
 const styles = themedStyles(() => ({
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  titleWrap: { flex: 1, gap: 1 },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: fontSizes.md,
-    color: colors.text,
+  logo: {
+    width: 52,
+    height: 52,
+    borderRadius: radii.pill,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  message: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.xs,
-    color: colors.textMuted,
+  logoCompact: {
+    width: 42,
+    height: 42,
+    borderRadius: radii.pill,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  balanceWrap: { marginTop: spacing.sm, gap: 1 },
+  logoImage: { width: 34, height: 34 },
+  balanceWrap: { gap: 1 },
   balanceLabel: {
     fontFamily: fonts.medium,
     fontSize: fontSizes.xs,
     color: colors.textMuted,
   },
   balance: { fontSize: fontSizes.xxl, color: colors.text },
-  sessionCount: { fontFamily: fonts.extrabold, fontSize: fontSizes.xl, color: colors.text },
+  sessionCount: {
+    fontFamily: fonts.extrabold,
+    fontSize: fontSizes.xl,
+    color: colors.text,
+  },
   meta: {
-    marginTop: spacing.sm,
     fontFamily: fonts.medium,
     fontSize: fontSizes.xs,
     color: colors.textMuted,
+    textAlign: 'right',
   },
-  compact: { padding: spacing.sm + 2 },
   pressed: { opacity: 0.9 },
 }));

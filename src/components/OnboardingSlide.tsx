@@ -1,10 +1,11 @@
 // src/components/OnboardingSlide.tsx
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
+import { Pressable, Text, View } from 'react-native';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '../theme';
 import { Button } from './Button';
 import { ProgressDots } from './ProgressDots';
 import { Screen } from './Screen';
+import { SplashText } from './SplashText';
 import type { AccentTone } from '../lib/types';
 import { Glyph } from './Glyph';
 
@@ -13,6 +14,8 @@ interface OnboardingSlideProps {
   icon: string;
   tone: AccentTone;
   title: string;
+  /** Optional second line with the marketing site's title highlight. */
+  highlight?: string;
   body: string;
   step: number;
   total: number;
@@ -49,6 +52,7 @@ export function OnboardingSlide({
   icon,
   tone,
   title,
+  highlight,
   body,
   step,
   total,
@@ -83,7 +87,10 @@ export function OnboardingSlide({
       </View>
 
       <View style={styles.copy}>
-        <Text style={styles.title}>{title}</Text>
+        <View style={styles.titleGroup}>
+          <Text style={styles.title}>{title}</Text>
+          {highlight ? <SplashText fontSize={fontSizes.display} tone="lavender">{highlight}</SplashText> : null}
+        </View>
         <Text style={styles.body}>{body}</Text>
         {tip ? (
           <View style={styles.tipBox}>
@@ -159,7 +166,7 @@ const styles = themedStyles(() => ({
     height: 196,
     borderRadius: 98,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -172,6 +179,7 @@ const styles = themedStyles(() => ({
   sparkleB: { top: '26%', right: '14%', fontSize: 14 },
   sparkleC: { bottom: '20%', left: '24%', fontSize: 12 },
   copy: { gap: spacing.sm },
+  titleGroup: { gap: 0 },
   title: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.display,

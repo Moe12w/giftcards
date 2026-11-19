@@ -9,10 +9,11 @@ import { Card } from '@/src/components/Card';
 import { Chip } from '@/src/components/Chip';
 import { EmptyState } from '@/src/components/EmptyState';
 import { GiftCardVisual } from '@/src/components/GiftCardVisual';
-import { Glyph } from '@/src/components/Glyph';
+import { PosterCard } from '@/src/components/PosterCard';
 import { PageHeader } from '@/src/components/PageHeader';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
+import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { useCards } from '@/src/lib/cards';
 import { isGiftWaiting } from '@/src/lib/delivery';
 import { cardHref, prefetchCard } from '@/src/lib/navigation';
@@ -70,6 +71,10 @@ export default function GiftsScreen() {
   const readyGifts = useMemo(() => usable.filter((card) => !isGiftWaiting(card)), [usable]);
   const readyCount = usableCards.filter((card) => !isGiftWaiting(card)).length;
 
+  const waitingPage = usePaged(waitingGifts, 3);
+  const readyPage = usePaged(readyGifts, 4);
+  const usedPage = usePaged(used, 3);
+
   function renderCard(card: GiftCard) {
     const isWaiting = isGiftWaiting(card);
     return (
@@ -110,39 +115,39 @@ export default function GiftsScreen() {
 
   return (
     <Screen tabbed>
-      <PageHeader title={t('gifts.title')} subtitle={t('gifts.subtitle')} />
+      <PageHeader title={t('gifts.title')} subtitle={t('gifts.subtitle')} splash />
 
       {!ready ? (
         <ActivityIndicator color={colors.teal} style={styles.loader} />
       ) : (
         <>
-          <Card tone="teal" style={styles.summary}>
-            <View style={styles.summaryTop}>
-              <View style={styles.summaryCopy}>
-                <Text style={styles.summaryLabel}>{t('gifts.giftCardsCount')}</Text>
-                <Text style={styles.summaryAmount}>{cards.length}</Text>
+          <PosterCard
+            tone="teal"
+            tag={t('gifts.title')}
+            icon="gift"
+            artHeight={100}
+            title={String(cards.length)}
+            titleStyle={styles.summaryAmount}
+            subtitle={t('gifts.giftCardsCount')}
+            footer={
+              <View style={styles.summaryStats}>
+                <View style={styles.stat}>
+                  <Text style={styles.statValue}>{readyCount}</Text>
+                  <Text style={styles.statLabel}>{t('gifts.toUse')}</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.stat}>
+                  <Text style={styles.statValue}>{sentCards.length}</Text>
+                  <Text style={styles.statLabel}>{t('gifts.sent')}</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.stat}>
+                  <Text style={styles.statValue}>{usedCards.length}</Text>
+                  <Text style={styles.statLabel}>{t('gifts.used')}</Text>
+                </View>
               </View>
-              <View style={styles.summaryIcon}>
-                <Glyph name="gift" size={30} />
-              </View>
-            </View>
-            <View style={styles.summaryStats}>
-              <View style={styles.stat}>
-                <Text style={styles.statValue}>{readyCount}</Text>
-                <Text style={styles.statLabel}>{t('gifts.toUse')}</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.stat}>
-                <Text style={styles.statValue}>{sentCards.length}</Text>
-                <Text style={styles.statLabel}>{t('gifts.sent')}</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.stat}>
-                <Text style={styles.statValue}>{usedCards.length}</Text>
-                <Text style={styles.statLabel}>{t('gifts.used')}</Text>
-              </View>
-            </View>
-          </Card>
+            }
+          />
 
           <ScrollView
             horizontal
@@ -162,22 +167,31 @@ export default function GiftsScreen() {
 
           {waitingGifts.length > 0 ? (
             <>
-              <SectionHeader title={t('gifts.waitingSection')} />
-              <View style={styles.list}>{waitingGifts.map(renderCard)}</View>
+              <SectionHeader title={t('gifts.waitingSection')} splash />
+              <View style={styles.list}>{waitingPage.visible.map(renderCard)}</View>
+              {waitingPage.hasMore ? (
+                <ShowMore expanded={waitingPage.expanded} onPress={waitingPage.toggle} />
+              ) : null}
             </>
           ) : null}
 
           {readyGifts.length > 0 ? (
             <>
-              <SectionHeader title={t('gifts.yourCards')} />
-              <View style={styles.list}>{readyGifts.map(renderCard)}</View>
+              <SectionHeader title={t('gifts.yourCards')} splash />
+              <View style={styles.list}>{readyPage.visible.map(renderCard)}</View>
+              {readyPage.hasMore ? (
+                <ShowMore expanded={readyPage.expanded} onPress={readyPage.toggle} />
+              ) : null}
             </>
           ) : null}
 
           {used.length > 0 ? (
             <>
-              <SectionHeader title={t('gifts.pastCards')} />
-              <View style={styles.list}>{used.map(renderCard)}</View>
+              <SectionHeader title={t('gifts.pastCards')} splash />
+              <View style={styles.list}>{usedPage.visible.map(renderCard)}</View>
+              {usedPage.hasMore ? (
+                <ShowMore expanded={usedPage.expanded} onPress={usedPage.toggle} />
+              ) : null}
             </>
           ) : null}
 
@@ -216,28 +230,10 @@ export default function GiftsScreen() {
 }
 
 const styles = themedStyles(() => ({
-  summary: { gap: spacing.md },
-  summaryTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  summaryCopy: { flex: 1, gap: 2 },
-  summaryLabel: {
-    fontFamily: fonts.medium,
-    fontSize: fontSizes.sm,
-    color: colors.textMuted,
-  },
   summaryAmount: {
     fontFamily: fonts.extrabold,
     fontSize: fontSizes.hero,
     color: colors.text,
-  },
-  summaryIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   summaryStats: {
     flexDirection: 'row',

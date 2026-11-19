@@ -62,7 +62,7 @@ export function IconTile({ icon, imageUrl, size = 64, tone = 'lavender', style }
 const styles = themedStyles(() => ({
   tile: {
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },

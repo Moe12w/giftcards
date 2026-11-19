@@ -127,7 +127,7 @@ const styles = themedStyles(() => ({
     padding: spacing.md,
     borderRadius: radii.md,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.tealTint,
   },
   successCopy: { flex: 1, gap: 2 },

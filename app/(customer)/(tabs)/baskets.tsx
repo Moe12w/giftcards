@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, Gift, HeartHandshake, Link2, Users } from 'lucide-react-native';
@@ -59,7 +59,7 @@ export default function GiftBasketHubScreen() {
   if (!ready) {
     return (
       <Screen tabbed>
-        <PageHeader title={t('basket.title')} subtitle={t('basket.subtitle')} />
+        <PageHeader title={t('basket.title')} subtitle={t('basket.subtitle')} splash />
         <ActivityIndicator color={colors.teal} style={styles.loader} />
       </Screen>
     );
@@ -69,7 +69,7 @@ export default function GiftBasketHubScreen() {
 
   return (
     <Screen tabbed>
-      <PageHeader title={t('basket.title')} subtitle={t('basket.subtitle')} />
+      <PageHeader title={t('basket.title')} subtitle={t('basket.subtitle')} splash />
 
       {/* Featured active basket */}
       {activeBasket ? (
@@ -245,7 +245,7 @@ const styles = themedStyles(() => ({
     gap: 5,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
@@ -279,7 +279,7 @@ const styles = themedStyles(() => ({
     height: 9,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     overflow: 'hidden',
   },
@@ -299,7 +299,7 @@ const styles = themedStyles(() => ({
     gap: 4,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
@@ -311,7 +311,7 @@ const styles = themedStyles(() => ({
     height: 64,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -331,7 +331,7 @@ const styles = themedStyles(() => ({
     height: 56,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -351,7 +351,7 @@ const styles = themedStyles(() => ({
     height: 44,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.lavenderTint,
     alignItems: 'center',
     justifyContent: 'center',

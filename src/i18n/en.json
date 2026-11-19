@@ -14,6 +14,8 @@
     "required": "This field is required.",
     "search": "Search",
     "seeAll": "See all",
+    "viewMore": "View more",
+    "showLess": "Show less",
     "save": "Save",
     "done": "Done",
     "all": "All",
@@ -37,6 +39,8 @@
   },
   "auth": {
     "welcomeTitle": "Gift cards that feel personal",
+    "welcomeTitleLine1": "Gift cards that",
+    "welcomeTitleLine2": "feel personal",
     "welcomeSubtitle": "Buy from local vendors and send a gift in seconds.",
     "signIn": "Sign in",
     "signUp": "Create account",
@@ -95,6 +99,11 @@
     "resend": "Resend code",
     "profileSetupTitle": "Complete your profile",
     "profileSetupBody": "Add a name and photo so senders know it's you.",
+    "signupStep": "Step {{current}} of {{total}}",
+    "signupEmailTitle": "Your email",
+    "signupEmailBody": "We'll use it to create your account and keep your gifts safe.",
+    "signupPhoneTitle": "Your phone number",
+    "signupPhoneBody": "So friends can find you and we can text you when a gift arrives.",
     "chooseAvatar": "Choose an avatar",
     "finishSetup": "Finish setup",
     "notificationsTitle": "Stay in the loop",
@@ -126,19 +135,23 @@
     "next": "Next",
     "getStarted": "Get started",
     "welcome": {
-      "title": "Gifts that feel personal",
+      "title": "Gifts that",
+      "titleHighlight": "feel personal",
       "body": "Discover gift cards from local businesses and send something they'll actually love."
     },
     "discover": {
-      "title": "Discover local gifts",
+      "title": "Discover",
+      "titleHighlight": "local gifts",
       "body": "Coffee, spa days, dinners and adventures — all in one place."
     },
     "personalize": {
-      "title": "Make it theirs",
+      "title": "Make it",
+      "titleHighlight": "theirs",
       "body": "Add a message, pick a design and choose exactly when it arrives."
     },
     "send": {
-      "title": "Send in seconds",
+      "title": "Send in",
+      "titleHighlight": "seconds",
       "body": "Share a link by email, SMS or chat. No app download needed to open it."
     }
   },

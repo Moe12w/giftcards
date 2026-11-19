@@ -49,7 +49,7 @@ export function SessionMeter({
             key={index}
             style={[
               styles.dot,
-              { borderColor: colors.ink, backgroundColor: index < used ? 'transparent' : fill },
+              { borderColor: colors.border, backgroundColor: index < used ? 'transparent' : fill },
             ]}
           />
         ))}
@@ -82,7 +82,7 @@ const styles = themedStyles(() => ({
   pill: {
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
   },

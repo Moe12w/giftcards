@@ -120,7 +120,7 @@ const styles = themedStyles(() => ({
     backgroundColor: colors.tealTint,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     fontFamily: fonts.bold,

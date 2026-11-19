@@ -14,6 +14,7 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
+import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { BusinessSkeleton, SkeletonList } from '@/src/components/Skeleton';
 import { offerBusinessId, offerTone } from '@/src/lib/catalog';
@@ -96,6 +97,7 @@ export default function BusinessScreen() {
 
   const businessId = business?.id ?? id ?? '';
   const offersMatching = offers.filter((offer) => offerBusinessId(offer) === businessId);
+  const page = usePaged(offersMatching, 6);
   const primary = offersMatching[0];
   const tone = primary ? (offerTone(primary) as AccentTone) : 'lavender';
   const isPartner = business?.business_kind === 'partner';
@@ -109,6 +111,7 @@ export default function BusinessScreen() {
         title={name}
         subtitle={offersMatching.length > 0 ? t('business.giftCards') : undefined}
         onBack={() => router.back()}
+        splash
       />
 
       {loading && !business ? (
@@ -187,7 +190,7 @@ export default function BusinessScreen() {
             </Card>
           ) : null}
 
-          <SectionHeader title={t('business.giftCards')} />
+          <SectionHeader title={t('business.giftCards')} splash />
           {offersLoading && offersMatching.length === 0 ? (
             <SkeletonList rows={2} />
           ) : offersMatching.length === 0 ? (
@@ -199,7 +202,7 @@ export default function BusinessScreen() {
             />
           ) : (
             <View style={styles.list}>
-              {offersMatching.map((offer, index) => (
+              {page.visible.map((offer, index) => (
                 <OfferCard
                   key={offer.id}
                   offer={offer}
@@ -210,6 +213,7 @@ export default function BusinessScreen() {
               ))}
             </View>
           )}
+          {page.hasMore ? <ShowMore expanded={page.expanded} onPress={page.toggle} /> : null}
 
           {!isPartner && locations.length > 0 ? (
             <>

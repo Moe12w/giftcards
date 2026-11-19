@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -9,6 +9,7 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { Glyph } from '@/src/components/Glyph';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
+import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { useCards } from '@/src/lib/cards';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatMoney } from '@/src/lib/money';
@@ -28,6 +29,7 @@ export default function GiftTransactionsScreen() {
         .filter((row) => Boolean(row.card)),
     [entries, getCard],
   );
+  const page = usePaged(rows, 6);
 
   return (
     <Screen>
@@ -35,6 +37,7 @@ export default function GiftTransactionsScreen() {
         title={t('gifts.transactionsTitle')}
         subtitle={t('gifts.transactionsSubtitle')}
         onBack={() => router.back()}
+        splash
       />
 
       {rows.length === 0 ? (
@@ -46,7 +49,7 @@ export default function GiftTransactionsScreen() {
         />
       ) : (
         <View style={styles.list}>
-          {rows.map(({ entry, card }) => (
+          {page.visible.map(({ entry, card }) => (
             <Card key={entry.id} style={styles.row}>
               <View style={styles.icon}>
                 <Glyph
@@ -81,6 +84,7 @@ export default function GiftTransactionsScreen() {
           ))}
         </View>
       )}
+      {page.hasMore ? <ShowMore expanded={page.expanded} onPress={page.toggle} /> : null}
     </Screen>
   );
 }
@@ -93,7 +97,7 @@ const styles = themedStyles(() => ({
     height: 38,
     borderRadius: 19,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.tealTint,
     alignItems: 'center',
     justifyContent: 'center',

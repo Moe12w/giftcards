@@ -8,6 +8,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { OfferCard } from '@/src/components/OfferCard';
 import { Screen } from '@/src/components/Screen';
+import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { CATEGORIES, offersForCategory } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
@@ -35,12 +36,14 @@ export default function CategoryScreen() {
 
   const entry = CATEGORIES.find((category) => category.slug === slug);
   const results = slug ? offersForCategory(offers, slug as CategoryId) : [];
+  const page = usePaged(results, 6);
 
   return (
     <Screen>
       <FlowHeader
         title={entry ? t(entry.titleKey) : t('explore.categories')}
         onBack={() => router.back()}
+        splash
       />
 
       {/* Each category rents its own carousel. Empty slots simply render nothing. */}
@@ -60,7 +63,7 @@ export default function CategoryScreen() {
       ) : (
         <>
           <View style={styles.list}>
-            {results.map((offer, index) => (
+            {page.visible.map((offer, index) => (
               <OfferCard
                 key={offer.id}
                 offer={offer}
@@ -69,6 +72,7 @@ export default function CategoryScreen() {
               />
             ))}
           </View>
+          {page.hasMore ? <ShowMore expanded={page.expanded} onPress={page.toggle} /> : null}
         </>
       )}
     </Screen>

@@ -59,7 +59,7 @@ export default function SendScreen() {
 
   return (
     <Screen tabbed>
-      <PageHeader title={t('send.title')} subtitle={t('send.subtitle')} />
+      <PageHeader title={t('send.title')} subtitle={t('send.subtitle')} splash />
 
       <Card tone="teal" style={styles.hero}>
         <View style={styles.heroTop}>
@@ -197,7 +197,7 @@ const styles = themedStyles(() => ({
     height: 84,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -242,7 +242,7 @@ const styles = themedStyles(() => ({
     height: 56,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     borderStyle: 'dashed',
     backgroundColor: colors.surface,
     alignItems: 'center',
@@ -256,7 +256,7 @@ const styles = themedStyles(() => ({
     gap: 6,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,

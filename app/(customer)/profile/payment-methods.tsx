@@ -97,7 +97,7 @@ const styles = themedStyles(() => ({
     height: 34,
     borderRadius: radii.sm,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',

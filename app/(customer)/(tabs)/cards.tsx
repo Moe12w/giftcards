@@ -1,14 +1,15 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { Badge, type BadgeTone } from '@/src/components/Badge';
-import { Card } from '@/src/components/Card';
+import type { BadgeTone } from '@/src/components/Badge';
 import { EmptyState } from '@/src/components/EmptyState';
-import { Money } from '@/src/components/Money';
+import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { Screen } from '@/src/components/Screen';
+import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { SkeletonList } from '@/src/components/Skeleton';
+import { SplashText } from '@/src/components/SplashText';
 import { useCards } from '@/src/lib/cards';
 import { cardHref, prefetchCard } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
@@ -31,11 +32,12 @@ export default function CardsScreen() {
   // here would download the same vouchers a second time.
   const { ready, cards } = useCards();
   const loading = !ready;
+  const page = usePaged(cards, 4);
 
   return (
     <Screen>
       <View style={styles.header}>
-        <Text style={styles.title}>{t('cards.title')}</Text>
+        <SplashText fontSize={fontSizes.display}>{t('cards.title')}</SplashText>
         <Text style={styles.subtitle}>{t('cards.subtitle')}</Text>
       </View>
 
@@ -45,9 +47,16 @@ export default function CardsScreen() {
         <EmptyState title={t('cards.noCards')} body={t('cards.noCardsBody')} icon="gift" />
       ) : (
         <View style={styles.list}>
-          {cards.map((card) => (
-            <Pressable
+          {page.visible.map((card) => (
+            <GiftCardVisual
               key={card.id}
+              title={card.partner_name ?? card.vendor_name ?? card.offer_title ?? 'Gift card'}
+              icon={card.icon}
+              logoUrl={card.image_url}
+              tone={card.tone}
+              amountMinor={card.balance_minor ?? card.original_value_minor}
+              meta={`${t('cards.originalValue')}: ${formatMoney(card.original_value_minor, i18n.language === 'ar' ? 'ar' : 'en')}`}
+              badge={{ label: t(`cards.${card.status}`), tone: statusTone[card.status] }}
               onPressIn={() => prefetchCard(card.id)}
               onPress={() =>
                 router.push(
@@ -57,50 +66,17 @@ export default function CardsScreen() {
                   }) as never,
                 )
               }
-              accessibilityRole="button"
-              style={({ pressed }) => pressed && styles.pressed}
-            >
-              <Card style={styles.card}>
-                <View style={styles.cardTop}>
-                  <Text style={styles.vendor}>{card.partner_name ?? card.vendor_name ?? card.offer_title ?? 'Gift card'}</Text>
-                  <Badge label={t(`cards.${card.status}`)} tone={statusTone[card.status]} />
-                </View>
-                <Text style={styles.balanceLabel}>{t('cards.balance')}</Text>
-                <Money minor={card.balance_minor ?? card.original_value_minor} style={styles.balance} />
-                <View style={styles.cardBottom}>
-                  <Text style={styles.original}>
-                    {t('cards.originalValue')}: {formatMoney(card.original_value_minor, i18n.language === 'ar' ? 'ar' : 'en')}
-                  </Text>
-                  <Text style={styles.details}>{t('cards.details')} →</Text>
-                </View>
-              </Card>
-            </Pressable>
+            />
           ))}
         </View>
       )}
+      {page.hasMore ? <ShowMore expanded={page.expanded} onPress={page.toggle} /> : null}
     </Screen>
   );
 }
 
 const styles = themedStyles(() => ({
   header: { gap: spacing.xs, marginTop: spacing.sm },
-  title: { fontSize: fontSizes.display, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: fontSizes.md, color: colors.textMuted },
   list: { gap: spacing.md },
-  card: { gap: spacing.xs },
-  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  vendor: { fontSize: fontSizes.md, fontWeight: '700', color: colors.text, flex: 1 },
-  balanceLabel: { fontSize: fontSizes.sm, color: colors.textMuted, marginTop: spacing.sm },
-  balance: { fontSize: fontSizes.display, fontWeight: '700', color: colors.primaryDark },
-  cardBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm,
-  },
-  original: { fontSize: fontSizes.xs, color: colors.textMuted },
-  details: { fontSize: fontSizes.xs, color: colors.primary, fontWeight: '600' },
-  pressed: { opacity: 0.9 },
 }));

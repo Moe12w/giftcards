@@ -19,9 +19,10 @@ import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/th
 export default function VerifyEmailScreen() {
   useThemeRefresh();
   const { t } = useTranslation();
-  const { email = 'you@example.com', name = '' } = useLocalSearchParams<{
+  const { email = 'you@example.com', name = '', phone = '' } = useLocalSearchParams<{
     email?: string;
     name?: string;
+    phone?: string;
   }>();
   const { user } = useAuth();
   const [code, setCode] = useState('');
@@ -45,7 +46,7 @@ export default function VerifyEmailScreen() {
         });
         if (verifyError) throw verifyError;
       }
-      router.push({ pathname: '/(auth)/profile-setup', params: { name, email } });
+      router.push({ pathname: '/(auth)/profile-setup', params: { name, email, phone } });
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : '';
       if (/expired|expired_token/i.test(message)) {
@@ -134,7 +135,7 @@ const styles = themedStyles(() => ({
   notice: {
     borderRadius: radii.md,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.tealTint,
     padding: spacing.sm + 2,
   },

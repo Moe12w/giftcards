@@ -15,21 +15,13 @@ import {
   offerTitle,
   offerTone,
 } from '../lib/catalog';
-import { glyphIcon } from '../lib/glyphs';
 import { prefetchGift } from '../lib/navigation';
 import type { AccentTone, MarketplaceBusiness, Offer } from '../lib/types';
 import { colors, edges, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
-import { Card, type CardTone } from './Card';
+import { Card } from './Card';
 import { IconTile, type IconTileTone } from './IconTile';
 import { Money } from './Money';
-
-const BACKGROUNDS: Record<AccentTone, string> = {
-  get teal() { return colors.tealTint; },
-  get pink() { return colors.pinkTint; },
-  get lavender() { return colors.lavenderTint; },
-  get gold() { return colors.creamSoft; },
-  get sky() { return colors.skySoft; },
-};
+import { PosterCard } from './PosterCard';
 
 const EDGES: Record<AccentTone, string> = {
   get teal() { return edges.teal; },
@@ -37,14 +29,6 @@ const EDGES: Record<AccentTone, string> = {
   get lavender() { return edges.lavender; },
   get gold() { return edges.gold; },
   get sky() { return edges.ink; },
-};
-
-const CARD_TONES: Record<AccentTone, CardTone> = {
-  teal: 'teal',
-  pink: 'pink',
-  lavender: 'lavender',
-  gold: 'gold',
-  sky: 'sky',
 };
 
 const FEATURED_TONES: AccentTone[] = ['gold', 'teal', 'pink', 'lavender', 'sky'];
@@ -58,28 +42,18 @@ interface CategoryShortcutProps {
 }
 
 export function CategoryShortcut({ label, icon, tone, onPress }: CategoryShortcutProps) {
-  const Icon = glyphIcon(icon);
   return (
-    <Pressable
+    <PosterCard
+      tone={tone}
+      icon={icon}
+      iconSize={30}
+      title={label}
+      titleNumberOfLines={2}
+      width={168}
+      artHeight={86}
       onPress={onPress}
-      accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => [
-        styles.edge,
-        styles.categoryEdge,
-        { backgroundColor: EDGES[tone] },
-        pressed && styles.pressed,
-      ]}
-    >
-      <View style={[styles.categoryTile, { backgroundColor: BACKGROUNDS[tone] }]}>
-        <View style={styles.categoryIcon}>
-          <Icon size={22} color={colors.ink} strokeWidth={2} />
-        </View>
-        <Text style={styles.categoryLabel} numberOfLines={2}>
-          {label}
-        </Text>
-      </View>
-    </Pressable>
+    />
   );
 }
 
@@ -100,39 +74,26 @@ export function CuratedCollectionCard({
   onPress,
 }: CuratedCollectionCardProps) {
   const { i18n } = useTranslation();
-  const Icon = glyphIcon(icon);
   const rtl = i18n.language === 'ar';
   const Arrow = rtl ? ArrowLeft : ArrowRight;
 
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => [
-        styles.edge,
-        styles.collectionEdge,
-        { backgroundColor: EDGES[tone] },
-        pressed && styles.pressed,
-      ]}
-    >
-      <View style={[styles.collectionTile, { backgroundColor: BACKGROUNDS[tone] }]}>
-        <View style={styles.collectionTop}>
-          <View style={styles.collectionIcon}>
-            <Icon size={26} color={colors.ink} strokeWidth={2} />
-          </View>
-          <View style={styles.collectionArrow}>
-            <Arrow size={15} color={colors.ink} />
-          </View>
+    <PosterCard
+      tone={tone}
+      icon={icon}
+      iconSize={30}
+      title={label}
+      subtitle={subtitle}
+      width={232}
+      artHeight={96}
+      artRight={
+        <View style={styles.arrow}>
+          <Arrow size={15} color={colors.ink} />
         </View>
-        <Text style={styles.collectionTitle} numberOfLines={2}>
-          {label}
-        </Text>
-        <Text style={styles.collectionSubtitle} numberOfLines={2}>
-          {subtitle}
-        </Text>
-      </View>
-    </Pressable>
+      }
+      onPress={onPress}
+      accessibilityLabel={label}
+    />
   );
 }
 
@@ -227,56 +188,53 @@ export function TrendingGiftCard({
   const { t, i18n } = useTranslation();
   const tone = offerTone(offer) as AccentTone;
   const title = offerTitle(offer, i18n.language);
+  const image = offerImage(offer);
 
   return (
-    <Pressable
+    <PosterCard
+      tone={tone}
+      icon={offer.icon}
+      iconNode={image ? (
+        <View style={styles.artLogo}>
+          <Image source={image} style={styles.artLogoImage} contentFit="contain" cachePolicy="memory-disk" />
+        </View>
+      ) : undefined}
+      title={title}
+      subtitle={offerBusinessName(offer, title)}
+      width={206}
+      artHeight={106}
+      artRight={
+        <View style={styles.ratingPill}>
+          <Star size={11} color={colors.gold} />
+          <Text style={styles.ratingText}>{(offer.rating ?? 4.8).toFixed(1)}</Text>
+        </View>
+      }
+      metaLeft={
+        <View style={styles.trendingPrice}>
+          <Text style={styles.trendingFrom}>{t('common.from')}</Text>
+          <Money minor={offerStartingPriceMinor(offer)} style={styles.trendingAmount} />
+        </View>
+      }
+      metaRight={
+        onAdd ? (
+          <Pressable
+            onPress={(event) => {
+              event.stopPropagation();
+              onAdd();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={addLabel ?? t('discovery.quickAdd')}
+            hitSlop={6}
+            style={({ pressed }) => [styles.addButton, added && styles.addButtonDone, pressed && styles.pressed]}
+          >
+            {added ? <Check size={16} color={colors.ink} /> : <Plus size={16} color={colors.ink} />}
+          </Pressable>
+        ) : undefined
+      }
       onPress={onPress}
       onPressIn={() => prefetchGift(offer, i18n.language)}
-      accessibilityRole="button"
       accessibilityLabel={title}
-      style={({ pressed }) => [styles.trendingWrap, pressed && styles.pressed]}
-    >
-      <Card tone={CARD_TONES[tone]} style={styles.trendingCard}>
-        <View style={styles.trendingTop}>
-          <IconTile
-            icon={offer.icon}
-            imageUrl={offerImage(offer)}
-            size={46}
-            tone={tone as IconTileTone}
-          />
-          <View style={styles.ratingPill}>
-            <Star size={11} color={colors.gold} />
-            <Text style={styles.ratingText}>{(offer.rating ?? 4.8).toFixed(1)}</Text>
-          </View>
-        </View>
-        <Text style={styles.trendingTitle} numberOfLines={1}>
-          {title}
-        </Text>
-        <Text style={styles.trendingVendor} numberOfLines={1}>
-          {offerBusinessName(offer, title)}
-        </Text>
-        <View style={styles.trendingFooter}>
-          <View style={styles.trendingPrice}>
-            <Text style={styles.trendingFrom}>{t('common.from')}</Text>
-            <Money minor={offerStartingPriceMinor(offer)} style={styles.trendingAmount} />
-          </View>
-          {onAdd ? (
-            <Pressable
-              onPress={(event) => {
-                event.stopPropagation();
-                onAdd();
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={addLabel ?? t('discovery.quickAdd')}
-              hitSlop={6}
-              style={({ pressed }) => [styles.addButton, added && styles.addButtonDone, pressed && styles.pressed]}
-            >
-              {added ? <Check size={16} color={colors.ink} /> : <Plus size={16} color={colors.ink} />}
-            </Pressable>
-          ) : null}
-        </View>
-      </Card>
-    </Pressable>
+    />
   );
 }
 
@@ -338,87 +296,33 @@ export function RecommendationRow({ offer, reason, onPress }: RecommendationRowP
 }
 
 const styles = themedStyles(() => ({
-  edge: {
-    borderRadius: radii.md,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    paddingBottom: 4,
-  },
   pressed: { opacity: 0.88, transform: [{ translateY: 2 }] },
-  categoryEdge: { width: 100 },
-  categoryTile: {
-    minHeight: 104,
-    borderRadius: radii.md - 2,
-    padding: spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  categoryIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: radii.pill,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  categoryLabel: {
-    fontFamily: fonts.bold,
-    fontSize: fontSizes.xs,
-    color: colors.ink,
-    textAlign: 'center',
-  },
-  collectionEdge: { width: 232 },
-  collectionTile: {
-    minHeight: 154,
-    borderRadius: radii.md - 2,
-    padding: spacing.md,
-    gap: spacing.xs,
-  },
-  collectionTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  collectionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.pill,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  collectionArrow: {
+  arrow: {
     width: 30,
     height: 30,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
-    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    backgroundColor: 'rgba(255, 255, 255, 0.82)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  collectionTitle: {
-    marginTop: spacing.xs,
-    fontFamily: fonts.extrabold,
-    fontSize: fontSizes.lg,
-    color: colors.ink,
+  artLogo: {
+    width: 52,
+    height: 52,
+    borderRadius: radii.pill,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  collectionSubtitle: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.xs,
-    color: colors.textMuted,
-    lineHeight: 16,
-  },
+  artLogoImage: { width: 36, height: 36 },
   businessEdge: {
     width: 264,
     borderRadius: radii.lg,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     paddingBottom: 5,
   },
   businessCard: {
@@ -452,21 +356,13 @@ const styles = themedStyles(() => ({
     color: colors.textMuted,
   },
   businessAmount: { fontSize: fontSizes.md, color: colors.text },
-  trendingWrap: { width: 206 },
-  trendingCard: { gap: 2 },
-  trendingTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: spacing.xs,
-  },
   ratingPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -475,24 +371,6 @@ const styles = themedStyles(() => ({
     fontFamily: fonts.bold,
     fontSize: fontSizes.xs,
     color: colors.ink,
-  },
-  trendingTitle: {
-    marginTop: spacing.xs,
-    fontFamily: fonts.bold,
-    fontSize: fontSizes.md,
-    color: colors.text,
-  },
-  trendingVendor: {
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.xs,
-    color: colors.textMuted,
-  },
-  trendingFooter: {
-    marginTop: spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: spacing.xs,
   },
   trendingPrice: { gap: 0 },
   trendingFrom: {
@@ -506,7 +384,7 @@ const styles = themedStyles(() => ({
     height: 34,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -543,7 +421,7 @@ const styles = themedStyles(() => ({
     height: 26,
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.tealTint,
     alignItems: 'center',
     justifyContent: 'center',

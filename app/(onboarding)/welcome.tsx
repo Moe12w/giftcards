@@ -18,6 +18,7 @@ export default function WelcomeSlide() {
       icon="gift"
       tone="pink"
       title={t('onboarding.welcome.title')}
+      highlight={t('onboarding.welcome.titleHighlight')}
       body={t('onboarding.welcome.body')}
       step={0}
       total={4}

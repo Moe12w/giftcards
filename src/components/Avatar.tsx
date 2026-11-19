@@ -45,7 +45,7 @@ export function Avatar({ name, size = 48, tone = 'lavender', style }: AvatarProp
 const styles = themedStyles(() => ({
   avatar: {
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },

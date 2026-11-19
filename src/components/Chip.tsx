@@ -1,7 +1,8 @@
 // src/components/Chip.tsx
 import React from 'react';
-import { Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
-import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
+import { Pressable, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+
+import { colors, edges, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 
 interface ChipProps {
   label: string;
@@ -11,32 +12,36 @@ interface ChipProps {
   accessibilityLabel?: string;
 }
 
-/** Pill-shaped choice chip used for amount presets and filters. */
+/** Pill-shaped choice chip, matching the site's filter chips: 2px ink outline,
+ *  pastel fill and a hard 2px bottom edge when selected. */
 export function Chip({ label, active = false, onPress, style, accessibilityLabel }: ChipProps) {
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      accessibilityLabel={accessibilityLabel ?? label}
-      style={({ pressed }) => [
-        styles.chip,
-        active && styles.chipActive,
-        pressed && styles.pressed,
-        style,
-      ]}
-    >
-      <Text style={[styles.label, active && styles.labelActive]}>{label}</Text>
-    </Pressable>
+    <View style={[styles.edge, active && styles.edgeActive, style]}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityState={{ selected: active }}
+        accessibilityLabel={accessibilityLabel ?? label}
+        style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && styles.pressed]}
+      >
+        <Text style={[styles.label, active && styles.labelActive]}>{label}</Text>
+      </Pressable>
+    </View>
   );
 }
 
 const styles = themedStyles(() => ({
-  chip: {
+  edge: {
+    alignSelf: 'flex-start',
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
+    paddingBottom: 2,
+  },
+  edgeActive: { backgroundColor: edges.teal },
+  chip: {
+    borderRadius: radii.pill - 2,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },

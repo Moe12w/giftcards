@@ -221,17 +221,9 @@ export function SponsoredCarousel({
     }, 10000);
   }
 
-  if (ads.length === 0) {
-    return (
-      <View style={[styles.carousel, style]}>
-        <Card padded={false} edgeColor={edges.ink}>
-          <View style={[styles.imageFallback, { aspectRatio: 2 }]}>
-            <Megaphone size={30} color={colors.ink} />
-          </View>
-        </Card>
-      </View>
-    );
-  }
+  // No live campaign means no placeholder box and no heading: the section is
+  // simply absent, exactly like the marketing site's empty ad slots.
+  if (ads.length === 0) return null;
 
   return (
     <View style={[styles.carousel, style]}>
@@ -390,20 +382,13 @@ export function SponsoredStrip({
   const ads = placement?.ads ?? [];
   const title =
     variant === 'business' ? t('discovery.sponsoredBusinesses') : t('discovery.sponsoredGiftCards');
-  if (ads.length === 0) {
-    return (
-      <View style={style}>
-        <SectionHeader title={title} />
-        <View style={styles.emptyStrip}>
-          <Text style={styles.emptyStripText}>No sponsored items</Text>
-        </View>
-      </View>
-    );
-  }
+
+  // Hide the whole strip — heading included — when there are no active ads.
+  if (ads.length === 0) return null;
 
   return (
     <View style={style}>
-      <SectionHeader title={title} />
+      <SectionHeader title={title} splash />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -479,7 +464,7 @@ const styles = themedStyles(() => ({
   sponsoredPill: {
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
@@ -506,7 +491,7 @@ const styles = themedStyles(() => ({
     height: 8,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
   },
   dotActive: { backgroundColor: colors.ink, width: 20 },
@@ -514,8 +499,6 @@ const styles = themedStyles(() => ({
   // re-apply the gutter inside the content so cards line up with the page.
   hScrollOuter: { marginHorizontal: -spacing.gutter, marginTop: spacing.sm },
   hScroll: { gap: spacing.sm, paddingHorizontal: spacing.gutter },
-  emptyStrip: { padding: spacing.md, alignItems: 'center' },
-  emptyStripText: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted },
   nativeWrap: { width: 240 },
   nativeCard: { overflow: 'hidden' },
   nativeMedia: { position: 'relative', height: 116, backgroundColor: colors.skySoft },

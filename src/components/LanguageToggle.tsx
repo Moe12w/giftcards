@@ -54,7 +54,7 @@ const styles = themedStyles(() => ({
     gap: 3,
     padding: 3,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     borderRadius: radii.pill,
     backgroundColor: colors.surface,
   },

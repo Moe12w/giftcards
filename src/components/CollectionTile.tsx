@@ -63,7 +63,7 @@ const styles = themedStyles(() => ({
     minWidth: 0,
     borderRadius: radii.md,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.border,
     paddingBottom: 4,
   },
   wide: { flexBasis: '100%' },
