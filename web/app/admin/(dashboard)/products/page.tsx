@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Package, Search, ShoppingBag } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
+import { adminProductTotals } from '@/lib/aggregates';
 import { adminSetProductStatus } from '@/lib/actions/admin';
 import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
@@ -28,7 +29,7 @@ export default async function AdminProductsPage({
   const type = params.type ?? '';
   const vendorFilter = params.vendor ?? '';
 
-  const [productsResult, vendorsResult] = await Promise.all([
+  const [productsResult, vendorsResult, totals] = await Promise.all([
     ctx.supabase
       .from('products')
       .select(
@@ -37,6 +38,7 @@ export default async function AdminProductsPage({
       .order('created_at', { ascending: false })
       .limit(2000),
     ctx.supabase.from('vendors').select('id, name').order('name'),
+    adminProductTotals(ctx.supabase),
   ]);
 
   const error = productsResult.error ?? vendorsResult.error ?? null;
@@ -60,9 +62,6 @@ export default async function AdminProductsPage({
       .includes(q);
   });
 
-  const published = allProducts.filter((product) => product.status === 'published').length;
-  const experience = allProducts.filter((product) => product.fulfilment_type === 'experience').length;
-  const enterprise = allProducts.filter((product) => product.fulfilment_type === 'enterprise_code').length;
 
   return (
     <div className="dash-content">
@@ -79,28 +78,28 @@ export default async function AdminProductsPage({
           <span className="kpi-icon">
             <ShoppingBag size={17} />
           </span>
-          <strong>{allProducts.length}</strong>
+          <strong>{totals.total}</strong>
           <span>{t.allProducts}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <ShoppingBag size={17} />
           </span>
-          <strong>{published}</strong>
+          <strong>{totals.published}</strong>
           <span>{t.published}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <Package size={17} />
           </span>
-          <strong>{experience}</strong>
+          <strong>{totals.experience}</strong>
           <span>{t.experiencePackages}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Package size={17} />
           </span>
-          <strong>{enterprise}</strong>
+          <strong>{totals.enterpriseCode}</strong>
           <span>{t.corporateCodes}</span>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, Banknote, Download, FileBarChart, TrendingUp, Wallet } from 'lucide-react';
 import { requireVendor } from '@/lib/auth';
+import { vendorSalesTotals } from '@/lib/aggregates';
 import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead } from '@/components/ui';
@@ -35,13 +36,16 @@ export default async function VendorReportsPage({
   const c = pick(common, locale);
   const rangeLabel = t.ranges[RANGES.find((item) => item.value === range)?.copyKey ?? 'd90'];
 
-  const { data: orderItems } = await ctx.supabase
-    .from('order_items')
-    .select('id, total_minor, commission_minor, vendor_share_minor, created_at, products(title), orders(order_ref, status, created_at)')
-    .eq('vendor_id', ctx.vendor.id)
-    .gte('created_at', since)
-    .order('created_at', { ascending: false })
-    .limit(1000);
+  const [{ data: orderItems }, totals] = await Promise.all([
+    ctx.supabase
+      .from('order_items')
+      .select('id, total_minor, commission_minor, vendor_share_minor, created_at, products(title), orders(order_ref, status, created_at)')
+      .eq('vendor_id', ctx.vendor.id)
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(1000),
+    vendorSalesTotals(ctx.supabase, ctx.vendor.id, since),
+  ]);
 
   const paidItems = (orderItems ?? []).filter((item) => {
     const order = Array.isArray(item.orders) ? item.orders[0] : item.orders;
@@ -49,15 +53,7 @@ export default async function VendorReportsPage({
   });
 
   // The customer pays the gross, Giftly keeps the commission, the rest is the vendor's.
-  const gross = paidItems.reduce((sum, item) => sum + Number(item.total_minor ?? 0), 0);
-  const commission = paidItems.reduce((sum, item) => sum + Number(item.commission_minor ?? 0), 0);
-  const share = paidItems.reduce((sum, item) => sum + Number(item.vendor_share_minor ?? 0), 0);
-  const orderRefs = new Set(
-    paidItems.map((item) => {
-      const order = Array.isArray(item.orders) ? item.orders[0] : item.orders;
-      return order?.order_ref;
-    }),
-  );
+  const { grossMinor: gross, commissionMinor: commission, shareMinor: share } = totals;
   const effectiveBps = gross > 0 ? Math.round((commission / gross) * 10000) : 0;
 
   const monthly = new Map<string, number>();
@@ -104,7 +100,7 @@ export default async function VendorReportsPage({
         <Kpi
           label={t.grossSales}
           value={formatMoney(gross)}
-          hint={fill(t.paidItemsInPeriod, { count: paidItems.length })}
+          hint={fill(t.paidItemsInPeriod, { count: totals.paidItems })}
           icon={<Banknote size={17} />}
           tone="mint"
         />
@@ -124,7 +120,7 @@ export default async function VendorReportsPage({
         />
         <Kpi
           label={t.paidOrders}
-          value={String(orderRefs.size)}
+          value={String(totals.paidOrders)}
           icon={<FileBarChart size={17} />}
           tone="coral"
         />
@@ -142,7 +138,7 @@ export default async function VendorReportsPage({
               <div className="strong" style={{ fontSize: '1.6rem', marginTop: 6 }}>
                 {formatMoney(gross)}
               </div>
-              <span className="small muted">{fill(t.priceTimesSold, { count: paidItems.length })}</span>
+              <span className="small muted">{fill(t.priceTimesSold, { count: totals.paidItems })}</span>
             </div>
             <div className="card gold">
               <span className="small muted">{t.giftlyCut}</span>

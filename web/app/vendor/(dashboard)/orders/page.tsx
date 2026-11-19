@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Search, ShoppingBag } from 'lucide-react';
 import { requireVendor } from '@/lib/auth';
+import { vendorSalesTotals } from '@/lib/aggregates';
 import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
@@ -22,14 +23,17 @@ export default async function VendorOrdersPage({
   const t = pick(vendorCopy, locale).orders;
   const c = pick(common, locale);
 
-  const { data, error } = await ctx.supabase
-    .from('order_items')
-    .select(
-      'id, total_minor, commission_minor, vendor_share_minor, created_at, recipient_name, products(title), orders(order_ref, status, created_at, sender_name, recipient_name, recipient_email)',
-    )
-    .eq('vendor_id', ctx.vendor.id)
-    .order('created_at', { ascending: false })
-    .limit(400);
+  const [totals, { data, error }] = await Promise.all([
+    vendorSalesTotals(ctx.supabase, ctx.vendor.id),
+    ctx.supabase
+      .from('order_items')
+      .select(
+        'id, total_minor, commission_minor, vendor_share_minor, created_at, recipient_name, products(title), orders(order_ref, status, created_at, sender_name, recipient_name, recipient_email)',
+      )
+      .eq('vendor_id', ctx.vendor.id)
+      .order('created_at', { ascending: false })
+      .limit(400),
+  ]);
 
   const items = (data ?? []).filter((item) => {
     const order = Array.isArray(item.orders) ? item.orders[0] : item.orders;
@@ -49,12 +53,6 @@ export default async function VendorOrdersPage({
     return haystack.includes(q);
   });
 
-  const paid = (data ?? []).filter((item) => {
-    const order = Array.isArray(item.orders) ? item.orders[0] : item.orders;
-    return order?.status === 'paid';
-  });
-  const gross = paid.reduce((sum, item) => sum + Number(item.total_minor ?? 0), 0);
-  const share = paid.reduce((sum, item) => sum + Number(item.vendor_share_minor ?? 0), 0);
 
   return (
     <div className="dash-content">
@@ -76,28 +74,28 @@ export default async function VendorOrdersPage({
           <span className="kpi-icon">
             <ShoppingBag size={17} />
           </span>
-          <strong>{paid.length}</strong>
+          <strong>{totals.paidItems}</strong>
           <span>{t.paidOrderItems}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <ShoppingBag size={17} />
           </span>
-          <strong>{formatMoney(gross)}</strong>
+          <strong>{formatMoney(totals.grossMinor)}</strong>
           <span>{t.grossSales}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <ShoppingBag size={17} />
           </span>
-          <strong>{formatMoney(share)}</strong>
+          <strong>{formatMoney(totals.shareMinor)}</strong>
           <span>{t.yourShare}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <ShoppingBag size={17} />
           </span>
-          <strong>{formatMoney(gross - share)}</strong>
+          <strong>{formatMoney(totals.commissionMinor)}</strong>
           <span>{t.platformCommission}</span>
         </div>
       </div>

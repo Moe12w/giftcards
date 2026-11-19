@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Search, UserRound } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
+import { adminCustomerTotals } from '@/lib/aggregates';
 import { formatDate, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
@@ -22,7 +23,7 @@ export default async function AdminCustomersPage({
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
 
-  const [profilesResult, ordersResult, vouchersResult, rolesResult] = await Promise.all([
+  const [profilesResult, ordersResult, vouchersResult, rolesResult, totals] = await Promise.all([
     ctx.supabase
       .from('profiles')
       .select('id, full_name, email, phone, preferred_language, is_admin, status, created_at')
@@ -39,6 +40,7 @@ export default async function AdminCustomersPage({
       .order('created_at', { ascending: false })
       .limit(3000),
     ctx.supabase.from('user_roles').select('user_id, role'),
+    adminCustomerTotals(ctx.supabase),
   ]);
 
   const error = profilesResult.error ?? ordersResult.error ?? null;
@@ -75,8 +77,6 @@ export default async function AdminCustomersPage({
       .includes(q);
   });
 
-  const suspended = (profilesResult.data ?? []).filter((profile) => profile.status === 'suspended').length;
-  const withOrders = (profilesResult.data ?? []).filter((profile) => orderStats.has(profile.id)).length;
 
   return (
     <div className="dash-content">
@@ -93,28 +93,28 @@ export default async function AdminCustomersPage({
           <span className="kpi-icon">
             <UserRound size={17} />
           </span>
-          <strong>{(profilesResult.data ?? []).length}</strong>
+          <strong>{totals.accounts}</strong>
           <span>{t.accounts}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <UserRound size={17} />
           </span>
-          <strong>{withOrders}</strong>
+          <strong>{totals.withOrders}</strong>
           <span>{t.haveOrdered}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <UserRound size={17} />
           </span>
-          <strong>{orders.filter((order) => order.status === 'paid').length}</strong>
+          <strong>{totals.paidOrders}</strong>
           <span>{t.paidOrders}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <UserRound size={17} />
           </span>
-          <strong>{suspended}</strong>
+          <strong>{totals.suspended}</strong>
           <span>{t.suspendedAccounts}</span>
         </div>
       </div>

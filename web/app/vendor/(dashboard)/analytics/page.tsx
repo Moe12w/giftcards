@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { ArrowRight, Banknote, CalendarRange, ScanLine, ShoppingBag, Ticket, TrendingUp } from 'lucide-react';
 import { requireVendor } from '@/lib/auth';
+import {
+  vendorRedemptionTotals,
+  vendorSalesTotals,
+  vendorVoucherTotals,
+} from '@/lib/aggregates';
 import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Kpi, PageHead } from '@/components/ui';
@@ -38,7 +43,7 @@ export default async function VendorAnalyticsPage({
   const c = pick(common, locale);
   const rangeLabel = t.ranges[RANGES.find((item) => item.value === range)?.copyKey ?? 'd90'];
 
-  const [itemsResult, vouchersResult, redemptionsResult] = await Promise.all([
+  const [itemsResult, salesTotals, voucherTotals, redemptionTotals] = await Promise.all([
     supabase
       .from('order_items')
       .select('id, total_minor, commission_minor, vendor_share_minor, created_at, products(title, fulfilment_type), orders(order_ref, status, created_at)')
@@ -46,42 +51,21 @@ export default async function VendorAnalyticsPage({
       .gte('created_at', since)
       .order('created_at', { ascending: false })
       .limit(1000),
-    supabase
-      .from('vouchers')
-      .select('id, status, fulfilment_type, initial_value_minor, remaining_value_minor, created_at')
-      .eq('vendor_id', vendor.id)
-      .gte('created_at', since)
-      .limit(1000),
-    supabase
-      .from('redemptions')
-      .select('id, kind, amount_minor, sessions, occurred_at')
-      .eq('vendor_id', vendor.id)
-      .gte('occurred_at', since)
-      .limit(1000),
+    vendorSalesTotals(supabase, vendor.id, since),
+    vendorVoucherTotals(supabase, vendor.id, since),
+    vendorRedemptionTotals(supabase, vendor.id, since),
   ]);
 
   const paidItems = (itemsResult.data ?? []).filter((item) => {
     const order = Array.isArray(item.orders) ? item.orders[0] : item.orders;
     return order?.status === 'paid';
   });
-  const vouchers = vouchersResult.data ?? [];
-  const redemptions = redemptionsResult.data ?? [];
+  const gross = salesTotals.grossMinor;
+  const share = salesTotals.shareMinor;
+  const commission = salesTotals.commissionMinor;
 
-  const gross = paidItems.reduce((sum, item) => sum + Number(item.total_minor ?? 0), 0);
-  const share = paidItems.reduce((sum, item) => sum + Number(item.vendor_share_minor ?? 0), 0);
-  const commission = paidItems.reduce((sum, item) => sum + Number(item.commission_minor ?? 0), 0);
-  const orderRefs = new Set(
-    paidItems.map((item) => {
-      const order = Array.isArray(item.orders) ? item.orders[0] : item.orders;
-      return order?.order_ref;
-    }),
-  );
-
-  const redeemedValue = redemptions.reduce(
-    (sum, redemption) => sum + Number(redemption.amount_minor ?? 0),
-    0,
-  );
-  const sessionCount = redemptions.reduce((sum, redemption) => sum + Number(redemption.sessions ?? 0), 0);
+  const redeemedValue = redemptionTotals.amountMinor;
+  const sessionCount = redemptionTotals.sessions;
 
   const byProduct = new Map<string, { gross: number; units: number; type: string }>();
   for (const item of paidItems) {
@@ -112,10 +96,6 @@ export default async function VendorAnalyticsPage({
   }
   const monthMax = Math.max(...monthly.values(), 1);
 
-  const activeVouchers = vouchers.filter((voucher) =>
-    ['issued', 'claimed', 'active', 'partially_redeemed'].includes(voucher.status),
-  ).length;
-  const redeemedVouchers = vouchers.filter((voucher) => voucher.status === 'redeemed').length;
 
   return (
     <div className="dash-content">
@@ -143,7 +123,7 @@ export default async function VendorAnalyticsPage({
         <Kpi
           label={t.grossSales}
           value={formatMoney(gross)}
-          hint={`${orderRefs.size} ${orderRefs.size === 1 ? t.paidOrder : t.paidOrders}`}
+          hint={`${salesTotals.paidOrders} ${salesTotals.paidOrders === 1 ? t.paidOrder : t.paidOrders}`}
           icon={<Banknote size={17} />}
           tone="mint"
         />
@@ -156,8 +136,8 @@ export default async function VendorAnalyticsPage({
         />
         <Kpi
           label={t.vouchersIssued}
-          value={String(vouchers.length)}
-          hint={fill(t.stillActive, { count: activeVouchers })}
+          value={String(voucherTotals.total)}
+          hint={fill(t.stillActive, { count: voucherTotals.active })}
           icon={<Ticket size={17} />}
           tone="gold"
         />
@@ -225,11 +205,11 @@ export default async function VendorAnalyticsPage({
               </div>
               <div>
                 <span className="k">{t.redemptionRecords}</span>
-                <span className="v">{redemptions.length}</span>
+                <span className="v">{redemptionTotals.redemptions}</span>
               </div>
               <div>
                 <span className="k">{t.fullyRedeemedVouchers}</span>
-                <span className="v">{redeemedVouchers}</span>
+                <span className="v">{voucherTotals.redeemed}</span>
               </div>
             </div>
             <div className="callout info" style={{ marginTop: 14 }}>
@@ -242,7 +222,7 @@ export default async function VendorAnalyticsPage({
       <section className="panel">
         <div className="panel-head">
           <h3>{t.topGifts}</h3>
-          <span className="small muted">{fill(t.paidItemsInPeriod, { count: paidItems.length })}</span>
+          <span className="small muted">{fill(t.paidItemsInPeriod, { count: salesTotals.paidItems })}</span>
         </div>
         <div className="panel-body flush">
           {topProducts.length === 0 ? (
@@ -325,7 +305,7 @@ export default async function VendorAnalyticsPage({
         </div>
       </section>
 
-      {gross === 0 && vouchers.length === 0 ? (
+      {gross === 0 && voucherTotals.total === 0 ? (
         <EmptyState
           title={t.emptyTitle}
           body={t.emptyBody}

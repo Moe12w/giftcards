@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { Mail, Plus, Search, Ticket } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
+import { adminVoucherTotals } from '@/lib/aggregates';
 import {
   adminEmailClaimLink,
   adminIssueManualVoucher,
@@ -57,13 +58,16 @@ export default async function AdminVouchersPage({
   const status = params.status ?? '';
   const type = params.type ?? '';
 
-  const { data, error } = await ctx.supabase
-    .from('vouchers')
-    .select(
-      'id, voucher_code, status, fulfilment_type, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, recipient_name, recipient_email, claimed_by, expires_at, created_at, products(title, vendors(name)), orders(id, order_ref), profiles!buyer_id(full_name, email)',
-    )
-    .order('created_at', { ascending: false })
-    .limit(2000);
+  const [{ data, error }, voucherTotals] = await Promise.all([
+    ctx.supabase
+      .from('vouchers')
+      .select(
+        'id, voucher_code, status, fulfilment_type, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, recipient_name, recipient_email, claimed_by, expires_at, created_at, products(title, vendors(name)), orders(id, order_ref), profiles!buyer_id(full_name, email)',
+      )
+      .order('created_at', { ascending: false })
+      .limit(2000),
+    adminVoucherTotals(ctx.supabase),
+  ]);
 
   const allVouchers = data ?? [];
 
@@ -90,13 +94,6 @@ export default async function AdminVouchersPage({
       .toLowerCase()
       .includes(q);
   });
-
-  const active = allVouchers.filter((voucher) => ACTIVE.includes(voucher.status));
-  const outstanding = active
-    .filter((voucher) => voucher.fulfilment_type === 'monetary')
-    .reduce((sum, voucher) => sum + Number(voucher.remaining_value_minor ?? 0), 0);
-  const redeemed = allVouchers.filter((voucher) => voucher.status === 'redeemed').length;
-  const expired = allVouchers.filter((voucher) => voucher.status === 'expired').length;
 
   return (
     <div className="dash-content">
@@ -134,29 +131,29 @@ export default async function AdminVouchersPage({
           <span className="kpi-icon">
             <Ticket size={17} />
           </span>
-          <strong>{allVouchers.length}</strong>
+          <strong>{voucherTotals.total}</strong>
           <span>{t.allVouchers}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <Ticket size={17} />
           </span>
-          <strong>{active.length}</strong>
+          <strong>{voucherTotals.active}</strong>
           <span>{c.status.active}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Ticket size={17} />
           </span>
-          <strong>{formatMoney(outstanding)}</strong>
+          <strong>{formatMoney(voucherTotals.outstandingMinor)}</strong>
           <span>{t.outstandingBalance}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <Ticket size={17} />
           </span>
-          <strong>{redeemed}</strong>
-          <span>{fill(t.expiredCount, { count: expired })}</span>
+          <strong>{voucherTotals.redeemed}</strong>
+          <span>{fill(t.expiredCount, { count: voucherTotals.expired })}</span>
         </div>
       </div>
 

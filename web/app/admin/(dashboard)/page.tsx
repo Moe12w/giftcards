@@ -10,6 +10,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
+import { adminOrderTotals, adminSupportOpenCount, adminVoucherTotals } from '@/lib/aggregates';
 import { formatDate, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
@@ -33,8 +34,10 @@ export default async function AdminOverviewPage() {
     customersCount,
     partnersCount,
     productsCount,
+    orderTotals,
+    voucherTotals,
+    openSupport,
     ordersResult,
-    vouchersResult,
     supportResult,
     applicationsResult,
   ] = await Promise.all([
@@ -52,15 +55,14 @@ export default async function AdminOverviewPage() {
       .from('products')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'published'),
+    adminOrderTotals(supabase),
+    adminVoucherTotals(supabase),
+    adminSupportOpenCount(supabase),
     supabase
       .from('orders')
       .select('id, order_ref, status, total_minor, created_at, sender_name, recipient_name, profiles(full_name, email)')
       .order('created_at', { ascending: false })
-      .limit(400),
-    supabase
-      .from('vouchers')
-      .select('id, status, fulfilment_type, remaining_value_minor, initial_value_minor')
-      .limit(2000),
+      .limit(10),
     supabase
       .from('support_requests')
       .select('id, kind, subject, status, reference, created_at')
@@ -75,19 +77,8 @@ export default async function AdminOverviewPage() {
   ]);
 
   const orders = ordersResult.data ?? [];
-  const vouchers = vouchersResult.data ?? [];
   const support = supportResult.data ?? [];
   const applications = applicationsResult.data ?? [];
-
-  const paid = orders.filter((order) => order.status === 'paid');
-  const gmv = paid.reduce((sum, order) => sum + Number(order.total_minor ?? 0), 0);
-  const activeVouchers = vouchers.filter((voucher) =>
-    ['issued', 'claimed', 'active', 'partially_redeemed'].includes(voucher.status),
-  );
-  const outstanding = activeVouchers
-    .filter((voucher) => voucher.fulfilment_type === 'monetary')
-    .reduce((sum, voucher) => sum + Number(voucher.remaining_value_minor ?? 0), 0);
-  const openSupport = support.filter((request) => request.status === 'open').length;
 
   return (
     <div className="dash-content">
@@ -125,15 +116,15 @@ export default async function AdminOverviewPage() {
         />
         <Kpi
           label={t.paidOrderValue}
-          value={formatMoney(gmv)}
-          hint={fill(t.paidOrders, { count: paid.length })}
+          value={formatMoney(orderTotals.paidValueMinor)}
+          hint={fill(t.paidOrders, { count: orderTotals.paid })}
           icon={<CreditCard size={17} />}
           tone="gold"
         />
         <Kpi
           label={t.outstanding}
-          value={formatMoney(outstanding)}
-          hint={fill(t.activeVouchers, { count: activeVouchers.length })}
+          value={formatMoney(voucherTotals.outstandingMinor)}
+          hint={fill(t.activeVouchers, { count: voucherTotals.active })}
           icon={<Ticket size={17} />}
           tone="coral"
         />
@@ -262,7 +253,7 @@ export default async function AdminOverviewPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.slice(0, 10).map((order) => {
+                  {orders.map((order) => {
                     const buyer = Array.isArray(order.profiles) ? order.profiles[0] : order.profiles;
                     return (
                       <tr key={order.id}>

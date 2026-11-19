@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ScanLine, Search, Ticket } from 'lucide-react';
 import { requireVendor } from '@/lib/auth';
+import { vendorVoucherTotals } from '@/lib/aggregates';
 import { formatDate } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { fulfilmentLabel } from '@/lib/catalog';
@@ -25,12 +26,15 @@ export default async function VendorVouchersPage({
   const t = pick(vendorCopy, locale).vouchers;
   const c = pick(common, locale);
 
-  const { data, error } = await ctx.supabase
-    .from('vouchers')
-    .select('id, voucher_code, status, fulfilment_type, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, recipient_name, expires_at, created_at, products(title)')
-    .eq('vendor_id', ctx.vendor.id)
-    .order('created_at', { ascending: false })
-    .limit(600);
+  const [{ data, error }, totals] = await Promise.all([
+    ctx.supabase
+      .from('vouchers')
+      .select('id, voucher_code, status, fulfilment_type, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, recipient_name, expires_at, created_at, products(title)')
+      .eq('vendor_id', ctx.vendor.id)
+      .order('created_at', { ascending: false })
+      .limit(600),
+    vendorVoucherTotals(ctx.supabase, ctx.vendor.id),
+  ]);
 
   const vouchers = (data ?? []).filter((voucher) => {
     const product = Array.isArray(voucher.products) ? voucher.products[0] : voucher.products;
@@ -44,13 +48,6 @@ export default async function VendorVouchersPage({
       .includes(q);
   });
 
-  const active = (data ?? []).filter((voucher) => ACTIVE.includes(voucher.status));
-  const outstanding = active.reduce((sum, voucher) => {
-    if (voucher.fulfilment_type === 'monetary') {
-      return sum + Number(voucher.remaining_value_minor ?? 0);
-    }
-    return sum;
-  }, 0);
 
   return (
     <div className="dash-content">
@@ -72,28 +69,28 @@ export default async function VendorVouchersPage({
           <span className="kpi-icon">
             <Ticket size={17} />
           </span>
-          <strong>{active.length}</strong>
+          <strong>{totals.active}</strong>
           <span>{t.activeVouchers}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--lavender-soft)' }}>
             <Ticket size={17} />
           </span>
-          <strong>{data?.length ?? 0}</strong>
+          <strong>{totals.total}</strong>
           <span>{t.issuedInTotal}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <Ticket size={17} />
           </span>
-          <strong>{formatMoney(outstanding)}</strong>
+          <strong>{formatMoney(totals.outstandingMinor)}</strong>
           <span>{t.outstandingBalance}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <Ticket size={17} />
           </span>
-          <strong>{(data ?? []).filter((voucher) => voucher.status === 'redeemed').length}</strong>
+          <strong>{totals.redeemed}</strong>
           <span>{t.fullyRedeemed}</span>
         </div>
       </div>

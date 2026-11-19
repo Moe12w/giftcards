@@ -13,6 +13,7 @@ import {
   Users,
 } from 'lucide-react';
 import { requireVendor } from '@/lib/auth';
+import { vendorSalesTotals, vendorTopProducts, vendorVoucherTotals } from '@/lib/aggregates';
 import { formatDate, formatDateTime, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
@@ -35,60 +36,52 @@ export default async function VendorOverviewPage() {
   const t = copy.overview;
   const c = pick(common, locale);
 
-  const [itemsResult, vouchersResult, redemptionsResult, redemptionCount, productsResult, locationsCount, outstandingResult] =
-    await Promise.all([
-      supabase
-        .from('order_items')
-        .select(
-          'id, total_minor, vendor_share_minor, commission_minor, created_at, product_id, orders(order_ref, status, created_at, sender_name, recipient_name), products(title)',
-        )
-        .eq('vendor_id', vendor.id)
-        .order('created_at', { ascending: false })
-        .limit(300),
-      supabase
-        .from('vouchers')
-        .select('id, status, initial_value_minor, remaining_value_minor, fulfilment_type, total_sessions, remaining_sessions, created_at')
-        .eq('vendor_id', vendor.id)
-        .limit(1000),
-      supabase
-        .from('redemptions')
-        .select('id, reference, kind, amount_minor, sessions, occurred_at, vouchers(voucher_code, recipient_name)')
-        .eq('vendor_id', vendor.id)
-        .order('occurred_at', { ascending: false })
-        .limit(6),
-      supabase
-        .from('redemptions')
-        .select('id', { count: 'exact', head: true })
-        .eq('vendor_id', vendor.id),
-      supabase.from('products').select('id, title, status, fulfilment_type').eq('vendor_id', vendor.id),
-      supabase
-        .from('vendor_locations')
-        .select('id', { count: 'exact', head: true })
-        .eq('vendor_id', vendor.id),
-      supabase.rpc('vendor_outstanding_minor', { p_vendor_id: vendor.id }),
-    ]);
+  const [
+    itemsResult,
+    redemptionsResult,
+    redemptionCount,
+    productsResult,
+    locationsCount,
+    outstandingResult,
+    salesTotals,
+    voucherTotals,
+    topTotals,
+  ] = await Promise.all([
+    supabase
+      .from('order_items')
+      .select(
+        'id, total_minor, vendor_share_minor, commission_minor, created_at, orders!inner(order_ref, status, created_at, sender_name, recipient_name), products(title)',
+      )
+      .eq('vendor_id', vendor.id)
+      .eq('orders.status', 'paid')
+      .order('created_at', { ascending: false })
+      .limit(8),
+    supabase
+      .from('redemptions')
+      .select('id, reference, kind, amount_minor, sessions, occurred_at, vouchers(voucher_code, recipient_name)')
+      .eq('vendor_id', vendor.id)
+      .order('occurred_at', { ascending: false })
+      .limit(6),
+    supabase
+      .from('redemptions')
+      .select('id', { count: 'exact', head: true })
+      .eq('vendor_id', vendor.id),
+    supabase.from('products').select('id, title, status, fulfilment_type').eq('vendor_id', vendor.id),
+    supabase
+      .from('vendor_locations')
+      .select('id', { count: 'exact', head: true })
+      .eq('vendor_id', vendor.id),
+    supabase.rpc('vendor_outstanding_minor', { p_vendor_id: vendor.id }),
+    vendorSalesTotals(supabase, vendor.id),
+    vendorVoucherTotals(supabase, vendor.id),
+    vendorTopProducts(supabase, vendor.id, { limit: 5 }),
+  ]);
 
-  const items = itemsResult.data ?? [];
-  const vouchers = vouchersResult.data ?? [];
+  const paidItems = itemsResult.data ?? [];
   const redemptions = redemptionsResult.data ?? [];
   const products = productsResult.data ?? [];
 
-  const paidItems = items.filter((item) => {
-    const order = Array.isArray(item.orders) ? item.orders[0] : item.orders;
-    return order?.status === 'paid';
-  });
-
-  const gross = paidItems.reduce((sum, item) => sum + Number(item.total_minor ?? 0), 0);
-  const share = paidItems.reduce((sum, item) => sum + Number(item.vendor_share_minor ?? 0), 0);
-  const orderRefs = new Set(
-    paidItems.map((item) => {
-      const order = Array.isArray(item.orders) ? item.orders[0] : item.orders;
-      return order?.order_ref;
-    }),
-  );
-  const activeVouchers = vouchers.filter((voucher) =>
-    ['issued', 'claimed', 'active', 'partially_redeemed'].includes(voucher.status),
-  ).length;
+  const activeVouchers = voucherTotals.active;
 
   const outstandingRaw = outstandingResult.data as unknown;
   const outstandingValue = Array.isArray(outstandingRaw)
@@ -96,14 +89,8 @@ export default async function VendorOverviewPage() {
     : (outstandingRaw as number | null);
   const outstanding = Number(outstandingValue ?? 0);
 
-  const topProducts = new Map<string, number>();
-  for (const item of paidItems) {
-    const product = Array.isArray(item.products) ? item.products[0] : item.products;
-    const name = product?.title ?? t.gift;
-    topProducts.set(name, (topProducts.get(name) ?? 0) + Number(item.total_minor ?? 0));
-  }
-  const top = [...topProducts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-  const topMax = top[0]?.[1] ?? 1;
+  const top = topTotals;
+  const topMax = top[0]?.grossMinor ?? 1;
 
   const publishedCount = products.filter((product) => product.status === 'published').length;
 
@@ -215,22 +202,22 @@ export default async function VendorOverviewPage() {
       <div className="kpi-grid">
         <Kpi
           label={t.grossSales}
-          value={formatMoney(gross)}
-          hint={`${orderRefs.size} ${orderRefs.size === 1 ? t.paidOrder : t.paidOrders}`}
+          value={formatMoney(salesTotals.grossMinor)}
+          hint={`${salesTotals.paidOrders} ${salesTotals.paidOrders === 1 ? t.paidOrder : t.paidOrders}`}
           icon={<Banknote size={17} />}
           tone="mint"
         />
         <Kpi
           label={t.yourShare}
-          value={formatMoney(share)}
-          hint={fill(t.commission, { amount: formatMoney(gross - share) })}
+          value={formatMoney(salesTotals.shareMinor)}
+          hint={fill(t.commission, { amount: formatMoney(salesTotals.commissionMinor) })}
           icon={<TrendingUp size={17} />}
           tone="lavender"
         />
         <Kpi
           label={t.activeVouchers}
           value={String(activeVouchers)}
-          hint={fill(t.issuedInTotal, { count: vouchers.length })}
+          hint={fill(t.issuedInTotal, { count: voucherTotals.total })}
           icon={<Ticket size={17} />}
           tone="gold"
         />
@@ -303,14 +290,14 @@ export default async function VendorOverviewPage() {
               <p className="small muted">{t.noSalesYet}</p>
             ) : (
               <div className="split-list">
-                {top.map(([name, value]) => (
-                  <div key={name} style={{ display: 'grid', gap: 6 }}>
+                {top.map((product) => (
+                  <div key={product.title ?? 'other'} style={{ display: 'grid', gap: 6 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-                      <span className="strong">{name}</span>
-                      <span>{formatMoney(value)}</span>
+                      <span className="strong">{product.title ?? t.gift}</span>
+                      <span>{formatMoney(product.grossMinor)}</span>
                     </div>
                     <div className="progress">
-                      <span style={{ width: `${Math.max(6, (value / topMax) * 100)}%` }} />
+                      <span style={{ width: `${Math.max(6, (product.grossMinor / topMax) * 100)}%` }} />
                     </div>
                   </div>
                 ))}

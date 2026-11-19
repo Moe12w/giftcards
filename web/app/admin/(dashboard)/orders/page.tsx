@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { CreditCard, Search, ShoppingBag } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
+import { adminOrderTotals } from '@/lib/aggregates';
 import { formatDate, initials, titleCase } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
@@ -22,13 +23,16 @@ export default async function AdminOrdersPage({
   const q = (params.q ?? '').trim().toLowerCase();
   const status = params.status ?? '';
 
-  const { data, error } = await ctx.supabase
-    .from('orders')
-    .select(
-      'id, order_ref, status, payment_status, subtotal_minor, discount_minor, fee_minor, total_minor, sender_name, recipient_name, delivery_method, paid_at, created_at, profiles(full_name, email), order_items(id), vouchers(id)',
-    )
-    .order('created_at', { ascending: false })
-    .limit(1000);
+  const [totals, { data, error }] = await Promise.all([
+    adminOrderTotals(ctx.supabase),
+    ctx.supabase
+      .from('orders')
+      .select(
+        'id, order_ref, status, payment_status, subtotal_minor, discount_minor, fee_minor, total_minor, sender_name, recipient_name, delivery_method, paid_at, created_at, profiles(full_name, email), order_items(id), vouchers(id)',
+      )
+      .order('created_at', { ascending: false })
+      .limit(1000),
+  ]);
 
   const orders = (data ?? []).filter((order) => {
     if (status && order.status !== status) return false;
@@ -40,12 +44,6 @@ export default async function AdminOrdersPage({
       .toLowerCase()
       .includes(q);
   });
-
-  const allOrders = data ?? [];
-  const paid = allOrders.filter((order) => order.status === 'paid');
-  const paidValue = paid.reduce((sum, order) => sum + Number(order.total_minor ?? 0), 0);
-  const pending = allOrders.filter((order) => order.status === 'pending').length;
-  const refunded = allOrders.filter((order) => order.status === 'refunded').length;
 
   return (
     <div className="dash-content">
@@ -62,28 +60,28 @@ export default async function AdminOrdersPage({
           <span className="kpi-icon">
             <ShoppingBag size={17} />
           </span>
-          <strong>{allOrders.length}</strong>
+          <strong>{totals.total}</strong>
           <span>{t.allOrders}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--mint-soft)' }}>
             <CreditCard size={17} />
           </span>
-          <strong>{formatMoney(paidValue)}</strong>
-          <span>{fill(t.paidOrders, { count: paid.length })}</span>
+          <strong>{formatMoney(totals.paidValueMinor)}</strong>
+          <span>{fill(t.paidOrders, { count: totals.paid })}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--gold-soft)' }}>
             <ShoppingBag size={17} />
           </span>
-          <strong>{pending}</strong>
+          <strong>{totals.pending}</strong>
           <span>{t.pendingPayment}</span>
         </div>
         <div className="kpi">
           <span className="kpi-icon" style={{ background: 'var(--coral-soft)' }}>
             <ShoppingBag size={17} />
           </span>
-          <strong>{refunded}</strong>
+          <strong>{totals.refunded}</strong>
           <span>{t.refunded}</span>
         </div>
       </div>
