@@ -40,15 +40,6 @@ function internalRequest(req: Request): boolean {
   return Boolean(expected && provided && provided === expected);
 }
 
-function toBase64(bytes: Uint8Array): string {
-  let binary = '';
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  return btoa(binary);
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
@@ -141,7 +132,7 @@ Deno.serve(async (req) => {
       const response = await uploadSupplierDocument({
         FileName: fileName,
         MediaType: mime,
-        Buffer: toBase64(bytes),
+        Buffer: bytes,
         FileType: fileType,
         SupplierCode: Number(supplierCode),
       });

@@ -108,12 +108,18 @@ async function mfRequest(path: string, init: RequestInit = {}): Promise<any> {
   }, TIMEOUT_MS);
 
   try {
+    const jsonHeaders: Record<string, string> = {
+      Authorization: `Bearer ${apiKey}`,
+    };
+    // Multipart uploads need the browser/Deno to set the boundary.
+    if (!(typeof FormData !== 'undefined' && init.body instanceof FormData)) {
+      jsonHeaders['Content-Type'] = 'application/json';
+    }
     const response = await fetch(`${baseUrl}${path}`, {
       ...init,
       signal: controller.signal,
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        ...jsonHeaders,
         ...(init.headers ?? {}),
       },
     });
@@ -237,17 +243,28 @@ export async function getSuppliers(): Promise<SupplierRecord[]> {
 export interface UploadDocumentInput {
   FileName: string;
   MediaType: string;
-  Buffer: string; // base64
+  Buffer: Uint8Array;
   FileType: number;
   SupplierCode: number;
 }
 
 export async function uploadSupplierDocument(input: UploadDocumentInput): Promise<any> {
-  // OpenAPI reference: JSON body with base64 Buffer. The prose also mentions
-  // form-data; if the live account rejects JSON, switch this single function.
+  // UploadSupplierDocument is a multipart form, not a JSON body. The provider
+  // binds a flat file part named `FileUpload`; a base64 Buffer or a nested
+  // `SupplierFile.*` name fails with "The field File Upload is mandatory".
+  const form = new FormData();
+  form.append('SupplierCode', String(input.SupplierCode));
+  form.append('FileType', String(input.FileType));
+  form.append('FileName', input.FileName);
+  form.append('MediaType', input.MediaType);
+  form.append(
+    'FileUpload',
+    new Blob([input.Buffer as BlobPart], { type: input.MediaType }),
+    input.FileName,
+  );
   return mfRequest('/v2/UploadSupplierDocument', {
     method: 'PUT',
-    body: JSON.stringify(input),
+    body: form,
   });
 }
 
