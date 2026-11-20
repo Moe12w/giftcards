@@ -55,7 +55,7 @@ export default function SendPreviewScreen() {
           icon="gift"
           tone="lavender"
         />
-        <Button label={t('home.quickSend')} onPress={() => router.replace('/(customer)/(tabs)/send')} />
+        <Button label={t('home.quickSend')} onPress={() => router.replace('/(customer)/send/recipient')} />
       </Screen>
     );
   }

@@ -80,11 +80,6 @@ export default function CustomerTabsLayout() {
       />
 
       {/* Legacy routes kept for deep links but hidden from the tab bar. */}
-      <Tabs.Screen name="explore" options={{ href: null }} />
-      <Tabs.Screen name="send" options={{ href: null }} />
-      <Tabs.Screen name="cards" options={{ href: null }} />
-      <Tabs.Screen name="orders" options={{ href: null }} />
-      <Tabs.Screen name="account" options={{ href: null }} />
     </Tabs>
   );
 }
