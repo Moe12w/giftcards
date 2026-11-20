@@ -8,6 +8,12 @@
 
 import type { Copy } from './index';
 
+// The MCP server lives on the project's own Supabase deployment. Deriving the
+// URL keeps this copy working if the project moves or a staging build runs
+// against another project, instead of printing a production ref everywhere.
+const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/\/$/, '');
+const mcpEndpoint = supabaseUrl ? `${supabaseUrl}/functions/v1/mcp` : '';
+
 const en = {
   meta: {
     title: 'AI Gift Card Shopping in Qatar | Giftly',
@@ -143,7 +149,7 @@ const en = {
     body:
       'Giftly exposes its catalogue through MCP, an open standard for connecting assistants to tools and data. That means an assistant can search real local businesses and gift cards without a custom integration for every platform.',
     endpointLabel: 'MCP server URL',
-    endpoint: 'https://rxrrbznwnsgzpinirzme.supabase.co/functions/v1/mcp',
+    endpoint: mcpEndpoint,
     toolsLabel: 'Available tools',
     tools: [
       'search_businesses',
@@ -352,7 +358,7 @@ const ar: AiCopy = {
     body:
       'يتيح Giftly كتالوجه عبر MCP، وهو معيار مفتوح لربط المساعدات بالأدوات والبيانات. لذلك يستطيع المساعد البحث في متاجر محلية حقيقية وبطاقات هدايا دون تكامل مخصص لكل منصة.',
     endpointLabel: 'عنوان خادم MCP',
-    endpoint: 'https://rxrrbznwnsgzpinirzme.supabase.co/functions/v1/mcp',
+    endpoint: mcpEndpoint,
     toolsLabel: 'الأدوات المتاحة',
     tools: [
       'search_businesses',

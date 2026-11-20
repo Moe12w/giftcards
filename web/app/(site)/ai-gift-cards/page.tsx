@@ -343,6 +343,10 @@ export default async function AiGiftCardsPage() {
             <ShieldCheck size={16} /> {t.mcp.note}
           </div>
 
+          {/* The endpoint comes from NEXT_PUBLIC_SUPABASE_URL. Hide the
+              connection details rather than printing an empty URL if a build
+              was made without it. */}
+          {t.mcp.endpoint ? (
           <details className="ai-connect">
             <summary>{t.mcp.docsCta}</summary>
             <div className="ai-connect-body">
@@ -382,6 +386,7 @@ export default async function AiGiftCardsPage() {
               </p>
             </div>
           </details>
+          ) : null}
         </div>
       </section>
 

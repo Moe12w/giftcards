@@ -1,5 +1,18 @@
 import type { NextConfig } from 'next';
 
+// The Supabase project host is configuration, not a constant of this repository:
+// preview deployments and a future project move must not need a code change.
+function supabaseHostname(): string | null {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    return url ? new URL(url).hostname : null;
+  } catch {
+    return null;
+  }
+}
+
+const projectHostname = supabaseHostname();
+
 const nextConfig: NextConfig = {
   turbopack: {
     // `web/` has its own package-lock.json, but the repository root has one
@@ -15,7 +28,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'placehold.co' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
-      { protocol: 'https', hostname: 'rxrrbznwnsgzpinirzme.supabase.co' },
+      ...(projectHostname
+        ? [{ protocol: 'https' as const, hostname: projectHostname }]
+        : []),
     ],
   },
   experimental: {

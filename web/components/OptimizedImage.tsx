@@ -16,11 +16,20 @@ interface OptimizedImageProps {
   priority?: boolean;
 }
 
-const KNOWN_HOSTS = new Set([
-  'placehold.co',
-  'images.unsplash.com',
-  'rxrrbznwnsgzpinirzme.supabase.co',
-]);
+const SUPABASE_HOSTNAME = (() => {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    return url ? new URL(url).hostname : null;
+  } catch {
+    return null;
+  }
+})();
+
+const KNOWN_HOSTS = new Set(
+  ['placehold.co', 'images.unsplash.com', SUPABASE_HOSTNAME].filter(
+    (host): host is string => Boolean(host),
+  ),
+);
 
 export function OptimizedImage({
   src,
