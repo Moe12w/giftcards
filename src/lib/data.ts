@@ -1109,46 +1109,37 @@ export async function getAdViewerKey(): Promise<string> {
   return key;
 }
 
-/**
- * Asks the backend for the ads in a placement and its admin-set config.
- *
- * Cached with stale-while-revalidate: a repeat visit paints immediately from
- * memory/disk and refreshes quietly. This matters because every carousel on a
- * screen used to make its own RPC (which also ran a full campaign-maintenance
- * sweep) on mount, so they all popped in seconds after the rest of the page.
- */
+/** Asks the backend for the ads in a placement and its admin-set config. */
 export async function listSponsoredAds(
   placementKey: string,
   limit = 5,
 ): Promise<SponsoredPlacement> {
-  return cached(`sponsored:${placementKey}:${limit}`, 2 * 60_000, async () => {
-    if (!hasSupabaseConfig) {
-      return { placement: placementKey, ads: [], config: {} };
-    }
-    const supabase = getSupabase();
-    const viewerKey = await getAdViewerKey();
-    const [delivery, placement] = await Promise.all([
-      supabase.rpc('advertising_deliver', {
-        p_placement_key: placementKey,
-        p_limit: limit,
-        p_viewer_key: viewerKey,
-        p_session_id: AD_SESSION_ID,
-        p_context: { platform: 'mobile' },
-      }),
-      supabase
-        .from('advertising_placements')
-        .select('config')
-        .eq('key', placementKey)
-        .maybeSingle(),
-    ]);
-    if (delivery.error) throw delivery.error;
-    const payload = (delivery.data ?? {}) as { ads?: SponsoredAd[] };
-    return {
-      placement: placementKey,
-      ads: payload.ads ?? [],
-      config: (placement.data?.config ?? {}) as Record<string, unknown>,
-    };
-  });
+  if (!hasSupabaseConfig) {
+    return { placement: placementKey, ads: [], config: {} };
+  }
+  const supabase = getSupabase();
+  const viewerKey = await getAdViewerKey();
+  const [delivery, placement] = await Promise.all([
+    supabase.rpc('advertising_deliver', {
+      p_placement_key: placementKey,
+      p_limit: limit,
+      p_viewer_key: viewerKey,
+      p_session_id: AD_SESSION_ID,
+      p_context: { platform: 'mobile' },
+    }),
+    supabase
+      .from('advertising_placements')
+      .select('config')
+      .eq('key', placementKey)
+      .maybeSingle(),
+  ]);
+  if (delivery.error) throw delivery.error;
+  const payload = (delivery.data ?? {}) as { ads?: SponsoredAd[] };
+  return {
+    placement: placementKey,
+    ads: payload.ads ?? [],
+    config: (placement.data?.config ?? {}) as Record<string, unknown>,
+  };
 }
 
 /** Records a click and returns the canonical destination from the database. */

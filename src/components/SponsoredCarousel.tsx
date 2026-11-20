@@ -192,6 +192,8 @@ export function SponsoredCarousel({
 
   useEffect(() => {
     let active = true;
+    // A slow/hanging delivery must never leave a skeleton on screen forever.
+    const safety = setTimeout(() => active && setLoadedKey(`${placementKey}:${limit}`), 2_500);
     listSponsoredAds(placementKey, limit)
       .then((next) => {
         if (!active) return;
@@ -200,9 +202,13 @@ export function SponsoredCarousel({
         indexRef.current = 0;
       })
       .catch(() => active && setPlacement(null))
-      .finally(() => active && setLoadedKey(`${placementKey}:${limit}`));
+      .finally(() => {
+        clearTimeout(safety);
+        if (active) setLoadedKey(`${placementKey}:${limit}`);
+      });
     return () => {
       active = false;
+      clearTimeout(safety);
     };
   }, [placementKey, limit]);
 
@@ -389,12 +395,17 @@ export function SponsoredStrip({
 
   useEffect(() => {
     let active = true;
+    const safety = setTimeout(() => active && setLoadedKey(`${placementKey}:${limit}`), 2_500);
     listSponsoredAds(placementKey, limit)
       .then((next) => active && setPlacement(next))
       .catch(() => active && setPlacement(null))
-      .finally(() => active && setLoadedKey(`${placementKey}:${limit}`));
+      .finally(() => {
+        clearTimeout(safety);
+        if (active) setLoadedKey(`${placementKey}:${limit}`);
+      });
     return () => {
       active = false;
+      clearTimeout(safety);
     };
   }, [placementKey, limit]);
 
