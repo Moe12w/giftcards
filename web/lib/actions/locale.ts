@@ -7,7 +7,6 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { revalidatePath } from 'next/cache';
 import { LOCALE_COOKIE, type Locale } from '@/lib/i18n';
 import { createClient } from '@/lib/supabase/server';
 
@@ -36,5 +35,6 @@ export async function setLocale(formData: FormData) {
       .eq('id', user.id);
   }
 
-  revalidatePath('/', 'layout');
+  // The caller refreshes/renavigates. Revalidating the whole layout here would
+  // purge every prerendered public page on each language click.
 }

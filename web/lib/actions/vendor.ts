@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/public-cache';
+import { revalidatePublicPath } from '@/lib/public-revalidate';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireVendor } from '@/lib/auth';
@@ -934,8 +935,8 @@ export async function uploadVendorImage(formData: FormData): Promise<ImageAction
   revalidatePath('/vendor/settings');
   revalidatePath('/vendor/onboarding');
   revalidatePath('/vendor');
-  if (ctx.vendor.slug) revalidatePath(`/vendors/${ctx.vendor.slug}`);
-  revalidatePath('/vendors');
+  if (ctx.vendor.slug) revalidatePublicPath(`/vendors/${ctx.vendor.slug}`);
+  revalidatePublicPath('/vendors');
   revalidateTag(CACHE_TAGS.marketplace, 'max');
 
   return { ok: true, url: publicUrl };
@@ -961,8 +962,8 @@ export async function removeVendorImage(kind: 'logo' | 'banner'): Promise<ImageA
   revalidatePath('/vendor/settings');
   revalidatePath('/vendor/onboarding');
   revalidatePath('/vendor');
-  if (ctx.vendor.slug) revalidatePath(`/vendors/${ctx.vendor.slug}`);
-  revalidatePath('/vendors');
+  if (ctx.vendor.slug) revalidatePublicPath(`/vendors/${ctx.vendor.slug}`);
+  revalidatePublicPath('/vendors');
   revalidateTag(CACHE_TAGS.marketplace, 'max');
 
   return { ok: true };

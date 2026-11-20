@@ -42,7 +42,7 @@ export async function submitEnterpriseEnquiry(formData: FormData) {
   const size = String(formData.get('team_size') ?? '').trim();
   const message = String(formData.get('message') ?? '').trim();
   if (!company || !name || !email) {
-    back('/enterprise', 'Please tell us your company, your name and your email.');
+    back('/corporate', 'Please tell us your company, your name and your email.');
   }
 
   const supabase = await createClient();
@@ -66,8 +66,8 @@ export async function submitEnterpriseEnquiry(formData: FormData) {
     reference: `ENQUIRY-${Date.now().toString(36).toUpperCase()}`,
     status: 'open',
   });
-  if (error) back('/enterprise', error.message);
-  redirect('/enterprise?sent=1');
+  if (error) back('/corporate', error.message);
+  redirect('/corporate?sent=1');
 }
 
 export async function joinLaunchList(formData: FormData) {

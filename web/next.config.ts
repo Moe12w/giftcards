@@ -13,6 +13,54 @@ function supabaseHostname(): string | null {
 
 const projectHostname = supabaseHostname();
 
+/**
+ * The public site is prerendered under /en and /ar. These rewrites keep the
+ * original neutral URLs (/faq, /vendors, …) working and pick the locale from
+ * the cookie, so no request-time code runs for an anonymous visitor.
+ *
+ * Dashboards, auth callbacks and /api are deliberately absent: they must keep
+ * hitting their dynamic routes untouched.
+ */
+const LOCALE_COOKIE = 'giftly.locale';
+const publicRewritePaths = [
+  '',
+  'faq',
+  'contact',
+  'corporate',
+  'download',
+  'vendors',
+  'vendors/:slug',
+  'legal',
+  'legal/:audience/:doc',
+  'privacy',
+  'terms',
+  'ai-gift-cards',
+];
+
+function publicLocaleRewrites() {
+  const rules: {
+    source: string;
+    destination: string;
+    has?: { type: 'cookie'; key: string; value: string }[];
+    missing?: { type: 'cookie'; key: string; value: string }[];
+  }[] = [];
+  for (const path of publicRewritePaths) {
+    const source = path === '' ? '/' : `/${path}`;
+    const suffix = path === '' ? '' : `/${path}`;
+    rules.push({
+      source,
+      destination: `/ar${suffix}`,
+      has: [{ type: 'cookie', key: LOCALE_COOKIE, value: 'ar' }],
+    });
+    rules.push({
+      source,
+      destination: `/en${suffix}`,
+      missing: [{ type: 'cookie', key: LOCALE_COOKIE, value: 'ar' }],
+    });
+  }
+  return rules;
+}
+
 const nextConfig: NextConfig = {
   turbopack: {
     // `web/` has its own package-lock.json, but the repository root has one
@@ -40,6 +88,10 @@ const nextConfig: NextConfig = {
       // plus multipart overhead or the upload is rejected before it lands here.
       bodySizeLimit: '8mb',
     },
+  },
+  async rewrites() {
+    // afterFiles keeps real dashboard/API routes ahead of these fallbacks.
+    return { afterFiles: publicLocaleRewrites() };
   },
 };
 
@@ -98,6 +150,18 @@ export default {
         source: '/:path*',
         headers: securityHeaders,
       },
+      // Neutral URLs are rewritten to /en or /ar based on a cookie. Vary makes
+      // shared caches keep a separate copy for each locale.
+      {
+        source: '/',
+        headers: [{ key: 'Vary', value: 'Cookie' }],
+      },
+      ...publicRewritePaths
+        .filter((path) => path !== '')
+        .map((path) => ({
+          source: `/${path}`,
+          headers: [{ key: 'Vary', value: 'Cookie' }],
+        })),
     ];
   },
 };
