@@ -1,4 +1,4 @@
--- 0134_partial_refund_reduces_card_value.sql
+-- 0135_partial_refund_reduces_card_value.sql
 --
 -- A partial refund reversed the seller's ledger but left the gift card worth
 -- its full remaining value, so the customer kept money that had been returned.

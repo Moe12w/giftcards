@@ -1,4 +1,4 @@
--- 0130_checkout_voucher_codes.sql
+-- 0131_checkout_voucher_codes.sql
 --
 -- Why: gift cards issued by the MyFatoorah checkout were inserted by
 -- issue_gift_card / issue_session_card without a voucher_code. The vendor

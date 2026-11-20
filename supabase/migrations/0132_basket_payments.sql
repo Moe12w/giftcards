@@ -1,4 +1,4 @@
--- 0131_basket_payments.sql
+-- 0132_basket_payments.sql
 --
 -- Basket contributions are now paid through MyFatoorah. Until this migration
 -- the app inserted gift_basket_items directly, so a contribution appeared in

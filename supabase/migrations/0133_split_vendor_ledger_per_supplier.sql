@@ -1,4 +1,4 @@
--- 0132_split_vendor_ledger_per_supplier.sql
+-- 0133_split_vendor_ledger_per_supplier.sql
 --
 -- myfatoorah_payment_confirmed credited the whole order total to
 -- myfatoorah_payments.vendor_id, which is the vendor of the *first* order item.
