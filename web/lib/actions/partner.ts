@@ -1,5 +1,7 @@
 'use server';
 
+import { str, optional, back, moneyField, intField, checkbox } from './_form';
+
 import { redirect } from 'next/navigation';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/public-cache';
@@ -7,14 +9,6 @@ import { requireEnterprise } from '@/lib/auth';
 import { validateImageUpload } from '@/lib/security';
 
 const MEDIA_BUCKET = 'vendor-media';
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
-}
-
-function back(path: string, message: string): never {
-  redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
-}
 
 /** Uploads or replaces a partner logo/banner image (stored under <partner-id>/). */
 export async function uploadPartnerImage(formData: FormData): Promise<{ ok: boolean; url?: string; error?: string }> {

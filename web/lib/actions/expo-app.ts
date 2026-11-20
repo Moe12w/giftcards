@@ -1,29 +1,12 @@
 'use server';
 
+import { str, optional, back, moneyField, intField, checkbox } from './_form';
+
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { requireAdmin } from '@/lib/auth';
 import { HOME_SECTION_KEYS } from '@/lib/expo-app-config';
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
-}
-
-function checkbox(formData: FormData, key: string): boolean {
-  return formData.get(key) === 'on' || formData.get(key) === 'true';
-}
-
-function intField(formData: FormData, key: string): number | null {
-  const raw = str(formData, key);
-  if (!raw) return null;
-  const value = Number.parseInt(raw, 10);
-  return Number.isFinite(value) ? value : null;
-}
-
-function back(path: string, message: string): never {
-  redirect(`${path}?error=${encodeURIComponent(message)}`);
-}
 
 function saved(path: string): never {
   redirect(`${path}?saved=1`);

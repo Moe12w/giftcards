@@ -1,5 +1,7 @@
 'use server';
 
+import { str, optional, back, moneyField, intField, checkbox } from './_form';
+
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
@@ -9,14 +11,6 @@ import {
   getPaymentMyFatoorahConfig,
   minorToMajor,
 } from '@/lib/myfatoorah';
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
-}
-
-function back(path: string, message: string): never {
-  redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
-}
 
 /** Admin-entered config is used by both web routes and Edge Functions. */
 export async function adminSavePaymentProviderSettings(formData: FormData) {

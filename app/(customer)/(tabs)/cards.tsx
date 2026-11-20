@@ -15,15 +15,8 @@ import { cardHref, prefetchCard } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatMoney } from '@/src/lib/money';
 import type { CardStatus } from '@/src/lib/types';
+import { CARD_STATUS_TONE } from '@/src/lib/status';
 import { colors, fontSizes, spacing, themedStyles } from '@/src/theme';
-
-const statusTone: Record<CardStatus, BadgeTone> = {
-  issued: 'warning',
-  claimed: 'success',
-  redeemed: 'neutral',
-  expired: 'danger',
-  voided: 'danger',
-};
 
 export default function CardsScreen() {
   useThemeRefresh();
@@ -56,7 +49,7 @@ export default function CardsScreen() {
               tone={card.tone}
               amountMinor={card.balance_minor ?? card.original_value_minor}
               meta={`${t('cards.originalValue')}: ${formatMoney(card.original_value_minor, i18n.language === 'ar' ? 'ar' : 'en')}`}
-              badge={{ label: t(`cards.${card.status}`), tone: statusTone[card.status] }}
+              badge={{ label: t(`cards.${card.status}`), tone: CARD_STATUS_TONE[card.status] }}
               onPressIn={() => prefetchCard(card.id)}
               onPress={() =>
                 router.push(

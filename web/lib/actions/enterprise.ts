@@ -1,5 +1,7 @@
 'use server';
 
+import { str, optional, back, moneyField, intField, checkbox } from './_form';
+
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -9,40 +11,6 @@ import { slugify } from '@/lib/format';
 import { normalizeTone } from '@/lib/catalog';
 import { parseBulkTiers } from '@/lib/bulk';
 import { normalizeWebsite, validateImageUpload } from '@/lib/security';
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
-}
-
-function optional(formData: FormData, key: string): string | null {
-  const value = str(formData, key);
-  return value || null;
-}
-
-function back(path: string, message: string): never {
-  redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
-}
-
-function moneyField(formData: FormData, key: string): number | null {
-  const raw = str(formData, key);
-  if (!raw) return null;
-  try {
-    return parseMoneyToMinor(raw);
-  } catch {
-    return null;
-  }
-}
-
-function intField(formData: FormData, key: string): number | null {
-  const raw = str(formData, key);
-  if (!raw) return null;
-  const value = Number.parseInt(raw, 10);
-  return Number.isFinite(value) ? value : null;
-}
-
-function checkbox(formData: FormData, key: string): boolean {
-  return formData.get(key) === 'on' || formData.get(key) === 'true';
-}
 
 const ONBOARDING_STEPS = ['organisation', 'contact', 'structure', 'done'] as const;
 type EnterpriseOnboardingStep = (typeof ONBOARDING_STEPS)[number];

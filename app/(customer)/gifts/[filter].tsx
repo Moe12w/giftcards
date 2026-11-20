@@ -15,15 +15,8 @@ import { formatDate } from '@/src/lib/time';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { isSessionCard } from '@/src/lib/sessions';
 import type { CardStatus, GiftCard } from '@/src/lib/types';
+import { CARD_STATUS_TONE } from '@/src/lib/status';
 import { colors, spacing, themedStyles } from '@/src/theme';
-
-const statusTone: Record<CardStatus, BadgeTone> = {
-  issued: 'warning',
-  claimed: 'success',
-  redeemed: 'neutral',
-  expired: 'danger',
-  voided: 'danger',
-};
 
 type Filter = 'all' | 'received' | 'sent';
 
@@ -121,7 +114,7 @@ export default function GiftFilterScreen() {
               badge={
                 sentCards.some((item) => item.id === card.id)
                   ? { label: t('gifts.sent'), tone: 'primary' as BadgeTone }
-                  : { label: t(`cards.${card.status}`), tone: statusTone[card.status] }
+                  : { label: t(`cards.${card.status}`), tone: CARD_STATUS_TONE[card.status] }
               }
               onPress={() => router.push(`/(customer)/card/${card.id}`)}
             />

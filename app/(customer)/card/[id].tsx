@@ -20,15 +20,8 @@ import { useThemeRefresh } from '@/src/lib/theme';
 import { formatMoney } from '@/src/lib/money';
 import { isSessionCard } from '@/src/lib/sessions';
 import type { CardStatus, GiftCard } from '@/src/lib/types';
+import { CARD_STATUS_TONE } from '@/src/lib/status';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
-
-const statusTone: Record<CardStatus, BadgeTone> = {
-  issued: 'warning',
-  claimed: 'success',
-  redeemed: 'neutral',
-  expired: 'danger',
-  voided: 'danger',
-};
 
 export default function CardDetailScreen() {
   useThemeRefresh();
@@ -147,7 +140,7 @@ export default function CardDetailScreen() {
           ) : waiting ? (
             <Badge label={t('cards.scheduled')} tone="warning" />
           ) : (
-            <Badge label={t(`cards.${card.status}`)} tone={statusTone[card.status]} />
+            <Badge label={t(`cards.${card.status}`)} tone={CARD_STATUS_TONE[card.status]} />
           )}
         </View>
 

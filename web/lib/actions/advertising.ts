@@ -1,5 +1,7 @@
 'use server';
 
+import { str, optional, back, moneyField, intField, checkbox } from './_form';
+
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin, requireAdvertiser } from '@/lib/auth';
@@ -13,36 +15,6 @@ import {
   getAppPublicUrl,
   isMyFatoorahConfigured,
 } from '@/lib/myfatoorah';
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
-}
-
-function optional(formData: FormData, key: string): string | null {
-  const value = str(formData, key);
-  return value || null;
-}
-
-function intField(formData: FormData, key: string): number | null {
-  const raw = str(formData, key);
-  if (!raw) return null;
-  const value = Number.parseInt(raw, 10);
-  return Number.isFinite(value) ? value : null;
-}
-
-function moneyField(formData: FormData, key: string): number | null {
-  const raw = str(formData, key);
-  if (!raw) return null;
-  try {
-    return parseMoneyToMinor(raw);
-  } catch {
-    return null;
-  }
-}
-
-function checkbox(formData: FormData, key: string): boolean {
-  return formData.get(key) === 'on' || formData.get(key) === 'true';
-}
 
 /** Parses "1500, 1200, 1000" into [150000, 120000, 100000] minor units. */
 function parseSlotPrices(raw: string): number[] | null {
@@ -81,10 +53,6 @@ const ADVERTISING_ERROR_MESSAGES: Record<string, string> = {
 function friendly(message: string | undefined): string {
   if (!message) return 'Something went wrong. Please try again.';
   return ADVERTISING_ERROR_MESSAGES[message] ?? message.replace(/_/g, ' ');
-}
-
-function back(path: string, message: string): never {
-  redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
 }
 
 function creativeFromForm(formData: FormData) {

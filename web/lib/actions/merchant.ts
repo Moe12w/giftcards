@@ -1,5 +1,7 @@
 'use server';
 
+import { str, optional, back, moneyField, intField, checkbox } from './_form';
+
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
@@ -25,19 +27,6 @@ const DOC_EXTENSIONS: Record<string, string> = {
 };
 
 const IMAGE_MIME = new Set(['image/png', 'image/jpeg', 'image/webp']);
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
-}
-
-function optional(formData: FormData, key: string): string | null {
-  const value = str(formData, key);
-  return value || null;
-}
-
-function back(path: string, message: string): never {
-  redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
-}
 
 function paymentsPath(application: Pick<MerchantApplication, 'owner_type'>): string {
   return application.owner_type === 'vendor' ? '/vendor/payments' : '/enterprise/payments';

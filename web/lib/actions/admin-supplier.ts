@@ -2,165 +2,121 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+
 import { requireAdmin } from '@/lib/auth';
 import { callSupplierFunction } from '@/lib/myfatoorah-supplier';
+import { str, back } from './_form';
 
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
+type OwnerType = 'vendor' | 'partner';
+
+function ownerContext(formData: FormData, owner: OwnerType) {
+  const id = str(formData, `${owner}_id`);
+  const base = owner === 'vendor' ? '/admin/vendors' : '/admin/enterprise';
+  const path = id ? `${base}/${id}` : base;
+  return { id, base, path, label: owner === 'vendor' ? 'Vendor' : 'Partner' };
 }
 
-function back(path: string, message: string): never {
-  redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
-}
-
-function revalidate(vendorId?: string) {
-  revalidatePath('/admin/vendors');
+function revalidateOwner(owner: OwnerType, id?: string) {
+  const base = owner === 'vendor' ? '/admin/vendors' : '/admin/enterprise';
+  revalidatePath(base);
   revalidatePath('/admin/merchant-onboarding');
-  if (vendorId) revalidatePath(`/admin/vendors/${vendorId}`);
+  if (id) revalidatePath(`${base}/${id}`);
+}
+
+function providerError(result: { ok: boolean; skipped?: boolean; error?: string }, path: string, action: string): never {
+  back(
+    path,
+    result.skipped
+      ? 'Supplier service is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the web app.'
+      : (result.error ?? `Supplier ${action} failed.`),
+  );
+}
+
+async function createSupplier(formData: FormData, owner: OwnerType) {
+  await requireAdmin();
+  const { id, base, path, label } = ownerContext(formData, owner);
+  if (!id) back(base, `${label} not found.`);
+
+  const result = await callSupplierFunction('supplier-onboard', { [`${owner}Id`]: id });
+  if (!result.ok) providerError(result, path, 'creation');
+  revalidateOwner(owner, id);
+  redirect(`${path}?supplier=1`);
+}
+
+async function syncSuppliers(formData: FormData, owner: OwnerType) {
+  await requireAdmin();
+  const { id, base, path } = ownerContext(formData, owner);
+
+  const result = await callSupplierFunction('sync-myfatoorah-suppliers');
+  if (!result.ok) providerError(result, path, 'sync');
+  revalidateOwner(owner, id || undefined);
+  redirect(`${path}?synced=1`);
+}
+
+async function setEligibility(formData: FormData, owner: OwnerType) {
+  const ctx = await requireAdmin();
+  const { id, base, path, label } = ownerContext(formData, owner);
+  if (!id) back(base, `${label} not found.`);
+
+  const { error } = await ctx.supabase.rpc(
+    owner === 'vendor' ? 'myfatoorah_supplier_set_eligibility' : 'myfatoorah_partner_set_eligibility',
+    owner === 'vendor'
+      ? { p_vendor_id: id, p_eligible: str(formData, 'eligible') === 'true', p_note: str(formData, 'note') || null }
+      : { p_partner_id: id, p_eligible: str(formData, 'eligible') === 'true', p_note: str(formData, 'note') || null },
+  );
+  if (error) back(path, error.message.replace(/_/g, ' '));
+  revalidateOwner(owner, id);
+  redirect(`${path}?eligibility=1`);
+}
+
+async function resubmitDocument(formData: FormData, owner: OwnerType) {
+  await requireAdmin();
+  const { id, path } = ownerContext(formData, owner);
+  const documentId = str(formData, 'document_id');
+  if (!documentId) back(path, 'Document not found.');
+
+  const result = await callSupplierFunction('upload-supplier-document', { documentId });
+  if (!result.ok && !result.skipped) back(path, result.error ?? 'Document submission failed.');
+  revalidateOwner(owner, id || undefined);
+  redirect(`${path}?document_submitted=1`);
 }
 
 /** Creates a supplier exactly once. Safe to press repeatedly. */
 export async function adminCreateMyFatoorahSupplier(formData: FormData) {
-  await requireAdmin();
-  const vendorId = str(formData, 'vendor_id');
-  const path = `/admin/vendors/${vendorId}`;
-  if (!vendorId) back('/admin/vendors', 'Vendor not found.');
-
-  const result = await callSupplierFunction('supplier-onboard', { vendorId });
-  if (!result.ok) {
-    back(
-      path,
-      result.skipped
-        ? 'Supplier service is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the web app.'
-        : (result.error ?? 'Supplier creation failed.'),
-    );
-  }
-  revalidate(vendorId);
-  redirect(`${path}?supplier=1`);
+  await createSupplier(formData, 'vendor');
 }
 
 /** Pulls real supplier statuses from MyFatoorah (GetSuppliers). */
 export async function adminSyncMyFatoorahSuppliers(formData: FormData) {
-  await requireAdmin();
-  const vendorId = str(formData, 'vendor_id');
-  const path = vendorId ? `/admin/vendors/${vendorId}` : '/admin/merchant-onboarding';
-
-  const result = await callSupplierFunction('sync-myfatoorah-suppliers');
-  if (!result.ok) {
-    back(
-      path,
-      result.skipped
-        ? 'Supplier service is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the web app.'
-        : (result.error ?? 'Supplier sync failed.'),
-    );
-  }
-  revalidate(vendorId);
-  redirect(`${path}?synced=1`);
+  await syncSuppliers(formData, 'vendor');
 }
 
 /** Platform gate. MyFatoorah Active + internal checks are enforced by the RPC. */
 export async function adminSetMyFatoorahEligibility(formData: FormData) {
-  const ctx = await requireAdmin();
-  const vendorId = str(formData, 'vendor_id');
-  const path = `/admin/vendors/${vendorId}`;
-  if (!vendorId) back('/admin/vendors', 'Vendor not found.');
-
-  const eligible = str(formData, 'eligible') === 'true';
-  const { error } = await ctx.supabase.rpc('myfatoorah_supplier_set_eligibility', {
-    p_vendor_id: vendorId,
-    p_eligible: eligible,
-    p_note: str(formData, 'note') || null,
-  });
-  if (error) back(path, error.message.replace(/_/g, ' '));
-  revalidate(vendorId);
-  redirect(`${path}?eligibility=1`);
+  await setEligibility(formData, 'vendor');
 }
-
-// ---------------------------------------------------------------------------
-// Enterprise partners use the identical supplier lifecycle.
-// ---------------------------------------------------------------------------
 
 /** Creates a supplier for a partner exactly once. */
 export async function adminCreatePartnerSupplier(formData: FormData) {
-  await requireAdmin();
-  const partnerId = str(formData, 'partner_id');
-  const path = `/admin/enterprise/${partnerId}`;
-  if (!partnerId) back('/admin/enterprise', 'Partner not found.');
-
-  const result = await callSupplierFunction('supplier-onboard', { partnerId });
-  if (!result.ok) {
-    back(
-      path,
-      result.skipped
-        ? 'Supplier service is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the web app.'
-        : (result.error ?? 'Supplier creation failed.'),
-    );
-  }
-  revalidatePath(path);
-  revalidatePath('/admin/merchant-onboarding');
-  redirect(`${path}?supplier=1`);
+  await createSupplier(formData, 'partner');
 }
 
 /** Synchronises supplier statuses for vendors and partners alike. */
 export async function adminSyncPartnerSuppliers(formData: FormData) {
-  await requireAdmin();
-  const partnerId = str(formData, 'partner_id');
-  const path = partnerId ? `/admin/enterprise/${partnerId}` : '/admin/enterprise';
-
-  const result = await callSupplierFunction('sync-myfatoorah-suppliers');
-  if (!result.ok) {
-    back(
-      path,
-      result.skipped
-        ? 'Supplier service is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the web app.'
-        : (result.error ?? 'Supplier sync failed.'),
-    );
-  }
-  revalidate(path);
-  redirect(`${path}?synced=1`);
+  await syncSuppliers(formData, 'partner');
 }
 
 /** Admin-only platform gate for a partner supplier. */
 export async function adminSetPartnerPaymentEligibility(formData: FormData) {
-  const ctx = await requireAdmin();
-  const partnerId = str(formData, 'partner_id');
-  const path = `/admin/enterprise/${partnerId}`;
-  if (!partnerId) back('/admin/enterprise', 'Partner not found.');
-
-  const { error } = await ctx.supabase.rpc('myfatoorah_partner_set_eligibility', {
-    p_partner_id: partnerId,
-    p_eligible: str(formData, 'eligible') === 'true',
-    p_note: str(formData, 'note') || null,
-  });
-  if (error) back(path, error.message.replace(/_/g, ' '));
-  revalidatePath(path);
-  redirect(`${path}?eligibility=1`);
+  await setEligibility(formData, 'partner');
 }
 
 /** Retries a partner document submission after a provider failure. */
 export async function adminResubmitPartnerDocument(formData: FormData) {
-  await requireAdmin();
-  const partnerId = str(formData, 'partner_id');
-  const documentId = str(formData, 'document_id');
-  const path = partnerId ? `/admin/enterprise/${partnerId}` : '/admin/merchant-onboarding';
-  if (!documentId) back(path, 'Document not found.');
-
-  const result = await callSupplierFunction('upload-supplier-document', { documentId });
-  if (!result.ok && !result.skipped) back(path, result.error ?? 'Document submission failed.');
-  revalidate(path);
-  redirect(`${path}?document_submitted=1`);
+  await resubmitDocument(formData, 'partner');
 }
 
 /** Retries a document submission after a provider failure or replacement. */
 export async function adminResubmitSupplierDocument(formData: FormData) {
-  await requireAdmin();
-  const vendorId = str(formData, 'vendor_id');
-  const documentId = str(formData, 'document_id');
-  const path = vendorId ? `/admin/vendors/${vendorId}` : '/admin/merchant-onboarding';
-  if (!documentId) back(path, 'Document not found.');
-
-  const result = await callSupplierFunction('upload-supplier-document', { documentId });
-  if (!result.ok && !result.skipped) back(path, result.error ?? 'Document submission failed.');
-  revalidate(vendorId);
-  redirect(`${path}?document_submitted=1`);
+  await resubmitDocument(formData, 'vendor');
 }

@@ -1,5 +1,7 @@
 'use server';
 
+import { str, optional, back, moneyField, intField, checkbox } from './_form';
+
 import { escapeHtml } from '@/lib/security';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -10,10 +12,6 @@ import { unitPriceForQuantity, parseRecipientRows } from '@/lib/bulk';
 
 function fail(path: string, message: string): never {
   redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
-}
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
 }
 
 function makeOrderRef() {

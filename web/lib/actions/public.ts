@@ -1,11 +1,9 @@
 'use server';
 
+import { str, optional, back, moneyField, intField, checkbox } from './_form';
+
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-
-function back(path: string, message: string): never {
-  redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
-}
 
 export async function submitContact(formData: FormData) {
   const name = String(formData.get('name') ?? '').trim();

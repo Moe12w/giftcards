@@ -1,18 +1,12 @@
 'use server';
 
+import { str, optional, back, moneyField, intField, checkbox } from './_form';
+
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin, requireEnterprise, requireVendor } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createTeamMemberAccount } from '@/lib/team-members';
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
-}
-
-function back(path: string, message: string): never {
-  redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
-}
 
 /** Vendor owner/manager creates a staff account that can log in immediately. */
 export async function vendorCreateStaff(formData: FormData) {

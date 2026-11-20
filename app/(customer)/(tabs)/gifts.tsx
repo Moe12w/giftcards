@@ -21,15 +21,8 @@ import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import { isSessionCard } from '@/src/lib/sessions';
 import type { CardStatus, GiftCard } from '@/src/lib/types';
+import { CARD_STATUS_TONE } from '@/src/lib/status';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
-
-const statusTone: Record<CardStatus, BadgeTone> = {
-  issued: 'warning',
-  claimed: 'success',
-  redeemed: 'neutral',
-  expired: 'danger',
-  voided: 'danger',
-};
 
 type Filter = 'all' | 'received' | 'sent';
 
@@ -112,7 +105,7 @@ export default function GiftsScreen() {
             ? { label: t('gifts.sent'), tone: 'primary' as BadgeTone }
             : isWaiting
               ? { label: t('gifts.scheduled'), tone: 'warning' as BadgeTone }
-              : { label: t(`cards.${card.status}`), tone: statusTone[card.status] }
+              : { label: t(`cards.${card.status}`), tone: CARD_STATUS_TONE[card.status] }
         }
         onPressIn={() => prefetchCard(card.id)}
         onPress={() =>

@@ -1,5 +1,7 @@
 'use server';
 
+import { str, optional, back, moneyField, intField, checkbox } from './_form';
+
 import { createHash } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -11,14 +13,6 @@ import { merchantErrorMessage } from '@/lib/merchant';
 
 const BUCKET = 'merchant-documents';
 const MAX_AGREEMENT_BYTES = 5 * 1024 * 1024;
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
-}
-
-function back(path: string, message: string): never {
-  redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
-}
 
 export async function adminReviewMerchantDocument(formData: FormData) {
   const ctx = await requireAdmin();

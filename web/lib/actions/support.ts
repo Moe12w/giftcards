@@ -1,5 +1,7 @@
 'use server';
 
+import { str, optional, back, moneyField, intField, checkbox } from './_form';
+
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import {
@@ -10,14 +12,6 @@ import {
 import { safeNextPath } from '@/lib/security';
 
 export type SupportAudience = 'vendor' | 'enterprise' | 'business';
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
-}
-
-function back(path: string, message: string): never {
-  redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
-}
 
 const SUPPORT_PREFIXES = ['/vendor/support', '/enterprise/support', '/business/support', '/admin/support'];
 
