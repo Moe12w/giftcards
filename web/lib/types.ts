@@ -135,7 +135,6 @@ export interface Voucher {
   buyer_id: string | null;
   order_id: string | null;
   voucher_code: string;
-  qr_payload: string | null;
   fulfilment_type: FulfilmentType;
   status: VoucherStatus;
   initial_value_minor: number;

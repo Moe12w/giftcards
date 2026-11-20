@@ -22,8 +22,6 @@ import {
   closeEnterpriseCode,
   listMyVouchers,
   listRedemptionsFor,
-  redeemSessionOnServer,
-  redeemValueOnServer,
   revealEnterpriseCode,
 } from './data';
 import {
@@ -52,10 +50,6 @@ export interface CardsContextValue {
   sessionsLeft: (card: GiftCard) => number;
   valueLeft: (card: GiftCard) => number;
   canRedeem: (card: GiftCard) => boolean;
-  /** Uses one session on an experience voucher. */
-  redeemSession: (cardId: string, actor: string, note?: string) => Promise<boolean>;
-  /** Spends an amount on a monetary voucher. */
-  redeemValue: (cardId: string, amountMinor: number, actor: string) => Promise<boolean>;
   /** Reads the partner's own code for a partner gift. */
   revealPartnerCode: (cardId: string) => Promise<string | null>;
   /** Marks a partner gift as used in the partner's app. */
@@ -241,32 +235,6 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
     [entriesFor, userId],
   );
 
-  const redeemSession = useCallback(
-    async (cardId: string, _actor: string, note?: string) => {
-      try {
-        await redeemSessionOnServer(cardId, 1, note);
-      } catch {
-        return false;
-      }
-      await load(userId);
-      return true;
-    },
-    [load, userId],
-  );
-
-  const redeemValue = useCallback(
-    async (cardId: string, amountMinor: number, _actor: string) => {
-      try {
-        await redeemValueOnServer(cardId, amountMinor);
-      } catch {
-        return false;
-      }
-      await load(userId);
-      return true;
-    },
-    [load, userId],
-  );
-
   const revealPartnerCode = useCallback(async (cardId: string) => {
     try {
       return await revealEnterpriseCode(cardId);
@@ -332,8 +300,6 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       sessionsLeft,
       valueLeft,
       canRedeem,
-      redeemSession,
-      redeemValue,
       revealPartnerCode,
       markPartnerCodeUsed,
       reload,
@@ -351,8 +317,6 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       sessionsLeft,
       valueLeft,
       canRedeem,
-      redeemSession,
-      redeemValue,
       revealPartnerCode,
       markPartnerCodeUsed,
       reload,

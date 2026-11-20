@@ -73,7 +73,6 @@ interface VoucherProduct {
 export interface VoucherRow {
   id: string;
   voucher_code: string | null;
-  qr_payload: string | null;
   product_id: string | null;
   vendor_id: string | null;
   buyer_id: string | null;
@@ -205,7 +204,7 @@ export async function listMyVouchers(options?: PageOptions): Promise<GiftCard[]>
   const { data, error } = await getSupabase()
     .from('vouchers')
     .select(
-      'id, voucher_code, qr_payload, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, image_url, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
+      'id, voucher_code, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, image_url, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
     )
     .order('created_at', { ascending: false })
     .range(page.from, page.to);
@@ -239,33 +238,6 @@ export async function listRedemptionsFor(
     actor: 'Giftly',
     created_at: row.created_at,
   }));
-}
-
-/** Uses one session on an experience voucher, on the server. */
-export async function redeemSessionOnServer(
-  voucherId: string,
-  sessions = 1,
-  serviceLabel?: string,
-): Promise<void> {
-  if (!hasSupabaseConfig) return;
-  const { error } = await getSupabase().rpc('redeem_sessions', {
-    p_voucher_id: voucherId,
-    p_sessions: sessions,
-    p_notes: null,
-    p_service_label: serviceLabel ?? null,
-  });
-  if (error) throw error;
-}
-
-/** Spends an amount on a monetary voucher, on the server. */
-export async function redeemValueOnServer(voucherId: string, amountMinor: number): Promise<void> {
-  if (!hasSupabaseConfig) return;
-  const { error } = await getSupabase().rpc('redeem_monetary', {
-    p_voucher_id: voucherId,
-    p_amount_minor: amountMinor,
-    p_notes: null,
-  });
-  if (error) throw error;
 }
 
 /** Saves the signed in customer's saved recipients. */

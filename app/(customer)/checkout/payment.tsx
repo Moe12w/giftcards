@@ -86,8 +86,9 @@ export default function PaymentScreen() {
         },
       });
       if (error) throw error;
-      const paymentUrl = String((data as any)?.paymentUrl ?? '');
-      const orderId = String((data as any)?.orderId ?? '');
+      const payment = data as { paymentUrl?: string; orderId?: string } | null;
+      const paymentUrl = String(payment?.paymentUrl ?? '');
+      const orderId = String(payment?.orderId ?? '');
       if (!paymentUrl || !orderId) throw new Error('payment_link_unavailable');
 
       const redirectUrl = `${env.appScheme}://payment`;

@@ -214,9 +214,9 @@ cards.forEach((card) => {
   const codeHash = `encode(extensions.digest(${q(card.code)}, 'sha256'), 'hex')`;
   const claimedBy = card.status === 'issued' ? 'null' : q(USER_ID);
   const claimedAt = card.status === 'issued' ? 'null' : 'now() - interval \'1 day\'';
-  add(`insert into public.vouchers (id, product_id, order_id, buyer_id, recipient_name, recipient_email, initial_value_minor, status, claim_token_hash, claimed_by, claimed_at, expires_at, card_code_hash, voucher_code, qr_payload, vendor_id, order_item_id, fulfilment_type, remaining_value_minor, currency, delivery_status, gift_message)`);
+  add(`insert into public.vouchers (id, product_id, order_id, buyer_id, recipient_name, recipient_email, initial_value_minor, status, claim_token_hash, claimed_by, claimed_at, expires_at, card_code_hash, voucher_code, vendor_id, order_item_id, fulfilment_type, remaining_value_minor, currency, delivery_status, gift_message)`);
   add(`values (${q(voucherId)}, ${q(COFFEE_PRODUCT)}, ${q(orderId)}, ${q(USER_ID)}, 'Mohmed', 'mohmed528omer@gmail.com', ${card.amount}, '${card.status}', ${claimHash},`);
-  add(`  ${claimedBy}, ${claimedAt}, now() + interval '365 days', ${codeHash}, ${q(card.code)}, ${q('GIFTLY:' + card.code)}, ${q(COFFEE_ID)}, ${q(itemId)}, 'monetary', ${card.amount}, 'QAR', 'delivered', ${q(card.msg)})`);
+  add(`  ${claimedBy}, ${claimedAt}, now() + interval '365 days', ${codeHash}, ${q(card.code)}, ${q(COFFEE_ID)}, ${q(itemId)}, 'monetary', ${card.amount}, 'QAR', 'delivered', ${q(card.msg)})`);
   add(`on conflict (id) do nothing;`);
   add('');
 });

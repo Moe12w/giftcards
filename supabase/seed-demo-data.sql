@@ -1061,27 +1061,27 @@ insert into public.order_items (id, order_id, product_id, vendor_id, quantity, u
 values ('2f357017-954d-579c-8da2-faa857040b9b', 'a2446803-8f20-532e-83bc-1d532eccb707', 'b4b0f99f-b29c-41ce-9b2b-9ae9eebb269f', '58852d5f-8486-42fa-a423-b199925159b0', 1, 5000, 5000, 500, 4500, 'QAR', 'Mohmed', 'mohmed528omer@gmail.com', 'in_app')
 on conflict (id) do nothing;
 
-insert into public.vouchers (id, product_id, order_id, buyer_id, recipient_name, recipient_email, initial_value_minor, status, claim_token_hash, claimed_by, claimed_at, expires_at, card_code_hash, voucher_code, qr_payload, vendor_id, order_item_id, fulfilment_type, remaining_value_minor, currency, delivery_status, gift_message)
+insert into public.vouchers (id, product_id, order_id, buyer_id, recipient_name, recipient_email, initial_value_minor, status, claim_token_hash, claimed_by, claimed_at, expires_at, card_code_hash, voucher_code, vendor_id, order_item_id, fulfilment_type, remaining_value_minor, currency, delivery_status, gift_message)
 values ('65e634e3-7e3e-5cb4-8e0f-f171be04d315', 'b4b0f99f-b29c-41ce-9b2b-9ae9eebb269f', 'a2446803-8f20-532e-83bc-1d532eccb707', 'a8d7bca6-22a4-47d3-9298-0d45f4e1d93c', 'Mohmed', 'mohmed528omer@gmail.com', 5000, 'issued', encode(extensions.digest('DEMO-CLAIM-COFFEE-1', 'sha256'), 'hex'),
-  null, null, now() + interval '365 days', encode(extensions.digest('GFT-DEMO-COFFEE-001', 'sha256'), 'hex'), 'GFT-DEMO-COFFEE-001', 'GIFTLY:GFT-DEMO-COFFEE-001', '58852d5f-8486-42fa-a423-b199925159b0', '2f357017-954d-579c-8da2-faa857040b9b', 'monetary', 5000, 'QAR', 'delivered', 'Your first coffee is on us.')
+  null, null, now() + interval '365 days', encode(extensions.digest('GFT-DEMO-COFFEE-001', 'sha256'), 'hex'), 'GFT-DEMO-COFFEE-001', '58852d5f-8486-42fa-a423-b199925159b0', '2f357017-954d-579c-8da2-faa857040b9b', 'monetary', 5000, 'QAR', 'delivered', 'Your first coffee is on us.')
 on conflict (id) do nothing;
 
 insert into public.order_items (id, order_id, product_id, vendor_id, quantity, unit_price_minor, total_minor, commission_minor, vendor_share_minor, currency, recipient_name, recipient_email, delivery_method)
 values ('b2af5afc-6f32-5dec-8588-1bc0bbfdff57', 'a2446803-8f20-532e-83bc-1d532eccb707', 'b4b0f99f-b29c-41ce-9b2b-9ae9eebb269f', '58852d5f-8486-42fa-a423-b199925159b0', 1, 10000, 10000, 1000, 9000, 'QAR', 'Mohmed', 'mohmed528omer@gmail.com', 'in_app')
 on conflict (id) do nothing;
 
-insert into public.vouchers (id, product_id, order_id, buyer_id, recipient_name, recipient_email, initial_value_minor, status, claim_token_hash, claimed_by, claimed_at, expires_at, card_code_hash, voucher_code, qr_payload, vendor_id, order_item_id, fulfilment_type, remaining_value_minor, currency, delivery_status, gift_message)
+insert into public.vouchers (id, product_id, order_id, buyer_id, recipient_name, recipient_email, initial_value_minor, status, claim_token_hash, claimed_by, claimed_at, expires_at, card_code_hash, voucher_code, vendor_id, order_item_id, fulfilment_type, remaining_value_minor, currency, delivery_status, gift_message)
 values ('87a5d9d3-72d1-531b-8071-9be4f5cff1b9', 'b4b0f99f-b29c-41ce-9b2b-9ae9eebb269f', 'a2446803-8f20-532e-83bc-1d532eccb707', 'a8d7bca6-22a4-47d3-9298-0d45f4e1d93c', 'Mohmed', 'mohmed528omer@gmail.com', 10000, 'claimed', null,
-  'a8d7bca6-22a4-47d3-9298-0d45f4e1d93c', now() - interval '1 day', now() + interval '365 days', encode(extensions.digest('GFT-DEMO-COFFEE-002', 'sha256'), 'hex'), 'GFT-DEMO-COFFEE-002', 'GIFTLY:GFT-DEMO-COFFEE-002', '58852d5f-8486-42fa-a423-b199925159b0', 'b2af5afc-6f32-5dec-8588-1bc0bbfdff57', 'monetary', 10000, 'QAR', 'delivered', 'A little treat for the week.')
+  'a8d7bca6-22a4-47d3-9298-0d45f4e1d93c', now() - interval '1 day', now() + interval '365 days', encode(extensions.digest('GFT-DEMO-COFFEE-002', 'sha256'), 'hex'), 'GFT-DEMO-COFFEE-002', '58852d5f-8486-42fa-a423-b199925159b0', 'b2af5afc-6f32-5dec-8588-1bc0bbfdff57', 'monetary', 10000, 'QAR', 'delivered', 'A little treat for the week.')
 on conflict (id) do nothing;
 
 insert into public.order_items (id, order_id, product_id, vendor_id, quantity, unit_price_minor, total_minor, commission_minor, vendor_share_minor, currency, recipient_name, recipient_email, delivery_method)
 values ('e2ba156e-d9e7-510c-8606-57b22eb04fe3', 'a2446803-8f20-532e-83bc-1d532eccb707', 'b4b0f99f-b29c-41ce-9b2b-9ae9eebb269f', '58852d5f-8486-42fa-a423-b199925159b0', 1, 20000, 20000, 2000, 18000, 'QAR', 'Mohmed', 'mohmed528omer@gmail.com', 'in_app')
 on conflict (id) do nothing;
 
-insert into public.vouchers (id, product_id, order_id, buyer_id, recipient_name, recipient_email, initial_value_minor, status, claim_token_hash, claimed_by, claimed_at, expires_at, card_code_hash, voucher_code, qr_payload, vendor_id, order_item_id, fulfilment_type, remaining_value_minor, currency, delivery_status, gift_message)
+insert into public.vouchers (id, product_id, order_id, buyer_id, recipient_name, recipient_email, initial_value_minor, status, claim_token_hash, claimed_by, claimed_at, expires_at, card_code_hash, voucher_code, vendor_id, order_item_id, fulfilment_type, remaining_value_minor, currency, delivery_status, gift_message)
 values ('3afaeeb1-53e8-53cb-8605-ae34d6cfceda', 'b4b0f99f-b29c-41ce-9b2b-9ae9eebb269f', 'a2446803-8f20-532e-83bc-1d532eccb707', 'a8d7bca6-22a4-47d3-9298-0d45f4e1d93c', 'Mohmed', 'mohmed528omer@gmail.com', 20000, 'active', null,
-  'a8d7bca6-22a4-47d3-9298-0d45f4e1d93c', now() - interval '1 day', now() + interval '365 days', encode(extensions.digest('GFT-DEMO-COFFEE-003', 'sha256'), 'hex'), 'GFT-DEMO-COFFEE-003', 'GIFTLY:GFT-DEMO-COFFEE-003', '58852d5f-8486-42fa-a423-b199925159b0', 'e2ba156e-d9e7-510c-8606-57b22eb04fe3', 'monetary', 20000, 'QAR', 'delivered', 'Coffee and pastries for two.')
+  'a8d7bca6-22a4-47d3-9298-0d45f4e1d93c', now() - interval '1 day', now() + interval '365 days', encode(extensions.digest('GFT-DEMO-COFFEE-003', 'sha256'), 'hex'), 'GFT-DEMO-COFFEE-003', '58852d5f-8486-42fa-a423-b199925159b0', 'e2ba156e-d9e7-510c-8606-57b22eb04fe3', 'monetary', 20000, 'QAR', 'delivered', 'Coffee and pastries for two.')
 on conflict (id) do nothing;
 
 delete from public.ledger_entries where voucher_id in ('65e634e3-7e3e-5cb4-8e0f-f171be04d315','87a5d9d3-72d1-531b-8071-9be4f5cff1b9','3afaeeb1-53e8-53cb-8605-ae34d6cfceda');
