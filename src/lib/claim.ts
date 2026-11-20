@@ -5,7 +5,7 @@
 // never stored. The app asks the database what the gift is, and claims it once
 // the recipient is signed in.
 import { getSupabase } from './supabase';
-import { hasSupabaseConfig } from './env';
+import { env, hasSupabaseConfig } from './env';
 
 export interface ClaimGift {
   voucherId: string;
@@ -27,8 +27,22 @@ export interface ClaimGift {
 export async function fetchClaimGift(token: string): Promise<ClaimGift | null> {
   if (!hasSupabaseConfig) return null;
 
-  const { data, error } = await getSupabase().rpc('claim_preview', { p_token: token });
-  if (error || !data) return null;
+  // The lookup runs behind an Edge Function, because the database function
+  // enforces a per-caller limit from the address the function runtime observes.
+  let data: unknown = null;
+  try {
+    const response = await fetch(`${env.supabaseUrl}/functions/v1/claim-preview`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json().catch(() => null)) as { gift?: unknown } | null;
+    data = payload?.gift ?? null;
+  } catch {
+    return null;
+  }
+  if (!data) return null;
 
   const row = (Array.isArray(data) ? data[0] : data) as
     | {

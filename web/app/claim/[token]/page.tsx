@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { Gift, Smartphone } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { formatMoney } from '@/lib/money';
 import { getLocale } from '@/lib/i18n/server';
 
@@ -18,12 +19,29 @@ export const metadata: Metadata = { title: 'You received a gift card' };
 export default async function ClaimPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const locale = await getLocale();
-  const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc('claim_preview', { p_token: token });
+  // claim_preview is service-role only: it needs the visitor's address to apply
+  // the per-caller limit, and only a server can be trusted to supply it.
+  const headerStore = await headers();
+  const visitorIp =
+    headerStore.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    headerStore.get('x-real-ip') ||
+    null;
+
+  let data: unknown = null;
+  try {
+    const result = await createAdminClient().rpc('claim_preview', {
+      p_token: token,
+      p_source: visitorIp,
+    });
+    data = result.data;
+  } catch {
+    // A missing service key or a rate limit both end as "no gift to show".
+    data = null;
+  }
   const gift = (Array.isArray(data) ? data[0] : data) as any | null;
 
-  if (error || !gift) notFound();
+  if (!gift) notFound();
 
   const amount = Number(gift.amount_minor ?? 0);
   const appUrl = `giftly://claim/${token}`;
