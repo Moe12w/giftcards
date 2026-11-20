@@ -123,6 +123,46 @@ function SponsoredPill({ label }: { label: string }) {
   );
 }
 
+function SkeletonLine({ width }: { width: string }) {
+  return <View style={[styles.skeletonLine, { width }]} />;
+}
+
+/** Holds the hero's place until the delivery RPC answers. */
+function AdCarouselPlaceholder({ width }: { width: number }) {
+  return (
+    <Card padded={false} edgeColor={edges.ink}>
+      <View style={[styles.media, { height: Math.max(140, Math.round(width / 2)) }]}>
+        <View style={styles.skeletonFill} />
+      </View>
+      <View style={styles.copy}>
+        <SkeletonLine width="55%" />
+        <SkeletonLine width="85%" />
+      </View>
+    </Card>
+  );
+}
+
+/** Holds a strip's place so the cards don't shove the page down on arrival. */
+function AdStripPlaceholder() {
+  return (
+    <View style={styles.hScrollOuter}>
+      <View style={styles.hScroll}>
+        {[0, 1].map((key) => (
+          <View style={styles.nativeWrap} key={key}>
+            <Card padded={false} style={styles.nativeCard}>
+              <View style={[styles.nativeMedia, styles.skeletonFill]} />
+              <View style={styles.nativeBody}>
+                <SkeletonLine width="60%" />
+                <SkeletonLine width="90%" />
+              </View>
+            </Card>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 /** Full-width rotating banner used by the homepage hero carousel. */
 export function SponsoredCarousel({
   placementKey,
@@ -136,6 +176,7 @@ export function SponsoredCarousel({
   const { t, i18n } = useTranslation();
   const window = useWindowDimensions();
   const [placement, setPlacement] = useState<SponsoredPlacement | null>(null);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [index, setIndex] = useState(0);
   const [measuredWidth, setMeasuredWidth] = useState(0);
   const scrollRef = useRef<ScrollViewInstance>(null);
@@ -145,6 +186,7 @@ export function SponsoredCarousel({
 
   const width = measuredWidth || Math.max(0, window.width - spacing.gutter * 2);
   const ads = placement?.ads ?? [];
+  const loaded = loadedKey === `${placementKey}:${limit}`;
   const ratio = useMemo(() => aspectRatioFrom(placement?.config), [placement?.config]);
   const seconds = useMemo(() => autoRotateSeconds(placement?.config), [placement?.config]);
 
@@ -157,7 +199,8 @@ export function SponsoredCarousel({
         setIndex(0);
         indexRef.current = 0;
       })
-      .catch(() => active && setPlacement(null));
+      .catch(() => active && setPlacement(null))
+      .finally(() => active && setLoadedKey(`${placementKey}:${limit}`));
     return () => {
       active = false;
     };
@@ -221,9 +264,12 @@ export function SponsoredCarousel({
     }, 10000);
   }
 
-  // No live campaign means no placeholder box and no heading: the section is
-  // simply absent, exactly like the marketing site's empty ad slots.
-  if (ads.length === 0) return null;
+  // Reserve the exact space while the placement loads so the rest of the page
+  // never jumps. Once we know there is no live campaign the section disappears,
+  // exactly like the marketing site's empty ad slots.
+  if (ads.length === 0) {
+    return loaded ? null : <AdCarouselPlaceholder width={width} />;
+  }
 
   return (
     <View style={[styles.carousel, style]}>
@@ -330,6 +376,7 @@ export function SponsoredStrip({
 }) {
   const { t, i18n } = useTranslation();
   const [placement, setPlacement] = useState<SponsoredPlacement | null>(null);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   // Ads that point at a gift card but have no creative image of their own can
   // still show the uploaded gift artwork instead of a blank placeholder.
   // Keyed by placement: when the carousel moves, the old urls simply stop
@@ -344,7 +391,8 @@ export function SponsoredStrip({
     let active = true;
     listSponsoredAds(placementKey, limit)
       .then((next) => active && setPlacement(next))
-      .catch(() => active && setPlacement(null));
+      .catch(() => active && setPlacement(null))
+      .finally(() => active && setLoadedKey(`${placementKey}:${limit}`));
     return () => {
       active = false;
     };
@@ -385,11 +433,21 @@ export function SponsoredStrip({
   }, [placement, placementKey]);
 
   const ads = placement?.ads ?? [];
+  const loaded = loadedKey === `${placementKey}:${limit}`;
   const title =
     variant === 'business' ? t('discovery.sponsoredBusinesses') : t('discovery.sponsoredGiftCards');
 
-  // Hide the whole strip — heading included — when there are no active ads.
-  if (ads.length === 0) return null;
+  // Keep the strip's height while loading, then hide it entirely if no campaign
+  // is live (empty ad slots render nothing on the marketing site too).
+  if (ads.length === 0) {
+    if (loaded) return null;
+    return (
+      <View style={style}>
+        <SectionHeader title={title} splash />
+        <AdStripPlaceholder />
+      </View>
+    );
+  }
 
   return (
     <View style={style}>
@@ -518,4 +576,12 @@ const styles = themedStyles(() => ({
   nativeBody: { padding: spacing.sm + 2, gap: 2 },
   vendor: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted },
   nativeHeadline: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
+  // Loading placeholders use the same dimensions as the real cards.
+  skeletonFill: { width: '100%', height: '100%', backgroundColor: colors.lavenderTint },
+  skeletonLine: {
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.lavenderTint,
+    marginBottom: 6,
+  },
 }));

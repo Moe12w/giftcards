@@ -49,7 +49,7 @@ import {
   peekOffers,
   type AppCategory,
 } from '@/src/lib/data';
-import { businessHref, giftHref, prefetchBusiness, pushOnce } from '@/src/lib/navigation';
+import { businessHref, giftHref, pushOnce } from '@/src/lib/navigation';
 import { hasSeenTutorial } from '@/src/lib/tutorial';
 import { basketTotal, useBaskets } from '@/src/lib/baskets';
 import { useAuth } from '@/src/lib/auth';
@@ -251,7 +251,6 @@ export default function ExploreHomeScreen() {
                 key={business.id}
                 business={business}
                 index={index}
-                onPressIn={() => prefetchBusiness(business)}
                 onPress={() => pushOnce(businessHref(business))}
               />
             ))}

@@ -14,7 +14,7 @@ import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { SkeletonList } from '@/src/components/Skeleton';
 import { SponsoredStrip } from '@/src/components/SponsoredCarousel';
 import { listMarketplaceBusinesses, peekBusinesses } from '@/src/lib/data';
-import { businessHref, prefetchBusiness, pushOnce } from '@/src/lib/navigation';
+import { businessHref, pushOnce } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
 import type { MarketplaceBusiness } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
@@ -75,7 +75,6 @@ export default function BusinessesScreen() {
             return (
               <Pressable
                 key={business.id}
-                onPressIn={() => prefetchBusiness(business)}
                 onPress={() => pushOnce(businessHref(business))}
                 accessibilityRole="button"
                 accessibilityLabel={business.name}

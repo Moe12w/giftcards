@@ -64,8 +64,10 @@ function AppShell({ loaded, i18nReady }: { loaded: boolean; i18nReady: boolean }
   const { isDark, ready } = useTheme();
   const { user, loading: authLoading } = useAuth();
   const [cacheReady, setCacheReady] = useState(false);
-  const [authTimedOut, setAuthTimedOut] = useState(false);
-  const authReady = !authLoading || authTimedOut;
+  // Wait for the session restore to finish before mounting the navigator. A
+  // late auth result used to change the provider keys and remount the whole
+  // stack, which made a screen the user had just opened appear to open twice.
+  const authReady = !authLoading;
 
   // Disk hydration and session restore are the only things worth holding the
   // splash for. Both have a hard ceiling so an offline or very slow device
@@ -81,12 +83,6 @@ function AppShell({ loaded, i18nReady }: { loaded: boolean; i18nReady: boolean }
       clearTimeout(timer);
     };
   }, []);
-
-  useEffect(() => {
-    if (!authLoading) return;
-    const timer = setTimeout(() => setAuthTimedOut(true), 2_500);
-    return () => clearTimeout(timer);
-  }, [authLoading]);
 
   // Start warming the catalog as soon as the persisted copy is in memory, but
   // never let the network decide when the branded splash disappears.
