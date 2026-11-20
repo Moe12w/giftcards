@@ -262,37 +262,6 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Live updates: every participant sees the same box.
-  useEffect(() => {
-    if (!hasSupabaseConfig) return;
-    const channel = getSupabase()
-      .channel('gift-baskets')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'gift_basket_items' },
-        () => load(),
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'gift_basket_participants' },
-        () => load(),
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'gift_basket_activity' },
-        () => load(),
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'gift_baskets' },
-        () => load(),
-      )
-      .subscribe();
-    return () => {
-      getSupabase().removeChannel(channel);
-    };
-  }, [load]);
-
   const getBasket = useCallback(
     (id: string) => baskets.find((basket) => basket.id === id) ?? null,
     [baskets],
@@ -579,4 +548,29 @@ export function useBaskets(): BasketContextValue {
   const value = useContext(BasketContext);
   if (!value) throw new Error('useBaskets must be used inside BasketProvider');
   return value;
+}
+
+/** Opt-in realtime for basket screens; no global socket at app launch. */
+export function useBasketRealtime() {
+  const { reload } = useBaskets();
+
+  useEffect(() => {
+    if (!hasSupabaseConfig) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const refresh = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => void reload(), 1000);
+    };
+    const channel = getSupabase()
+      .channel('gift-baskets')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gift_basket_items' }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gift_basket_participants' }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gift_basket_activity' }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gift_baskets' }, refresh)
+      .subscribe();
+    return () => {
+      if (timer) clearTimeout(timer);
+      getSupabase().removeChannel(channel);
+    };
+  }, [reload]);
 }

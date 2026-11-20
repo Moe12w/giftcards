@@ -29,6 +29,8 @@ export default function ProcessingScreen() {
 
     let timer: ReturnType<typeof setTimeout> | undefined;
     const deadline = Date.now() + 5 * 60 * 1000;
+    // Back off so a slow provider does not turn into ~120 RPC calls per checkout.
+    let delay = 2500;
 
     const poll = async () => {
       if (stopped.current) return;
@@ -65,7 +67,8 @@ export default function ProcessingScreen() {
         router.replace('/(customer)/checkout/failed');
         return;
       }
-      timer = setTimeout(poll, 2500);
+      timer = setTimeout(poll, delay);
+      delay = Math.min(Math.round(delay * 1.5), 15_000);
     };
 
     void poll();

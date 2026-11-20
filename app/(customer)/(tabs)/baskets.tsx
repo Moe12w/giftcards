@@ -15,12 +15,13 @@ import { ParticipantStack } from '@/src/components/ParticipantStack';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { TextField } from '@/src/components/TextField';
-import { basketProgress, basketTotal, useBaskets } from '@/src/lib/baskets';
+import { basketProgress, basketTotal, useBaskets, useBasketRealtime } from '@/src/lib/baskets';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 export default function GiftBasketHubScreen() {
   useThemeRefresh();
+  useBasketRealtime();
   const { t, i18n } = useTranslation();
   const { baskets, ready, activeBasket, completedBaskets, joinBasket } = useBaskets();
   const [code, setCode] = useState('');

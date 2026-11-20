@@ -10,7 +10,7 @@ import { FlowHeader } from '@/src/components/FlowHeader';
 import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { Screen } from '@/src/components/Screen';
 import { ShowMore, usePaged } from '@/src/components/ShowMore';
-import { useCards } from '@/src/lib/cards';
+import { useCards, useWalletRealtime } from '@/src/lib/cards';
 import { formatDate } from '@/src/lib/time';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { isSessionCard } from '@/src/lib/sessions';
@@ -24,6 +24,7 @@ const FILTERS: Filter[] = ['all', 'received', 'sent'];
 
 export default function GiftFilterScreen() {
   useThemeRefresh();
+  useWalletRealtime();
   const { t, i18n } = useTranslation();
   const { filter: rawFilter } = useLocalSearchParams<{ filter: string }>();
   const { ready, cards, receivedCards, sentCards, sessionsLeft, valueLeft, reload } = useCards();

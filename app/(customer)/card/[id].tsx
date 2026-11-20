@@ -13,7 +13,7 @@ import { QRCode } from '@/src/components/QRCode';
 import { Screen } from '@/src/components/Screen';
 import { SessionMeter } from '@/src/components/SessionMeter';
 import { GiftSkeleton } from '@/src/components/Skeleton';
-import { useCards } from '@/src/lib/cards';
+import { useCards, useWalletRealtime } from '@/src/lib/cards';
 import { isGiftWaiting } from '@/src/lib/delivery';
 import { formatDate } from '@/src/lib/time';
 import { useThemeRefresh } from '@/src/lib/theme';
@@ -25,6 +25,7 @@ import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 export default function CardDetailScreen() {
   useThemeRefresh();
+  useWalletRealtime();
   const { t, i18n } = useTranslation();
   const { id, name: paramName } = useLocalSearchParams<{ id: string; name?: string }>();
   const { ready, getCard, sentCards, sessionsLeft, valueLeft, canRedeem, revealPartnerCode, markPartnerCodeUsed, reload } =

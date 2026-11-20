@@ -35,6 +35,7 @@ import type { GiftCard, RedemptionEntry } from './types';
 export interface CardsContextValue {
   ready: boolean;
   /** Every voucher the customer can see. */
+  ownerId: string | null;
   cards: GiftCard[];
   /** The redemption history for those vouchers. */
   entries: RedemptionEntry[];
@@ -162,37 +163,6 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
     };
   }, [userId]);
 
-  // A redemption on the web dashboard changes the voucher row. Realtime pushes
-  // that change to the phone so the balance updates while the app is open.
-  useEffect(() => {
-    if (!hasSupabaseConfig || !userId) return;
-    const supabase = getSupabase();
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    const refresh = () => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-        void load(userId);
-      }, 250);
-    };
-    const channel = supabase
-      .channel(`wallet:${userId}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'vouchers', filter: `buyer_id=eq.${userId}` },
-        refresh,
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'vouchers', filter: `claimed_by=eq.${userId}` },
-        refresh,
-      )
-      .subscribe();
-    return () => {
-      if (timer) clearTimeout(timer);
-      void supabase.removeChannel(channel);
-    };
-  }, [load, userId]);
-
   const reload = useCallback(() => load(userId), [load, userId]);
 
   const getCard = useCallback(
@@ -289,6 +259,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<CardsContextValue>(
     () => ({
       ready,
+      ownerId: userId,
       cards: visibleCards,
       entries: visibleEntries,
       receivedCards,
@@ -306,6 +277,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       ready,
+      userId,
       visibleCards,
       visibleEntries,
       receivedCards,
@@ -330,4 +302,40 @@ export function useCards(): CardsContextValue {
   const value = useContext(CardsContext);
   if (!value) throw new Error('useCards must be used inside CardProvider');
   return value;
+}
+
+/**
+ * Opt-in realtime for wallet screens that need live balance/scan updates.
+ * Keeping this off the global provider avoids one Supabase connection per user
+ * for the whole app lifetime.
+ */
+export function useWalletRealtime() {
+  const { ownerId, reload } = useCards();
+
+  useEffect(() => {
+    if (!hasSupabaseConfig || !ownerId) return;
+    const supabase = getSupabase();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const refresh = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => void reload(), 1000);
+    };
+    const channel = supabase
+      .channel(`wallet:${ownerId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'vouchers', filter: `buyer_id=eq.${ownerId}` },
+        refresh,
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'vouchers', filter: `claimed_by=eq.${ownerId}` },
+        refresh,
+      )
+      .subscribe();
+    return () => {
+      if (timer) clearTimeout(timer);
+      void supabase.removeChannel(channel);
+    };
+  }, [ownerId, reload]);
 }

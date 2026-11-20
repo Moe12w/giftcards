@@ -40,7 +40,7 @@ import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
-import { basketProgress, basketTotal, participantTotals, useBaskets } from '@/src/lib/baskets';
+import { basketProgress, basketTotal, participantTotals, useBaskets, useBasketRealtime } from '@/src/lib/baskets';
 import { formatMoney } from '@/src/lib/money';
 import { timeAgo } from '@/src/lib/time';
 import type { BasketActivityKind, BasketItem, BasketStatus } from '@/src/lib/types';
@@ -54,6 +54,7 @@ const STATUS_TONE: Record<BasketStatus, BadgeTone> = {
 
 export default function BasketDetailScreen() {
   useThemeRefresh();
+  useBasketRealtime();
   const { t, i18n } = useTranslation();
   const params = useLocalSearchParams<{
     id: string;
