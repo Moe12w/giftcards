@@ -18,7 +18,3 @@ export function perfBetween(from: string, to: string): number | null {
   return start === undefined || end === undefined ? null : Math.round(end - start);
 }
 
-/** A copy of every mark, for diagnostics. */
-export function perfMarks(): Record<string, number> {
-  return Object.fromEntries(marks);
-}

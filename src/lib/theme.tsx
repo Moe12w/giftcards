@@ -89,10 +89,6 @@ export function useTheme() {
   return useContext(ThemeContext);
 }
 
-/** Just the active palette, for components that only need colours. */
-export function useThemeColors() {
-  return useContext(ThemeContext).colors;
-}
 
 /**
  * Subscribes a screen to theme changes without using the values directly.

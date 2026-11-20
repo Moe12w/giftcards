@@ -34,7 +34,6 @@ export default function RootLayout() {
     Figtree_700Bold,
     Figtree_800ExtraBold,
     Figtree_900Black,
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
   const [i18nReady, setI18nReady] = useState(false);
 

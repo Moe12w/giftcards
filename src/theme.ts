@@ -185,9 +185,6 @@ export function setActivePalette(palette: Palette) {
   revision += 1;
 }
 
-export function activePalette() {
-  return activeColors;
-}
 
 /**
  * The current theme's colours.

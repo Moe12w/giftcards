@@ -186,21 +186,6 @@ export interface Order {
   gift_card_id?: string | null;
 }
 
-export interface LedgerEntry {
-  id: string;
-  card_id: string;
-  order_id: string | null;
-  entry_type: 'issue' | 'redeem' | 'refund' | 'void';
-  amount_minor: number; // signed: negative for redemptions
-  created_at: string;
-}
-
-export interface Stat {
-  label: string;
-  value: string;
-  hint?: string;
-}
-
 export interface Recipient {
   id: string;
   name: string;
@@ -298,9 +283,6 @@ export interface MarketplaceBusiness {
   is_featured: boolean;
   gift_count: number;
 }
-
-/** A partner business, as seen by the public storefront. */
-export type PartnerBusiness = MarketplaceBusiness;
 
 export type BasketStatus = 'open' | 'ready' | 'completed';
 

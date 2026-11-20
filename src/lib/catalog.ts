@@ -44,23 +44,6 @@ export const OCCASIONS: CatalogEntry[] = [
   { slug: 'seasonal', icon: 'seasonal', tone: 'sky', titleKey: 'catalog.occasions.seasonal' },
 ];
 
-export const COLLECTION_SLUGS = [
-  'trending',
-  'featured-businesses',
-  'new-arrivals',
-  'popular',
-  'birthday',
-  'anniversary',
-  'wedding',
-  'graduation',
-  'thank-you',
-  'congratulations',
-  'just-because',
-  'seasonal',
-  'for-her',
-  'for-him',
-] as const;
-
 export interface CuratedCollectionEntry {
   slug: string;
   /** Semantic glyph key from `src/lib/glyphs.ts`. */
@@ -232,23 +215,3 @@ export function offersForCollection(offers: Offer[], slug: string): Offer[] {
   }
 }
 
-/** Groups offers by business, keeping the highest-rated gift as its card. */
-export function groupOffersByVendor(offers: Offer[]): Offer[] {
-  const seen = new Set<string>();
-  const result: Offer[] = [];
-  for (const offer of [...offers].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))) {
-    const businessId = offerBusinessId(offer);
-    if (!businessId || seen.has(businessId)) continue;
-    seen.add(businessId);
-    result.push(offer);
-  }
-  return result;
-}
-
-export function findOffer(offers: Offer[], id: string): Offer | null {
-  return offers.find((offer) => offer.id === id) ?? null;
-}
-
-export function findBusiness(offers: Offer[], businessId: string): Offer | null {
-  return offers.find((offer) => offerBusinessId(offer) === businessId) ?? null;
-}

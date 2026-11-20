@@ -13,7 +13,6 @@ import {
   MOCK_NOTIFICATIONS,
   MOCK_OFFERS,
   MOCK_ORDERS,
-  MOCK_PAYMENT_METHODS,
   MOCK_REDEMPTIONS,
   MOCK_RECIPIENTS,
 } from './mock-data';
@@ -31,7 +30,6 @@ import type {
   NotificationKind,
   Offer,
   Order,
-  PaymentMethod,
   ProductVariant,
   Recipient,
   RedemptionEntry,
@@ -295,29 +293,6 @@ export async function removeRecipient(id: string): Promise<void> {
   if (error) throw error;
 }
 
-/** The saved payment methods of the signed in customer. */
-export async function listPaymentMethods(): Promise<PaymentMethod[]> {
-  if (!hasSupabaseConfig) return MOCK_PAYMENT_METHODS;
-  const { data, error } = await getSupabase()
-    .from('payment_methods')
-    .select('id, brand, last4, expiry, is_default')
-    .order('is_default', { ascending: false });
-  if (error) throw error;
-  return ((data ?? []) as unknown as {
-    id: string;
-    brand: string | null;
-    last4: string | null;
-    expiry: string | null;
-    is_default: boolean;
-  }[]).map((row) => ({
-    id: row.id,
-    brand: row.brand ?? 'Card',
-    last4: row.last4 ?? '••••',
-    expiry: row.expiry ?? '',
-    isDefault: row.is_default,
-  }));
-}
-
 /** The branches of a business. */
 export async function listVendorLocations(vendorId: string): Promise<BusinessLocation[]> {
   if (!hasSupabaseConfig) {
@@ -414,12 +389,6 @@ export async function getBusiness(idOrSlug: string): Promise<MarketplaceBusiness
     if (business) primeBusiness(business);
     return business;
   });
-}
-
-/** Kept for older callers: a partner is one kind of business. */
-export async function getPartner(idOrSlug: string): Promise<MarketplaceBusiness | null> {
-  const business = await getBusiness(idOrSlug);
-  return business?.business_kind === 'partner' ? business : null;
 }
 
 /** The public business directory: vendors and partners combined. */
@@ -698,27 +667,6 @@ export async function getOffer(id: string): Promise<Offer | null> {
     primeCache(`offer:${offer.id}`, offer);
     return offer;
   });
-}
-
-export async function listMyCards(): Promise<GiftCard[]> {
-  // The cards tab and the wallet read the same rows. Reusing the voucher
-  // mapping keeps partner and vendor names, logos and partner-code balances.
-  return listMyVouchers();
-}
-
-export async function getMyCard(id: string): Promise<GiftCard | null> {
-  if (!hasSupabaseConfig) {
-    return MOCK_CARDS.find((c) => c.id === id) ?? null;
-  }
-  const { data, error } = await getSupabase()
-    .from('vouchers')
-    .select(
-      'id, voucher_code, qr_payload, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, image_url, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
-    )
-    .eq('id', id)
-    .maybeSingle();
-  if (error) throw error;
-  return data ? mapVoucher(data as unknown as VoucherRow) : null;
 }
 
 export async function listMyOrders(options?: PageOptions): Promise<Order[]> {
@@ -1117,17 +1065,6 @@ export async function validatePromoCode(
   };
 }
 
-/** Saves a payment method. Only the reference is stored, never the number. */
-export async function addPaymentMethod(method: {
-  brand: string;
-  last4: string;
-  expiry: string;
-}): Promise<void> {
-  if (!hasSupabaseConfig) return;
-  const { error } = await getSupabase().from('payment_methods').insert(method);
-  if (error) throw error;
-}
-
 /**
  * Deletes the signed-in customer's account and personal data.
  * Financial records (orders, vouchers) stay with the vendor and recipient.
@@ -1136,13 +1073,6 @@ export async function addPaymentMethod(method: {
 export async function deleteMyAccount(): Promise<void> {
   if (!hasSupabaseConfig) return;
   const { error } = await getSupabase().rpc('delete_my_account');
-  if (error) throw error;
-}
-
-/** Removes a saved payment method. */
-export async function removePaymentMethod(id: string): Promise<void> {
-  if (!hasSupabaseConfig) return;
-  const { error } = await getSupabase().from('payment_methods').delete().eq('id', id);
   if (error) throw error;
 }
 
@@ -1243,30 +1173,3 @@ export async function trackSponsoredClick(
   return (data ?? null) as Partial<SponsoredAd> | null;
 }
 
-/** Attributes a purchase to the most recent touch inside the rule window. */
-export async function trackSponsoredConversion(
-  campaignId: string,
-  options: {
-    clickId?: string | null;
-    orderId?: string | null;
-    voucherId?: string | null;
-    valueMinor?: number;
-    requestId?: string;
-  } = {},
-): Promise<string | null> {
-  if (!hasSupabaseConfig) return null;
-  const { data, error } = await getSupabase().rpc('advertising_track_conversion', {
-    p_campaign_id: campaignId,
-    p_click_id: options.clickId ?? null,
-    p_order_id: options.orderId ?? null,
-    p_voucher_id: options.voucherId ?? null,
-    p_value_minor: options.valueMinor ?? 0,
-    p_conversion_type: 'purchase',
-    p_request_id:
-      options.requestId ??
-      `conv_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`,
-    p_metadata: { source: 'mobile' },
-  });
-  if (error) return null;
-  return typeof data === 'string' ? data : null;
-}

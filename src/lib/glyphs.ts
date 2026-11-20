@@ -308,8 +308,6 @@ export const GLYPHS = {
   book: BookOpen,
 } satisfies Record<string, LucideIcon>;
 
-export type GlyphKey = keyof typeof GLYPHS;
-
 /** Resolves a semantic glyph key to a Lucide icon, falling back to a gift box. */
 export function glyphIcon(key?: string | null): LucideIcon {
   if (!key) return GLYPHS.gift;

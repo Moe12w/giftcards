@@ -17,26 +17,3 @@ export function toLatinDigits(value: string): string {
     .replace(/\u066C/g, ',');
 }
 
-/** `Intl.NumberFormat` for a language, with Latin digits enforced. */
-export function latinNumber(
-  value: number,
-  locale: string,
-  options: Intl.NumberFormatOptions = {},
-): string {
-  const intlLocale = locale === 'ar' ? 'ar-QA' : 'en-QA';
-  return toLatinDigits(
-    new Intl.NumberFormat(intlLocale, { numberingSystem: 'latn', ...options }).format(value),
-  );
-}
-
-/** `toLocaleDateString` for a language, with Latin digits enforced. */
-export function latinDate(
-  value: Date,
-  locale: string,
-  options: Intl.DateTimeFormatOptions = {},
-): string {
-  const intlLocale = locale === 'ar' ? 'ar-QA' : 'en-QA';
-  return toLatinDigits(
-    value.toLocaleDateString(intlLocale, { numberingSystem: 'latn', ...options }),
-  );
-}

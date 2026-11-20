@@ -1,10 +1,6 @@
 // src/lib/time.ts
-// Small date helpers shared by demo data and screens.
+// Small date helpers shared by screens.
 import { toLatinDigits } from './digits';
-
-export function daysFromNow(days: number): string {
-  return new Date(Date.now() + days * 86_400_000).toISOString();
-}
 
 export function formatDate(iso: string | null | undefined, locale: string): string {
   if (!iso) return '';
