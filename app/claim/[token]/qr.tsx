@@ -17,14 +17,13 @@ export default function ClaimQrScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
   const { user, loading: authLoading } = useAuth();
   const [gift, setGift] = useState<ClaimGift | null>(null);
-  const [loading, setLoading] = useState(true);
+  // No id means there is nothing to fetch: start settled rather than
+  // flipping the flag from inside the effect.
+  const [loading, setLoading] = useState(!token);
 
   useEffect(() => {
     let active = true;
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+    if (!token) return;
     fetchClaimGift(token)
       .then((row) => active && setGift(row))
       .catch(() => active && setGift(null))

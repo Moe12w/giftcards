@@ -30,7 +30,6 @@ interface IconTileProps {
 
 /** Rounded pastel tile with an ink outline, used for offer and list artwork. */
 export function IconTile({ icon, imageUrl, size = 64, tone = 'lavender', style }: IconTileProps) {
-  const Icon = glyphIcon(icon);
   return (
     <View
       style={[
@@ -53,7 +52,8 @@ export function IconTile({ icon, imageUrl, size = 64, tone = 'lavender', style }
           transition={120}
         />
       ) : (
-        <Icon size={size * 0.48} color={colors.ink} strokeWidth={2} />
+        // createElement, not a JSX alias: the table holds stable components.
+        React.createElement(glyphIcon(icon), { size: size * 0.48, color: colors.ink, strokeWidth: 2 })
       )}
     </View>
   );

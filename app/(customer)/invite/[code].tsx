@@ -43,9 +43,8 @@ export default function InviteScreen() {
     basket && user && basket.participants.some((participant) => participant.id === user.id),
   );
 
-  useEffect(() => {
-    if (ready && code && !basket) setError(true);
-  }, [basket, code, ready]);
+  // A code that resolves to nothing is an error without needing its own state.
+  const missingBasket = ready && Boolean(code) && !basket;
 
   async function join() {
     if (!basket) return;
@@ -68,7 +67,7 @@ export default function InviteScreen() {
     );
   }
 
-  if (!basket || error) {
+  if (!basket || error || missingBasket) {
     return (
       <Screen>
         <FlowHeader title={t('basket.inviteTitle')} onBack={() => router.back()} />

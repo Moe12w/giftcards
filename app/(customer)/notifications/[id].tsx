@@ -43,31 +43,31 @@ export default function NotificationDetailScreen() {
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [item, setItem] = useState<AppNotification | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(id));
   const [sharing, setSharing] = useState(false);
 
-  const load = useCallback(async () => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const found = await getNotification(id);
-      setItem(found);
-      if (found && !found.read) {
-        await markNotificationRead(found.id);
-        setItem({ ...found, read: true });
-      }
-    } catch {
-      setItem(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!id) return undefined;
+    let active = true;
+    getNotification(id)
+      .then(async (found) => {
+        if (!active) return;
+        setItem(found);
+        if (found && !found.read) {
+          await markNotificationRead(found.id);
+          if (active) setItem({ ...found, read: true });
+        }
+      })
+      .catch(() => {
+        if (active) setItem(null);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   // The gift is due and the recipient has not opened it: the buyer sends the
   // link themselves, so the app mints a fresh one and hands it to the share

@@ -32,9 +32,21 @@ export default function AddressesScreen() {
     }
   }, []);
 
+  // Rows arrive after the await, so the mount does not write state inside the
+  // effect body; load() still runs after a save or a delete.
   useEffect(() => {
-    load();
-  }, [load]);
+    let active = true;
+    listAddresses()
+      .then((rows) => {
+        if (active) setAddresses(rows);
+      })
+      .catch(() => {
+        if (active) setAddresses([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function save() {
     if (!line.trim() || !city.trim()) return;

@@ -60,10 +60,25 @@ export default function PickGiftsScreen() {
 
   const adding = Boolean(params.basketId);
 
+  // Preset application is guarded so removing it afterwards sticks.
+  const presetApplied = useRef(false);
+
   useEffect(() => {
     let active = true;
     listActiveOffers()
-      .then((data) => active && setOffers(data))
+      .then((data) => {
+        if (!active) return;
+        setOffers(data);
+        // A card picked from the basket picker arrives already selected. Applied
+        // once, as the offers land, so the customer can still remove it.
+        const preset = presetApplied.current || !params.preset
+          ? null
+          : data.find((offer) => offer.id === params.preset);
+        if (preset) {
+          presetApplied.current = true;
+          setSelection({ [preset.id]: offerStartingPriceMinor(preset) });
+        }
+      })
       .catch(() => active && setError(true))
       .finally(() => active && setLoading(false));
     listAppCategories()
@@ -73,20 +88,6 @@ export default function PickGiftsScreen() {
       active = false;
     };
   }, []);
-
-  // A card picked from the basket picker arrives already selected. It is only
-  // applied once so the customer can still remove it afterwards.
-  const presetApplied = useRef(false);
-  useEffect(() => {
-    if (presetApplied.current) return;
-    if (!params.preset) return;
-    const preset = offers.find((offer) => offer.id === params.preset);
-    if (!preset) return;
-    presetApplied.current = true;
-    setSelection({
-      [preset.id]: offerStartingPriceMinor(preset),
-    });
-  }, [offers, params.preset]);
 
   const filtered = useMemo(() => {
     const searched = searchOffers(offers, query, i18n.language);

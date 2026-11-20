@@ -27,9 +27,21 @@ export default function RecipientsScreen() {
     }
   }, []);
 
+  // Rows arrive after the await, so the mount does not write state inside the
+  // effect body; load() still runs after adding or removing someone.
   useEffect(() => {
-    load();
-  }, [load]);
+    let active = true;
+    listRecipients()
+      .then((rows) => {
+        if (active) setRecipients(rows);
+      })
+      .catch(() => {
+        if (active) setRecipients([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function remove(id: string) {
     setRecipients((current) => current.filter((item) => item.id !== id));

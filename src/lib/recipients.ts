@@ -19,9 +19,24 @@ export function useRecipients() {
     }
   }, []);
 
+  // The fetch applies its rows after the await, so mounting never writes
+  // state synchronously from the effect body. reload() stays for callers.
   useEffect(() => {
-    reload();
-  }, [reload]);
+    let active = true;
+    listRecipients()
+      .then((rows) => {
+        if (active) setRecipients(rows);
+      })
+      .catch(() => {
+        if (active) setRecipients([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return { recipients, loading, reload };
 }

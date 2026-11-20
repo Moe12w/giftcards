@@ -23,14 +23,13 @@ export default function SendConfirmScreen() {
   const { t, i18n } = useTranslation();
   const { draft } = useGiftDraft();
   const [offer, setOffer] = useState<Offer | null>(null);
-  const [loading, setLoading] = useState(true);
+  // No id means there is nothing to fetch: start settled rather than
+  // flipping the flag from inside the effect.
+  const [loading, setLoading] = useState(!draft.offerId);
 
   useEffect(() => {
     let active = true;
-    if (!draft.offerId) {
-      setLoading(false);
-      return;
-    }
+    if (!draft.offerId) return;
     getOffer(draft.offerId)
       .then((data) => active && setOffer(data))
       .finally(() => active && setLoading(false));

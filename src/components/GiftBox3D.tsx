@@ -7,7 +7,7 @@
 //  - tap the box to open / close the lid
 //  - drag horizontally to rotate it (springs back when released)
 //  - vouchers visibly fly in whenever the basket gains a card
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -93,12 +93,13 @@ export function GiftBox3D({
   idle = false,
 }: GiftBox3DProps) {
   const [open, setOpen] = useState(defaultOpen);
-  const rotation = useRef(new Animated.Value(0)).current;
-  const lid = useRef(new Animated.Value(defaultOpen ? 1 : 0)).current;
-  const fly = useRef(new Animated.Value(1)).current;
-  const pulse = useRef(new Animated.Value(0)).current;
+  // The animated values are read while rendering (every interpolate below reads
+  // one), so they are state — a ref may not be touched during render.
+  const [rotation] = useState(() => new Animated.Value(0));
+  const [lid] = useState(() => new Animated.Value(defaultOpen ? 1 : 0));
+  const [fly] = useState(() => new Animated.Value(1));
+  const [pulse] = useState(() => new Animated.Value(0));
   const prevCount = useRef(basket.items.length);
-  const loopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   const tone = resolveTone(basket.items[0]?.tone);
   const palette = PALETTE()[tone] ?? PALETTE().lavender;
@@ -106,35 +107,37 @@ export function GiftBox3D({
   const total = basketTotal(basket);
   const latest = newestItem(basket);
 
-  // Gentle idle sway so the box always feels alive.
+  // Gentle idle sway so the box always feels alive. Built from the props rather
+  // than stashed in a ref, so the pan handlers can restart the same animation.
+  const sway = useMemo(
+    () =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(rotation, {
+            toValue: 1,
+            duration: 2800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(rotation, {
+            toValue: -1,
+            duration: 2800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+      ),
+    [rotation],
+  );
+
   useEffect(() => {
     if (!interactive || idle) {
       rotation.setValue(0);
       return;
     }
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(rotation, {
-          toValue: 1,
-          duration: 2800,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotation, {
-          toValue: -1,
-          duration: 2800,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    loopRef.current = loop;
-    loop.start();
-    return () => {
-      loop.stop();
-      loopRef.current = null;
-    };
-  }, [idle, interactive, rotation]);
+    sway.start();
+    return () => sway.stop();
+  }, [idle, interactive, rotation, sway]);
 
   // Confetti / sparkle pulse for ready and completed baskets.
   useEffect(() => {
@@ -159,42 +162,44 @@ export function GiftBox3D({
     return () => loop.stop();
   }, [completed, pulse]);
 
+  // Once the group gift is wrapped the lid stays shut with the ribbon on, so the
+  // closed state is derived rather than copied into state from an effect.
+  const openLid = open && basket.status === 'open';
+
   // Open or close the lid.
   useEffect(() => {
     Animated.spring(lid, {
-      toValue: open ? 1 : 0,
+      toValue: openLid ? 1 : 0,
       friction: 7,
       tension: 60,
       useNativeDriver: true,
     }).start();
-  }, [lid, open]);
-
-  // Once the group gift is wrapped, the lid stays shut with the ribbon on.
-  useEffect(() => {
-    if (basket.status !== 'open') setOpen(false);
-  }, [basket.status]);
+  }, [lid, openLid]);
 
   // Fly the newest voucher into the box when the contents grow, and pop the
   // lid open so the new gift is visible.
   useEffect(() => {
     if (basket.items.length > prevCount.current) {
-      if (basket.status === 'open') setOpen(true);
       fly.setValue(0);
       Animated.timing(fly, {
         toValue: 1,
         duration: 900,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
-      }).start();
+      }).start(() => {
+        // Open once the card has landed, so the new gift is visible.
+        if (basket.status === 'open') setOpen(true);
+      });
     }
     prevCount.current = basket.items.length;
   }, [basket.items.length, basket.status, fly]);
 
-  const pan = useRef(
-    PanResponder.create({
+  const pan = useMemo(
+    () =>
+      PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_event, gesture) => interactive && Math.abs(gesture.dx) > 8,
-      onPanResponderGrant: () => loopRef.current?.stop(),
+      onPanResponderGrant: () => sway.stop(),
       onPanResponderMove: (_event, gesture) => {
         const next = Math.max(-1.4, Math.min(1.4, gesture.dx / 90));
         rotation.setValue(next);
@@ -205,10 +210,11 @@ export function GiftBox3D({
           friction: 6,
           tension: 70,
           useNativeDriver: true,
-        }).start(() => loopRef.current?.start());
+        }).start(() => sway.start());
       },
     }),
-  ).current;
+    [interactive, rotation, sway],
+  );
 
   const boxW = size * 0.72;
   const boxH = size * 0.52;
@@ -267,7 +273,7 @@ export function GiftBox3D({
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={open ? 'Close gift box' : 'Open gift box'}
+          accessibilityLabel={openLid ? 'Close gift box' : 'Open gift box'}
           onPress={() => setOpen((value) => !value)}
           style={[styles.boxHit, { width: boxW, height: stageH * 0.82 }]}
         >
@@ -286,7 +292,7 @@ export function GiftBox3D({
             <View style={[styles.inner, { height: boxH * 0.55 }]} />
 
             {/* Vouchers peeking out of the open box */}
-            {open ? (
+            {openLid ? (
               <View style={[styles.voucherRow, { bottom: boxH * 0.42 }]}>
                 {visibleVouchers.map((item, index) => (
                   <View
@@ -387,7 +393,7 @@ export function GiftBox3D({
       {/* Live hint, sat just below the box so it never covers the artwork */}
       {interactive ? (
         <View style={styles.tapHint}>
-          <Text style={styles.tapHintText}>{open ? 'Tap to close' : 'Tap to open'}</Text>
+          <Text style={styles.tapHintText}>{openLid ? 'Tap to close' : 'Tap to open'}</Text>
         </View>
       ) : null}
 

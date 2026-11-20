@@ -52,48 +52,46 @@ export default function BusinessScreen() {
   const [offersLoading, setOffersLoading] = useState(Boolean(id) && offers.length === 0);
   const request = useRef(0);
 
-  const load = useCallback(async () => {
+  useEffect(() => {
+    if (!id) return undefined;
+    let active = true;
     const token = ++request.current;
-    const isActive = () => request.current === token;
+    const isActive = () => active && request.current === token;
 
-    if (!id) return;
-
-    try {
-      // Start both requests together. The business one is usually served from
-      // memory; the offer query only asks for this business, not the whole
-      // marketplace.
-      const offersPromise = listOffersForBusiness(id);
-      const found = await getBusiness(id);
-      if (!isActive()) return;
-
-      setBusiness(found);
-      setLoading(false);
-
-      const locationsPromise =
-        found?.business_kind === 'vendor'
-          ? listVendorLocations(found.id)
-          : Promise.resolve<BusinessLocation[]>([]);
-
-      const [offerRows, locationRows] = await Promise.all([offersPromise, locationsPromise]);
-      if (!isActive()) return;
-
-      setOffers(offerRows);
-      setLocations(locationRows);
-    } catch {
-      if (!isActive()) return;
-      setBusiness((current) => current ?? null);
-      setLocations([]);
-    } finally {
-      if (isActive()) {
+    // Start both requests together. The business one is usually served from
+    // memory; the offer query only asks for this business, not the whole
+    // marketplace.
+    const offersPromise = listOffersForBusiness(id);
+    getBusiness(id)
+      .then((found) => {
+        if (!isActive()) return undefined;
+        setBusiness(found);
+        setLoading(false);
+        const locationsPromise =
+          found?.business_kind === 'vendor'
+            ? listVendorLocations(found.id)
+            : Promise.resolve<BusinessLocation[]>([]);
+        return Promise.all([offersPromise, locationsPromise]).then(([offerRows, locationRows]) => {
+          if (!isActive()) return;
+          setOffers(offerRows);
+          setLocations(locationRows);
+        });
+      })
+      .catch(() => {
+        if (!isActive()) return;
+        setBusiness((current) => current ?? null);
+        setLocations([]);
+      })
+      .finally(() => {
+        if (!isActive()) return;
         setLoading(false);
         setOffersLoading(false);
-      }
-    }
-  }, [id]);
+      });
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   const businessId = business?.id ?? id ?? '';
   const offersMatching = offers.filter((offer) => offerBusinessId(offer) === businessId);

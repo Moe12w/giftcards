@@ -16,7 +16,6 @@ interface CollectionTileProps {
 }
 
 export function CollectionTile({ label, icon, tone = 'lavender', onPress, wide = false }: CollectionTileProps) {
-  const Icon = glyphIcon(icon);
   return (
     <Pressable
       onPress={onPress}
@@ -31,7 +30,8 @@ export function CollectionTile({ label, icon, tone = 'lavender', onPress, wide =
     >
       <View style={[styles.tile, { backgroundColor: backgrounds[tone] }]}>
         <View style={styles.iconWrap}>
-          <Icon size={26} color={colors.ink} strokeWidth={2} />
+          {/* createElement, not a JSX alias: the table holds stable components. */}
+          {React.createElement(glyphIcon(icon), { size: 26, color: colors.ink, strokeWidth: 2 })}
         </View>
         <Text style={styles.label} numberOfLines={2}>
           {label}

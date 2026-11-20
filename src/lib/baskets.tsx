@@ -205,7 +205,7 @@ function makeCode(): string {
 export function BasketProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [baskets, setBaskets] = useState<GiftBasket[]>([]);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(!hasSupabaseConfig);
 
   const displayName = useCallback(
     () =>
@@ -234,9 +234,33 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // The first read happens here so the effect body never writes state
+  // synchronously — the rows land after the await. load() still serves the
+  // realtime subscription and the mutations below.
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!hasSupabaseConfig) return undefined;
+    let active = true;
+    Promise.resolve(
+      getSupabase()
+        .from('gift_baskets')
+        .select(BASKET_SELECT)
+        .order('created_at', { ascending: false }),
+    )
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) throw error;
+        setBaskets(((data ?? []) as unknown as BasketRow[]).map(mapBasket));
+      })
+      .catch(() => {
+        if (active) setBaskets([]);
+      })
+      .finally(() => {
+        if (active) setReady(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Live updates: every participant sees the same box.
   useEffect(() => {

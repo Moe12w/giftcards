@@ -35,7 +35,7 @@ export default function SupportTicketScreen() {
   const [request, setRequest] = useState<SupportRequest | null>(null);
   const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [draft, setDraft] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(id));
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,9 +59,29 @@ export default function SupportTicketScreen() {
     }
   }, [id]);
 
+  // The first read happens here so the effect body never writes state
+  // synchronously; load() still runs after a reply.
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!id) return undefined;
+    let active = true;
+    Promise.all([getSupportRequest(id), listSupportMessages(id)])
+      .then(([row, thread]) => {
+        if (!active) return;
+        setRequest(row);
+        setMessages(thread);
+      })
+      .catch(() => {
+        if (!active) return;
+        setRequest(null);
+        setMessages([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   async function sendReply() {
     const body = draft.trim();

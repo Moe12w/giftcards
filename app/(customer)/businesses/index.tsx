@@ -28,21 +28,23 @@ export default function BusinessesScreen() {
   const [loading, setLoading] = useState(businesses.length === 0);
   const request = useRef(0);
 
-  const load = useCallback(async () => {
-    const token = ++request.current;
-    try {
-      const rows = await listMarketplaceBusinesses();
-      if (request.current === token) setBusinesses(rows);
-    } catch {
-      // A failed refresh keeps whatever the cache already painted.
-    } finally {
-      if (request.current === token) setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    void load();
-  }, [load]);
+    let active = true;
+    const token = ++request.current;
+    listMarketplaceBusinesses()
+      .then((rows) => {
+        if (active && request.current === token) setBusinesses(rows);
+      })
+      .catch(() => {
+        // A failed refresh keeps whatever the cache already painted.
+      })
+      .finally(() => {
+        if (active && request.current === token) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const rtl = i18n.language === 'ar';
   const Arrow = rtl ? ArrowLeft : ArrowRight;

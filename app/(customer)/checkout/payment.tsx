@@ -22,25 +22,31 @@ import { formatDate } from '@/src/lib/time';
 import type { Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
+/**
+ * One key per checkout attempt. Built outside the component so that rendering
+ * never reads the clock or the random generator.
+ */
+function newIdempotencyKey(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export default function PaymentScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { draft } = useGiftDraft();
   const [offer, setOffer] = useState<Offer | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Nothing to pay for without an offer, so start settled; the effect only
+  // flips the flag when there is something to fetch.
+  const [loading, setLoading] = useState(!draft.offerId);
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
-  const idempotencyKey = useRef(`${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const idempotencyKey = useRef(newIdempotencyKey());
 
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
 
   useEffect(() => {
     let active = true;
-    if (!draft.offerId) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
+    if (!draft.offerId) return;
     getOffer(draft.offerId)
       .then((data) => active && setOffer(data))
       .finally(() => active && setLoading(false));

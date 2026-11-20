@@ -33,6 +33,14 @@ const DESIGNS = [
 const DELIVERY_METHODS: DeliveryMethod[] = ['email', 'sms', 'whatsapp', 'link'];
 const SUGGESTIONS = ['birthday', 'thankYou', 'congrats', 'justBecause'] as const;
 
+/**
+ * Draft recipient ids are minted when a recipient is chosen. Built outside the
+ * component so rendering never reads the clock.
+ */
+function newRecipientId(): string {
+  return newRecipientId();
+}
+
 export default function GiftComposeScreen() {
   useThemeRefresh();
   const { recipients } = useRecipients();
@@ -40,7 +48,9 @@ export default function GiftComposeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { draft, update, ready } = useGiftDraft();
   const [offer, setOffer] = useState<Offer | null>(null);
-  const [loading, setLoading] = useState(true);
+  // No id means there is nothing to fetch: start settled rather than
+  // flipping the flag from inside the effect.
+  const [loading, setLoading] = useState(!id);
 
   const [custom, setCustom] = useState('');
   const [recipientName, setRecipientName] = useState(draft.recipient?.name ?? '');
@@ -59,10 +69,7 @@ export default function GiftComposeScreen() {
 
   useEffect(() => {
     let active = true;
-    if (!id) {
-      setLoading(false);
-      return;
-    }
+    if (!id) return;
     getOffer(id)
       .then((data) => active && setOffer(data))
       .finally(() => active && setLoading(false));
@@ -208,7 +215,7 @@ export default function GiftComposeScreen() {
     setRecipientPhone(phone ?? '');
     update({
       recipient: {
-        id: draft.recipient?.id ?? `recipient-${Date.now()}`,
+        id: draft.recipient?.id ?? newRecipientId(),
         name,
         email,
         phone,
@@ -259,7 +266,7 @@ export default function GiftComposeScreen() {
       variantId: isExperience ? selectedPackage?.id ?? null : null,
       amountMinor: isExperience ? selectedPackage?.price_minor ?? 0 : amount,
       recipient: {
-        id: draft.recipient?.id ?? `recipient-${Date.now()}`,
+        id: draft.recipient?.id ?? newRecipientId(),
         name: recipientName.trim(),
         email: recipientEmail.trim(),
         phone: recipientPhone.trim() || undefined,

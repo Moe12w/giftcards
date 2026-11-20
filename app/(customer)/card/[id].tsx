@@ -36,17 +36,14 @@ export default function CardDetailScreen() {
   const { id, name: paramName } = useLocalSearchParams<{ id: string; name?: string }>();
   const { ready, getCard, sentCards, sessionsLeft, valueLeft, canRedeem, revealPartnerCode, markPartnerCodeUsed, reload } =
     useCards();
-  const [card, setCard] = useState<GiftCard | null>(null);
+  // Seeded from the wallet on first render; the realtime effect and the
+  // partner-code flow keep it fresh afterwards.
+  const [card, setCard] = useState<GiftCard | null>(() => (id ? getCard(id) : null));
   const previousCard = useRef<{ balance: number; sessions: number; status: string } | null>(null);
   const reacted = useRef(false);
   const [partnerCode, setPartnerCode] = useState<string | null>(null);
   const [codeError, setCodeError] = useState(false);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (!id) return;
-    setCard(getCard(id));
-  }, [getCard, id]);
 
   // The vendor scans the QR on another device. Realtime reloads this card, so
   // a drop in balance/sessions means the scan just completed.

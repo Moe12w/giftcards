@@ -332,7 +332,13 @@ export function SponsoredStrip({
   const [placement, setPlacement] = useState<SponsoredPlacement | null>(null);
   // Ads that point at a gift card but have no creative image of their own can
   // still show the uploaded gift artwork instead of a blank placeholder.
-  const [giftImages, setGiftImages] = useState<Record<string, string>>({});
+  // Keyed by placement: when the carousel moves, the old urls simply stop
+  // matching instead of being cleared from inside an effect.
+  const [giftImagesFor, setGiftImagesFor] = useState<{
+    key: string;
+    images: Record<string, string>;
+  }>({ key: '', images: {} });
+  const giftImages = giftImagesFor.key === placementKey ? giftImagesFor.images : {};
 
   useEffect(() => {
     let active = true;
@@ -354,7 +360,6 @@ export function SponsoredStrip({
         Boolean(ad.destination_id),
     );
     if (missing.length === 0) {
-      setGiftImages({});
       return () => {
         active = false;
       };
@@ -372,7 +377,7 @@ export function SponsoredStrip({
       if (!active) return;
       const next: Record<string, string> = {};
       for (const [id, url] of entries) if (url) next[id] = url;
-      setGiftImages(next);
+      setGiftImagesFor({ key: placementKey, images: next });
     });
     return () => {
       active = false;

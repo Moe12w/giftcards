@@ -124,9 +124,49 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // The first wallet read runs here so nothing is written synchronously in the
+  // effect body; load() still handles refreshes and every redemption.
   useEffect(() => {
-    void load(userId);
-  }, [load, userId]);
+    if (!hasSupabaseConfig && !userId) return undefined;
+    const target = hasSupabaseConfig ? userId : 'demo';
+    if (!target) return undefined;
+    let active = true;
+    (async () => {
+      try {
+        const previousIds =
+          walletRef.current.scope === target
+            ? walletRef.current.cards.map((card) => card.id)
+            : [];
+        const history = previousIds.length
+          ? listRedemptionsFor(previousIds).catch(() => null)
+          : null;
+
+        const rows = await listMyVouchers();
+        if (!active) return;
+        walletRef.current = { scope: target, cards: rows };
+        setCards(rows);
+        setLoadedScope(target);
+
+        if (history) {
+          const entries = await history;
+          if (entries && active) setEntries(entries);
+        } else {
+          const entries = await listRedemptionsFor(rows.map((row) => row.id));
+          if (active) setEntries(entries);
+        }
+      } catch {
+        if (!active) return;
+        walletRef.current = { scope: target, cards: [] };
+        setCards(NO_CARDS);
+        setEntries(NO_ENTRIES);
+      } finally {
+        if (active) setLoadedScope(target);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [userId]);
 
   // A redemption on the web dashboard changes the voucher row. Realtime pushes
   // that change to the phone so the balance updates while the app is open.

@@ -22,6 +22,13 @@ export function Glyph({
   strokeWidth = 2,
   style,
 }: GlyphProps) {
-  const Icon = glyphIcon(name);
-  return <Icon size={size} color={color} strokeWidth={strokeWidth} style={style} />;
+  // Rendered through createElement: the glyph table holds stable module-level
+  // components, so nothing is created here, but the JSX alias made it look as
+  // though this render built a new component type.
+  return React.createElement(glyphIcon(name), {
+    size,
+    color,
+    strokeWidth,
+    style,
+  });
 }

@@ -33,24 +33,20 @@ export default function SendBasketScreen() {
   const { ready, getBasket, sendBasket } = useBaskets();
   const basket = id ? getBasket(id) : null;
 
-  const [name, setName] = useState(basket?.recipient_name ?? '');
+  // The creator's name and note fall back to whatever the basket already has,
+  // so a late-hydrating basket fills the form without an effect copying state.
+  const [nameEdit, setNameEdit] = useState<string | null>(null);
+  const name = nameEdit ?? basket?.recipient_name ?? '';
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [method, setMethod] = useState<DeliveryMethod>('email');
-  const [message, setMessage] = useState(basket?.note ?? '');
+  const [messageEdit, setMessageEdit] = useState<string | null>(null);
+  const message = messageEdit ?? basket?.note ?? '';
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sending, setSending] = useState(false);
 
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
   const isOwner = basket ? basket.creator_id === (user?.id ?? 'demo-user') : false;
-
-  // Baskets hydrate from AsyncStorage, so prefill once the record is available
-  // without overwriting anything the creator has already typed.
-  useEffect(() => {
-    if (!basket) return;
-    setName((prev) => prev || basket.recipient_name);
-    setMessage((prev) => prev || basket.note || '');
-  }, [basket]);
 
   async function send() {
     if (!basket || sending) return;
@@ -204,7 +200,7 @@ export default function SendBasketScreen() {
           label={t('send.recipientName')}
           value={name}
           onChangeText={(value) => {
-            setName(value);
+            setNameEdit(value);
             setErrors((prev) => ({ ...prev, name: '' }));
           }}
           autoCapitalize="words"
@@ -260,7 +256,7 @@ export default function SendBasketScreen() {
         <TextField
           label={t('basket.sendMessage')}
           value={message}
-          onChangeText={setMessage}
+          onChangeText={setMessageEdit}
           placeholder={t('basket.sendMessagePlaceholder', { name: name.trim() || basket.recipient_name })}
           multiline
           numberOfLines={4}
