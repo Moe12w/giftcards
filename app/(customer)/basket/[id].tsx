@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -74,7 +74,6 @@ export default function BasketDetailScreen() {
   }, [reload]);
 
   const [selectedItem, setSelectedItem] = useState<BasketItem | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const lang: 'en' | 'ar' = i18n.language === 'ar' ? 'ar' : 'en';
   const rtl = i18n.language === 'ar';
@@ -101,39 +100,46 @@ export default function BasketDetailScreen() {
   // Live collaboration: when somebody else adds a card, the store picks it up
   // over Supabase Realtime and the basket shows the new contribution.
   const itemCount = basket?.items.length ?? 0;
-  useEffect(() => {
-    if (!basket || basket.items.length === 0) return;
-    const newest = basket.items[basket.items.length - 1];
-    if (newest.added_by_id === (user?.id ?? 'demo-user')) return;
-    setNotice(
-      t('basket.justAdded', {
-        name: newest.added_by_name,
-        amount: formatMoney(newest.amount_minor, lang),
-        vendor: newest.vendor_name,
-      }),
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemCount]);
+  const newest = basket && itemCount > 0 ? basket.items[itemCount - 1] : null;
+  const newcomer = newest && newest.added_by_id !== (user?.id ?? 'demo-user') ? newest : null;
+  const additionNotice = newcomer
+    ? t('basket.justAdded', {
+        name: newcomer.added_by_name,
+        amount: formatMoney(newcomer.amount_minor, lang),
+        vendor: newcomer.vendor_name,
+      })
+    : null;
+
+  // Confirmation after returning from a contribution payment or from sending
+  // the finished box; it outranks the live-collaboration toast.
+  const flashNotice =
+    params.paid === '1'
+      ? t('basket.paidNotice')
+      : params.sent === '1'
+        ? t('basket.sentNotice')
+        : null;
+
+  // Both toasts are derived from the basket and the route, so nothing writes
+  // state on mount. The timer only records what has already been shown, which
+  // makes the derived value go quiet again.
+  const [dismissedFlash, setDismissedFlash] = useState(false);
+  const [dismissedCount, setDismissedCount] = useState<number | null>(null);
+  const notice =
+    flashNotice && !dismissedFlash
+      ? flashNotice
+      : additionNotice && dismissedCount !== itemCount
+        ? additionNotice
+        : null;
 
   useEffect(() => {
     if (!notice) return;
-    const timer = setTimeout(() => setNotice(null), 4200);
+    const showingFlash = notice === flashNotice;
+    const timer = setTimeout(() => {
+      if (showingFlash) setDismissedFlash(true);
+      else setDismissedCount(itemCount);
+    }, 4200);
     return () => clearTimeout(timer);
-  }, [notice]);
-
-  // Confirmation after returning from a contribution payment or from sending
-  // the finished box. Guarded so re-renders don't replay the toast.
-  const flashed = useRef(false);
-  useEffect(() => {
-    if (flashed.current) return;
-    if (params.paid === '1') {
-      flashed.current = true;
-      setNotice(t('basket.paidNotice'));
-    } else if (params.sent === '1') {
-      flashed.current = true;
-      setNotice(t('basket.sentNotice'));
-    }
-  }, [params.paid, params.sent, t]);
+  }, [flashNotice, itemCount, notice]);
 
   const totals = useMemo(() => (basket ? participantTotals(basket) : {}), [basket]);
   const total = basket ? basketTotal(basket) : 0;

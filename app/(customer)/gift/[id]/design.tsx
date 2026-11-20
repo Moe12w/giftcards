@@ -38,7 +38,7 @@ const SUGGESTIONS = ['birthday', 'thankYou', 'congrats', 'justBecause'] as const
  * component so rendering never reads the clock.
  */
 function newRecipientId(): string {
-  return newRecipientId();
+  return `r_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
 
 export default function GiftComposeScreen() {
@@ -52,18 +52,26 @@ export default function GiftComposeScreen() {
   // flipping the flag from inside the effect.
   const [loading, setLoading] = useState(!id);
 
-  const [custom, setCustom] = useState('');
-  const [recipientName, setRecipientName] = useState(draft.recipient?.name ?? '');
-  const [recipientEmail, setRecipientEmail] = useState(draft.recipient?.email ?? '');
-  const [recipientPhone, setRecipientPhone] = useState(draft.recipient?.phone ?? '');
-  const [message, setMessage] = useState(draft.message);
-  const [mode, setMode] = useState<'now' | 'schedule'>(
-    draft.deliveryDate ? 'schedule' : 'now',
-  );
-  const [dateText, setDateText] = useState(
-    draft.deliveryDate ? draft.deliveryDate.slice(0, 10) : '',
-  );
+  // The typed custom amount belongs to one card; a different offer starts blank.
+  const [customInput, setCustomInput] = useState<{ offerId: string; text: string } | null>(null);
+
+  // Every field below mirrors the shared draft, which hydrates from AsyncStorage
+  // after mount. Each holds only the user's own edit, so a draft that lands late
+  // still fills whatever was left untouched instead of being written by an effect.
+  const [nameEdit, setNameEdit] = useState<string | null>(null);
+  const [emailEdit, setEmailEdit] = useState<string | null>(null);
+  const [phoneEdit, setPhoneEdit] = useState<string | null>(null);
+  const [messageEdit, setMessageEdit] = useState<string | null>(null);
+  const [modeEdit, setModeEdit] = useState<'now' | 'schedule' | null>(null);
+  const [dateEdit, setDateEdit] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const recipientName = nameEdit ?? draft.recipient?.name ?? '';
+  const recipientEmail = emailEdit ?? draft.recipient?.email ?? '';
+  const recipientPhone = phoneEdit ?? draft.recipient?.phone ?? '';
+  const message = messageEdit ?? draft.message;
+  const mode = modeEdit ?? (draft.deliveryDate ? 'schedule' : 'now');
+  const dateText = dateEdit ?? (draft.deliveryDate ? draft.deliveryDate.slice(0, 10) : '');
 
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
 
@@ -107,7 +115,6 @@ export default function GiftComposeScreen() {
           variantId: first.id,
           amountMinor: first.price_minor,
         });
-        setCustom('');
       }
       return;
     }
@@ -123,7 +130,6 @@ export default function GiftComposeScreen() {
           amountMinor: offer.min_amount_minor,
         });
       }
-      setCustom('');
       return;
     }
     if (draft.offerId !== offer.id || draft.amountMinor <= 0 || draft.variantId) {
@@ -132,25 +138,8 @@ export default function GiftComposeScreen() {
         variantId: null,
         amountMinor: offer.preset_amounts_minor[1] ?? offer.min_amount_minor,
       });
-      setCustom('');
     }
   }, [draft.amountMinor, draft.offerId, draft.variantId, offer, ready, update]);
-
-  // The draft hydrates from AsyncStorage. If it lands after this screen mounts,
-  // pull the saved recipient/message/date in once without clobbering edits.
-  const hydrated = useRef(false);
-  useEffect(() => {
-    if (!ready || hydrated.current) return;
-    hydrated.current = true;
-    setRecipientName((prev) => prev || draft.recipient?.name || '');
-    setRecipientEmail((prev) => prev || draft.recipient?.email || '');
-    setRecipientPhone((prev) => prev || draft.recipient?.phone || '');
-    setMessage((prev) => prev || draft.message || '');
-    if (draft.deliveryDate) {
-      setMode('schedule');
-      setDateText((prev) => prev || draft.deliveryDate!.slice(0, 10));
-    }
-  }, [draft, ready]);
 
   if (loading) {
     return (
@@ -182,10 +171,11 @@ export default function GiftComposeScreen() {
   const min = offer.min_amount_minor;
   const max = offer.max_amount_minor;
   const amount = isFixedAmount ? min : draft.amountMinor;
+  const custom = customInput && customInput.offerId === offer.id ? customInput.text : '';
 
   function chooseAmount(minor: number) {
     update({ amountMinor: minor, variantId: null });
-    setCustom('');
+    setCustomInput(null);
     setErrors((prev) => ({ ...prev, amount: '' }));
   }
 
@@ -195,7 +185,7 @@ export default function GiftComposeScreen() {
   }
 
   function onChangeCustom(text: string) {
-    setCustom(text);
+    setCustomInput({ offerId: offer!.id, text });
     if (!text.trim()) return;
     try {
       const minor = toMinorUnits(text);
@@ -210,9 +200,9 @@ export default function GiftComposeScreen() {
   }
 
   function chooseRecipient(name: string, email: string, phone?: string) {
-    setRecipientName(name);
-    setRecipientEmail(email);
-    setRecipientPhone(phone ?? '');
+    setNameEdit(name);
+    setEmailEdit(email);
+    setPhoneEdit(phone ?? '');
     update({
       recipient: {
         id: draft.recipient?.id ?? newRecipientId(),
@@ -446,7 +436,7 @@ export default function GiftComposeScreen() {
           label={t('send.recipientName')}
           value={recipientName}
           onChangeText={(value) => {
-            setRecipientName(value);
+            setNameEdit(value);
             setErrors((prev) => ({ ...prev, recipientName: '' }));
           }}
           autoCapitalize="words"
@@ -457,7 +447,7 @@ export default function GiftComposeScreen() {
             label={t('send.recipientEmail')}
             value={recipientEmail}
             onChangeText={(value) => {
-              setRecipientEmail(value);
+              setEmailEdit(value);
               setErrors((prev) => ({ ...prev, recipientEmail: '' }));
             }}
             keyboardType="email-address"
@@ -470,7 +460,7 @@ export default function GiftComposeScreen() {
             label={t('send.recipientPhone')}
             value={recipientPhone}
             onChangeText={(value) => {
-              setRecipientPhone(value);
+              setPhoneEdit(value);
               setErrors((prev) => ({ ...prev, recipientPhone: '' }));
             }}
             keyboardType="phone-pad"
@@ -508,14 +498,14 @@ export default function GiftComposeScreen() {
             label={t('send.deliveryNow')}
             active={mode === 'now'}
             onPress={() => {
-              setMode('now');
+              setModeEdit('now');
               setErrors((prev) => ({ ...prev, date: '' }));
             }}
           />
           <Chip
             label={t('send.deliverySchedule')}
             active={mode === 'schedule'}
-            onPress={() => setMode('schedule')}
+            onPress={() => setModeEdit('schedule')}
           />
         </View>
         {mode === 'schedule' ? (
@@ -523,7 +513,7 @@ export default function GiftComposeScreen() {
             label={t('send.deliveryDate')}
             value={dateText}
             onChangeText={(value) => {
-              setDateText(value);
+              setDateEdit(value);
               setErrors((prev) => ({ ...prev, date: '' }));
             }}
             placeholder="2026-12-24"
@@ -537,7 +527,7 @@ export default function GiftComposeScreen() {
         <Text style={styles.sectionTitle}>{t('send.messageTitle')}</Text>
         <TextField
           value={message}
-          onChangeText={setMessage}
+          onChangeText={setMessageEdit}
           placeholder={t('send.messagePlaceholder')}
           multiline
           numberOfLines={4}
@@ -549,7 +539,7 @@ export default function GiftComposeScreen() {
               key={key}
               label={t(`send.suggestionShort.${key}`)}
               active={false}
-              onPress={() => setMessage(t(`send.suggestions.${key}`))}
+              onPress={() => setMessageEdit(t(`send.suggestions.${key}`))}
             />
           ))}
         </View>
