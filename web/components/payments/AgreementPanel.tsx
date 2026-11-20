@@ -118,6 +118,14 @@ export function AgreementPanel({
                       <span className="k">Business reference</span>
                       <span className="v small mono">{application.id}</span>
                     </div>
+                    <div>
+                      <a
+                        className="btn sm ghost"
+                        href={`/api/merchant-agreements/${agreement?.id}/signed?signature=${signature.id}`}
+                      >
+                        <Download size={14} /> Download signed copy
+                      </a>
+                    </div>
                   </div>
                 </div>
               ) : null}

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Search, Store } from 'lucide-react';
+import { Download, Search, Store } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
 import { formatDate, initials } from '@/lib/format';
 import { EmptyState, Notice, PageHead, StatusTag } from '@/components/ui';
@@ -52,6 +52,11 @@ export default async function AdminVendorsPage({
         eyebrow={t.eyebrow}
         title={t.title}
         description={t.description}
+        actions={
+          <a className="btn sm primary" href="/api/admin/vendors/files">
+            <Download size={14} /> Download all files
+          </a>
+        }
       />
 
       <Notice
@@ -179,6 +184,13 @@ export default async function AdminVendorsPage({
                             <Link className="btn sm" href={`/admin/vendors/${vendor.id}`}>
                               <Store size={13} /> {c.actions.open}
                             </Link>
+                            <a
+                              className="btn sm ghost"
+                              href={`/api/admin/vendors/files?vendor=${vendor.id}`}
+                              title="Download this vendor's files"
+                            >
+                              <Download size={13} /> Files
+                            </a>
                           </div>
                         </td>
                       </tr>

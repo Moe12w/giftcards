@@ -362,11 +362,11 @@ export default async function AdminMerchantApplicationPage({
                     <a
                       className="small"
                       style={{ textDecoration: 'underline' }}
-                      href={`/api/merchant-agreements/${signature.agreement_id}`}
+                      href={`/api/merchant-agreements/${signature.agreement_id}/signed?signature=${signature.id}`}
                       target="_blank"
                       rel="noreferrer"
                     >
-                      View PDF
+                      Download signed PDF
                     </a>
                   </span>
                 </div>
