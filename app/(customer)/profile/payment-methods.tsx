@@ -1,110 +1,45 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { Badge } from '@/src/components/Badge';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
-import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
-import { addPaymentMethod, listPaymentMethods, removePaymentMethod } from '@/src/lib/data';
 import { useThemeRefresh } from '@/src/lib/theme';
-import type { PaymentMethod } from '@/src/lib/types';
-import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
+/**
+ * Giftly does not store payment instruments. Card details are typed on the
+ * MyFatoorah hosted page during checkout, so this screen explains that instead
+ * of listing placeholder cards.
+ */
 export default function PaymentMethodsScreen() {
   useThemeRefresh();
   const { t } = useTranslation();
-  const [methods, setMethods] = useState<PaymentMethod[]>([]);
-  const [added, setAdded] = useState(false);
-
-  const load = useCallback(async () => {
-    try {
-      setMethods(await listPaymentMethods());
-    } catch {
-      setMethods([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  async function add() {
-    try {
-      await addPaymentMethod({ brand: 'Visa', last4: '0000', expiry: '12/30' });
-      setAdded(true);
-      await load();
-    } catch {
-      setAdded(false);
-    }
-  }
 
   return (
     <Screen>
       <FlowHeader title={t('profile.paymentMethods')} onBack={() => router.back()} />
 
-      {added ? <Text style={styles.saved}>{t('profile.paymentAdded')}</Text> : null}
+      <Card style={styles.note}>
+        <Text style={styles.title}>{t('profile.paymentMethodsTitle')}</Text>
+        <Text style={styles.body}>{t('profile.paymentMethodsInfo')}</Text>
+      </Card>
 
-      {methods.length === 0 ? (
-        <EmptyState
-          title={t('profile.noPaymentMethods')}
-          body={t('profile.addFirstCard')}
-          icon="creditCard"
-          tone="teal"
-        />
-      ) : (
-        <View style={styles.list}>
-          {methods.map((method) => (
-            <Card key={method.id} style={styles.row}>
-              <View style={styles.brand}>
-                <Text style={styles.brandText}>{method.brand}</Text>
-              </View>
-              <View style={styles.copy}>
-                <Text style={styles.title}>•••• {method.last4}</Text>
-                <Text style={styles.meta}>{method.expiry}</Text>
-              </View>
-              {method.isDefault ? <Badge label={t('profile.default')} tone="success" /> : null}
-              <Text
-                onPress={() => setMethods((current) => current.filter((item) => item.id !== method.id))}
-                style={styles.remove}
-              >
-                {t('profile.remove')}
-              </Text>
-            </Card>
-          ))}
-        </View>
-      )}
-
-      <Button label={t('profile.addPayment')} onPress={add} />
-      <Button
-        label={t('common.back')}
-        variant="secondary"
-        onPress={() => router.back()}
-      />
+      <Button label={t('common.back')} variant="secondary" onPress={() => router.back()} />
     </Screen>
   );
 }
 
 const styles = themedStyles(() => ({
-  saved: { fontFamily: fonts.semibold, fontSize: fontSizes.sm, color: colors.success },
-  list: { gap: spacing.sm },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  brand: {
-    width: 48,
-    height: 34,
-    borderRadius: radii.sm,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
+  note: { gap: spacing.xs },
+  title: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
+  body: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+    lineHeight: 20,
   },
-  brandText: { fontFamily: fonts.extrabold, fontSize: fontSizes.xs, color: colors.ink },
-  copy: { flex: 1, gap: 1 },
-  title: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.text },
-  meta: { fontFamily: fonts.regular, fontSize: fontSizes.xs, color: colors.textMuted },
-  remove: { fontFamily: fonts.bold, fontSize: fontSizes.xs, color: colors.danger },
 }));

@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import * as WebBrowser from 'expo-web-browser';
 import { Lock } from 'lucide-react-native';
 
 import { Button } from '@/src/components/Button';
@@ -13,6 +14,8 @@ import { Money } from '@/src/components/Money';
 import { PaymentMethods } from '@/src/components/PaymentMethods';
 import { Screen } from '@/src/components/Screen';
 import { useBaskets } from '@/src/lib/baskets';
+import { env } from '@/src/lib/env';
+import { getSupabase } from '@/src/lib/supabase';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { offerBusinessName, offerImage, offerTitle, offerTone } from '@/src/lib/catalog';
 import { getOffer } from '@/src/lib/data';
@@ -54,12 +57,14 @@ export default function ContributeScreen() {
     target?: string;
     items?: string;
   }>();
-  const { ready, getBasket, addItem, createBasket } = useBaskets();
+  const { ready, getBasket, createBasket } = useBaskets();
 
   const pending = useMemo(() => parsePending(params.items), [params.items]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
+  const idempotencyKey = useRef<string | null>(null);
 
   const isNew = params.new === '1';
   const basket = params.basketId ? getBasket(params.basketId) : null;
@@ -88,42 +93,55 @@ export default function ContributeScreen() {
 
   const total = items.reduce((sum, item) => sum + item.amountMinor, 0);
 
-  // Open the finished basket as a fresh screen on top of the tabs. Dropping the
-  // create → pick → pay screens first means Back from the basket leaves the
-  // checkout flow instead of stepping into the payment screen again.
-  function openBasket(id: string, query: string) {
-    if (router.canDismiss()) {
-      router.dismissAll();
-      router.push(`/(customer)/basket/${id}?${query}`);
-      return;
-    }
-    router.replace(`/(customer)/basket/${id}?${query}`);
-  }
-
   async function pay() {
     if (paying || items.length === 0) return;
     setPaying(true);
-    // In production this waits for the MyFatoorah webhook before the cards are
-    // written. Until then the basket is filled straight away.
-    if (basket) {
-      for (const item of items) {
-        await addItem(basket.id, item);
+    setPayError(null);
+    idempotencyKey.current ??= `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    try {
+      // The basket exists before the invoice so the paid lines have a home.
+      // Its cards are only written by the webhook once the payment succeeds.
+      let target = basket;
+      if (!target) {
+        target = await createBasket({
+          name: params.name ?? t('basket.defaultName'),
+          recipientName: params.recipient ?? t('basket.yourRecipient'),
+          occasion: (params.occasion as OccasionId | undefined) ?? 'birthday',
+          targetMinor: Number(params.target ?? 0) || 0,
+          items: [],
+        });
+        if (!target) throw new Error('basket_create_failed');
       }
-      openBasket(basket.id, 'paid=1');
-      return;
-    }
-    const created = await createBasket({
-      name: params.name ?? t('basket.defaultName'),
-      recipientName: params.recipient ?? t('basket.yourRecipient'),
-      occasion: (params.occasion as OccasionId | undefined) ?? 'birthday',
-      targetMinor: Number(params.target ?? 0) || 0,
-      items,
-    });
-    if (!created) {
+
+      const { data, error } = await getSupabase().functions.invoke('create-basket-payment', {
+        body: {
+          basketId: target.id,
+          items: items.map(({ offer, amountMinor }) => ({
+            productId: offer.id,
+            amountMinor,
+          })),
+          language: lang,
+          idempotencyKey: idempotencyKey.current,
+          returnUrl: `${env.appScheme}://payment`,
+        },
+      });
+      if (error) throw error;
+
+      const paymentUrl = String((data as { paymentUrl?: string })?.paymentUrl ?? '');
+      const orderId = String((data as { orderId?: string })?.orderId ?? '');
+      if (!paymentUrl || !orderId) throw new Error('payment_link_unavailable');
+
+      await WebBrowser.openAuthSessionAsync(paymentUrl, `${env.appScheme}://payment`);
+      router.push({
+        pathname: '/(customer)/checkout/processing',
+        params: { orderId, basketId: target.id },
+      });
+    } catch (paymentError) {
+      console.error('[basket] payment request failed', paymentError);
+      setPayError(t('basket.paymentError'));
+    } finally {
       setPaying(false);
-      return;
     }
-    openBasket(created.id, 'paid=1&created=1');
   }
 
   if (!ready || loading) {
@@ -238,6 +256,12 @@ export default function ContributeScreen() {
         <Text style={styles.infoText}>{t('basket.contributeInfo')}</Text>
       </Card>
 
+      {payError ? (
+        <Text style={styles.errorText} accessibilityRole="alert">
+          {payError}
+        </Text>
+      ) : null}
+
       <PaymentMethods
         amountMinor={total}
         onPay={pay}
@@ -286,5 +310,11 @@ const styles = themedStyles(() => ({
     fontSize: fontSizes.sm,
     color: colors.text,
     lineHeight: 18,
+  },
+  errorText: {
+    fontFamily: fonts.semibold,
+    fontSize: fontSizes.sm,
+    color: colors.danger,
+    textAlign: 'center',
   },
 }));

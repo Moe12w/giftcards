@@ -476,7 +476,8 @@
     "confirmationBody": "Your gift is on its way.",
     "applePay": "Apple Pay",
     "googlePay": "Google Pay",
-    "newCard": "New card"
+    "newCard": "New card",
+    "securePaymentNote": "You'll finish the payment on MyFatoorah's secure page. Card details are entered there — Giftly never sees or stores them, and Apple Pay or Google Pay appears there when the business has it enabled."
   },
   "cards": {
     "title": "My cards",
@@ -657,6 +658,8 @@
     "changeEmail": "Change email",
     "changePassword": "Change password",
     "paymentMethods": "Payment methods",
+    "paymentMethodsTitle": "Cards are not stored in the app",
+    "paymentMethodsInfo": "Card details are entered on MyFatoorah's secure page during checkout. Giftly does not keep card numbers or wallet tokens.",
     "addPayment": "Add payment method",
     "favourites": "Saved businesses",
     "recipients": "Saved recipients",
@@ -1072,6 +1075,7 @@
     "paymentTotal": "Total to pay",
     "contributeInfo": "Your cards join the box only after payment succeeds, so every gift inside is already paid for.",
     "contributeCta": "Pay {{amount}} & add",
+    "paymentError": "We couldn't start the payment. Please try again.",
     "contributeNewCta": "Pay {{amount}} & create",
     "paidNotice": "Payment received — your gift cards are in the box.",
     "sentNotice": "Gift box sent! Everyone's cards were delivered together.",

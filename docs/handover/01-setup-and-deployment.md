@@ -83,6 +83,7 @@ Currently deployed functions:
 - `sync-myfatoorah-suppliers`
 - `create-payment`
 - `create-bulk-payment`
+- `create-basket-payment`
 - `payment-webhook`
 
 Most are internal and are called with a service-role header, so they must be deployed with JWT verification **off**:
@@ -91,10 +92,10 @@ Most are internal and are called with a service-role header, so they must be dep
 npx supabase functions deploy supplier-onboard upload-supplier-document sync-myfatoorah-suppliers payment-webhook --no-verify-jwt --yes
 ```
 
-`create-payment` and `create-bulk-payment` are called from browsers with a user JWT, so they keep JWT verification **on**:
+`create-payment`, `create-bulk-payment` and `create-basket-payment` are called from browsers with a user JWT, so they keep JWT verification **on**:
 
 ```bash
-npx supabase functions deploy create-payment create-bulk-payment --yes
+npx supabase functions deploy create-payment create-bulk-payment create-basket-payment --yes
 ```
 
 `mcp` is public for catalogue reads:

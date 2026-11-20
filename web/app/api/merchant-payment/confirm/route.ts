@@ -86,6 +86,28 @@ export async function POST(request: Request) {
     });
     if (confirmError) throw confirmError;
 
+    // Basket contributions put the paid cards into the shared box instead of
+    // issuing a voucher to the payer. The RPC is idempotent per order line.
+    const { data: orderRow } = await admin
+      .from('orders')
+      .select('basket_id')
+      .eq('id', payment.order_id)
+      .maybeSingle();
+    if (orderRow?.basket_id) {
+      const { data: fulfilled, error: basketError } = await admin.rpc(
+        'basket_fulfill_from_payment',
+        { p_order_id: payment.order_id },
+      );
+      if (basketError) throw basketError;
+      return NextResponse.json({
+        confirmed: true,
+        basket: true,
+        orderId: payment.order_id,
+        added: (fulfilled as any)?.added ?? 0,
+        delivery: { delivered: false, reason: 'basket_contribution' },
+      });
+    }
+
     const itemCount = await admin
       .from('order_items')
       .select('id', { count: 'exact', head: true })

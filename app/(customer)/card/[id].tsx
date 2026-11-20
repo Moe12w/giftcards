@@ -120,10 +120,6 @@ export default function CardDetailScreen() {
   const redeemable = card && !waiting ? canRedeem(card) : false;
   const redeemValue = `giftly:card:${card?.id ?? ''}`;
 
-  function walletUnavailable() {
-    Alert.alert(t('cards.addToWallet'), t('cards.walletNotConfigured'));
-  }
-
   if (!ready) {
     return (
       <Screen>
@@ -242,6 +238,11 @@ export default function CardDetailScreen() {
         <Card style={styles.qrCard}>
           <Text style={styles.qrTitle}>{t('cards.showCode')}</Text>
           <QRCode value={redeemValue} />
+          {card.voucher_code ? (
+            <Text style={styles.voucherCode} selectable>
+              {card.voucher_code}
+            </Text>
+          ) : null}
           <Text style={styles.qrHint}>
             {sessionCard ? t('sessions.scanHint') : t('cards.scanHint')}
           </Text>
@@ -268,13 +269,6 @@ export default function CardDetailScreen() {
           <Text style={styles.howText}>{t('sessions.howItWorks')}</Text>
         </Card>
       ) : null}
-
-      {waiting || isSent ? null : (
-        <>
-          <Button label={t('cards.appleWallet')} variant="secondary" onPress={walletUnavailable} />
-          <Button label={t('cards.googleWallet')} variant="secondary" onPress={walletUnavailable} />
-        </>
-      )}
 
       {isSent ? null : (
         <Text style={styles.privacy}>{sessionCard ? t('sessions.privacy') : t('cards.codeOnce')}</Text>
@@ -310,6 +304,13 @@ const styles = themedStyles(() => ({
   qrCard: { alignItems: 'center', gap: spacing.sm },
   qrTitle: { fontSize: fontSizes.md, fontWeight: '700', color: colors.text },
   qrHint: { fontSize: fontSizes.sm, color: colors.textMuted, textAlign: 'center' },
+  voucherCode: {
+    fontFamily: fonts.extrabold,
+    fontSize: fontSizes.md,
+    letterSpacing: 2,
+    color: colors.text,
+    marginTop: spacing.xs,
+  },
   infoCard: { gap: spacing.sm },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
   rowLabel: { fontSize: fontSizes.md, color: colors.textMuted },

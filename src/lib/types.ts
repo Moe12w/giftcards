@@ -148,6 +148,8 @@ export interface GiftCard {
   remaining_sessions?: number;
   /** Vendor that issued the card — used by the vendor dashboard. */
   vendor_id?: string;
+  /** Human-readable code the vendor types if the QR cannot be scanned. */
+  voucher_code?: string | null;
 }
 
 /** One redemption against a gift card. */

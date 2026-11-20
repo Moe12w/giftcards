@@ -476,7 +476,8 @@
     "confirmationBody": "هديتك في طريقها.",
     "applePay": "Apple Pay",
     "googlePay": "Google Pay",
-    "newCard": "بطاقة جديدة"
+    "newCard": "بطاقة جديدة",
+    "securePaymentNote": "ستُكمل الدفع على صفحة MyFatoorah الآمنة. تُدخل بيانات البطاقة هناك، ولا يراها Giftly ولا يحفظها، ويظهر Apple Pay أو Google Pay عند تفعيله لدى المتجر."
   },
   "cards": {
     "title": "بطاقاتي",
@@ -657,6 +658,8 @@
     "changeEmail": "تغيير البريد الإلكتروني",
     "changePassword": "تغيير كلمة المرور",
     "paymentMethods": "طرق الدفع",
+    "paymentMethodsTitle": "لا تُحفظ البطاقات في التطبيق",
+    "paymentMethodsInfo": "تُدخل بيانات البطاقة في صفحة MyFatoorah الآمنة أثناء الشراء. لا يحفظ Giftly أرقام البطاقات أو رموز المحافظ.",
     "addPayment": "إضافة طريقة دفع",
     "favourites": "المتاجر المحفوظة",
     "recipients": "المستلمون المحفوظون",
@@ -1072,6 +1075,7 @@
     "paymentTotal": "الإجمالي للدفع",
     "contributeInfo": "لا تُضاف بطاقاتك إلى السلة إلا بعد نجاح الدفع، لذا كل هدية داخل الصندوق مدفوعة بالفعل.",
     "contributeCta": "ادفع {{amount}} وأضف",
+    "paymentError": "تعذر بدء الدفع. حاول مرة أخرى.",
     "contributeNewCta": "ادفع {{amount}} وأنشئ",
     "paidNotice": "تم استلام الدفع — بطاقات هداياك داخل الصندوق.",
     "sentNotice": "تم إرسال صندوق الهدايا! سُلّمت بطاقات الجميع معاً.",

@@ -17,7 +17,7 @@ import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/th
 export default function ProcessingScreen() {
   useThemeRefresh();
   const { t } = useTranslation();
-  const { orderId } = useLocalSearchParams<{ orderId?: string }>();
+  const { orderId, basketId } = useLocalSearchParams<{ orderId?: string; basketId?: string }>();
   const stopped = useRef(false);
 
   useEffect(() => {
@@ -40,6 +40,13 @@ export default function ProcessingScreen() {
         if (error) throw error;
         const status = data as { paid?: boolean; failed?: boolean } | null;
         if (status?.paid) {
+          if (basketId) {
+            router.replace({
+              pathname: '/(customer)/basket/[id]',
+              params: { id: basketId, paid: '1' },
+            });
+            return;
+          }
           router.replace({
             pathname: '/(customer)/checkout/success',
             params: { orderId },
@@ -66,7 +73,7 @@ export default function ProcessingScreen() {
       stopped.current = true;
       if (timer) clearTimeout(timer);
     };
-  }, [orderId]);
+  }, [basketId, orderId]);
 
   return (
     <Screen scroll={false} contentStyle={styles.content}>

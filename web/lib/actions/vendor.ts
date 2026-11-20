@@ -844,12 +844,22 @@ export async function redeemScannedVoucher(input: {
     }
   }
 
-  const { data, error } = await ctx.supabase.rpc('redeem_voucher_by_code', {
-    p_code: voucher.code,
-    p_amount_minor: amount,
-    p_sessions: sessions,
-    p_notes: notes,
-  });
+  // The scanned QR resolves to the voucher id. Redeem by id so a card that has
+  // no printable code (issued before codes were generated) still works; a typed
+  // code uses the code path.
+  const { data, error } = voucher.code
+    ? await ctx.supabase.rpc('redeem_voucher_by_code', {
+        p_code: voucher.code,
+        p_amount_minor: amount,
+        p_sessions: sessions,
+        p_notes: notes,
+      })
+    : await ctx.supabase.rpc('redeem_voucher_by_id', {
+        p_voucher_id: voucher.id,
+        p_amount_minor: amount,
+        p_sessions: sessions,
+        p_notes: notes,
+      });
 
   if (error) return { ok: false, error: error.message };
 

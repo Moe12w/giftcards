@@ -165,10 +165,48 @@ export async function adminProcessMyFatoorahRefund(formData: FormData) {
 
   const { data: payment } = await ctx.supabase
     .from('myfatoorah_payments')
-    .select('invoice_id, supplier_code')
+    .select('id, invoice_id, supplier_code')
     .eq('order_id', orderId)
     .maybeSingle();
   if (!payment) back(path, 'Payment not found for that order.');
+
+  // A multi-vendor order was charged to several suppliers. The provider must
+  // deduct the refund from each of them in proportion to what it was paid,
+  // not from whichever supplier happens to be first on the payment row.
+  const { data: allocations } = await ctx.supabase
+    .from('myfatoorah_payment_allocations')
+    .select('supplier_code, invoice_share_minor')
+    .eq('payment_id', payment.id)
+    .order('invoice_share_minor', { ascending: false });
+
+  const shares = (allocations ?? [])
+    .map((row) => ({
+      supplierCode: String(row.supplier_code ?? ''),
+      shareMinor: Number(row.invoice_share_minor ?? 0),
+    }))
+    .filter((row) => row.supplierCode && row.shareMinor > 0);
+  const allocatedMinor = shares.reduce((sum, row) => sum + row.shareMinor, 0);
+
+  let refundRemaining = amountMinor;
+  const suppliers = shares.length > 0 && allocatedMinor > 0
+    ? shares
+        .map((row, index) => {
+          const share = index === shares.length - 1
+            ? refundRemaining
+            : Math.min(
+                refundRemaining,
+                Math.floor((amountMinor * row.shareMinor) / allocatedMinor),
+              );
+          refundRemaining -= share;
+          return {
+            SupplierCode: Number(row.supplierCode),
+            SupplierDeductedAmount: minorToMajor(share),
+          };
+        })
+        .filter((row) => Number(row.SupplierDeductedAmount) > 0)
+    : payment.supplier_code
+      ? [{ SupplierCode: Number(payment.supplier_code), SupplierDeductedAmount: minorToMajor(amountMinor) }]
+      : [];
 
   const externalIdentifier = `giftly-refund-${orderId}-${Date.now()}`;
   try {
@@ -180,9 +218,7 @@ export async function adminProcessMyFatoorahRefund(formData: FormData) {
         Key: payment.invoice_id,
         Comment: 'Gift card order refund initiated by Giftly administrator.',
         ExternalIdentifier: externalIdentifier,
-        Suppliers: payment.supplier_code
-          ? [{ SupplierCode: Number(payment.supplier_code), SupplierDeductedAmount: minorToMajor(amountMinor) }]
-          : [],
+        Suppliers: suppliers,
       }),
       cache: 'no-store',
       signal: AbortSignal.timeout(20_000),

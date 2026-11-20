@@ -154,6 +154,7 @@ export function mapVoucher(row: VoucherRow): GiftCard {
     fulfilment_type: row.fulfilment_type as GiftCard['fulfilment_type'],
     total_sessions: row.total_sessions ?? undefined,
     remaining_sessions: row.remaining_sessions ?? undefined,
+    voucher_code: row.voucher_code ?? null,
   };
 }
 

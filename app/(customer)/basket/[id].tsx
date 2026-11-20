@@ -64,8 +64,14 @@ export default function BasketDetailScreen() {
     sent?: string;
   }>();
   const { user } = useAuth();
-  const { getBasket, ready } = useBaskets();
+  const { getBasket, ready, reload } = useBaskets();
   const basket = params.id ? getBasket(params.id) : null;
+
+  // Coming back from a paid contribution: refresh so the new cards are there
+  // even if the realtime event arrives before this screen mounts.
+  useEffect(() => {
+    void reload();
+  }, [reload]);
 
   const [selectedItem, setSelectedItem] = useState<BasketItem | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
