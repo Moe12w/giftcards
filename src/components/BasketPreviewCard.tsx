@@ -1,6 +1,6 @@
 // src/components/BasketPreviewCard.tsx
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, Users } from 'lucide-react-native';
 

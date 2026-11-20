@@ -9,7 +9,7 @@ interface ScreenProps {
   scroll?: boolean;
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
-  edges?: Array<'top' | 'bottom' | 'left' | 'right'>;
+  edges?: ('top' | 'bottom' | 'left' | 'right')[];
   /** Adds room for the floating tab bar. */
   tabbed?: boolean;
 }

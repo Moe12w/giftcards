@@ -1,7 +1,7 @@
 import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
 import { Link, Stack } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { colors, fontSizes, spacing, themedStyles } from '@/src/theme';

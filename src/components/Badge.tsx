@@ -1,6 +1,6 @@
 // src/components/Badge.tsx
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 
 export type BadgeTone = 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'primary';

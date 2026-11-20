@@ -1,6 +1,6 @@
 // src/components/BackButton.tsx
 import React from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable } from 'react-native';
 import { ArrowLeft, ArrowRight } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, radii, themedStyles } from '../theme';

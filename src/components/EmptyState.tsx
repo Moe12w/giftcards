@@ -1,6 +1,6 @@
 // src/components/EmptyState.tsx
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '../theme';
 import { IconTile, type IconTileTone } from './IconTile';
 

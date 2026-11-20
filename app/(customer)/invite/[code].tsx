@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Gift, Link2, UserPlus, Users } from 'lucide-react-native';
@@ -27,7 +27,7 @@ import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/th
  */
 export default function InviteScreen() {
   useThemeRefresh();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { code } = useLocalSearchParams<{ code?: string }>();
   const { user } = useAuth();
   const { ready, getBasketByCode, joinBasket } = useBaskets();
@@ -88,8 +88,6 @@ export default function InviteScreen() {
   }
 
   const total = basketTotal(basket);
-  const lang: 'en' | 'ar' = i18n.language === 'ar' ? 'ar' : 'en';
-
   return (
     <Screen>
       <FlowHeader

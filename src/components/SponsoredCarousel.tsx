@@ -382,7 +382,7 @@ export function SponsoredStrip({
     return () => {
       active = false;
     };
-  }, [placement]);
+  }, [placement, placementKey]);
 
   const ads = placement?.ads ?? [];
   const title =

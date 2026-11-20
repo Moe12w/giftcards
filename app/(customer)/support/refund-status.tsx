@@ -1,6 +1,6 @@
 import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { Text } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -9,7 +9,7 @@ import { Card } from '@/src/components/Card';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
-import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
+import { colors, fonts, fontSizes, themedStyles } from '@/src/theme';
 
 export default function RefundStatusScreen() {
   useThemeRefresh();

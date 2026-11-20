@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -23,7 +23,7 @@ export default function ClaimDetailsScreen() {
   const [gift, setGift] = useState<ClaimGift | null>(null);
   // No id means there is nothing to fetch: start settled rather than
   // flipping the flag from inside the effect.
-  const [loading, setLoading] = useState(!token);
+  const [, setLoading] = useState(!token);
 
   useEffect(() => {
     let active = true;

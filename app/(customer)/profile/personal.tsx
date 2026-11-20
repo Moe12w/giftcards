@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -10,7 +10,7 @@ import { ListRow } from '@/src/components/ListRow';
 import { Screen } from '@/src/components/Screen';
 import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
-import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
+import { colors, fonts, fontSizes, themedStyles } from '@/src/theme';
 
 export default function PersonalInfoScreen() {
   useThemeRefresh();

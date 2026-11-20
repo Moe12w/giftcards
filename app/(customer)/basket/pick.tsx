@@ -1,12 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Check, Plus, Star, Trash2 } from 'lucide-react-native';
@@ -24,13 +17,7 @@ import { SearchBar } from '@/src/components/SearchBar';
 import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { offerBusinessName, offerImage, offerIsFixedAmount, offerPackages, offerStartingPriceMinor, offerTitle, offerTone } from '@/src/lib/catalog';
 import { useThemeRefresh } from '@/src/lib/theme';
-import {
-  categoryLabel,
-  listActiveOffers,
-  listAppCategories,
-  peekAppCategories,
-  type AppCategory,
-} from '@/src/lib/data';
+import { categoryLabel, listActiveOffers, listAppCategories, peekAppCategories, type AppCategory } from '@/src/lib/data';
 import { searchOffers } from '@/src/lib/search';
 import { formatMoney } from '@/src/lib/money';
 import type { AccentTone, CategoryId, OccasionId, Offer } from '@/src/lib/types';
@@ -87,7 +74,7 @@ export default function PickGiftsScreen() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [params.preset]);
 
   const filtered = useMemo(() => {
     const searched = searchOffers(offers, query, i18n.language);

@@ -2,9 +2,9 @@
 // Lets the customer choose which open gift box a gift card should join
 // before the contribution payment starts.
 import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Check, Gift, Plus, X } from 'lucide-react-native';
+import { Check, Gift, X } from 'lucide-react-native';
 
 import { basketTotal } from '../lib/baskets';
 import type { GiftBasket } from '../lib/types';

@@ -3,7 +3,7 @@
 // page, which offers whatever the business has enabled (card, Apple Pay,
 // Google Pay). The parent screen owns the actual payment action.
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { formatMoney } from '../lib/money';

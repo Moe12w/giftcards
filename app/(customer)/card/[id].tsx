@@ -3,7 +3,7 @@ import { Alert, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { Badge, type BadgeTone } from '@/src/components/Badge';
+import { Badge } from '@/src/components/Badge';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { FlowHeader } from '@/src/components/FlowHeader';
@@ -19,7 +19,7 @@ import { formatDate } from '@/src/lib/time';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatMoney } from '@/src/lib/money';
 import { isSessionCard } from '@/src/lib/sessions';
-import type { CardStatus, GiftCard } from '@/src/lib/types';
+import type { GiftCard } from '@/src/lib/types';
 import { CARD_STATUS_TONE } from '@/src/lib/status';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 

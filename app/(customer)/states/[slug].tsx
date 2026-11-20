@@ -1,15 +1,12 @@
 import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
-import { StyleSheet, Text } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/components/Button';
-import { Card } from '@/src/components/Card';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
-import { colors, fonts, fontSizes, spacing } from '@/src/theme';
 
 const SLUGS = [
   'no-internet',
@@ -44,4 +41,3 @@ export default function StateScreen() {
   );
 }
 
-const styles = StyleSheet.create({});

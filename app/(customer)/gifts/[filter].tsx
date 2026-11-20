@@ -14,7 +14,7 @@ import { useCards } from '@/src/lib/cards';
 import { formatDate } from '@/src/lib/time';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { isSessionCard } from '@/src/lib/sessions';
-import type { CardStatus, GiftCard } from '@/src/lib/types';
+import type { GiftCard } from '@/src/lib/types';
 import { CARD_STATUS_TONE } from '@/src/lib/status';
 import { colors, spacing, themedStyles } from '@/src/theme';
 

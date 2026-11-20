@@ -1,6 +1,6 @@
 // src/components/Card.tsx
 import React from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { colors, edgeHeight, edges, radii, spacing, themedStyles } from '../theme';
 
 export type CardTone = 'surface' | 'teal' | 'pink' | 'lavender' | 'gold' | 'sky';

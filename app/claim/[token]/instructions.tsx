@@ -1,7 +1,7 @@
 import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
 import React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { Text } from 'react-native';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 

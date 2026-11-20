@@ -1,7 +1,7 @@
 // src/components/SessionMeter.tsx
 // Shows how many sessions are left on an experience gift card.
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';

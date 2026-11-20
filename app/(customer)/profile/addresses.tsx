@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -9,7 +9,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
-import { addAddress, listAddresses, removeAddress } from '@/src/lib/data';
+import { addAddress, listAddresses } from '@/src/lib/data';
 import { useThemeRefresh } from '@/src/lib/theme';
 import type { CustomerAddress } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';

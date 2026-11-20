@@ -1,6 +1,6 @@
 // src/components/Avatar.tsx
 import React from 'react';
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { colors, fonts, radii, themedStyles } from '../theme';
 import { Glyph } from './Glyph';
 

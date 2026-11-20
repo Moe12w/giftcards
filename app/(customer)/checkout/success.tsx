@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -53,7 +53,7 @@ export default function CheckoutSuccessScreen() {
     return () => {
       active = false;
     };
-  }, [orderId]);
+  }, [orderId, draft.amountMinor]);
 
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
   const wantsWhatsapp = draft.deliveryMethod === 'whatsapp';

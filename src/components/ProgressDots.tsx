@@ -1,6 +1,6 @@
 // src/components/ProgressDots.tsx
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { colors, radii, spacing, themedStyles } from '../theme';
 
 interface ProgressDotsProps {

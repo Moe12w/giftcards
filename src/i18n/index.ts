@@ -1,7 +1,11 @@
 // src/i18n/index.ts
 // i18next setup for English and Arabic, with device-locale detection.
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import i18n from 'i18next';
+import i18n, {
+  changeLanguage,
+  init as initI18nextInstance,
+  use as applyI18nextPlugin,
+} from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { getLocales } from 'expo-localization';
 import { I18nManager } from 'react-native';
@@ -44,7 +48,8 @@ export async function initI18n(): Promise<typeof i18n> {
   // Fresh installs launched in Arabic should start with an RTL layout.
   I18nManager.forceRTL(isRTL(language));
 
-  await i18n.use(initReactI18next).init({
+  applyI18nextPlugin(initReactI18next);
+  await initI18nextInstance({
     resources: {
       en: { translation: en },
       ar: { translation: ar },
@@ -60,7 +65,7 @@ export async function initI18n(): Promise<typeof i18n> {
 }
 
 export async function setLanguage(language: Language): Promise<void> {
-  await i18n.changeLanguage(language);
+  await changeLanguage(language);
   try {
     await AsyncStorage.setItem(LANGUAGE_KEY, language);
   } catch {

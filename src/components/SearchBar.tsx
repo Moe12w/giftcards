@@ -1,6 +1,6 @@
 // src/components/SearchBar.tsx
 import React from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Search } from 'lucide-react-native';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 

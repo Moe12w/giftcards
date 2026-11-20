@@ -1,6 +1,6 @@
 // src/components/ListRow.tsx
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '../theme';
 import { IconTile, type IconTileTone } from './IconTile';

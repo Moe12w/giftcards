@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -9,7 +9,7 @@ import { Card } from '@/src/components/Card';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Screen } from '@/src/components/Screen';
-import { addRecipient, listRecipients, removeRecipient } from '@/src/lib/data';
+import { listRecipients, removeRecipient } from '@/src/lib/data';
 import { useThemeRefresh } from '@/src/lib/theme';
 import type { Recipient } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';

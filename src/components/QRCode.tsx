@@ -2,7 +2,7 @@
 // Redemption codes are always shown on a white background in light and dark
 // mode so scanners can read them reliably. QR codes never flip in RTL.
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import QRCodeSvg from 'react-native-qrcode-svg';
 import { colors, radii, spacing, themedStyles } from '../theme';
 

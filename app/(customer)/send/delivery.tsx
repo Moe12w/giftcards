@@ -1,6 +1,6 @@
 import { useThemeRefresh } from '@/src/lib/theme';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -12,7 +12,7 @@ import { Glyph } from '@/src/components/Glyph';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useGiftDraft, type DeliveryMethod } from '@/src/lib/gift-draft';
-import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
+import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
 const METHODS: DeliveryMethod[] = ['email', 'sms', 'whatsapp', 'link'];
 

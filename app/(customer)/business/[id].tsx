@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Image } from 'expo-image';
 import { Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';

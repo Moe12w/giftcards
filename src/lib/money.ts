@@ -65,7 +65,7 @@ export function vendorShareFor(saleMinor: number, rateBps: number): number {
 }
 
 /** Sum ledger entries (signed minor units) into a balance. */
-export function balanceFromEntries(entries: Array<{ amount_minor: number }>): number {
+export function balanceFromEntries(entries: { amount_minor: number }[]): number {
   return entries.reduce((sum, e) => sum + e.amount_minor, 0);
 }
 

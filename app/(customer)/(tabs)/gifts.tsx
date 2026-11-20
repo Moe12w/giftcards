@@ -20,7 +20,7 @@ import { cardHref, prefetchCard } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import { isSessionCard } from '@/src/lib/sessions';
-import type { CardStatus, GiftCard } from '@/src/lib/types';
+import type { GiftCard } from '@/src/lib/types';
 import { CARD_STATUS_TONE } from '@/src/lib/status';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
