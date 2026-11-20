@@ -1,4 +1,4 @@
--- 0131_myfatoorah_file_types.sql
+-- 0139_myfatoorah_file_types.sql
 -- Align our internal document types with MyFatoorah's documented FileType enum.
 --   4  = Signature Authorization (establishment card)
 --   16 = Civil Ids Of All Owners
