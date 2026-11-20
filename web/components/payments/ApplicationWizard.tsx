@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, FileText, ShieldCheck } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, FileText, Pencil, ShieldCheck } from 'lucide-react';
 import { Notice } from '@/components/ui';
 import { MerchantDocumentUpload } from '@/components/MerchantDocumentUpload';
 import { WizardRail, type WizardStep } from '@/components/WizardRail';
-import { saveMerchantStep } from '@/lib/actions/merchant';
+import { reopenMerchantApplication, saveMerchantStep } from '@/lib/actions/merchant';
 import { QATAR_IBAN_HINT } from '@/lib/iban';
 import {
   BUSINESS_TYPES,
@@ -64,6 +64,7 @@ export function ApplicationWizard({ bundle, basePath, step, error, success, tone
     documents.some((doc) => doc.doc_type === key && doc.status !== 'rejected'),
   );
   const locked = ['submitted', 'under_review', 'approved', 'active'].includes(application.status);
+  const canReopen = ['submitted', 'under_review', 'approved', 'rejected'].includes(application.status);
   const readOnly = !bundle.canManage;
 
   const rail = STEPS.map((item) => ({
@@ -84,12 +85,22 @@ export function ApplicationWizard({ bundle, basePath, step, error, success, tone
       ) : null}
 
       {locked ? (
-        <div className="callout info">
-          Your application has been submitted, so the details are locked. You can still review everything on the{' '}
-          <Link href={`${basePath}/review`} style={{ textDecoration: 'underline' }}>
-            review page
-          </Link>
-          .
+        <div className="callout info" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span style={{ flex: 1 }}>
+            Your application has been submitted, so the details are locked. You can still review everything on the{' '}
+            <Link href={`${basePath}/review`} style={{ textDecoration: 'underline' }}>
+              review page
+            </Link>
+            .
+          </span>
+          {canReopen && !readOnly ? (
+            <form action={reopenMerchantApplication}>
+              <input type="hidden" name="application_id" value={application.id} />
+              <button className="btn sm" type="submit">
+                <Pencil size={14} /> Edit application
+              </button>
+            </form>
+          ) : null}
         </div>
       ) : null}
 
