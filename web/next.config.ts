@@ -43,7 +43,47 @@ const nextConfig: NextConfig = {
   },
 };
 
+/**
+ * Content Security Policy.
+ *
+ * `script-src` has to allow inline script because Next renders its hydration
+ * bootstrap as inline <script> tags. Removing `'unsafe-inline'` means minting a
+ * per-request nonce in `proxy.ts`, which forces every matched route to render
+ * dynamically — a hosting decision for the marketing pages, not a header edit.
+ * `script-src-attr 'none'` still blocks inline event handlers, which React
+ * never needs, so injected `onclick=` payloads do not run.
+ */
+function contentSecurityPolicy(): string {
+  const connectSources = ["'self'"];
+  if (projectHostname) {
+    // Supabase REST/auth/storage over HTTPS and its realtime socket.
+    connectSources.push(`https://${projectHostname}`, `wss://${projectHostname}`);
+  }
+
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "frame-src 'none'",
+    "form-action 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "script-src-attr 'none'",
+    // Figtree is imported from Google Fonts in app/globals.css.
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    // Vendor logos and ad creatives are stored or entered as arbitrary URLs and
+    // fall back to a plain <img> when Next's optimizer does not cover the host.
+    "img-src 'self' data: blob: https:",
+    `connect-src ${connectSources.join(' ')}`,
+    // The scanner and document viewers spawn blob workers when needed.
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+  ].join('; ');
+}
+
 const securityHeaders = [
+  { key: 'Content-Security-Policy', value: contentSecurityPolicy() },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
