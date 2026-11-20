@@ -217,6 +217,11 @@ Deno.serve(async (req) => {
     });
     if (itemError) {
       await admin.from('orders').delete().eq('id', order.id);
+      // The exposure trigger (0138) is the authoritative check: it serialises on
+      // the vendor row, so it is the last word on whether this order fits.
+      if (String(itemError.message ?? '').includes('vendor_exposure_limit_reached')) {
+        return json({ error: 'vendor_exposure_limit_reached' }, 409);
+      }
       throw itemError;
     }
 
