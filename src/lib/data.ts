@@ -4,7 +4,7 @@
 // added, they fall back to demo data so the UI can be built and tested.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { cached, peekCache, primeCache } from './cache';
+import { cached, invalidateCache, peekCache, primeCache } from './cache';
 import { CATEGORIES, type CatalogEntry } from './catalog';
 import { hasSupabaseConfig } from './env';
 import {
@@ -375,7 +375,7 @@ export async function listMarketplaceBusinesses(
     page.offset === 0 && page.limit === PAGE_SIZE.businesses
       ? 'businesses:all'
       : `businesses:all:${page.limit}:${page.offset}`;
-  return cached(key, 60_000, async () => {
+  return cached(key, 15 * 60_000, async () => {
     const { data, error } = await getSupabase()
       .from('marketplace_businesses')
       .select(BUSINESS_COLUMNS)
@@ -395,7 +395,7 @@ export async function listBusinessesByIds(ids: string[]): Promise<MarketplaceBus
   const unique = [...new Set(ids.map((id) => id.trim()).filter(Boolean))].slice(0, 24);
   if (unique.length === 0) return [];
   const key = `businesses:ids:${unique.join(',')}`;
-  return cached(key, 60_000, async () => {
+  return cached(key, 15 * 60_000, async () => {
     const { data, error } = await getSupabase()
       .from('marketplace_businesses')
       .select(BUSINESS_COLUMNS)
@@ -449,7 +449,7 @@ function defaultAppCategories(): AppCategory[] {
  * artwork fallback for the original nine slugs.
  */
 export async function listAppCategories(): Promise<AppCategory[]> {
-  return cached('categories:app', 60_000, async () => {
+  return cached('categories:app', 15 * 60_000, async () => {
     if (!hasSupabaseConfig) return defaultAppCategories();
     const { data, error } = await getSupabase()
       .from('categories')
@@ -575,7 +575,7 @@ export async function listActiveOffers(options?: PageOptions): Promise<Offer[]> 
     page.offset === 0 && page.limit === PAGE_SIZE.catalog
       ? 'offers:active'
       : `offers:active:${page.limit}:${page.offset}`;
-  return cached(key, 60_000, async () => {
+  return cached(key, 15 * 60_000, async () => {
     const { data, error } = await getSupabase()
       .from('products')
       .select(
@@ -604,7 +604,7 @@ export async function listOffersForBusiness(businessId: string): Promise<Offer[]
   const fromCatalog = peekOffersForBusiness(businessId);
   if (fromCatalog.length > 0) return fromCatalog;
 
-  return cached(`offers:business:${businessId}`, 60_000, async () => {
+  return cached(`offers:business:${businessId}`, 15 * 60_000, async () => {
     const { data, error } = await getSupabase()
       .from('products')
       .select(
@@ -762,6 +762,7 @@ export async function markNotificationRead(id: string): Promise<void> {
     .eq('id', id)
     .is('read_at', null);
   if (error) throw error;
+  invalidateCache('notifications:unread');
 }
 
 /** Marks every unread notification as read. */
@@ -772,19 +773,22 @@ export async function markAllNotificationsRead(): Promise<void> {
     .update({ read_at: new Date().toISOString() })
     .is('read_at', null);
   if (error) throw error;
+  invalidateCache('notifications:unread');
 }
 
 /** How many notifications are still unread. */
 export async function countUnreadNotifications(): Promise<number> {
-  if (!hasSupabaseConfig) {
-    return MOCK_NOTIFICATIONS.filter((item) => !item.read).length;
-  }
-  const { count, error } = await getSupabase()
-    .from('notifications')
-    .select('id', { count: 'exact', head: true })
-    .is('read_at', null);
-  if (error) throw error;
-  return count ?? 0;
+  return cached('notifications:unread', 5 * 60_000, async () => {
+    if (!hasSupabaseConfig) {
+      return MOCK_NOTIFICATIONS.filter((item) => !item.read).length;
+    }
+    const { count, error } = await getSupabase()
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .is('read_at', null);
+    if (error) throw error;
+    return count ?? 0;
+  });
 }
 
 /** The signed in customer's saved addresses. */

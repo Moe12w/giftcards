@@ -1,5 +1,6 @@
 import 'server-only';
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { unstable_cache } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
@@ -53,27 +54,33 @@ function envConfig(): StoredConfig {
   };
 }
 
-async function storedConfig(settingsKey: string): Promise<StoredConfig> {
-  try {
-    const admin = createAdminClient();
-    const { data } = await admin
-      .from('system_settings')
-      .select('value')
-      .eq('key', settingsKey)
-      .maybeSingle();
-    const value = (data?.value ?? {}) as Record<string, unknown>;
-    const text = (input: unknown) => (typeof input === 'string' ? input.trim() : '');
-    return {
-      apiKey: text(value.api_key),
-      baseUrl: trimSlash(text(value.base_url)),
-      webhookSecret: text(value.webhook_secret),
-      appPublicUrl: trimSlash(text(value.app_public_url)),
-    };
-  } catch (error) {
-    console.error('[advertising] could not read MyFatoorah settings', error);
-    return { apiKey: '', baseUrl: '', webhookSecret: '', appPublicUrl: '' };
-  }
-}
+// Shared across lambdas via Next's data cache; the in-memory map below only
+// covers a single warm instance.
+const fetchStoredConfig = unstable_cache(
+  async (settingsKey: string): Promise<StoredConfig> => {
+    try {
+      const admin = createAdminClient();
+      const { data } = await admin
+        .from('system_settings')
+        .select('value')
+        .eq('key', settingsKey)
+        .maybeSingle();
+      const value = (data?.value ?? {}) as Record<string, unknown>;
+      const text = (input: unknown) => (typeof input === 'string' ? input.trim() : '');
+      return {
+        apiKey: text(value.api_key),
+        baseUrl: trimSlash(text(value.base_url)),
+        webhookSecret: text(value.webhook_secret),
+        appPublicUrl: trimSlash(text(value.app_public_url)),
+      };
+    } catch (error) {
+      console.error('[advertising] could not read MyFatoorah settings', error);
+      return { apiKey: '', baseUrl: '', webhookSecret: '', appPublicUrl: '' };
+    }
+  },
+  ['myfatoorah-settings'],
+  { revalidate: 30 },
+);
 
 export async function getMyFatoorahConfig(
   settingsKey: string = MYFATOORAH_SETTINGS_KEY,
@@ -81,7 +88,7 @@ export async function getMyFatoorahConfig(
   const hit = cached.get(settingsKey);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value;
 
-  const stored = await storedConfig(settingsKey);
+  const stored = await fetchStoredConfig(settingsKey);
   const env = envConfig();
   const value: MyFatoorahConfig = {
     apiKey: stored.apiKey || env.apiKey,

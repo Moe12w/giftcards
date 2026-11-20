@@ -8,7 +8,7 @@
 // decides what the app shows.
 import { useCallback, useEffect, useState } from 'react';
 
-import { cached, peekCache, primeCache } from './cache';
+import { cacheAge, cached, peekCache, primeCache } from './cache';
 import { hasSupabaseConfig } from './env';
 import { getSupabase } from './supabase';
 import type { MarketplaceBusiness } from './types';
@@ -254,8 +254,10 @@ export function parseAppConfig(rows: { key: string; value: unknown }[]): AppConf
  * Reads the public app configuration. A failed request keeps the last cached
  * copy (or the defaults) so the home screen never breaks because of config.
  */
+const APP_CONFIG_TTL = 5 * 60_000;
+
 export async function getAppConfig(): Promise<AppConfig> {
-  return cached<AppConfig>('app:config', 60_000, async () => {
+  return cached<AppConfig>('app:config', APP_CONFIG_TTL, async () => {
     if (!hasSupabaseConfig) return defaultAppConfig();
     try {
       const { data, error } = await getSupabase()
@@ -277,6 +279,10 @@ export async function getAppConfig(): Promise<AppConfig> {
  */
 export async function refreshAppConfig(): Promise<AppConfig> {
   if (!hasSupabaseConfig) return peekAppConfig();
+  // Tab focus runs this often; a five-minute floor keeps admin changes fresh
+  // without turning every focus into a database query.
+  const age = cacheAge('app:config');
+  if (age !== null && age < APP_CONFIG_TTL) return peekAppConfig();
   try {
     const { data, error } = await getSupabase()
       .from('system_settings')

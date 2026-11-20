@@ -61,6 +61,12 @@ export function peekCache<T>(key: string): T | undefined {
   return readEntry<T>(key)?.value;
 }
 
+/** How long ago a cache entry was written, in milliseconds. */
+export function cacheAge(key: string): number | null {
+  const at = readEntry(key)?.at;
+  return at === undefined ? null : Date.now() - at;
+}
+
 /**
  * Drops cached data after a write (profile edit, product change, sign-out).
  * Everything beginning with `prefix` is removed from memory and disk, so the

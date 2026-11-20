@@ -3,7 +3,7 @@
 //
 // It deliberately does two kinds of work:
 //   - static merchandising config that is available even offline (instant);
-//   - one efficient network pass for the catalog, public settings and the
+//   - one efficient network pass for the catalog, app config and the
 //     signed-in profile, all of which flow into the persistent cache.
 // Nothing here is awaited by the splash past a short safety window: a slow or
 // offline connection still gets a usable app, and the next launch starts from
@@ -19,7 +19,6 @@ import {
 } from './app-config';
 import { primeCache } from './cache';
 import {
-  getPublicSettings,
   listActiveOffers,
   listAppCategories,
   listMarketplaceBusinesses,
@@ -81,9 +80,7 @@ export function startCatalogBootstrap(): Promise<void> {
       listAppCategories().catch(() => []),
       getAppConfig(),
     ];
-    if (hasSupabaseConfig) tasks.push(getPublicSettings().catch(() => null));
-
-    const [offers, businesses, , rawConfig, settings] = await Promise.all(tasks);
+    const [offers, businesses, rawConfig] = await Promise.all(tasks);
     const config = (rawConfig as AppConfig | undefined) ?? defaultAppConfig();
     const offerRows = Array.isArray(offers) ? (offers as Offer[]) : [];
     const businessRows = Array.isArray(businesses)
@@ -97,7 +94,6 @@ export function startCatalogBootstrap(): Promise<void> {
     primeBusinesses(businessRows);
     primeCache('businesses:featured', featured);
     primeCache('offers:popular', popularOffers(offerRows));
-    if (settings) primeCache('settings:public', settings);
 
     perfMark('bootstrap:catalog');
     if (__DEV__) {

@@ -6,7 +6,14 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // Public marketing pages must stay on the CDN: no auth work for anonymous
+  // visitors. Only the authenticated portals and the auth callback need the
+  // session refreshed by the proxy.
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2)$).*)',
+    '/admin/:path*',
+    '/vendor/:path*',
+    '/enterprise/:path*',
+    '/business/:path*',
+    '/auth/:path*',
   ],
 };
