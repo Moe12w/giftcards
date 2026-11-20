@@ -124,14 +124,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error('Too many sign-in attempts. Please wait a few minutes and try again.');
         }
 
-        const { error } = await getSupabase().auth.signInWithPassword({ email, password });
+        const { data, error } = await getSupabase().auth.signInWithPassword({ email, password });
         const success = !error;
 
         if (env.authGateUrl) {
           try {
+            // Clearing the counter requires proof of the session that just
+            // signed in: the gate rejects a success report without this token.
+            const token = success ? data.session?.access_token : null;
             await fetch(env.authGateUrl, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
               body: JSON.stringify({ identifier, outcome: 'record', success }),
             });
           } catch {
