@@ -6,6 +6,7 @@
 // { vendorId } or { partnerId }
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { adminClient } from '../_shared/clients.ts';
+import { isValidQatarIban, normalizeIban } from '../_shared/iban.ts';
 import {
   createSupplier,
   getSuppliers,
@@ -133,13 +134,13 @@ Deno.serve(async (req) => {
     if (holder) input.BankAccountHolderName = holder;
     const account = digits(application.bank_account_number);
     if (account) input.BankAccount = account;
-    const iban = String(application.bank_iban ?? '').replace(/[\s-]/g, '').toUpperCase();
+    const iban = normalizeIban(String(application.bank_iban ?? ''));
     if (iban) {
-      if (!/^QA\d{2}[A-Z0-9]{22}$/.test(iban)) {
+      if (!isValidQatarIban(iban)) {
         return json(
           {
             error:
-              'The business IBAN is not a valid Qatar IBAN (QA, two check digits and 22 letters or numbers). Update the banking details and retry.',
+              'The business IBAN is not a valid Qatar IBAN. It must be QA + 2 correct check digits + 25 letters/numbers (29 characters). Update the banking details and retry.',
           },
           409,
         );

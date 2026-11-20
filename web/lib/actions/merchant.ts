@@ -6,6 +6,7 @@ import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { callSupplierFunction } from '@/lib/myfatoorah-supplier';
+import { QATAR_IBAN_HINT, isValidQatarIban, normalizeIban } from '@/lib/iban';
 import {
   DOCUMENT_MAX_BYTES,
   isPaymentMethodKey,
@@ -104,17 +105,14 @@ export async function saveMerchantStep(formData: FormData) {
   if (step === 4) {
     const accountNumber = optional(formData, 'bank_account_number');
     const rawIban = optional(formData, 'bank_iban');
-    const iban = rawIban ? rawIban.replace(/[\s-]/g, '').toUpperCase() : null;
+    const iban = rawIban ? normalizeIban(rawIban) : null;
     if (!accountNumber && !iban) {
       back(`${paymentsPath(application)}/application?step=4`, 'Enter an account number or IBAN.');
     }
     // A malformed IBAN is rejected by MyFatoorah with a generic "Invalid data",
-    // so catch it here where the business can still correct it.
-    if (iban && !/^QA\d{2}[A-Z0-9]{22}$/.test(iban)) {
-      back(
-        `${paymentsPath(application)}/application?step=4`,
-        'Enter a valid Qatar IBAN: QA, two check digits and 22 letters or numbers (29 characters).',
-      );
+    // so verify the format and the ISO 13616 check digits while it can be fixed.
+    if (iban && !isValidQatarIban(iban)) {
+      back(`${paymentsPath(application)}/application?step=4`, QATAR_IBAN_HINT);
     }
     patch.bank_name = optional(formData, 'bank_name');
     patch.bank_account_name = optional(formData, 'bank_account_name');

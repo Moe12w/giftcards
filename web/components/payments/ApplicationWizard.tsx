@@ -4,6 +4,7 @@ import { Notice } from '@/components/ui';
 import { MerchantDocumentUpload } from '@/components/MerchantDocumentUpload';
 import { WizardRail, type WizardStep } from '@/components/WizardRail';
 import { saveMerchantStep } from '@/lib/actions/merchant';
+import { QATAR_IBAN_HINT } from '@/lib/iban';
 import {
   BUSINESS_TYPES,
   DOCUMENT_ACCEPT,
@@ -372,11 +373,11 @@ export function ApplicationWizard({ bundle, basePath, step, error, success, tone
                     id="bank_iban"
                     name="bank_iban"
                     defaultValue={application.bank_iban ?? ''}
-                    placeholder="QA00XXXXXXXXXXXXXXXXXXXXXX"
+                    placeholder="QA58DOHB00001234567890ABCDEFG"
+                    pattern="[Qq][Aa][0-9]{2}[A-Za-z0-9 -]{25,45}"
+                    title={QATAR_IBAN_HINT}
                   />
-                  <span className="hint">
-                    Qatar IBAN: QA, two check digits and 22 letters or numbers (29 characters). Provide an account number, an IBAN, or both.
-                  </span>
+                  <span className="hint">{QATAR_IBAN_HINT} Provide an account number, an IBAN, or both.</span>
                 </div>
                 <div className="field">
                   <label htmlFor="bank_currency">Currency</label>
