@@ -173,7 +173,14 @@ select
   now()
 where not exists (
   select 1 from public.orders where id = 'c4b0a0d0-6c1e-4a4e-9f5e-2d8b7c6a5f01'
-);
+)
+  -- The demo account this order belongs to comes from supabase/seed.sql. On a
+  -- database built from migrations alone (CI, or a first `db reset`) there is
+  -- no customer to buy it yet, and a missing foreign key must not fail the
+  -- migration. Production had the seeded account long before this ran.
+  and exists (
+    select 1 from public.profiles where id = '11111111-1111-4111-8111-111111111111'
+  );
 
 insert into public.order_items (
   id, order_id, product_id, enterprise_product_id, vendor_id, quantity,
@@ -197,7 +204,18 @@ select
   now()
 where not exists (
   select 1 from public.order_items where id = 'c4b0a0d0-6c1e-4a4e-9f5e-2d8b7c6a5f02'
-);
+)
+  -- Same reason as the order above: the product and the partner gift it lines
+  -- up are seeded, not migrated.
+  and exists (
+    select 1 from public.orders where id = 'c4b0a0d0-6c1e-4a4e-9f5e-2d8b7c6a5f01'
+  )
+  and exists (
+    select 1 from public.products where id = '281f0523-5642-4d8c-9a14-1effc26d6126'
+  )
+  and exists (
+    select 1 from public.enterprise_products where id = '552487ae-23fb-463f-b05e-f73e7cea3a6a'
+  );
 
 -- Marking it paid fires the normal fulfilment trigger.
 update public.orders

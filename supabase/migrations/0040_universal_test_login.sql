@@ -64,23 +64,26 @@ on conflict (user_id) do update set role = excluded.role;
 -- The admin role row is enough: is_admin() reads user_roles first. The
 -- profiles.is_admin flag stays untouched so the guard trigger is not tripped.
 
--- Vendor access: The Coffee House and Dune Spa, both as owner.
+-- Vendor access: The Coffee House and Dune Spa, both as owner. The vendors are
+-- seeded, so a database built from migrations alone has no rows to link and the
+-- insert-select simply adds none.
 insert into public.vendor_members (vendor_id, user_id, role, active)
-values
-  ('58852d5f-8486-42fa-a423-b199925159b0'::uuid, '99999999-9999-4999-8999-999999999999'::uuid, 'owner', true),
-  ('2533ec89-f5b1-4409-9273-c87bf133d095'::uuid, '99999999-9999-4999-8999-999999999999'::uuid, 'owner', true)
+select v.id, '99999999-9999-4999-8999-999999999999'::uuid, 'owner', true
+from public.vendors v
+where v.id in (
+  '58852d5f-8486-42fa-a423-b199925159b0'::uuid,
+  '2533ec89-f5b1-4409-9273-c87bf133d095'::uuid
+)
 on conflict (vendor_id, user_id) do update
   set role = excluded.role,
       active = true;
 
--- Enterprise access: RetailPlus Rewards, as owner.
+-- Enterprise access: RetailPlus Rewards, as owner. Same guard as the vendors
+-- above: the partner is seeded, not migrated.
 insert into public.enterprise_members (partner_id, user_id, role, active)
-values (
-  '96d72e91-21e8-47bd-8298-8f991a2ca84e'::uuid,
-  '99999999-9999-4999-8999-999999999999'::uuid,
-  'owner',
-  true
-)
+select p.id, '99999999-9999-4999-8999-999999999999'::uuid, 'owner', true
+from public.enterprise_partners p
+where p.id = '96d72e91-21e8-47bd-8298-8f991a2ca84e'::uuid
 on conflict (partner_id, user_id) do update
   set role = excluded.role,
       active = true;

@@ -206,6 +206,13 @@ begin
       v_idx := ((v_slot - 1) % 4) + 1;
       v_vendor := v_vendors[v_idx];
       v_vendor_name := v_names[v_idx];
+
+      -- The demo vendors are seeded. On a database built from migrations alone
+      -- there is nothing to advertise, so leave the slot empty instead of
+      -- failing the migration on a missing foreign key.
+      if not exists (select 1 from public.vendors v where v.id = v_vendor) then
+        continue;
+      end if;
       v_price := coalesce(v_placement.slot_prices_minor[v_slot], 15000);
       v_headline := v_vendor_name || ' - Special Offers!';
       v_body := 'Check out our latest deals and exclusive offers. Shop now!';
