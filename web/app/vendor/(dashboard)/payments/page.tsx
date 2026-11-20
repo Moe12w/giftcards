@@ -1,5 +1,5 @@
 import { requireVendor } from '@/lib/auth';
-import { loadMerchantBundle } from '@/lib/merchant-server';
+import { loadMerchantBundleCached } from '@/lib/merchant-server';
 import { MerchantPaymentsOverview } from '@/components/MerchantPaymentsOverview';
 import { Notice, PageHead } from '@/components/ui';
 
@@ -10,7 +10,7 @@ export default async function VendorPaymentsPage({
 }) {
   const params = await searchParams;
   const ctx = await requireVendor();
-  const bundle = await loadMerchantBundle(ctx.supabase, 'vendor', ctx.vendor.id);
+  const bundle = await loadMerchantBundleCached(ctx.supabase, 'vendor', ctx.vendor.id);
 
   return (
     <div className="dash-content">

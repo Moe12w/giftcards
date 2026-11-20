@@ -15,7 +15,7 @@ import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
 import { HelpButton } from '@/components/HelpButton';
 import { SetupChecklist } from '@/components/SetupChecklist';
-import { loadMerchantBundle } from '@/lib/merchant-server';
+import { loadMerchantBundleCached } from '@/lib/merchant-server';
 import { requiredDocKeys } from '@/lib/merchant';
 import { fill, pick } from '@/lib/i18n';
 import { common } from '@/lib/i18n/common';
@@ -30,7 +30,7 @@ export default async function EnterpriseOverviewPage() {
   const supabase = ctx.supabase;
   const partner = ctx.partner;
 
-  const [productsResult, inventoryResult, membersResult, batchesResult] = await Promise.all([
+  const [productsResult, inventoryResult, membersResult, batchesResult, paymentsBundle] = await Promise.all([
     supabase
       .from('enterprise_products')
       .select('*')
@@ -52,6 +52,7 @@ export default async function EnterpriseOverviewPage() {
       .eq('partner_id', partner.id)
       .order('created_at', { ascending: false })
       .limit(5),
+    loadMerchantBundleCached(supabase, 'partner', partner.id),
   ]);
 
   const products = productsResult.data ?? [];
@@ -84,7 +85,6 @@ export default async function EnterpriseOverviewPage() {
   const soldValue = paidItems.reduce((sum, item) => sum + Number(item.total_minor ?? 0), 0);
   const activeProducts = products.filter((product) => product.is_active).length;
 
-  const paymentsBundle = await loadMerchantBundle(supabase, 'partner', partner.id);
   const paymentsApp = paymentsBundle.application;
   const paymentDocsRequired = requiredDocKeys(paymentsApp?.business_type ?? null);
   const paymentDocsUploaded = paymentsBundle.documents.filter(

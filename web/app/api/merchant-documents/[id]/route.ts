@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
+
+import { apiAdmin, apiUser } from '@/lib/api-auth';
 
 /**
  * Streams a merchant KYC document to an authorised viewer through a
@@ -13,11 +13,9 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return new NextResponse('Unauthorized', { status: 401 });
+  const auth = await apiUser();
+  if (!auth.ok) return auth.response;
+  const { supabase } = auth;
 
   const { data: document } = await supabase
     .from('merchant_application_documents')
@@ -32,14 +30,10 @@ export async function GET(
   });
   if (canView !== true) return new NextResponse('Not found', { status: 404 });
 
-  let admin;
-  try {
-    admin = createAdminClient();
-  } catch {
-    return new NextResponse('Storage unavailable', { status: 503 });
-  }
+  const adminResult = apiAdmin();
+  if (!adminResult.ok) return adminResult.response;
 
-  const { data: signed, error } = await admin.storage
+  const { data: signed, error } = await adminResult.admin.storage
     .from('merchant-documents')
     .createSignedUrl(document.storage_path, 120);
 

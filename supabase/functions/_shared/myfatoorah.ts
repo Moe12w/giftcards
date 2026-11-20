@@ -49,11 +49,18 @@ async function storedConfig(): Promise<Partial<MFConfig>> {
   }
 }
 
+/** Provider settings change rarely; one DB read per isolate per minute is enough. */
+const CONFIG_TTL_MS = 60_000;
+let configCache: { config: MFConfig; at: number } | null = null;
+
 /** Admin settings win; environment secrets are the fallback. */
 export async function mfConfig(): Promise<MFConfig> {
+  if (configCache && Date.now() - configCache.at < CONFIG_TTL_MS) {
+    return configCache.config;
+  }
   const stored = await storedConfig();
   const envApiKey = Deno.env.get('MYFATOORAH_API_KEY')?.trim() ?? '';
-  return {
+  const config: MFConfig = {
     apiKey: stored.apiKey || envApiKey,
     baseUrl: stored.baseUrl || (Deno.env.get('MYFATOORAH_BASE_URL')?.trim() || DEFAULT_BASE_URL).replace(/\/+$/, ''),
     webhookSecret: stored.webhookSecret || Deno.env.get('MYFATOORAH_WEBHOOK_SECRET')?.trim() || '',
@@ -61,6 +68,8 @@ export async function mfConfig(): Promise<MFConfig> {
       stored.appPublicUrl || (Deno.env.get('APP_PUBLIC_URL')?.trim() || '').replace(/\/+$/, ''),
     source: stored.apiKey ? 'database' : envApiKey ? 'environment' : 'none',
   };
+  configCache = { config, at: Date.now() };
+  return config;
 }
 
 export class MyFatoorahError extends Error {

@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { buildSignedAgreementPdf, resolveSignatureBox, safeFileName } from '@/lib/agreement-signature';
-import { requireAdmin } from '@/lib/auth';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { createClient } from '@/lib/supabase/server';
+import { apiAdmin, apiUser } from '@/lib/api-auth';
 
 type SignatureRow = {
   id: string;
@@ -24,23 +22,16 @@ export async function GET(
   const { id } = await params;
   const signatureId = new URL(request.url).searchParams.get('signature');
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return new NextResponse('Unauthorized', { status: 401 });
+  const auth = await apiUser();
+  if (!auth.ok) return auth.response;
+  const { supabase } = auth;
 
-  let admin;
-  try {
-    admin = createAdminClient();
-  } catch {
-    return new NextResponse('Storage unavailable', { status: 503 });
-  }
+  const adminResult = apiAdmin();
+  if (!adminResult.ok) return adminResult.response;
+  const { admin } = adminResult;
 
-  const isAdmin = await (async () => {
-    const { data: ctx } = await supabase.rpc('is_admin');
-    return ctx === true;
-  })();
+  const { data: adminCheck } = await supabase.rpc('is_admin');
+  const isAdmin = adminCheck === true;
 
   const { data: agreement } = await admin
     .from('merchant_agreements')

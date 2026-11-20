@@ -1,5 +1,5 @@
 import { requireVendor } from '@/lib/auth';
-import { loadMerchantBundle } from '@/lib/merchant-server';
+import { loadMerchantBundleCached } from '@/lib/merchant-server';
 import { ApplicationWizard } from '@/components/payments/ApplicationWizard';
 import { PageHead } from '@/components/ui';
 
@@ -10,7 +10,7 @@ export default async function VendorPaymentApplicationPage({
 }) {
   const params = await searchParams;
   const ctx = await requireVendor();
-  const bundle = await loadMerchantBundle(ctx.supabase, 'vendor', ctx.vendor.id);
+  const bundle = await loadMerchantBundleCached(ctx.supabase, 'vendor', ctx.vendor.id);
   const parsed = Number.parseInt(params.step ?? '1', 10);
   const step = Number.isFinite(parsed) ? parsed : 1;
 

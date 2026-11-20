@@ -19,7 +19,7 @@ import { formatMoney } from '@/lib/money';
 import { Kpi, PageHead, StatusTag } from '@/components/ui';
 import { HelpButton } from '@/components/HelpButton';
 import { SetupChecklist } from '@/components/SetupChecklist';
-import { loadMerchantBundle } from '@/lib/merchant-server';
+import { loadMerchantBundleCached } from '@/lib/merchant-server';
 import { requiredDocKeys } from '@/lib/merchant';
 import { fulfilmentLabel } from '@/lib/catalog';
 import { fill, pick } from '@/lib/i18n';
@@ -46,6 +46,7 @@ export default async function VendorOverviewPage() {
     salesTotals,
     voucherTotals,
     topTotals,
+    paymentsBundle,
   ] = await Promise.all([
     supabase
       .from('order_items')
@@ -75,6 +76,7 @@ export default async function VendorOverviewPage() {
     vendorSalesTotals(supabase, vendor.id),
     vendorVoucherTotals(supabase, vendor.id),
     vendorTopProducts(supabase, vendor.id, { limit: 5 }),
+    loadMerchantBundleCached(supabase, 'vendor', vendor.id),
   ]);
 
   const paidItems = itemsResult.data ?? [];
@@ -94,7 +96,6 @@ export default async function VendorOverviewPage() {
 
   const publishedCount = products.filter((product) => product.status === 'published').length;
 
-  const paymentsBundle = await loadMerchantBundle(supabase, 'vendor', vendor.id);
   const paymentsApp = paymentsBundle.application;
   const paymentDocsRequired = requiredDocKeys(paymentsApp?.business_type ?? null);
   const paymentDocsUploaded = paymentsBundle.documents.filter(

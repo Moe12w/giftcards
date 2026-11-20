@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   MerchantAgreement,
@@ -41,13 +42,23 @@ export async function loadMerchantBundle(
   ownerId: string,
 ): Promise<MerchantBundle> {
   const ownerColumn = ownerType === 'vendor' ? 'vendor_id' : 'partner_id';
+  const supplierColumns =
+    'myfatoorah_supplier_code, myfatoorah_supplier_status, myfatoorah_supplier_created_at, myfatoorah_last_synced_at, myfatoorah_last_error, myfatoorah_rejection_comment, myfatoorah_deposit_terms, payment_eligibility, payment_eligibility_note';
 
-  const { data: existing, error: existingError } = await supabase
-    .from('merchant_applications')
-    .select('*')
-    .eq(ownerColumn, ownerId)
-    .maybeSingle();
+  // These three reads do not depend on the application, so fetch them together.
+  const [existingResult, agreementResult, supplierResult] = await Promise.all([
+    supabase
+      .from('merchant_applications')
+      .select('*')
+      .eq(ownerColumn, ownerId)
+      .maybeSingle(),
+    supabase.from('merchant_agreements').select('*').eq('is_active', true).maybeSingle(),
+    ownerType === 'vendor'
+      ? supabase.from('vendors').select(supplierColumns).eq('id', ownerId).maybeSingle()
+      : supabase.from('enterprise_partners').select(supplierColumns).eq('id', ownerId).maybeSingle(),
+  ]);
 
+  const existingError = existingResult.error;
   if (existingError) {
     return {
       application: null,
@@ -60,7 +71,7 @@ export async function loadMerchantBundle(
     };
   }
 
-  let application = (existing as MerchantApplication | null) ?? null;
+  let application = (existingResult.data as MerchantApplication | null) ?? null;
 
   if (!application) {
     const { data: created, error: createError } = await supabase.rpc('merchant_application_create', {
@@ -86,11 +97,7 @@ export async function loadMerchantBundle(
     application = created as MerchantApplication;
   }
 
-  const supplierColumns =
-    'myfatoorah_supplier_code, myfatoorah_supplier_status, myfatoorah_supplier_created_at, myfatoorah_last_synced_at, myfatoorah_last_error, myfatoorah_rejection_comment, myfatoorah_deposit_terms, payment_eligibility, payment_eligibility_note';
-
-  const [documentsResult, signatureResult, agreementResult, canManageResult, supplierResult] =
-    await Promise.all([
+  const [documentsResult, signatureResult, canManageResult] = await Promise.all([
     supabase
       .from('merchant_application_documents')
       .select('*')
@@ -103,11 +110,7 @@ export async function loadMerchantBundle(
       .order('signed_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
-    supabase.from('merchant_agreements').select('*').eq('is_active', true).maybeSingle(),
     supabase.rpc('merchant_application_can_manage', { p_application_id: application.id }),
-    ownerType === 'vendor'
-      ? supabase.from('vendors').select(supplierColumns).eq('id', ownerId).maybeSingle()
-      : supabase.from('enterprise_partners').select(supplierColumns).eq('id', ownerId).maybeSingle(),
   ]);
 
   const supplierRow = supplierResult.data as Record<string, any> | null;
@@ -134,4 +137,8 @@ export async function loadMerchantBundle(
     error: null,
   };
 }
+
+/** Request-scoped cache so a page and its children share one bundle load. */
+export const loadMerchantBundleCached = cache(loadMerchantBundle);
+
 

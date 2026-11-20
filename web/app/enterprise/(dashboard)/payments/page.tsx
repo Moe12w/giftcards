@@ -1,5 +1,5 @@
 import { requireEnterprise } from '@/lib/auth';
-import { loadMerchantBundle } from '@/lib/merchant-server';
+import { loadMerchantBundleCached } from '@/lib/merchant-server';
 import { MerchantPaymentsOverview } from '@/components/MerchantPaymentsOverview';
 import { Notice, PageHead } from '@/components/ui';
 
@@ -10,7 +10,7 @@ export default async function EnterprisePaymentsPage({
 }) {
   const params = await searchParams;
   const ctx = await requireEnterprise();
-  const bundle = await loadMerchantBundle(ctx.supabase, 'partner', ctx.partner.id);
+  const bundle = await loadMerchantBundleCached(ctx.supabase, 'partner', ctx.partner.id);
 
   return (
     <div className="dash-content">
