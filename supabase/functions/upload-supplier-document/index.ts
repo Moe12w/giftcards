@@ -14,16 +14,17 @@ const MAX_BYTES = 5 * 1024 * 1024;
 
 // Mirrors public.myfatoorah_file_type in migration 0119.
 const FILE_TYPES: Record<string, number> = {
-  owner_id_front: 1,
+  owner_id_front: 16, // Civil Ids Of All Owners
+  owner_id_back: 16,
   commercial_license: 2,
-  establishment_card: 5,
+  establishment_card: 4, // Signature Authorization
   logo: 5,
-  owner_id_back: 6,
-  manager_civil_id_back: 5,
+  manager_civil_id_back: 17, // Civil Id Of Manager
   manager_civil_id_front: 17,
   commercial_register: 20,
   bank_account_letter: 21,
   website_screenshot: 25,
+  three_parties_contract: 26, // 3-parties contract/ agreement
 };
 
 // MyFatoorah's documented upload formats. WebP is accepted by our bucket but

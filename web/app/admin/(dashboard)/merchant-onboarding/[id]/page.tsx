@@ -6,6 +6,7 @@ import {
   adminAddMerchantNote,
   adminReviewMerchantApplication,
   adminReviewMerchantDocument,
+  adminSendSignedContract,
 } from '@/lib/actions/admin-merchant';
 import {
   MERCHANT_DOC_COPY,
@@ -45,7 +46,7 @@ export default async function AdminMerchantApplicationPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ reviewed?: string; decided?: string; noted?: string; error?: string }>;
+  searchParams: Promise<{ reviewed?: string; decided?: string; noted?: string; contract_submitted?: string; error?: string }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
@@ -131,7 +132,9 @@ export default async function AdminMerchantApplicationPage({
               ? 'Application decision saved.'
               : query.noted === '1'
                 ? 'Note added.'
-                : null
+                : query.contract_submitted === '1'
+                  ? 'Signed contract submitted to MyFatoorah.'
+                  : null
         }
       />
 
@@ -368,6 +371,14 @@ export default async function AdminMerchantApplicationPage({
                     >
                       Download signed PDF
                     </a>
+                    <form action={adminSendSignedContract} style={{ marginTop: 6 }}>
+                      <input type="hidden" name="signature_id" value={signature.id} />
+                      <input type="hidden" name="application_id" value={id} />
+                      <input type="hidden" name="return_to" value={`/admin/merchant-onboarding/${id}`} />
+                      <button className="btn sm ghost" type="submit">
+                        Send contract to MyFatoorah
+                      </button>
+                    </form>
                   </span>
                 </div>
               ))}

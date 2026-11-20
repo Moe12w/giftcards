@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
+import { buildSignedAgreementPdf } from '@/lib/agreement-signature';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { callSupplierFunction } from '@/lib/myfatoorah-supplier';
 import { merchantErrorMessage } from '@/lib/merchant';
@@ -172,4 +173,93 @@ export async function adminDeactivateAgreement(formData: FormData) {
 
   revalidatePath('/admin/merchant-onboarding/agreements');
   redirect('/admin/merchant-onboarding/agreements?deactivated=1');
+}
+
+/** Generates the stamped agreement and submits it as MyFatoorah FileType 26. */
+export async function adminSendSignedContract(formData: FormData) {
+  const ctx = await requireAdmin();
+  const signatureId = str(formData, 'signature_id');
+  const applicationId = str(formData, 'application_id');
+  const requestedReturn = str(formData, 'return_to');
+  const returnPath = requestedReturn.startsWith('/admin/')
+    ? requestedReturn
+    : '/admin/merchant-onboarding';
+
+  if (!signatureId || !applicationId) back(returnPath, 'Signature not found.');
+
+  const admin = createAdminClient();
+  const { data: signature } = await admin
+    .from('merchant_agreement_signatures')
+    .select('*')
+    .eq('id', signatureId)
+    .eq('application_id', applicationId)
+    .maybeSingle();
+  if (!signature?.signature_data) back(returnPath, 'This signature has no stored image.');
+
+  const { data: agreement } = await admin
+    .from('merchant_agreements')
+    .select('id, version, storage_path')
+    .eq('id', signature.agreement_id)
+    .maybeSingle();
+  if (!agreement) back(returnPath, 'Agreement not found.');
+
+  const { data: application } = await admin
+    .from('merchant_applications')
+    .select('id, vendor_id, partner_id')
+    .eq('id', applicationId)
+    .maybeSingle();
+  if (!application) back(returnPath, 'Application not found.');
+  const ownerType = application.vendor_id ? 'vendor' : 'partner';
+  const ownerId = application.vendor_id ?? application.partner_id;
+  if (!ownerId) back(returnPath, 'Application has no owner.');
+
+  const { data: base, error: downloadError } = await admin.storage
+    .from(BUCKET)
+    .download(agreement.storage_path);
+  if (downloadError || !base) back(returnPath, 'Agreement file unavailable.');
+
+  const pdf = await buildSignedAgreementPdf({
+    basePdf: new Uint8Array(await base.arrayBuffer()),
+    signatureData: signature.signature_data,
+    signatoryName: signature.signatory_name,
+    signatoryRole: signature.signatory_role,
+    signedAt: signature.signed_at,
+  });
+  const bytes = Buffer.from(pdf);
+  const storagePath = `${ownerType}/${ownerId}/${applicationId}/three-parties-contract-${Date.now()}.pdf`;
+  const { error: uploadError } = await admin.storage
+    .from(BUCKET)
+    .upload(storagePath, bytes, { contentType: 'application/pdf', upsert: false });
+  if (uploadError) back(returnPath, uploadError.message);
+
+  const { data: document, error: documentError } = await admin
+    .from('merchant_application_documents')
+    .insert({
+      application_id: applicationId,
+      doc_type: 'three_parties_contract',
+      storage_path: storagePath,
+      file_name: `signed-agreement-${agreement.version}.pdf`,
+      mime_type: 'application/pdf',
+      size_bytes: bytes.byteLength,
+      status: 'approved',
+      uploaded_by: ctx.user.id,
+    })
+    .select('id')
+    .single();
+  if (documentError) {
+    await admin.storage.from(BUCKET).remove([storagePath]);
+    back(returnPath, documentError.message);
+  }
+
+  const submission = await callSupplierFunction('upload-supplier-document', {
+    documentId: document.id,
+  });
+  if (!submission.ok && !submission.skipped) {
+    back(returnPath, submission.error ?? 'MyFatoorah submission failed.');
+  }
+
+  revalidatePath(returnPath);
+  if (application.vendor_id) revalidatePath(`/admin/vendors/${application.vendor_id}`);
+  if (application.partner_id) revalidatePath(`/admin/enterprise/${application.partner_id}`);
+  redirect(`${returnPath}?contract_submitted=1`);
 }
