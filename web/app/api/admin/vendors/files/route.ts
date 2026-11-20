@@ -7,6 +7,26 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 const MAX_FILES = 200;
 
+/**
+ * `vendor_documents.file_url` is written by vendors, so it is untrusted input.
+ * Only our own Supabase storage origin is fetched: anything else (an internal
+ * address, a metadata endpoint, a third-party host) is skipped instead of being
+ * requested from inside the deployment. Redirects are refused separately
+ * because an allowed host could otherwise bounce the request elsewhere.
+ */
+function isOwnStorageUrl(raw: string): boolean {
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== 'https:') return false;
+    if (!url.pathname.startsWith('/storage/v1/object/')) return false;
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!base) return false;
+    return url.hostname === new URL(base).hostname;
+  } catch {
+    return false;
+  }
+}
+
 type SignatureRow = {
   id: string;
   application_id: string;
@@ -78,9 +98,14 @@ export async function GET(request: Request) {
       .eq('vendor_id', app.vendor_id ?? '');
     for (const doc of publicDocs ?? []) {
       if (!doc.file_url || Object.keys(files).length >= MAX_FILES) continue;
+      if (!isOwnStorageUrl(doc.file_url)) continue;
       try {
-        const response = await fetch(doc.file_url, { signal: AbortSignal.timeout(8000) });
-        if (!response.ok) continue;
+        const response = await fetch(doc.file_url, {
+          signal: AbortSignal.timeout(8000),
+          // An allowed host must not be able to redirect us somewhere else.
+          redirect: 'manual',
+        });
+        if (response.status < 200 || response.status >= 300) continue;
         files[`${folder}/upload-${safeFileName(doc.doc_type || 'document')}-${safeFileName(String(doc.file_url).slice(-12))}.pdf`] =
           new Uint8Array(await response.arrayBuffer());
       } catch {
