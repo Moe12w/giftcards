@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getPaymentMyFatoorahConfig, getMyFatoorahPaymentStatus } from '@/lib/myfatoorah';
 import { deliverClaimLinks } from '@/lib/merchant-payment-delivery';
@@ -15,9 +15,22 @@ export const maxDuration = 60;
  * A redirect alone can never issue a gift card.
  */
 export async function POST(request: Request) {
-  const expected = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // The Edge Functions sign with INTERNAL_API_KEY when it is set (the name
+  // Supabase does not reserve), while this route and the browser callback use
+  // the service-role key. Accept either configured secret so a webhook is never
+  // rejected just because the operator followed the recommended naming.
+  const acceptedKeys = [process.env.INTERNAL_API_KEY, process.env.SUPABASE_SERVICE_ROLE_KEY].filter(
+    (value): value is string => typeof value === 'string' && value.length > 0,
+  );
   const provided = request.headers.get('x-internal-key') ?? '';
-  if (!expected || !provided || provided !== expected) {
+  const providedDigest = createHash('sha256').update(provided).digest();
+  const authorized =
+    provided.length > 0 &&
+    acceptedKeys.some((key) => timingSafeEqual(createHash('sha256').update(key).digest(), providedDigest));
+  if (!authorized) {
+    if (acceptedKeys.length === 0) {
+      console.error('[merchant-payment] no internal key configured: confirmation is impossible');
+    }
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
