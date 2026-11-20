@@ -17,8 +17,11 @@ export const maxDuration = 60;
  *     trigger. The balance and ledger are untouched.
  *  2. Advertising — expiry, budget exhaustion, scheduled activation and
  *     auto-renewal for campaigns and their slots.
+ *  3. Retention — a bounded batch delete of high-growth event/telemetry tables.
+ *     Never touches money, ledger, orders or audit rows. Runs in dry-run mode
+ *     until RETENTION_LIVE=1 is set on the deployment.
  *
- * Both are idempotent, so a scheduler running more often than necessary is
+ * All are idempotent, so a scheduler running more often than necessary is
  * harmless. Auth is the cron secret: Vercel Cron sends `CRON_SECRET` as a
  * bearer token, and any other scheduler can send it in `Authorization` or
  * `x-cron-secret`.
@@ -51,9 +54,17 @@ async function run(request: Request) {
   try {
     const admin = createAdminClient();
 
-    const [gifts, advertising] = await Promise.all([
+    // Retention starts in dry-run mode; flip RETENTION_LIVE=1 only after the
+    // first report has been inspected. The RPC itself is service-role only.
+    const retentionDryRun = process.env.RETENTION_LIVE !== '1';
+
+    const [gifts, advertising, retention] = await Promise.all([
       admin.rpc('deliver_scheduled_gifts', { p_limit: 200 }),
       admin.rpc('advertising_run_maintenance'),
+      admin.rpc('app_retention_cleanup', {
+        p_dry_run: retentionDryRun,
+        p_max_rows_per_table: 5000,
+      }),
     ]);
 
     // A failure in one job must not hide the other one's result.
@@ -62,6 +73,12 @@ async function run(request: Request) {
         gifts: gifts.error?.message ?? null,
         advertising: advertising.error?.message ?? null,
       });
+    }
+
+    // Retention is non-fatal: a missing RPC or a failed delete must not turn
+    // the whole scheduled run into a 500 and hide the gift/advertising result.
+    if (retention.error) {
+      console.error('Retention cleanup failed', retention.error.message);
     }
 
     // Supplier KYC statuses change in MyFatoorah without a guaranteed webhook,
@@ -133,6 +150,11 @@ async function run(request: Request) {
         advertising: {
           result: advertising.data ?? null,
           error: advertising.error?.message ?? null,
+        },
+        retention: {
+          dry_run: retentionDryRun,
+          result: retention.data ?? null,
+          error: retention.error?.message ?? null,
         },
         suppliers: supplierSync,
       },
