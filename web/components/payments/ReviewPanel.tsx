@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { AlertCircle, CheckCircle2, Send } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Pencil, Send } from 'lucide-react';
 import { Notice, StatusTag } from '@/components/ui';
-import { submitMerchantApplication } from '@/lib/actions/merchant';
+import { reopenMerchantApplication, submitMerchantApplication } from '@/lib/actions/merchant';
 import {
   MERCHANT_DOC_COPY,
   PAYMENT_METHOD_LABELS,
@@ -36,6 +36,7 @@ export function ReviewPanel({
   );
   const signedThisVersion = Boolean(signature && agreement && signature.agreement_id === agreement.id);
   const alreadySubmitted = ['submitted', 'under_review', 'approved', 'active'].includes(application.status);
+  const canReopen = ['submitted', 'under_review', 'approved', 'rejected'].includes(application.status);
   const readOnly = !bundle.canManage;
   // The submission step itself cannot be complete before submitting, so readiness
   // is judged on the five steps that come before it.
@@ -58,6 +59,14 @@ export function ReviewPanel({
             <strong>Application submitted.</strong> We received it on {formatDate(application.submitted_at ?? application.updated_at)}.
             You can track progress in Online Payments.
           </span>
+          {canReopen && !readOnly ? (
+            <form action={reopenMerchantApplication} style={{ marginLeft: 'auto' }}>
+              <input type="hidden" name="application_id" value={application.id} />
+              <button className="btn sm" type="submit">
+                <Pencil size={14} /> Edit application
+              </button>
+            </form>
+          ) : null}
         </div>
       ) : null}
 

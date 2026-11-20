@@ -351,3 +351,31 @@ export async function submitMerchantApplication(formData: FormData) {
   revalidatePath('/admin/merchant-onboarding');
   redirect(`${paymentsPath(application)}?submitted=1`);
 }
+
+/** Returns a submitted/rejected application to draft so details can be fixed. */
+export async function reopenMerchantApplication(formData: FormData) {
+  const applicationId = str(formData, 'application_id');
+  const loaded = await loadApplication(applicationId);
+  if (!loaded) back('/vendor/payments', 'Application not found.');
+
+  const { supabase, application } = loaded;
+  const reviewPath = `${paymentsPath(application)}/review`;
+  const { error } = await supabase.rpc('merchant_application_reopen', {
+    p_application_id: applicationId,
+  });
+  if (error) {
+    back(
+      reviewPath,
+      error.message === 'status_not_editable'
+        ? 'This application can no longer be edited. Contact support.'
+        : merchantErrorMessage(error.message),
+    );
+  }
+
+  const base = paymentsPath(application);
+  revalidatePath(base);
+  revalidatePath(`${base}/review`);
+  revalidatePath(`${base}/application`);
+  revalidatePath('/admin/merchant-onboarding');
+  redirect(`${base}/application?step=4&reopened=1`);
+}
