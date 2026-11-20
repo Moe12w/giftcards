@@ -141,11 +141,39 @@ Deno.serve(async (req) => {
       }
 
       // Failed / cancelled / refunded notifications only update our status.
-      const mapped = invoiceStatus === 'REFUNDED' ? 'refunded' : txStatus === 'FAILED' ? 'failed' : null;
+      // Orders have no "cancelled" state, so a cancelled or expired invoice
+      // closes the order as failed; the payment record keeps the detail.
+      const cancelled =
+        invoiceStatus === 'CANCELLED' || invoiceStatus === 'EXPIRED' || txStatus === 'CANCELLED';
+      const mapped =
+        invoiceStatus === 'REFUNDED' ? 'refunded' : txStatus === 'FAILED' || cancelled ? 'failed' : null;
       if (mapped && invoiceId) {
         await admin.from('orders')
           .update({ status: mapped as any, payment_status: mapped as any })
           .eq('provider_invoice_id', invoiceId);
+
+        // Keep the payment record in step with the provider so reconciliation
+        // does not show an invoice as still pending after the provider has
+        // closed it. A paid payment is never downgraded to failed/cancelled.
+        const paymentStatus =
+          mapped === 'refunded'
+            ? 'refunded'
+            : invoiceStatus === 'CANCELLED' || invoiceStatus === 'EXPIRED'
+              ? 'cancelled'
+              : 'failed';
+        let paymentUpdate = admin
+          .from('myfatoorah_payments')
+          .update({ payment_status: paymentStatus, updated_at: new Date().toISOString() })
+          .eq('invoice_id', invoiceId);
+        if (paymentStatus !== 'refunded') {
+          paymentUpdate = paymentUpdate.neq('payment_status', 'paid');
+        }
+        const { error: paymentError } = await paymentUpdate;
+        if (paymentError) {
+          // The order status is already recorded; a failure here would make
+          // MyFatoorah retry the whole event, which is preferable to silence.
+          throw paymentError;
+        }
       }
       await markProcessed();
       return json({ received: true, ignored: true });
