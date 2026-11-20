@@ -1,0 +1,86 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
+import { requireAdvertiser } from '@/lib/auth';
+import { PageHead } from '@/components/ui';
+import { CampaignWizard } from '@/components/CampaignWizard';
+import { saveAdvertisingDraft, updateAdvertisingCampaign } from '@/lib/actions/advertising';
+import { loadAdvertisingSlotMap } from '@/lib/advertising-slots';
+import { getUserLocale } from '@/lib/i18n/server';
+
+export async function EditCampaign({
+  prefer,
+  params,
+}: {
+  prefer: 'vendor' | 'enterprise';
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const ctx = await requireAdvertiser({ prefer });
+  const locale = await getUserLocale(ctx.profile?.preferred_language);
+
+  const { data: campaign } = await ctx.supabase
+    .from('advertising_campaigns')
+    .select('*, advertising_creatives(*)')
+    .eq('id', id)
+    .eq('vendor_id', ctx.vendor.id)
+    .maybeSingle();
+
+  if (!campaign) notFound();
+
+  const [placementsResult, offersResult, categoriesResult, slotsByPlacement] = await Promise.all([
+    ctx.supabase
+      .from('advertising_placements')
+      .select('*, advertising_pricing(*)')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true }),
+    ctx.supabase
+      .from('offers')
+      .select('id, title')
+      .eq('vendor_id', ctx.vendor.id)
+      .eq('is_active', true)
+      .order('title', { ascending: true })
+      .limit(200),
+    ctx.supabase
+      .from('categories')
+      .select('id, name')
+      .eq('active', true)
+      .order('sort_order', { ascending: true }),
+    loadAdvertisingSlotMap(ctx.supabase),
+  ]);
+
+  const placements = (placementsResult.data ?? []).map((placement: any) => ({
+    ...placement,
+    advertising_pricing: (placement.advertising_pricing ?? []).filter(
+      (price: any) =>
+        price.is_active &&
+        (placement.allowed_pricing_models ?? ['fixed', 'cpc', 'cpm']).includes(price.pricing_model),
+    ),
+  }));
+
+  return (
+    <div className="dash-content">
+      <Link className="back-link" href={`${ctx.home}/campaigns/${campaign.id}`}>
+        <ArrowLeft size={15} /> Back to campaign
+      </Link>
+      <PageHead
+        eyebrow="Advertising & promotions"
+        title="Edit campaign"
+        description="Editing creative or schedule after payment sends the campaign back for approval. Budgets are locked once paid."
+      />
+      <CampaignWizard
+        action={updateAdvertisingCampaign}
+        saveDraftAction={saveAdvertisingDraft}
+        placements={placements}
+        offers={(offersResult.data ?? []) as { id: string; title: string }[]}
+        categories={(categoriesResult.data ?? []) as { id: string; name: string }[]}
+        vendorId={ctx.vendor.id}
+        vendorName={ctx.vendor.name}
+        home={ctx.home}
+        locale={locale}
+        campaign={campaign as any}
+        slotsByPlacement={slotsByPlacement}
+      />
+    </div>
+  );
+}
