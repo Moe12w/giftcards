@@ -514,7 +514,7 @@ export async function listFavourites(options?: PageOptions): Promise<Offer[]> {
   const { data, error } = await getSupabase()
     .from('favourites')
     .select(
-      'product_id, vendor_id, product:products(*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)), vendor:vendors(*)',
+      'product_id, vendor_id, product:products(id, vendor_id, partner_id, title, title_ar, description, image_url, min_amount_minor, max_amount_minor, preset_amounts_minor, valid_until, is_active, created_at, icon, tone, category_id, occasions, rating, location, fulfilment_type, session_count, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(id, product_id, kind, label, amount_minor, session_count, price_minor, currency, valid_until, active, sort_order)), vendor:vendors(id, name, name_ar, logo_url, banner_url)',
     )
     .order('created_at', { ascending: false })
     .range(page.from, page.to);
@@ -579,14 +579,14 @@ export async function listActiveOffers(options?: PageOptions): Promise<Offer[]> 
     const { data, error } = await getSupabase()
       .from('products')
       .select(
-        '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
+        'id, vendor_id, partner_id, title, title_ar, description, image_url, min_amount_minor, max_amount_minor, preset_amounts_minor, valid_until, is_active, created_at, icon, tone, category_id, occasions, rating, location, fulfilment_type, session_count, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(id, product_id, kind, label, amount_minor, session_count, price_minor, currency, valid_until, active, sort_order)',
       )
       .eq('is_active', true)
       .eq('status', 'published')
       .order('created_at', { ascending: false })
       .range(page.from, page.to);
     if (error) throw error;
-    const rows = ((data ?? []) as OfferRow[]).map(mapOffer);
+    const rows = ((data ?? []) as unknown as OfferRow[]).map(mapOffer);
     primeOffers(rows);
     return rows;
   });
@@ -608,14 +608,15 @@ export async function listOffersForBusiness(businessId: string): Promise<Offer[]
     const { data, error } = await getSupabase()
       .from('products')
       .select(
-        '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
+        'id, vendor_id, partner_id, title, title_ar, description, image_url, min_amount_minor, max_amount_minor, preset_amounts_minor, valid_until, is_active, created_at, icon, tone, category_id, occasions, rating, location, fulfilment_type, session_count, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(id, product_id, kind, label, amount_minor, session_count, price_minor, currency, valid_until, active, sort_order)',
       )
       .eq('is_active', true)
       .eq('status', 'published')
       .or(`vendor_id.eq.${businessId},partner_id.eq.${businessId}`)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(0, 200);
     if (error) throw error;
-    const rows = ((data ?? []) as OfferRow[]).map(mapOffer);
+    const rows = ((data ?? []) as unknown as OfferRow[]).map(mapOffer);
     primeOffers(rows);
     return rows;
   });
@@ -629,13 +630,13 @@ export async function getOffer(id: string): Promise<Offer | null> {
     const { data, error } = await getSupabase()
       .from('products')
       .select(
-        '*, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(*)',
+        'id, vendor_id, partner_id, title, title_ar, description, image_url, min_amount_minor, max_amount_minor, preset_amounts_minor, valid_until, is_active, created_at, icon, tone, category_id, occasions, rating, location, fulfilment_type, session_count, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(id, product_id, kind, label, amount_minor, session_count, price_minor, currency, valid_until, active, sort_order)',
       )
       .eq('id', id)
       .maybeSingle();
     if (error) throw error;
     if (!data) return null;
-    const offer = mapOffer(data as OfferRow);
+    const offer = mapOffer(data as unknown as OfferRow);
     primeCache(`offer:${offer.id}`, offer);
     return offer;
   });

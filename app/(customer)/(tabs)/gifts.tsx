@@ -14,7 +14,7 @@ import { PageHeader } from '@/src/components/PageHeader';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { ShowMore, usePaged } from '@/src/components/ShowMore';
-import { useCards, useWalletRealtime } from '@/src/lib/cards';
+import { useCards } from '@/src/lib/cards';
 import { isGiftWaiting } from '@/src/lib/delivery';
 import { cardHref, prefetchCard } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
@@ -30,7 +30,6 @@ const FILTERS: Filter[] = ['all', 'received', 'sent'];
 
 export default function GiftsScreen() {
   useThemeRefresh();
-  useWalletRealtime();
   const { t, i18n } = useTranslation();
   const { ready, cards, receivedCards, sentCards, usableCards, entries, sessionsLeft, valueLeft, reload } =
     useCards();

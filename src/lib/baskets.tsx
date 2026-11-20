@@ -550,27 +550,3 @@ export function useBaskets(): BasketContextValue {
   return value;
 }
 
-/** Opt-in realtime for basket screens; no global socket at app launch. */
-export function useBasketRealtime() {
-  const { reload } = useBaskets();
-
-  useEffect(() => {
-    if (!hasSupabaseConfig) return;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    const refresh = () => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => void reload(), 1000);
-    };
-    const channel = getSupabase()
-      .channel('gift-baskets')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'gift_basket_items' }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'gift_basket_participants' }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'gift_basket_activity' }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'gift_baskets' }, refresh)
-      .subscribe();
-    return () => {
-      if (timer) clearTimeout(timer);
-      getSupabase().removeChannel(channel);
-    };
-  }, [reload]);
-}

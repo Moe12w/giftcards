@@ -80,7 +80,7 @@ export function startCatalogBootstrap(): Promise<void> {
       listAppCategories().catch(() => []),
       getAppConfig(),
     ];
-    const [offers, businesses, rawConfig] = await Promise.all(tasks);
+    const [offers, businesses, , rawConfig] = await Promise.all(tasks);
     const config = (rawConfig as AppConfig | undefined) ?? defaultAppConfig();
     const offerRows = Array.isArray(offers) ? (offers as Offer[]) : [];
     const businessRows = Array.isArray(businesses)
