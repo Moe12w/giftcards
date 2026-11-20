@@ -32,6 +32,28 @@ function paymentsPath(application: Pick<MerchantApplication, 'owner_type'>): str
   return application.owner_type === 'vendor' ? '/vendor/payments' : '/enterprise/payments';
 }
 
+/** Explicitly opens a payment application. The RPC re-checks ownership/role. */
+export async function startMerchantApplication(formData: FormData) {
+  const supabase = await createClient();
+  const ownerType: MerchantOwnerType = str(formData, 'owner_type') === 'partner' ? 'partner' : 'vendor';
+  const ownerId = str(formData, 'owner_id');
+  const basePath = ownerType === 'vendor' ? '/vendor/payments' : '/enterprise/payments';
+  if (!ownerId) back(basePath, 'Business not found.');
+
+  const { error } = await supabase.rpc('merchant_application_create', {
+    p_owner_type: ownerType,
+    p_vendor_id: ownerType === 'vendor' ? ownerId : null,
+    p_partner_id: ownerType === 'partner' ? ownerId : null,
+  });
+  if (error) back(basePath, merchantErrorMessage(error.message));
+
+  revalidatePath(basePath);
+  revalidatePath(`${basePath}/application`);
+  revalidatePath(`${basePath}/agreement`);
+  revalidatePath('/admin/merchant-onboarding');
+  redirect(`${basePath}/application?step=1`);
+}
+
 interface LoadedApplication {
   supabase: Awaited<ReturnType<typeof createClient>>;
   userId: string;

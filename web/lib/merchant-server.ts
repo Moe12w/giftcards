@@ -20,6 +20,7 @@ export interface MerchantSupplierStatus {
 }
 
 export interface MerchantBundle {
+  ownerId: string;
   application: MerchantApplication | null;
   documents: MerchantDocument[];
   signature: MerchantSignature | null;
@@ -32,9 +33,8 @@ export interface MerchantBundle {
 }
 
 /**
- * Loads everything the payment screens need, creating the application on first
- * visit. Read-only members (e.g. enterprise analysts) can still see an existing
- * application; they simply cannot create or edit one.
+ * Loads everything the payment screens need. Creating the application is a
+ * separate explicit action, so page views never write to the database.
  */
 export async function loadMerchantBundle(
   supabase: SupabaseClient,
@@ -45,8 +45,8 @@ export async function loadMerchantBundle(
   const supplierColumns =
     'myfatoorah_supplier_code, myfatoorah_supplier_status, myfatoorah_supplier_created_at, myfatoorah_last_synced_at, myfatoorah_last_error, myfatoorah_rejection_comment, myfatoorah_deposit_terms, payment_eligibility, payment_eligibility_note';
 
-  // These three reads do not depend on the application, so fetch them together.
-  const [existingResult, agreementResult, supplierResult] = await Promise.all([
+  // These reads do not depend on the application, so fetch them together.
+  const [existingResult, agreementResult, supplierResult, canManageOwner] = await Promise.all([
     supabase
       .from('merchant_applications')
       .select('*')
@@ -56,11 +56,15 @@ export async function loadMerchantBundle(
     ownerType === 'vendor'
       ? supabase.from('vendors').select(supplierColumns).eq('id', ownerId).maybeSingle()
       : supabase.from('enterprise_partners').select(supplierColumns).eq('id', ownerId).maybeSingle(),
+    ownerType === 'vendor'
+      ? supabase.rpc('can_manage_vendor', { p_vendor_id: ownerId })
+      : supabase.rpc('can_manage_partner', { p_partner_id: ownerId }),
   ]);
 
   const existingError = existingResult.error;
   if (existingError) {
     return {
+      ownerId,
       application: null,
       documents: [],
       signature: null,
@@ -71,30 +75,19 @@ export async function loadMerchantBundle(
     };
   }
 
-  let application = (existingResult.data as MerchantApplication | null) ?? null;
+  const application = (existingResult.data as MerchantApplication | null) ?? null;
 
   if (!application) {
-    const { data: created, error: createError } = await supabase.rpc('merchant_application_create', {
-      p_owner_type: ownerType,
-      p_vendor_id: ownerType === 'vendor' ? ownerId : null,
-      p_partner_id: ownerType === 'partner' ? ownerId : null,
-    });
-
-    if (createError || !created) {
-      const notAuthorized = (createError?.message ?? '').includes('not_authorized');
-      return {
-        application: null,
-        documents: [],
-        signature: null,
-        agreement: null,
-        supplier: null,
-        canManage: false,
-        error: notAuthorized
-          ? 'No payment application has been started yet. An owner or manager needs to open Online Payments first.'
-          : (createError?.message ?? 'Could not open the payment application.'),
-      };
-    }
-    application = created as MerchantApplication;
+    return {
+      ownerId,
+      application: null,
+      documents: [],
+      signature: null,
+      agreement: (agreementResult.data as MerchantAgreement | null) ?? null,
+      supplier: null,
+      canManage: canManageOwner.data === true,
+      error: 'No payment application has been started yet. An owner or manager can start it from Online Payments.',
+    };
   }
 
   const [documentsResult, signatureResult, canManageResult] = await Promise.all([
@@ -116,6 +109,7 @@ export async function loadMerchantBundle(
   const supplierRow = supplierResult.data as Record<string, any> | null;
 
   return {
+    ownerId,
     application,
     documents: (documentsResult.data ?? []) as MerchantDocument[],
     signature: (signatureResult.data as MerchantSignature | null) ?? null,

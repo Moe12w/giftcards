@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, Circle, FileText, ShieldCheck } from 'lucide-react';
 import { StatusTag } from '@/components/ui';
+import { startMerchantApplication } from '@/lib/actions/merchant';
 import { formatDate } from '@/lib/format';
 import {
   MERCHANT_DOC_COPY,
@@ -34,9 +35,17 @@ export async function MerchantPaymentsOverview({
   const { application, documents, signature, agreement } = bundle;
 
   if (!application) {
+    const ownerType = basePath.startsWith('/enterprise') ? 'partner' : 'vendor';
     return (
-      <div className="callout error">
-        {bundle.error ?? 'The payment application is unavailable right now.'}
+      <div className="callout error" style={{ display: 'grid', gap: 10, justifyItems: 'start' }}>
+        <span>{bundle.error ?? 'The payment application is unavailable right now.'}</span>
+        {bundle.canManage ? (
+          <form action={startMerchantApplication}>
+            <input type="hidden" name="owner_type" value={ownerType} />
+            <input type="hidden" name="owner_id" value={bundle.ownerId} />
+            <button className="btn primary" type="submit">Start application</button>
+          </form>
+        ) : null}
       </div>
     );
   }

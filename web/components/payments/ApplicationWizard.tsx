@@ -55,7 +55,12 @@ export function ApplicationWizard({ bundle, basePath, step, error, success, tone
   const { application, documents, signature, agreement } = bundle;
 
   if (!application) {
-    return <div className="callout error">{bundle.error ?? 'The payment application is unavailable right now.'}</div>;
+    return (
+      <div className="callout error" style={{ display: 'grid', gap: 8, justifyItems: 'start' }}>
+        <span>{bundle.error ?? 'The payment application is unavailable right now.'}</span>
+        <Link className="btn sm" href={basePath}>Back to Online Payments</Link>
+      </div>
+    );
   }
 
   const stepKey = String(Math.min(Math.max(step, 1), 5));

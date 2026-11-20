@@ -62,6 +62,8 @@ Deno.serve(async (req) => {
     let synced = 0;
     const unmatched: string[] = [];
     const errors: Array<{ supplierCode: string; error: string }> = [];
+    const updates: Record<string, unknown>[] = [];
+    const codeByOwner = new Map<string, string>();
 
     for (const supplier of suppliers) {
       const code = String(supplier.SupplierCode ?? '').trim();
@@ -70,24 +72,33 @@ Deno.serve(async (req) => {
         unmatched.push(code);
         continue;
       }
+      codeByOwner.set(vendor.id, code);
+      updates.push({
+        owner_type: vendor.kind,
+        owner_id: vendor.id,
+        status: String(supplier.SupplierStatus ?? 'Pending'),
+        comment: supplier.Comment ? String(supplier.Comment) : null,
+        deposit_terms: supplier.DepositTerms ? String(supplier.DepositTerms) : null,
+        commission_percentage: toNumber(supplier.CommissionPercentage),
+        commission_value: toNumber(supplier.CommissionValue),
+        raw: supplier,
+      });
+    }
 
-      const isVendor = vendor.kind === 'vendor';
-      const { error } = await admin.rpc(
-        isVendor ? 'myfatoorah_supplier_synced' : 'myfatoorah_partner_synced',
-        {
-          [isVendor ? 'p_vendor_id' : 'p_partner_id']: vendor.id,
-          p_status: String(supplier.SupplierStatus ?? 'Pending'),
-          p_comment: supplier.Comment ? String(supplier.Comment) : null,
-          p_deposit_terms: supplier.DepositTerms ? String(supplier.DepositTerms) : null,
-          p_commission_percentage: toNumber(supplier.CommissionPercentage),
-          p_commission_value: toNumber(supplier.CommissionValue),
-          p_raw: supplier,
-        },
-      );
-      if (error) {
-        errors.push({ supplierCode: code, error: error.message });
-      } else {
-        synced += 1;
+    if (updates.length > 0) {
+      const { data: result, error } = await admin.rpc('myfatoorah_sync_statuses', {
+        p_updates: updates,
+      });
+      if (error) throw error;
+      synced = Number((result as { synced?: number } | null)?.synced ?? 0);
+      for (const row of (((result as { errors?: unknown[] } | null)?.errors ?? []) as {
+        owner_id?: string;
+        error?: string;
+      }[])) {
+        errors.push({
+          supplierCode: codeByOwner.get(String(row.owner_id ?? '')) ?? String(row.owner_id ?? 'unknown'),
+          error: String(row.error ?? 'sync_failed'),
+        });
       }
     }
 

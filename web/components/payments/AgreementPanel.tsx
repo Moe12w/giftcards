@@ -21,7 +21,12 @@ export function AgreementPanel({
   const { application, agreement, signature } = bundle;
 
   if (!application) {
-    return <div className="callout error">{bundle.error ?? 'The payment application is unavailable right now.'}</div>;
+    return (
+      <div className="callout error" style={{ display: 'grid', gap: 8, justifyItems: 'start' }}>
+        <span>{bundle.error ?? 'The payment application is unavailable right now.'}</span>
+        <Link className="btn sm" href={basePath}>Back to Online Payments</Link>
+      </div>
+    );
   }
 
   // A signature only counts for the exact agreement version it was made against.
