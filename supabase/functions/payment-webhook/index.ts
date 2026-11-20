@@ -192,16 +192,38 @@ Deno.serve(async (req) => {
       const status = value(data?.Refund?.Status).toUpperCase();
       const invoiceId = value(data?.ReferencedInvoice?.Id);
       const amount = Number(data?.Amount?.ValueInBaseCurrency ?? 0);
-      if (invoiceId && amount > 0 && status === 'REFUNDED') {
+      const refundMinor = Number.isFinite(amount) ? Math.round(amount * 100) : NaN;
+
+      if (invoiceId && status === 'REFUNDED') {
         const { data: payment } = await admin
           .from('myfatoorah_payments')
-          .select('order_id')
+          .select('order_id, amount_minor, currency')
           .eq('invoice_id', invoiceId)
           .maybeSingle();
-        if (payment) {
+
+        if (!payment) {
+          // A refund for an invoice we never recorded cannot be attributed.
+          console.error('payment-webhook refund for unknown invoice', { invoiceId, refundId });
+        } else if (!Number.isFinite(refundMinor) || refundMinor <= 0) {
+          console.error('payment-webhook refund amount missing', { invoiceId, refundId, amount });
+        } else if (refundMinor > Number(payment.amount_minor)) {
+          // The amount comes from the provider payload. Compare it to what we
+          // recorded for this invoice instead of booking it on trust: a refund
+          // larger than the payment is either a provider error or a currency
+          // mix-up, and must not reach the ledger.
+          console.error('payment-webhook refund exceeds recorded payment', {
+            invoiceId,
+            refundId,
+            refundMinor,
+            paymentMinor: payment.amount_minor,
+            currency: payment.currency,
+          });
+          await markProcessed();
+          return json({ received: true, ignored: true, reason: 'refund_amount_mismatch' });
+        } else {
           const { error } = await admin.rpc('myfatoorah_payment_refunded', {
             p_order_id: payment.order_id,
-            p_amount_minor: Math.round(amount * 100),
+            p_amount_minor: refundMinor,
             p_refund_reference: refundId,
             p_status: 'completed',
             p_provider_response: data,
