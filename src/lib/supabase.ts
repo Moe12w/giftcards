@@ -2,9 +2,9 @@
 // Supabase client for the mobile/web app. Uses only the public anon key.
 // Secret operations (payments, webhooks, wallet passes) run in Edge Functions.
 import 'react-native-url-polyfill/auto';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { env, hasSupabaseConfig } from './env';
+import { secureStorage } from './secure-storage';
 
 let client: SupabaseClient | null = null;
 
@@ -17,7 +17,8 @@ export function getSupabase(): SupabaseClient {
   if (!client) {
     client = createClient(env.supabaseUrl, env.supabaseAnonKey, {
       auth: {
-        storage: AsyncStorage,
+        // Keychain/Keystore on device, AsyncStorage on web; see secure-storage.ts.
+        storage: secureStorage,
         autoRefreshToken: true,
         persistSession: true,
         // The web build reads the recovery link straight from the URL. On a
