@@ -35,10 +35,12 @@
     "react-native-web": "~0.21.4"
   },
   "devDependencies": {
+    "@types/pg": "^8.23.1",
     "@types/react": "~19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~58.0.4",
     "jsdom": "^29.1.1",
+    "pg": "^8.23.1",
     "typescript": "~6.0.3",
     "vitest": "^5.1.0"
   },
@@ -49,6 +51,7 @@
     "web": "expo start --web",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:db": "vitest run tests/db",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
     "lint:web": "npm --prefix web run lint"
