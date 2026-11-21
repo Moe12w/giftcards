@@ -53,6 +53,9 @@ async function getItem(key: string): Promise<string | null> {
 
   const count = await readCount(key);
   if (count > 0) {
+    // A previous interrupted migration may have left a plaintext copy even
+    // though the secure-store chunks are complete. Clear it on every read.
+    void AsyncStorage.removeItem(key).catch(() => undefined);
     const parts = await Promise.all(
       Array.from({ length: count }, (_, index) => SecureStore.getItemAsync(chunkKey(key, index))),
     );
@@ -100,6 +103,8 @@ async function setItem(key: string, value: string): Promise<void> {
   const previous = await readCount(key);
   await Promise.all(chunks.map((chunk, index) => SecureStore.setItemAsync(chunkKey(key, index), chunk)));
   await SecureStore.setItemAsync(countKey(key), String(chunks.length));
+  // Once the secure copy is committed, any legacy plaintext is redundant.
+  void AsyncStorage.removeItem(key).catch(() => undefined);
 
   if (previous > chunks.length) {
     await Promise.all(

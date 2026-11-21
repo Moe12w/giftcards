@@ -110,8 +110,12 @@ async function openSponsoredAd(ad: SponsoredAd): Promise<void> {
     router.push('/(customer)/categories' as never);
     return;
   }
-  if (destinationType === 'internal' && destinationUrl?.startsWith('/')) {
-    router.push(destinationUrl as never);
+  if (destinationType === 'internal' && destinationUrl) {
+    // Require a single leading slash: '//host' is protocol-relative and would
+    // navigate off-origin on the web build under first-party ad branding.
+    if (/^\/(?!\/)/.test(destinationUrl)) {
+      router.push(destinationUrl as never);
+    }
   }
 }
 

@@ -6,7 +6,7 @@
 //  - Verifies the event-specific HMAC-SHA256 signature in constant time.
 //  - Deduplicates by (provider, event_id) and skips already-processed events.
 //  - Payment confirmation always re-queries MyFatoorah server-to-server.
-import { adminClient, randomToken } from '../_shared/clients.ts';
+import { adminClient } from '../_shared/clients.ts';
 import { json } from '../_shared/cors.ts';
 import { logProviderError, mfConfig } from '../_shared/myfatoorah.ts';
 
@@ -51,18 +51,21 @@ function signaturePayload(name: string, data: any): string {
   ].join(',');
 }
 
+/**
+ * Dedup identity must come only from HMAC-covered fields. Event.Reference is
+ * outside the signed payload, so using it as the key would let a replay holder
+ * alter the reference and bypass webhook_events dedup. The composite below is
+ * built exclusively from the fields signaturePayload() signs.
+ */
 function eventId(event: any, data: any): string {
-  const reference = value(event?.Event?.Reference);
-  if (reference) return reference;
-  return [
-    value(event?.Event?.Name),
-    value(data?.Invoice?.Id),
-    value(data?.Transaction?.PaymentId),
-    value(data?.Invoice?.Status),
-    value(data?.Transaction?.Status),
-    value(data?.Supplier?.Code),
-    value(data?.Refund?.Id),
-  ].join(':');
+  const name = value(event?.Event?.Name);
+  if (name === 'REFUND_STATUS_CHANGED') {
+    return `refund:${signaturePayload(name, data)}`;
+  }
+  if (name === 'SUPPLIER_STATUS_CHANGED') {
+    return `supplier:${signaturePayload(name, data)}`;
+  }
+  return `payment:${signaturePayload(name, data)}`;
 }
 
 Deno.serve(async (req) => {
@@ -216,7 +219,14 @@ Deno.serve(async (req) => {
     }
 
     if (name === 'REFUND_STATUS_CHANGED') {
-      const refundId = value(data?.Refund?.Id) || value(data?.Refund?.RefundReference) || randomToken(12);
+      // Refund.Id is inside the HMAC payload. Never fall back to the unsigned
+      // RefundReference or a random token for money-moving idempotency.
+      const refundId = value(data?.Refund?.Id);
+      if (!refundId) {
+        console.error('payment-webhook refund without signed Refund.Id', { invoiceId: value(data?.ReferencedInvoice?.Id) });
+        await markProcessed();
+        return json({ received: true, ignored: true, reason: 'refund_id_missing' });
+      }
       const status = value(data?.Refund?.Status).toUpperCase();
       const invoiceId = value(data?.ReferencedInvoice?.Id);
       const amount = Number(data?.Amount?.ValueInBaseCurrency ?? 0);

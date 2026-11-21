@@ -13,8 +13,11 @@ export async function GET(request: Request) {
   const orderId = url.searchParams.get('order') ?? '';
   const paymentId = url.searchParams.get('paymentId') ?? '';
   const failed = url.searchParams.get('failed') === '1';
-  const appUrl = (process.env.NEXT_PUBLIC_SITE_URL || url.origin).replace(/\/+$/, '');
-  const target = `${appUrl}/`;
+  // The internal confirm call carries the service-role key, so its destination
+  // must be a trusted constant. Never derive it from the request's Host/origin.
+  const configuredAppUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const appUrl = configuredAppUrl ? configuredAppUrl.replace(/\/+$/, '') : '';
+  const target = `${appUrl || url.origin}/`;
 
   // A mobile checkout passes its app scheme here; the browser closes itself
   // when MyFatoorah follows this redirect. Never trust an arbitrary URL.
@@ -45,7 +48,10 @@ export async function GET(request: Request) {
       .eq('order_id', orderId)
       .maybeSingle();
 
-    if (payment?.invoice_id && internal) {
+    // Without a configured site URL there is no safe destination for the
+    // secret-bearing request; skip confirmation rather than send it anywhere
+    // derived from the incoming request.
+    if (payment?.invoice_id && internal && appUrl) {
       const response = await fetch(`${appUrl}/api/merchant-payment/confirm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-internal-key': internal },

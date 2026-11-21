@@ -99,13 +99,15 @@ async function takeRateLimit(
 }
 
 function clientIp(req: Request): string {
-  const forwarded = req.headers.get('x-forwarded-for');
-  return (
-    req.headers.get('cf-connecting-ip') ??
-    req.headers.get('x-real-ip') ??
-    forwarded?.split(',')[0]?.trim() ??
-    'unknown'
-  );
+  // Only platform-controlled headers. X-Real-IP and the left-most XFF entry are
+  // client-writable and would let callers rotate rate-limit buckets.
+  const cf = req.headers.get('cf-connecting-ip')?.trim();
+  if (cf) return cf;
+  const forwarded = req.headers.get('x-forwarded-for')
+    ?.split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return forwarded?.[forwarded.length - 1] ?? 'unknown';
 }
 
 async function userIdFromRequest(

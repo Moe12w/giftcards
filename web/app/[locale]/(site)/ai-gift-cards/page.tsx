@@ -153,7 +153,15 @@ export default async function AiGiftCardsPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // JSON.stringify does not escape '<', so an env-derived URL containing
+        // </script> could break out of the script element under a CSP that
+        // allows inline scripts. Escape the HTML-significant characters.
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd)
+            .replace(/</g, '\\u003c')
+            .replace(/>/g, '\\u003e')
+            .replace(/&/g, '\\u0026'),
+        }}
       />
 
       <section className="page-hero ai-hero">

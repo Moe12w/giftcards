@@ -15,10 +15,12 @@ import { adminClient } from '../_shared/clients.ts';
 const MAX_TOKEN_LENGTH = 512;
 
 function sourceOf(req: Request): string | null {
-  const real = req.headers.get('x-real-ip')?.trim();
-  if (real) return real;
+  // Only headers the platform sets. A client-supplied X-Real-IP would let a
+  // caller rotate the per-IP rate-limit bucket at will.
   const cf = req.headers.get('cf-connecting-ip')?.trim();
   if (cf) return cf;
+  // The right-most XFF entry is appended by the proxy closest to us; a client
+  // cannot control it by prepending values.
   const forwarded = req.headers
     .get('x-forwarded-for')
     ?.split(',')

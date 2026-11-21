@@ -31,12 +31,12 @@ const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
 
 /** The caller's network, from headers the platform controls. */
 function sourceOf(req: Request): string {
-  const real = req.headers.get('x-real-ip')?.trim();
-  if (real) return real;
+  // Never trust a client-supplied X-Real-IP: it would let a caller choose their
+  // own lockout bucket. Prefer the platform-set CF-Connecting-IP.
   const cf = req.headers.get('cf-connecting-ip')?.trim();
   if (cf) return cf;
-  // The right-most entry is the one appended by the proxy closest to us, so a
-  // client cannot prepend a fake address.
+  // The right-most entry is appended by the proxy closest to us, so a client
+  // cannot prepend a fake address.
   const forwarded = req.headers.get('x-forwarded-for')
     ?.split(',')
     .map((part) => part.trim())
