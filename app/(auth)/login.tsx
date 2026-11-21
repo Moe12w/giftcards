@@ -7,6 +7,7 @@ import { AuthHero } from '@/src/components/AuthHero';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { LanguageToggle } from '@/src/components/LanguageToggle';
+import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
@@ -68,6 +69,10 @@ export default function LoginScreen() {
   return (
     <Screen>
       <LanguageToggle style={styles.languageToggle} />
+
+      <View style={styles.mascotWrap}>
+        <Mascot size={104} />
+      </View>
 
       <AuthHero
         eyebrow={t('auth.badgeWelcome')}
@@ -148,6 +153,7 @@ export default function LoginScreen() {
 
 const styles = themedStyles(() => ({
   languageToggle: { alignSelf: 'flex-end' },
+  mascotWrap: { alignItems: 'center', marginTop: -spacing.xs },
   form: { gap: spacing.md },
   demoText: {
     fontFamily: fonts.medium,
