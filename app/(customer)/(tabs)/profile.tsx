@@ -119,12 +119,6 @@ export default function ProfileScreen() {
           onPress={() => router.push('/(customer)/profile/personal')}
         />
         <ListRow
-          icon="creditCard"
-          tone="pink"
-          title={t('profile.paymentMethods')}
-          onPress={() => router.push('/(customer)/profile/payment-methods')}
-        />
-        <ListRow
           icon="store"
           tone="gold"
           title={t('profile.favourites')}
