@@ -1109,10 +1109,19 @@ export async function getAdViewerKey(): Promise<string> {
   return key;
 }
 
-/** Asks the backend for the ads in a placement and its admin-set config. */
-export async function listSponsoredAds(
+/**
+ * Memory-only ad cache. Unlike the catalog cache this is never written to
+ * disk: impression ids are per-delivery, so a stale copy from last launch must
+ * not be shown. Short TTL + in-flight dedupe means the bootstrap prefetch and
+ * the component's first mount share one RPC instead of racing.
+ */
+const SPONSORED_TTL = 60_000;
+const sponsoredMemory = new Map<string, { value: SponsoredPlacement; at: number }>();
+const sponsoredInflight = new Map<string, Promise<SponsoredPlacement>>();
+
+async function loadSponsoredAds(
   placementKey: string,
-  limit = 5,
+  limit: number,
 ): Promise<SponsoredPlacement> {
   if (!hasSupabaseConfig) {
     return { placement: placementKey, ads: [], config: {} };
@@ -1140,6 +1149,42 @@ export async function listSponsoredAds(
     ads: payload.ads ?? [],
     config: (placement.data?.config ?? {}) as Record<string, unknown>,
   };
+}
+
+/** Asks the backend for the ads in a placement and its admin-set config. */
+export async function listSponsoredAds(
+  placementKey: string,
+  limit = 5,
+): Promise<SponsoredPlacement> {
+  const key = `${placementKey}:${limit}`;
+  const entry = sponsoredMemory.get(key);
+  if (entry && Date.now() - entry.at < SPONSORED_TTL) return entry.value;
+
+  const running = sponsoredInflight.get(key);
+  if (running) return running;
+
+  const promise = loadSponsoredAds(placementKey, limit)
+    .then((value) => {
+      sponsoredMemory.set(key, { value, at: Date.now() });
+      return value;
+    })
+    .finally(() => sponsoredInflight.delete(key));
+  sponsoredInflight.set(key, promise);
+  return promise;
+}
+
+/**
+ * Warms the two homepage placements during bootstrap so their ads (and click
+ * ids) are already in memory when the first screen mounts. Other placements
+ * stay on-demand — prefetching them would burn impressions on screens the user
+ * may never open.
+ */
+export function prefetchSponsoredPlacements(): Promise<SponsoredPlacement[]> {
+  if (!hasSupabaseConfig) return Promise.resolve([]);
+  return Promise.all([
+    listSponsoredAds('homepage_hero_carousel', 8),
+    listSponsoredAds('homepage_featured_gift_card', 4),
+  ]);
 }
 
 /** Records a click and returns the canonical destination from the database. */

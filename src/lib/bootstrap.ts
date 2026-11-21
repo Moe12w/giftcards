@@ -22,13 +22,14 @@ import {
   listActiveOffers,
   listAppCategories,
   listMarketplaceBusinesses,
+  prefetchSponsoredPlacements,
   primeBusinesses,
   primeOffers,
 } from './data';
 import { hasSupabaseConfig } from './env';
 import { perfBetween, perfMark } from './perf';
 import { getSupabase } from './supabase';
-import type { MarketplaceBusiness, Offer } from './types';
+import type { MarketplaceBusiness, Offer, SponsoredPlacement } from './types';
 
 const IMAGE_BUDGET = 14;
 let catalogPromise: Promise<void> | null = null;
@@ -59,6 +60,20 @@ function prefetchImages(offers: Offer[], businesses: MarketplaceBusiness[]): Pro
   return Image.prefetch(list, 'memory-disk').catch(() => false);
 }
 
+/** Warms the ad creatives so the first carousel frame has real images. */
+function prefetchSponsoredImages(placements: SponsoredPlacement[]): Promise<boolean> {
+  const urls = new Set<string>();
+  for (const placement of placements) {
+    for (const ad of placement.ads) {
+      const url = ad.mobile_image_url || ad.image_url;
+      if (url) urls.add(url);
+    }
+  }
+  const list = [...urls].slice(0, 8);
+  if (list.length === 0) return Promise.resolve(false);
+  return Image.prefetch(list, 'memory-disk').catch(() => false);
+}
+
 /**
  * Starts the marketplace bootstrap once. The returned promise is safe to
  * ignore: failures are swallowed so a bad connection never breaks startup.
@@ -73,6 +88,13 @@ export function startCatalogBootstrap(): Promise<void> {
     // same keys, so there is no second copy of the category definitions.
     primeCache('catalog:categories', CATEGORIES);
     primeCache('catalog:occasions', OCCASIONS);
+
+    // Independent, lower-priority track: by the time the home screen mounts,
+    // the two homepage ad placements and their images are already warm. Failures
+    // are swallowed — an ad slot simply renders empty on a bad connection.
+    void prefetchSponsoredPlacements()
+      .then((placements) => prefetchSponsoredImages(placements))
+      .catch(() => undefined);
 
     const tasks: Promise<unknown>[] = [
       listActiveOffers().catch(() => [] as Offer[]),
