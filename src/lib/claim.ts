@@ -9,7 +9,6 @@ import { env, hasSupabaseConfig } from './env';
 
 export interface ClaimGift {
   voucherId: string;
-  voucherCode: string | null;
   vendor: string;
   title: string;
   amountMinor: number;
@@ -47,7 +46,6 @@ export async function fetchClaimGift(token: string): Promise<ClaimGift | null> {
   const row = (Array.isArray(data) ? data[0] : data) as
     | {
         voucher_id: string;
-        voucher_code: string | null;
         vendor_name: string | null;
         product_title: string | null;
         amount_minor: number;
@@ -65,7 +63,6 @@ export async function fetchClaimGift(token: string): Promise<ClaimGift | null> {
 
   return {
     voucherId: row.voucher_id,
-    voucherCode: row.voucher_code,
     vendor: row.vendor_name ?? 'Giftly',
     title: row.product_title ?? '',
     amountMinor: Number(row.amount_minor ?? 0),
@@ -80,10 +77,13 @@ export async function fetchClaimGift(token: string): Promise<ClaimGift | null> {
   };
 }
 
-/** Claims the gift for the signed in recipient. */
+/**
+ * Claims the gift for the signed in recipient.
+ * Throws on failure so callers never navigate to a false success screen.
+ */
 export async function claimGift(token: string): Promise<string | null> {
-  if (!hasSupabaseConfig) return null;
+  if (!hasSupabaseConfig) throw new Error('Claiming is unavailable in demo mode.');
   const { data, error } = await getSupabase().rpc('claim_voucher', { p_token: token });
-  if (error) return null;
+  if (error) throw new Error(error.message || 'Could not claim this gift.');
   return (data as string | null) ?? null;
 }

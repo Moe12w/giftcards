@@ -1,5 +1,5 @@
 import { useThemeRefresh } from '@/src/lib/theme';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -17,12 +17,15 @@ export default function ClaimAddScreen() {
   const { t } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
   const { user, loading: authLoading } = useAuth();
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (authLoading || !user || !token) return;
-    // Already signed in: bind the gift and continue.
-    claimGift(token).finally(() => router.replace(`/claim/${token}/details`));
-  }, [authLoading, user, token]);
+    if (authLoading || !user || !token || failed) return;
+    // Already signed in: bind the gift, then continue only on success.
+    claimGift(token)
+      .then(() => router.replace(`/claim/${token}/details`))
+      .catch(() => setFailed(true));
+  }, [authLoading, user, token, failed]);
 
   if (authLoading) return null;
   if (user) return null;
@@ -36,6 +39,12 @@ export default function ClaimAddScreen() {
         </View>
         <Text style={styles.title}>{t('claimExtra.addTitle')}</Text>
         <Text style={styles.body}>{t('claimExtra.addBody')}</Text>
+        {failed ? (
+          <View style={styles.footer}>
+            <Text style={styles.body}>{t('common.errorGeneric')}</Text>
+            <Button label={t('common.retry')} onPress={() => setFailed(false)} />
+          </View>
+        ) : null}
       </View>
 
       <Card style={styles.footer}>

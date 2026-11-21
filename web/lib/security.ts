@@ -93,11 +93,17 @@ export function escapeHtml(value: string | null | undefined): string {
     .replace(/'/g, '&#39;');
 }
 
-/** Neutralises spreadsheet formula injection in CSV exports. */
+/**
+ * Neutralises spreadsheet formula injection in CSV exports.
+ *
+ * RFC4180 quoting keeps embedded commas, quotes and newlines inside a single
+ * cell. Without it a value containing a newline could start a new row whose
+ * first cell begins with `=`, bypassing a leading-character-only check.
+ */
 export function csvCell(value: string | null | undefined): string {
-  const text = String(value ?? '');
-  if (/^[=+\-@\t\r]/.test(text)) return `'${text}`;
-  return text;
+  const raw = String(value ?? '');
+  const text = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+  return `"${text.replace(/"/g, '""')}"`;
 }
 
 /**

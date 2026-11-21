@@ -51,19 +51,23 @@ async function clientIp(): Promise<string | null> {
   }
 }
 
+/**
+ * Returns true (deny) when limiter state cannot be established. A limiter
+ * outage must not silently remove the brute-force throttle.
+ */
 async function attemptsExceeded(identifier: string, windowSeconds: number, maxFailed: number): Promise<boolean> {
   const client = admin();
-  if (!client) return false;
+  if (!client) return true;
   try {
     const { data, error } = await client.rpc('auth_attempts_exceeded', {
       p_identifier: identifier,
       p_window_seconds: windowSeconds,
       p_max_failed: maxFailed,
     });
-    if (error) return false;
+    if (error) return true;
     return data === true;
   } catch {
-    return false;
+    return true;
   }
 }
 
@@ -89,7 +93,7 @@ type ServerSupabase = Awaited<ReturnType<typeof createClient>>;
 /**
  * Signs a user in through Supabase, recording the attempt and enforcing the
  * per-identifier and per-IP limits before the credentials are checked.
- * Every failure in the limiter fails open: the credential check still runs.
+ * If the limiter cannot be read, sign-in is denied rather than allowed.
  */
 async function signInWithLimiter(
   supabase: ServerSupabase,
@@ -105,7 +109,7 @@ async function signInWithLimiter(
     limited = Boolean(ip) && (await attemptsExceeded(`ip:${ip}`, AUTH_WINDOW_SECONDS, 40));
     if (!limited) limited = await attemptsExceeded(identifier, AUTH_WINDOW_SECONDS, AUTH_MAX_FAILED);
   } catch {
-    limited = false;
+    limited = true;
   }
 
   if (limited) {

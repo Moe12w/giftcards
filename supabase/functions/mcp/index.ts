@@ -73,29 +73,10 @@ function jsonResponse(
   });
 }
 
-const memoryBuckets = new Map<string, { started: number; hits: number }>();
-
-function memoryRateLimit(key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now();
-  const bucket = memoryBuckets.get(key);
-  if (!bucket || now - bucket.started >= windowMs) {
-    memoryBuckets.set(key, { started: now, hits: 1 });
-    if (memoryBuckets.size > 5000) {
-      for (const [name, value] of memoryBuckets) {
-        if (now - value.started >= windowMs) memoryBuckets.delete(name);
-      }
-    }
-    return limit >= 1;
-  }
-  bucket.hits += 1;
-  return bucket.hits <= limit;
-}
-
 /**
- * Uses the shared Postgres counter when migration 0107 is applied, and falls
- * back to this isolate's memory if the RPC is unavailable. The fallback keeps
- * the endpoint usable during a rolling deploy; the database counter is the
- * real protection across isolates.
+ * Always use the shared Postgres counter. A silent per-isolate memory fallback
+ * multiplied every limit by the number of serving isolates and reset on cold
+ * starts, so an RPC failure now fails closed and is logged for operators.
  */
 async function takeRateLimit(
   admin: ReturnType<typeof adminClient>,
@@ -110,10 +91,11 @@ async function takeRateLimit(
       p_window_seconds: Math.ceil(windowMs / 1000),
     });
     if (!error && typeof data === 'boolean') return data;
-  } catch {
-    // Fall through to the in-memory bucket.
+    console.error('mcp rate limit RPC returned no decision; denying', error ?? data);
+  } catch (err) {
+    console.error('mcp rate limit RPC failed; denying', String(err));
   }
-  return memoryRateLimit(key, limit, windowMs);
+  return false;
 }
 
 function clientIp(req: Request): string {

@@ -78,12 +78,18 @@ describe('escapeHtml', () => {
 describe('csvCell', () => {
   it('neutralises formula injection', () => {
     expect(csvCell('=HYPERLINK("https://evil","Invoice")')).toBe(
-      "'=HYPERLINK(\"https://evil\",\"Invoice\")",
+      "\"'=HYPERLINK(\"\"https://evil\"\",\"\"Invoice\"\")\"",
     );
-    expect(csvCell('+cmd')).toBe("'+cmd");
-    expect(csvCell('-cmd')).toBe("'-cmd");
-    expect(csvCell('@SUM(A1)')).toBe("'@SUM(A1)");
-    expect(csvCell('plain')).toBe('plain');
+    expect(csvCell('+cmd')).toBe('"\'+cmd"');
+    expect(csvCell('-cmd')).toBe('"\'-cmd"');
+    expect(csvCell('@SUM(A1)')).toBe('"\'@SUM(A1)"');
+    expect(csvCell('plain')).toBe('"plain"');
+  });
+
+  it('quotes embedded newlines and delimiters inside one cell', () => {
+    expect(csvCell('gift\n=HYPERLINK("http://evil","x")')).toBe(
+      '"gift\n=HYPERLINK(""http://evil"",""x"")"',
+    );
   });
 });
 

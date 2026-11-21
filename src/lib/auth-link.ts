@@ -33,11 +33,26 @@ export async function handleAuthUrl(url: string | null): Promise<boolean> {
 
   try {
     const supabase = getSupabase();
-    const path = (url.split('#')[0] || url).split('?')[0];
+
+    // Compare against the exact link we generate. A substring test on the raw
+    // URL would also match `giftly://reset-password.attacker.tld/...`, letting a
+    // crafted link install an attacker-controlled session.
+    const expected = new URL(passwordResetLink());
+    const incoming = new URL(url);
+    const normalizePath = (value: string) => value.replace(/\/+$/, '') || '/';
+    const expectedPath = normalizePath(expected.pathname);
+    const incomingPath = normalizePath(incoming.pathname);
+    const isRecoveryLink =
+      incoming.protocol === expected.protocol &&
+      ((incoming.host === expected.host && incomingPath === expectedPath) ||
+        // Expo may encode the path as the host (`giftly://reset-password`) or
+        // as a real path (`giftly:///reset-password`); accept both exact forms.
+        (incomingPath === '/reset-password' && (incoming.host === '' || incoming.host === expected.host)));
+    if (!isRecoveryLink) return false;
 
     // PKCE flow: the link carries ?code=...
     const code = paramFrom(url, 'code');
-    if (code && path.includes('reset-password')) {
+    if (code) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       return !error;
     }
@@ -45,7 +60,7 @@ export async function handleAuthUrl(url: string | null): Promise<boolean> {
     // Implicit flow: the link carries #access_token=...&refresh_token=...
     const accessToken = paramFrom(url, 'access_token');
     const refreshToken = paramFrom(url, 'refresh_token');
-    if (accessToken && refreshToken && path.includes('reset-password')) {
+    if (accessToken && refreshToken) {
       const { error } = await supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,

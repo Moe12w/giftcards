@@ -166,7 +166,7 @@ describeDb('money path (real database, rolled back)', { timeout: 90_000 }, () =>
           client.query('select * from public.redeem_voucher_by_id($1, $2)', [voucherId, 1000]),
         ),
       );
-      expect(refusal).toMatch(/not allowed/);
+      expect(refusal).toMatch(/voucher not found or not allowed/);
 
       // The refusal left the card untouched.
       expect(await voucherBalanceMinor(client, voucherId)).toBe(fixture.amountMinor);

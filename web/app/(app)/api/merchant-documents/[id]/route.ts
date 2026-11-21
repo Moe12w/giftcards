@@ -30,6 +30,20 @@ export async function GET(
   });
   if (canView !== true) return new NextResponse('Not found', { status: 404 });
 
+  // Authorize the object as well as the application: a stored path outside the
+  // application's own tenant folder must never be signed by the service role.
+  const { data: application } = await supabase
+    .from('merchant_applications')
+    .select('owner_type, vendor_id, partner_id')
+    .eq('id', document.application_id)
+    .maybeSingle();
+  const expectedPrefix = application
+    ? `${application.owner_type}/${application.vendor_id ?? application.partner_id ?? 'unknown'}/${document.application_id}/`
+    : null;
+  if (!expectedPrefix || !document.storage_path.startsWith(expectedPrefix)) {
+    return new NextResponse('Not found', { status: 404 });
+  }
+
   const adminResult = apiAdmin();
   if (!adminResult.ok) return adminResult.response;
 
