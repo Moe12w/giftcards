@@ -10,7 +10,7 @@ export default function DiscoverSlide() {
 
   async function finish() {
     await markOnboardingSeen();
-    router.replace('/(auth)/login');
+    router.replace('/(customer)/(tabs)');
   }
 
   return (

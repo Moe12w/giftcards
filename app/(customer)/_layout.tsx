@@ -1,11 +1,10 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { Redirect, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 
 import { MaintenanceScreen } from '@/src/components/MaintenanceScreen';
 import { useAppConfig } from '@/src/lib/app-config';
 import { useAuth } from '@/src/lib/auth';
-import { hasSupabaseConfig } from '@/src/lib/env';
 import { BasketProvider } from '@/src/lib/baskets';
 import { GiftDraftProvider } from '@/src/lib/gift-draft';
 import { useThemeRefresh } from '@/src/lib/theme';
@@ -23,9 +22,8 @@ export default function CustomerLayout() {
       </View>
     );
   }
-  if (hasSupabaseConfig && !user) {
-    return <Redirect href="/(auth)/login" />;
-  }
+  // Guests browse the marketplace freely; account-only routes are gated by
+  // their own nested layouts and the profile/wallet tabs.
   if (config.controls.maintenance.enabled) {
     return <MaintenanceScreen setting={config.controls.maintenance} />;
   }

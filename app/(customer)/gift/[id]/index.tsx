@@ -27,6 +27,7 @@ import {
   offerTone,
 } from '@/src/lib/catalog';
 import { getOffer, peekOffer } from '@/src/lib/data';
+import { useAuth } from '@/src/lib/auth';
 import { pushOnce } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { useGiftDraft } from '@/src/lib/gift-draft';
@@ -38,6 +39,7 @@ export default function GiftDetailScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { id, title: paramTitle } = useLocalSearchParams<{ id: string; title?: string }>();
+  const { user } = useAuth();
   const { update } = useGiftDraft();
   const [offer, setOffer] = useState<Offer | null>(() => (id ? peekOffer(id) : null));
   const [loading, setLoading] = useState(Boolean(id) && !offer);
@@ -103,6 +105,10 @@ export default function GiftDetailScreen() {
 
   function startGift() {
     if (!offer) return;
+    if (!user) {
+      router.push('/(auth)/login');
+      return;
+    }
     update({
       offerId: offer.id,
       variantId: null,

@@ -9,11 +9,13 @@ import { Chip } from '@/src/components/Chip';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { Glyph } from '@/src/components/Glyph';
+import { GuestGate } from '@/src/components/GuestGate';
 import { GiftCardVisual } from '@/src/components/GiftCardVisual';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { offerBusinessLogo, offerIcon, offerIsFixedAmount, offerPackages, offerTitle, offerTone } from '@/src/lib/catalog';
+import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { getOffer } from '@/src/lib/data';
 import { useGiftDraft, type DeliveryMethod } from '@/src/lib/gift-draft';
@@ -44,6 +46,7 @@ function newRecipientId(): string {
 export default function GiftComposeScreen() {
   useThemeRefresh();
   const { recipients } = useRecipients();
+  const { user, loading: authLoading } = useAuth();
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { draft, update, ready } = useGiftDraft();
@@ -140,6 +143,11 @@ export default function GiftComposeScreen() {
       });
     }
   }, [draft.amountMinor, draft.offerId, draft.variantId, offer, ready, update]);
+
+  if (authLoading) return null;
+  if (!user) {
+    return <GuestGate title={t('guest.giftTitle')} body={t('guest.giftBody')} showBrowse />;
+  }
 
   if (loading) {
     return (

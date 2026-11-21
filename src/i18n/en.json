@@ -77,7 +77,23 @@
     "tooManyAttempts": "Too many attempts. Please wait a minute and try again.",
     "signInFailed": "We could not sign you in right now. Please try again.",
     "signUpFailed": "We could not create your account right now. Please try again.",
-    "backToSignIn": "Back to sign in"
+    "backToSignIn": "Back to sign in",
+    "continueBrowsing": "Continue browsing"
+  },
+  "guest": {
+    "title": "Sign in to continue",
+    "body": "Browsing Giftly is free. Sign in or create an account to save gifts, use your wallet and check out.",
+    "signIn": "Sign in",
+    "createAccount": "Create account",
+    "browse": "Keep browsing",
+    "basketsTitle": "Baskets need an account",
+    "basketsBody": "Sign in to create or join a collaborative gift basket.",
+    "walletTitle": "Your gift wallet",
+    "walletBody": "Sign in to see the gift cards you have received and sent.",
+    "profileTitle": "Your account",
+    "profileBody": "Sign in to manage your profile, saved recipients and preferences.",
+    "giftTitle": "Create your gift",
+    "giftBody": "Sign in to personalise this gift and continue to checkout."
   },
   "authExtra": {
     "forgotTitle": "Forgot password?",

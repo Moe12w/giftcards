@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Gift, HeartHandshake, Link2, Users } from 'lucid
 import { Badge } from '@/src/components/Badge';
 import { BasketPreviewCard } from '@/src/components/BasketPreviewCard';
 import { Button } from '@/src/components/Button';
+import { GuestGate } from '@/src/components/GuestGate';
 import { Card } from '@/src/components/Card';
 import { GiftBox3D } from '@/src/components/GiftBox3D';
 import { Money } from '@/src/components/Money';
@@ -16,6 +17,7 @@ import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { TextField } from '@/src/components/TextField';
 import { basketProgress, basketTotal, useBaskets } from '@/src/lib/baskets';
+import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
@@ -23,6 +25,7 @@ export default function GiftBasketHubScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
   const { baskets, ready, activeBasket, completedBaskets, joinBasket } = useBaskets();
+  const { user } = useAuth();
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
@@ -54,6 +57,16 @@ export default function GiftBasketHubScreen() {
     } else {
       setError(t('basket.joinNotFound'));
     }
+  }
+
+  if (!user) {
+    return (
+      <GuestGate
+        tabbed
+        title={t('guest.basketsTitle')}
+        body={t('guest.basketsBody')}
+      />
+    );
   }
 
   if (!ready) {

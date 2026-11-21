@@ -128,12 +128,16 @@ export default function ExploreHomeScreen() {
   // anything marked as read in the notification centre.
   useFocusEffect(
     useCallback(() => {
-      countUnreadNotifications()
-        .then(setUnread)
-        .catch(() => setUnread(0));
+      if (user) {
+        countUnreadNotifications()
+          .then(setUnread)
+          .catch(() => setUnread(0));
+      } else {
+        setUnread(0);
+      }
       // Admin merchandising changes are picked up whenever the tab is focused.
       void refreshConfig();
-    }, [refreshConfig]),
+    }, [refreshConfig, user]),
   );
 
   const featuredBusinesses = useMemo(
@@ -172,6 +176,11 @@ export default function ExploreHomeScreen() {
   );
 
   function quickAdd(offer: Offer) {
+    // Guests can browse and open gift details, but baskets need an account.
+    if (!user) {
+      router.push('/(auth)/login');
+      return;
+    }
     // The customer picks the gift box the card should join before paying.
     setPickerOffer(offer);
   }
@@ -191,6 +200,10 @@ export default function ExploreHomeScreen() {
   }
 
   function startNewBasket() {
+    if (!user) {
+      router.push('/(auth)/login');
+      return;
+    }
     const offer = pickerOffer;
     setPickerOffer(null);
     // The card is carried into the new box so it is not lost.
@@ -458,7 +471,9 @@ export default function ExploreHomeScreen() {
             <Globe size={21} color={colors.ink} />
           </Pressable>
           <Pressable
-            onPress={() => router.push('/(customer)/notifications')}
+            onPress={() =>
+              router.push(user ? '/(customer)/notifications' : '/(auth)/login')
+            }
             accessibilityRole="button"
             accessibilityLabel={t('notifications.title')}
             style={styles.iconButton}

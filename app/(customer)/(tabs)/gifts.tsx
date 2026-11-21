@@ -9,6 +9,7 @@ import { Card } from '@/src/components/Card';
 import { Chip } from '@/src/components/Chip';
 import { EmptyState } from '@/src/components/EmptyState';
 import { GiftCardVisual } from '@/src/components/GiftCardVisual';
+import { GuestGate } from '@/src/components/GuestGate';
 import { PosterCard } from '@/src/components/PosterCard';
 import { PageHeader } from '@/src/components/PageHeader';
 import { Screen } from '@/src/components/Screen';
@@ -17,6 +18,7 @@ import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { useCards } from '@/src/lib/cards';
 import { isGiftWaiting } from '@/src/lib/delivery';
 import { cardHref } from '@/src/lib/navigation';
+import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import { isSessionCard } from '@/src/lib/sessions';
@@ -33,6 +35,7 @@ export default function GiftsScreen() {
   const { t, i18n } = useTranslation();
   const { ready, cards, receivedCards, sentCards, usableCards, entries, sessionsLeft, valueLeft, reload } =
     useCards();
+  const { user } = useAuth();
   const [filter, setFilter] = useState<Filter>('all');
 
   useFocusEffect(
@@ -117,6 +120,10 @@ export default function GiftsScreen() {
         }
       />
     );
+  }
+
+  if (!user) {
+    return <GuestGate tabbed title={t('guest.walletTitle')} body={t('guest.walletBody')} />;
   }
 
   return (

@@ -46,6 +46,14 @@ export default function SignUpScreen() {
             </Pressable>
           </Link>
         </View>
+        <Pressable
+          onPress={() => router.replace('/(customer)/(tabs)')}
+          accessibilityRole="link"
+          hitSlop={8}
+          style={styles.browseRow}
+        >
+          <Text style={styles.link}>{t('auth.continueBrowsing')}</Text>
+        </Pressable>
       </View>
     </Screen>
   );
@@ -70,6 +78,7 @@ const styles = themedStyles(() => ({
     lineHeight: 22,
   },
   footer: { gap: spacing.md, marginTop: 'auto' },
+  browseRow: { alignSelf: 'center', paddingVertical: spacing.xs },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',

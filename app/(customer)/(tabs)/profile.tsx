@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Avatar } from '@/src/components/Avatar';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
+import { GuestGate } from '@/src/components/GuestGate';
 import { LanguageToggle } from '@/src/components/LanguageToggle';
 import { ListRow } from '@/src/components/ListRow';
 import { PageHeader } from '@/src/components/PageHeader';
@@ -29,6 +30,7 @@ export default function ProfileScreen() {
   const [orderCount, setOrderCount] = useState(0);
 
   useEffect(() => {
+    if (!user) return undefined;
     let active = true;
     countMyOrders()
       .then((count) => active && setOrderCount(count))
@@ -36,7 +38,7 @@ export default function ProfileScreen() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [user]);
 
   const name = (user?.user_metadata?.full_name as string | undefined) ?? t('common.appName');
   const email = user?.email ?? t('auth.demoHint');
@@ -65,6 +67,10 @@ export default function ProfileScreen() {
         },
       },
     ]);
+  }
+
+  if (!user) {
+    return <GuestGate tabbed title={t('guest.profileTitle')} body={t('guest.profileBody')} />;
   }
 
   return (

@@ -142,6 +142,12 @@ export default function LoginScreen() {
           </Pressable>
         </Link>
       </View>
+
+      <Button
+        label={t('auth.continueBrowsing')}
+        variant="ghost"
+        onPress={() => router.replace('/(customer)/(tabs)')}
+      />
     </Screen>
   );
 }
