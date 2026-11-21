@@ -7,7 +7,6 @@ import { AuthCardArt } from '@/src/components/AuthCardArt';
 import { Button } from '@/src/components/Button';
 import { Eyebrow } from '@/src/components/Eyebrow';
 import { LanguageToggle } from '@/src/components/LanguageToggle';
-import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { SplashText } from '@/src/components/SplashText';
 import { useThemeRefresh } from '@/src/lib/theme';
@@ -35,11 +34,7 @@ export default function SignUpScreen() {
         <Text style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Text>
       </View>
 
-      <View style={styles.mascotWrap}>
-        <Mascot size={148} />
-      </View>
-
-      <AuthCardArt size="step" />
+      <AuthCardArt size="hero" />
 
       <View style={styles.footer}>
         <Button label={t('auth.signUpCta')} onPress={() => router.push('/(auth)/sign-up-email')} />
@@ -60,7 +55,6 @@ const styles = themedStyles(() => ({
   content: { flex: 1, paddingTop: spacing.md, paddingBottom: spacing.lg },
   topBar: { alignItems: 'flex-end' },
   copy: { gap: spacing.sm, alignItems: 'flex-start' },
-  mascotWrap: { alignItems: 'center', marginVertical: spacing.xs },
   titleGroup: { gap: 0 },
   title: {
     fontFamily: fonts.extrabold,
