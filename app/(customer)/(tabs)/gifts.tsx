@@ -16,7 +16,7 @@ import { SectionHeader } from '@/src/components/SectionHeader';
 import { ShowMore, usePaged } from '@/src/components/ShowMore';
 import { useCards } from '@/src/lib/cards';
 import { isGiftWaiting } from '@/src/lib/delivery';
-import { cardHref, prefetchCard } from '@/src/lib/navigation';
+import { cardHref } from '@/src/lib/navigation';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import { isSessionCard } from '@/src/lib/sessions';
@@ -107,7 +107,6 @@ export default function GiftsScreen() {
               ? { label: t('gifts.scheduled'), tone: 'warning' as BadgeTone }
               : { label: t(`cards.${card.status}`), tone: CARD_STATUS_TONE[card.status] }
         }
-        onPressIn={() => prefetchCard(card.id)}
         onPress={() =>
           router.push(
             cardHref({

@@ -39,15 +39,6 @@ export function businessHref(business: {
   return `/(customer)/business/${business.id}${query ? `?${query}` : ''}`;
 }
 
-/** Warms the route bundle before the finger lifts. */
-export function prefetchBusiness(business: {
-  id: string;
-  name?: string | null;
-  logo_url?: string | null;
-}): void {
-  router.prefetch(businessHref(business) as never);
-}
-
 /**
  * Carries the title and logo into the gift route so its first frame shows the
  * real gift instead of a generic heading. The screen still refreshes the full
@@ -63,13 +54,6 @@ export function giftHref(offer: Offer, language?: string): string {
   return `/(customer)/gift/${offer.id}${query ? `?${query}` : ''}`;
 }
 
-/** Warms a gift route before the finger lifts. */
-export function prefetchGift(offer: Offer | string, language?: string): void {
-  const href =
-    typeof offer === 'string' ? `/(customer)/gift/${offer}` : giftHref(offer, language);
-  router.prefetch(href as never);
-}
-
 /** Warms a wallet card route before the finger lifts. */
 export function cardHref(card: {
   id: string;
@@ -83,6 +67,3 @@ export function cardHref(card: {
   return `/(customer)/card/${card.id}${query ? `?${query}` : ''}`;
 }
 
-export function prefetchCard(cardId: string): void {
-  router.prefetch(`/(customer)/card/${cardId}` as never);
-}

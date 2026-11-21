@@ -15,7 +15,6 @@ import {
   offerTitle,
   offerTone,
 } from '../lib/catalog';
-import { prefetchGift } from '../lib/navigation';
 import type { AccentTone, MarketplaceBusiness, Offer } from '../lib/types';
 import { colors, edges, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Card } from './Card';
@@ -232,7 +231,6 @@ export function TrendingGiftCard({
         ) : undefined
       }
       onPress={onPress}
-      onPressIn={() => prefetchGift(offer, i18n.language)}
       accessibilityLabel={title}
     />
   );

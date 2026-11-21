@@ -13,7 +13,7 @@ import {
   offerTitle,
   offerTone,
 } from '../lib/catalog';
-import { businessHref, prefetchGift, pushOnce } from '../lib/navigation';
+import { businessHref, pushOnce } from '../lib/navigation';
 import type { AccentTone, Offer } from '../lib/types';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
 import { Card } from './Card';
@@ -43,7 +43,6 @@ export function OfferCard({ offer, index = 0, onPress, vendorLink = true }: Offe
   return (
     <Pressable
       onPress={onPress}
-      onPressIn={() => prefetchGift(offer, i18n.language)}
       accessibilityRole="button"
       accessibilityLabel={title}
       style={({ pressed }) => pressed && styles.pressed}
