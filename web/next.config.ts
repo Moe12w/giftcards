@@ -69,10 +69,11 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   images: {
-    // Modern formats plus a long minimum TTL keep unchanged logos from being
-    // downloaded again on every visit.
+    // Modern formats plus a 7-day minimum TTL keep unchanged logos from being
+    // re-optimized every day. Each unique (image, size, format) counts against
+    // the 5k/month Hobby transformation budget; a 1-day TTL burned it in weeks.
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 60 * 60 * 24,
+    minimumCacheTTL: 60 * 60 * 24 * 7,
     remotePatterns: [
       { protocol: 'https', hostname: 'placehold.co' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
