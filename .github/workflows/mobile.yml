@@ -18,9 +18,16 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
 
       - run: npm ci
+
+      # The root Vitest config also discovers web/lib and web/app tests. Those
+      # import Next.js and web-only packages, so web's dependencies must be
+      # installed here too (web.yml installs them separately in its own job).
+      - run: npm ci --prefix web
 
       - name: Lint (Expo / React Native)
         run: npm run lint
