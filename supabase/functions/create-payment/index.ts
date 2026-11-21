@@ -95,6 +95,10 @@ Deno.serve(async (req) => {
     // Vendors and enterprise partners use the identical supplier model.
     let ownerName = '';
     let supplierCode: string | null = null;
+    // Captured from the owner row we already fetch below, so the supplier-status
+    // and eligibility gates don't re-query the same table twice.
+    let ownerSupplierStatus: string | null = null;
+    let ownerPaymentEligible = false;
     if (product.vendor_id) {
       const { data: vendor, error: vendorError } = await admin
         .from('vendors')
@@ -105,6 +109,8 @@ Deno.serve(async (req) => {
       if (!vendor || vendor.status !== 'approved') return json({ error: 'vendor_unavailable' }, 409);
       supplierCode = vendor.myfatoorah_supplier_code;
       ownerName = vendor.name;
+      ownerSupplierStatus = vendor.myfatoorah_supplier_status ?? null;
+      ownerPaymentEligible = Boolean(vendor.payment_eligibility);
       const exposureLimit = Number(vendor.max_unredeemed_minor ?? 0);
       if (exposureLimit > 0) {
         const { data: outstandingData, error: outstandingError } = await admin.rpc(
@@ -125,22 +131,15 @@ Deno.serve(async (req) => {
       if (!partner || partner.status !== 'active') return json({ error: 'vendor_unavailable' }, 409);
       supplierCode = partner.myfatoorah_supplier_code;
       ownerName = partner.name;
+      ownerSupplierStatus = partner.myfatoorah_supplier_status ?? null;
+      ownerPaymentEligible = Boolean(partner.payment_eligibility);
     }
 
     if (!supplierCode) return json({ error: 'supplier_not_ready' }, 409);
-    if (String((await admin
-      .from(product.vendor_id ? 'vendors' : 'enterprise_partners')
-      .select('myfatoorah_supplier_status')
-      .eq('id', product.vendor_id ?? product.partner_id)
-      .maybeSingle()).data?.myfatoorah_supplier_status ?? '').toLowerCase() !== 'active') {
+    if (String(ownerSupplierStatus ?? '').toLowerCase() !== 'active') {
       return json({ error: 'supplier_not_active' }, 409);
     }
-    const { data: eligibilityRow } = await admin
-      .from(product.vendor_id ? 'vendors' : 'enterprise_partners')
-      .select('payment_eligibility')
-      .eq('id', product.vendor_id ?? product.partner_id)
-      .maybeSingle();
-    if (!eligibilityRow?.payment_eligibility) return json({ error: 'payments_not_enabled' }, 409);
+    if (!ownerPaymentEligible) return json({ error: 'payments_not_enabled' }, 409);
 
     // Idempotency: one order per (buyer, client key).
     const idempotencyKey = String(body.idempotencyKey ?? '').trim();
