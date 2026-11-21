@@ -58,6 +58,27 @@ async function saleCredits(client: Client, orderId: string) {
 }
 
 describeDb('money path (real database, rolled back)', { timeout: 90_000 }, () => {
+  // Migration drift regression: 0009 granted EXECUTE on the privileged
+  // issuance function to `authenticated`, and two later CREATE OR REPLACE
+  // redefinitions silently preserved the grant. A grant assertion is the only
+  // reliable guard against that class of bug recurring.
+  it('does not let an authenticated client mint vouchers via issue_session_card', async () => {
+    await inRolledBackTransaction(async (client) => {
+      const signature = 'public.issue_session_card(uuid,uuid,uuid,bigint,text,text,text,text,timestamptz)';
+      const { rows } = await client.query(
+        `select
+           has_function_privilege('authenticated', $1, 'EXECUTE') as auth_can_mint,
+           has_function_privilege('service_role', $1, 'EXECUTE') as service_can_mint,
+           has_function_privilege('anon', $1, 'EXECUTE') as anon_can_mint`,
+        [signature],
+      );
+      expect(rows[0].auth_can_mint).toBe(false);
+      expect(rows[0].anon_can_mint).toBe(false);
+      // The trusted fulfilment path must still work.
+      expect(rows[0].service_can_mint).toBe(true);
+    });
+  });
+
   it('credits the seller, issues a scannable voucher, and redeems it down to zero', async () => {
     await inRolledBackTransaction(async (client) => {
       const fixture = await createMoneyPathFixture(client);
