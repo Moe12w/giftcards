@@ -1,6 +1,6 @@
 import { useThemeRefresh } from '@/src/lib/theme';
 import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -18,17 +18,31 @@ export default function ClaimAddScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
   const { user, loading: authLoading } = useAuth();
   const [failed, setFailed] = useState(false);
+  // Bumping this re-runs the claim effect, so "Try again" retries the same
+  // token without leaving the screen.
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (authLoading || !user || !token || failed) return;
-    // Already signed in: bind the gift, then continue only on success.
+    if (authLoading || !user || !token) return;
+    let active = true;
     claimGift(token)
-      .then(() => router.replace(`/claim/${token}/details`))
-      .catch(() => setFailed(true));
-  }, [authLoading, user, token, failed]);
+      .then(() => {
+        if (!active) return;
+        // Keep this screen's progress state up until details mounts; a flash
+        // of the signed-out card here would look like the claim failed.
+        router.replace(`/claim/${token}/details`);
+      })
+      .catch(() => {
+        if (!active) return;
+        setFailed(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [authLoading, user, token, attempt]);
 
-  if (authLoading) return null;
-  if (user) return null;
+  // Signed in and not yet failed: the claim is being attempted right now.
+  const claiming = !authLoading && !!user && !failed;
 
   return (
     <Screen scroll={false} contentStyle={styles.content}>
@@ -37,27 +51,56 @@ export default function ClaimAddScreen() {
         <View style={styles.circle}>
           <Glyph name="key" size={38} />
         </View>
-        <Text style={styles.title}>{t('claimExtra.addTitle')}</Text>
-        <Text style={styles.body}>{t('claimExtra.addBody')}</Text>
+
         {failed ? (
-          <View style={styles.footer}>
-            <Text style={styles.body}>{t('common.errorGeneric')}</Text>
-            <Button label={t('common.retry')} onPress={() => setFailed(false)} />
-          </View>
-        ) : null}
+          <>
+            <Text style={styles.title}>{t('claimExtra.claimFailedTitle')}</Text>
+            <Text style={styles.body}>{t('claimExtra.claimFailedBody')}</Text>
+          </>
+        ) : claiming ? (
+          <>
+            <Text style={styles.title}>{t('claim.claiming')}</Text>
+            <ActivityIndicator color={colors.teal} />
+          </>
+        ) : (
+          <>
+            <Text style={styles.title}>{t('claimExtra.addTitle')}</Text>
+            <Text style={styles.body}>{t('claimExtra.addBody')}</Text>
+          </>
+        )}
       </View>
 
-      <Card style={styles.footer}>
-        <Button
-          label={t('claimExtra.createAccount')}
-          onPress={() => router.push(`/claim/${token}/signup`)}
-        />
-        <Button
-          label={t('claimExtra.signIn')}
-          variant="secondary"
-          onPress={() => router.push(`/claim/${token}/login`)}
-        />
-      </Card>
+      {failed ? (
+        <Card style={styles.footer}>
+          <Button
+            label={t('common.retry')}
+            onPress={() => {
+              // Retrying clears the error card and re-runs the claim effect.
+              setFailed(false);
+              setAttempt((count) => count + 1);
+            }}
+          />
+          <Button
+            label={t('claimExtra.viewGift')}
+            variant="secondary"
+            onPress={() => router.replace('/(customer)/(tabs)/gifts')}
+          />
+        </Card>
+      ) : null}
+
+      {!user && !authLoading ? (
+        <Card style={styles.footer}>
+          <Button
+            label={t('claimExtra.createAccount')}
+            onPress={() => router.push(`/claim/${token}/signup`)}
+          />
+          <Button
+            label={t('claimExtra.signIn')}
+            variant="secondary"
+            onPress={() => router.push(`/claim/${token}/login`)}
+          />
+        </Card>
+      ) : null}
     </Screen>
   );
 }

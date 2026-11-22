@@ -1,10 +1,11 @@
 -- ---------------------------------------------------------------------------
 -- Enterprise codes are a marketplace, not a gift card
 --
--- A partner (Snoonu, Talabat, Rafeeq) brings the codes it generated in its own
--- system, we sell them like any other gift, and the customer types the
--- partner's code into the partner's app. We do not measure usage: when the
--- code is used, the whole value is spent, so the code simply closes.
+-- An enterprise partner (Sephora, H&M, Lulu Hypermarket) brings the codes it
+-- generated in its own system — the partner issues and redeems them, so this is
+-- not a resale arrangement. We sell the code like any other gift, and the
+-- customer types it into the partner's app or website. We do not measure usage:
+-- when the code is used, the whole value is spent, so the code simply closes.
 --
 -- Until now the partner's code stayed encrypted and the buyer received a
 -- Giftly code, so nothing could actually be used in the partner's app.

@@ -15,7 +15,7 @@ import React, {
   useState,
 } from 'react';
 
-import { hasSupabaseConfig } from './env';
+import { demoMode, hasSupabaseConfig } from './env';
 import { getSupabase } from './supabase';
 import { useAuth } from './auth';
 import {
@@ -69,7 +69,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   // Demo builds have no account but still show the sample wallet.
-  const scope = hasSupabaseConfig ? userId : 'demo';
+  const scope = demoMode ? 'demo' : userId;
   const [cards, setCards] = useState<GiftCard[]>(NO_CARDS);
   const [entries, setEntries] = useState<RedemptionEntry[]>(NO_ENTRIES);
   const [loadedScope, setLoadedScope] = useState<string | null>(null);
@@ -84,7 +84,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
   const visibleEntries = hasWallet ? entries : NO_ENTRIES;
 
   const load = useCallback(async (requestedUserId: string | null) => {
-    const target = hasSupabaseConfig ? requestedUserId : 'demo';
+    const target = demoMode ? 'demo' : requestedUserId;
     if (!target) return;
     try {
       // On a refresh we already know the voucher ids, so both reads can run
@@ -122,8 +122,8 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
   // The first wallet read runs here so nothing is written synchronously in the
   // effect body; load() still handles refreshes and every redemption.
   useEffect(() => {
-    if (!hasSupabaseConfig && !userId) return undefined;
-    const target = hasSupabaseConfig ? userId : 'demo';
+    if (!demoMode && !userId) return undefined;
+    const target = demoMode ? 'demo' : userId;
     if (!target) return undefined;
     let active = true;
     (async () => {

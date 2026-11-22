@@ -28,7 +28,9 @@ Plain-English meanings of the words used in this codebase.
 | **Ledger** | Immutable record of money in and out |
 | **Settlement** | Provider deposit to a supplier; recorded manually in Giftly |
 | **Voucher** | An issued gift card instance |
-| **Enterprise code** | A partner's own code, stored encrypted and revealed to the buyer |
+| **Enterprise partner** | A business that brings codes it issues itself (Sephora, H&M, Lulu Hypermarket); Giftly lists and sells them but does not resell them |
+| **Vendor** | A business whose gift cards Giftly issues and whose staff redeem them in the Giftly system |
+| **Enterprise code** | A code issued by an enterprise partner (not Giftly), stored encrypted and revealed to the buyer |
 | **Shell vendor** | Hidden vendor row used so enterprise partners can advertise |
 | **Basket** | Client-side list of bulk offers before checkout |
 | **Placement** | An advertising area, such as homepage hero or a category carousel |

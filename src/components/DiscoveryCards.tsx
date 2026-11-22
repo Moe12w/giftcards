@@ -112,9 +112,7 @@ export function FeaturedBusinessCard({
   const { t } = useTranslation();
   const tone = FEATURED_TONES[index % FEATURED_TONES.length];
   const location = business.area ?? business.city;
-  const banner =
-    business.banner_url ??
-    `https://placehold.co/900x300/png?text=${encodeURIComponent(business.name)}`;
+  const banner = business.banner_url;
 
   return (
     <Pressable
@@ -125,13 +123,17 @@ export function FeaturedBusinessCard({
       style={({ pressed }) => [styles.businessEdge, { backgroundColor: EDGES[tone] }, pressed && styles.pressed]}
     >
       <View style={styles.businessCard}>
-        <Image
-          source={banner}
-          style={styles.businessBanner}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          transition={160}
-        />
+        {banner ? (
+          <Image
+            source={banner}
+            style={styles.businessBanner}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={160}
+          />
+        ) : (
+          <View style={[styles.businessBanner, { backgroundColor: EDGES[tone] }]} />
+        )}
         <View style={styles.businessBody}>
           <View style={styles.businessLogo}>
             <IconTile

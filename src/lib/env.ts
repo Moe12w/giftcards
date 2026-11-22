@@ -15,3 +15,12 @@ export const env = {
 
 /** True when Supabase credentials have been provided. */
 export const hasSupabaseConfig = Boolean(env.supabaseUrl && env.supabaseAnonKey);
+
+/**
+ * Demo mode: the signed-in demo account and the bundled sample data. It exists
+ * only to make a development build usable before a backend is configured, so
+ * it is compiled out of release builds. A release build without Supabase
+ * credentials stays signed out and shows empty states instead of pretending to
+ * be a working account.
+ */
+export const demoMode = !hasSupabaseConfig && __DEV__;

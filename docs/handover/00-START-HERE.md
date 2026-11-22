@@ -9,8 +9,14 @@ Giftly is a Qatari gift-card marketplace with three kinds of business:
 | Type | Sells | How it is redeemed |
 |---|---|---|
 | **Vendor** | Giftly-issued gift cards or experiences | Customer or staff scans/redeems in the Giftly system |
-| **Enterprise partner** | Its own pre-existing codes (e.g. a restaurant chain's codes) | Customer enters the code in the partner's own app |
+| **Enterprise partner** | Codes the partner already issues itself (e.g. Sephora, H&M, Lulu Hypermarket) | Customer enters the code in the partner's own app or website |
 | **Bulk buyer** | Buys many gift cards at once for staff or clients | Codes/links are sent to recipients |
+
+The difference between the two sellers is who creates the code. For a **vendor**, Giftly
+issues the gift card and staff redeem it in the Giftly system. For an **enterprise partner**,
+the partner's own company generates the codes and redeems them in its own channel; Giftly
+lists and sells them but is **not a reseller** — the codes are not bought from the partner in
+bulk and resold, and the partner's brand and redemption stay with the partner.
 
 There are also **admins**, who approve businesses, manage payments and run the platform.
 

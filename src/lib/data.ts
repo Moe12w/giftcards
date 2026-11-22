@@ -1,12 +1,13 @@
 // src/lib/data.ts
 // Read/write helpers for the customer app. When Supabase is configured these
-// query the real database through RLS-protected tables. Before credentials are
-// added, they fall back to demo data so the UI can be built and tested.
+// query the real database through RLS-protected tables. Development builds
+// without credentials fall back to demo data so the UI can be built and tested;
+// release builds never do — they go to the database and surface the error.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { cached, invalidateCache, peekCache, primeCache } from './cache';
 import { CATEGORIES, type CatalogEntry } from './catalog';
-import { hasSupabaseConfig } from './env';
+import { demoMode, hasSupabaseConfig } from './env';
 import {
   MOCK_CARDS,
   MOCK_LOCATIONS,
@@ -197,7 +198,7 @@ function pageWindow(options: PageOptions | undefined, fallback: number) {
 
 /** Every voucher the signed in customer can see, newest first. */
 export async function listMyVouchers(options?: PageOptions): Promise<GiftCard[]> {
-  if (!hasSupabaseConfig) {
+  if (demoMode) {
     return MOCK_CARDS;
   }
   const page = pageWindow(options, PAGE_SIZE.vouchers);
@@ -217,7 +218,7 @@ export async function listRedemptionsFor(
   voucherIds: string[],
   options?: PageOptions,
 ): Promise<RedemptionEntry[]> {
-  if (!hasSupabaseConfig) return MOCK_REDEMPTIONS;
+  if (demoMode) return MOCK_REDEMPTIONS;
   if (voucherIds.length === 0) return [];
   const page = pageWindow(options, PAGE_SIZE.redemptions);
   const { data, error } = await getSupabase()
@@ -242,7 +243,7 @@ export async function listRedemptionsFor(
 
 /** Saves the signed in customer's saved recipients. */
 export async function listRecipients(): Promise<Recipient[]> {
-  if (!hasSupabaseConfig) return MOCK_RECIPIENTS;
+  if (demoMode) return MOCK_RECIPIENTS;
   const { data, error } = await getSupabase()
     .from('recipients')
     .select('id, name, email, phone, relation')
@@ -267,7 +268,7 @@ export async function removeRecipient(id: string): Promise<void> {
 
 /** The branches of a business. */
 export async function listVendorLocations(vendorId: string): Promise<BusinessLocation[]> {
-  if (!hasSupabaseConfig) {
+  if (demoMode) {
     return MOCK_LOCATIONS.filter((location) => location.vendorId === vendorId);
   }
   return cached(`locations:${vendorId}`, 5 * 60_000, async () => {
@@ -566,7 +567,7 @@ function mapOffer(row: OfferRow): Offer {
 }
 
 export async function listActiveOffers(options?: PageOptions): Promise<Offer[]> {
-  if (!hasSupabaseConfig) {
+  if (demoMode) {
     return MOCK_OFFERS.filter((o) => o.is_active);
   }
   const page = pageWindow(options, PAGE_SIZE.catalog);
@@ -598,7 +599,7 @@ export async function listActiveOffers(options?: PageOptions): Promise<Offer[]> 
  * business instead of downloading every product on the marketplace.
  */
 export async function listOffersForBusiness(businessId: string): Promise<Offer[]> {
-  if (!hasSupabaseConfig) {
+  if (demoMode) {
     return MOCK_OFFERS.filter((offer) => offer.is_active && offerBusinessId(offer) === businessId);
   }
   const fromCatalog = peekOffersForBusiness(businessId);
@@ -623,7 +624,7 @@ export async function listOffersForBusiness(businessId: string): Promise<Offer[]
 }
 
 export async function getOffer(id: string): Promise<Offer | null> {
-  if (!hasSupabaseConfig) {
+  if (demoMode) {
     return MOCK_OFFERS.find((o) => o.id === id) ?? null;
   }
   return cached(`offer:${id}`, 5 * 60_000, async () => {
@@ -643,7 +644,7 @@ export async function getOffer(id: string): Promise<Offer | null> {
 }
 
 export async function listMyOrders(options?: PageOptions): Promise<Order[]> {
-  if (!hasSupabaseConfig) {
+  if (demoMode) {
     return MOCK_ORDERS;
   }
   const page = pageWindow(options, PAGE_SIZE.orders);
@@ -682,7 +683,7 @@ export async function listMyOrders(options?: PageOptions): Promise<Order[]> {
 
 /** How many orders the customer has, without downloading their rows. */
 export async function countMyOrders(): Promise<number> {
-  if (!hasSupabaseConfig) {
+  if (demoMode) {
     return MOCK_ORDERS.length;
   }
   const { count, error } = await getSupabase()
@@ -712,7 +713,7 @@ function mapNotification(row: NotificationRow): AppNotification {
  * survives leaving the screen.
  */
 export async function listNotifications(options?: PageOptions): Promise<AppNotification[]> {
-  if (!hasSupabaseConfig) {
+  if (demoMode) {
     return MOCK_NOTIFICATIONS;
   }
   const page = pageWindow(options, PAGE_SIZE.notifications);
@@ -728,7 +729,7 @@ export async function listNotifications(options?: PageOptions): Promise<AppNotif
 
 /** One notification by id, for a detail screen that only needs that row. */
 export async function getNotification(id: string): Promise<AppNotification | null> {
-  if (!hasSupabaseConfig) {
+  if (demoMode) {
     return MOCK_NOTIFICATIONS.find((item) => item.id === id) ?? null;
   }
   const { data, error } = await getSupabase()
@@ -780,7 +781,7 @@ export async function markAllNotificationsRead(): Promise<void> {
 /** How many notifications are still unread. */
 export async function countUnreadNotifications(): Promise<number> {
   return cached('notifications:unread', 5 * 60_000, async () => {
-    if (!hasSupabaseConfig) {
+    if (demoMode) {
       return MOCK_NOTIFICATIONS.filter((item) => !item.read).length;
     }
     const { count, error } = await getSupabase()
@@ -1056,9 +1057,11 @@ export async function deleteMyAccount(): Promise<void> {
 /* -------------------------------------------------------------------------
  * Partner codes
  *
- * A partner (Snoonu, Talabat, Rafeeq) brings its own codes. We sell them like
- * any other gift and the customer types the partner's code into the partner's
- * app. We do not measure usage: using the code closes the whole value.
+ * An enterprise partner (Sephora, H&M, Lulu Hypermarket) brings its own codes:
+ * the partner issues them, we do not resell or re-issue anything. We sell the
+ * code like any other gift and the customer types it into the partner's own app
+ * or website. We do not measure usage: using the code closes the whole value.
+ * Vendors are the other kind of seller — Giftly issues their gift cards.
  * ---------------------------------------------------------------------- */
 
 /** Reads the partner's own code so the customer can type it in. */

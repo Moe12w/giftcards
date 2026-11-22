@@ -86,6 +86,8 @@ Currently deployed functions:
 - `create-basket-payment`
 - `payment-webhook`
 
+`supabase/config.toml` records `verify_jwt = false` for `payment-webhook`, `mcp`, `supplier-onboard`, `upload-supplier-document`, `sync-myfatoorah-suppliers` and `wallet-pass`, so a plain `npx supabase functions deploy <name>` already deploys them with verification off. The flags below are still correct — a command-line flag overrides the config file — and the config is what protects a future deployer who forgets them.
+
 Most are internal and are called with a service-role header, so they must be deployed with JWT verification **off**:
 
 ```bash

@@ -6,8 +6,15 @@ const repoRoot = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]$/, 
 export default defineConfig({
   // Web files use "@/..." mapped to web/ (web/tsconfig.json); mobile files in
   // tests use relative imports, so this alias only affects web route tests.
+  // Edge Function code imports its packages with Deno specifiers, which Node
+  // cannot resolve; map them to the dev-dependency copies of those versions so
+  // the wallet pass test can run the real signing code.
   resolve: {
-    alias: { '@': `${repoRoot}/web` },
+    alias: [
+      { find: '@', replacement: `${repoRoot}/web` },
+      { find: /^npm:node-forge@[\d.]+$/, replacement: 'node-forge' },
+      { find: /^npm:fflate@[\d.]+$/, replacement: 'fflate' },
+    ],
   },
   test: {
     environment: 'node',

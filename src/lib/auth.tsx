@@ -6,7 +6,7 @@ import * as Linking from 'expo-linking';
 import type { Session, User } from '@supabase/supabase-js';
 import { handleAuthUrl, passwordResetLink } from './auth-link';
 import { invalidateCache } from './cache';
-import { env, hasSupabaseConfig } from './env';
+import { demoMode, env, hasSupabaseConfig } from './env';
 import { getSupabase } from './supabase';
 import { registerPushToken } from './push';
 
@@ -44,7 +44,7 @@ const DEMO_USER = {
 } as unknown as User;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(hasSupabaseConfig ? null : DEMO_USER);
+  const [user, setUser] = useState<User | null>(demoMode ? DEMO_USER : null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(hasSupabaseConfig);
   const [recovery, setRecovery] = useState(false);
@@ -83,8 +83,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Register this device for push notifications whenever a real user signs in.
-  // Best-effort: never blocks auth, and needs a dev build + EAS project id to
-  // actually receive pushes in production.
+  // Best-effort and silent: it only stores a token if permission was already
+  // granted, so the one-time system prompt is never raised here — it is primed
+  // on the notifications screen (see `src/lib/push.ts`). Needs a dev build plus
+  // an EAS project id to actually receive pushes in production.
   useEffect(() => {
     if (!user?.id || !hasSupabaseConfig) return;
     registerPushToken(user.id);
@@ -95,10 +97,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       session,
       loading,
-      isDemo: !hasSupabaseConfig,
+      isDemo: demoMode,
       recovery,
       async signIn(email, password) {
-        if (!hasSupabaseConfig) return;
+        // Demo mode simulates a session; a release build without a backend
+        // must fail loudly rather than silently do nothing.
+        if (demoMode) return;
         const identifier = email.trim().toLowerCase();
 
         // Ask the auth gate whether this identifier is still inside the attempt
@@ -152,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       },
       async signUp(email, password, fullName) {
-        if (!hasSupabaseConfig) return { session: null };
+        if (demoMode) return { session: null };
         const { data, error } = await getSupabase().auth.signUp({
           email,
           password,
@@ -165,7 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { session: data.session ?? null };
       },
       async signOut() {
-        if (!hasSupabaseConfig) return;
+        if (demoMode) return;
         const { error } = await getSupabase().auth.signOut();
         if (error) {
           if (__DEV__) console.warn('[auth] sign out failed', error.message);
@@ -175,7 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         invalidateCache('profile:');
       },
       async resetPassword(email) {
-        if (!hasSupabaseConfig) return;
+        if (demoMode) return;
         const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
           redirectTo: passwordResetLink(),
         });
@@ -185,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       },
       async updatePassword(password) {
-        if (!hasSupabaseConfig) return;
+        if (demoMode) return;
         const { error } = await getSupabase().auth.updateUser({ password });
         if (error) {
           if (__DEV__) console.warn('[auth] update password failed', error.message);
@@ -193,7 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       },
       async updateProfile(patch) {
-        if (!hasSupabaseConfig) {
+        if (demoMode) {
           setUser((prev) =>
             prev
               ? ({

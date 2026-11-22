@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert, Linking, Platform, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -20,6 +20,7 @@ import { useThemeRefresh } from '@/src/lib/theme';
 import { formatMoney } from '@/src/lib/money';
 import { isSessionCard } from '@/src/lib/sessions';
 import type { GiftCard } from '@/src/lib/types';
+import { fetchWalletPassLinks, syncWalletPass } from '@/src/lib/wallet-pass';
 import { CARD_STATUS_TONE } from '@/src/lib/status';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
@@ -38,6 +39,7 @@ export default function CardDetailScreen() {
   const [partnerCode, setPartnerCode] = useState<string | null>(null);
   const [codeError, setCodeError] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [walletBusy, setWalletBusy] = useState<'apple' | 'google' | null>(null);
 
   // The vendor scans the QR on another device. Realtime reloads this card, so
   // a drop in balance/sessions means the scan just completed.
@@ -58,6 +60,8 @@ export default function CardDetailScreen() {
     if (!spent && !completed) return;
 
     reacted.current = true;
+    // The balance just moved: keep a saved Google Wallet pass in step.
+    void syncWalletPass(card.id);
     Alert.alert(
       t('cards.scannedTitle'),
       t('cards.scannedBody'),
@@ -86,6 +90,23 @@ export default function CardDetailScreen() {
       return;
     }
     setCodeError(true);
+  }
+
+  async function addToWallet(provider: 'apple' | 'google') {
+    if (!card) return;
+    setWalletBusy(provider);
+    const links = await fetchWalletPassLinks(card.id);
+    setWalletBusy(null);
+    const url = links?.[provider] ?? null;
+    if (!url) {
+      Alert.alert(t('cards.walletTitle'), t('cards.walletNotConfigured'));
+      return;
+    }
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert(t('cards.walletTitle'), t('cards.walletNotConfigured'));
+    }
   }
 
   async function markUsed() {
@@ -237,6 +258,22 @@ export default function CardDetailScreen() {
           <Text style={styles.qrHint}>
             {sessionCard ? t('sessions.scanHint') : t('cards.scanHint')}
           </Text>
+          <View style={styles.walletActions}>
+            {Platform.OS === 'ios' ? (
+              <Button
+                label={t('cards.appleWallet')}
+                variant="secondary"
+                onPress={() => addToWallet('apple')}
+                disabled={walletBusy !== null}
+              />
+            ) : null}
+            <Button
+              label={t('cards.googleWallet')}
+              variant="secondary"
+              onPress={() => addToWallet('google')}
+              disabled={walletBusy !== null}
+            />
+          </View>
         </Card>
       ) : null}
 
@@ -316,6 +353,11 @@ const styles = themedStyles(() => ({
     letterSpacing: 2,
     textAlign: 'center',
     marginVertical: spacing.sm,
+  },
+  walletActions: {
+    alignSelf: 'stretch',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
   },
   partnerActions: {
     flexDirection: 'row',

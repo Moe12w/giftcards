@@ -1,0 +1,43 @@
+# supabase/config.toml
+# Project-wide CLI settings. Kept minimal on purpose: only the per-function JWT
+# settings that a deploy would otherwise get wrong are recorded here, so
+# deployers do not have to remember `--no-verify-jwt` for each one.
+
+# Only names the local Docker stack — Supabase's docs mark this key required, so
+# it is set rather than omitted. It is deliberately NOT the production project
+# ref: it has nothing to do with the function settings below, and the deployed
+# project still comes from --project-ref / SUPABASE_PROJECT_ID / `supabase link`.
+project_id = "giftcards"
+
+# wallet-pass: Apple Wallet fetches a pass with `Authorization: ApplePass
+# <token>` and no Supabase JWT, so gateway verification would 401 every pass
+# fetch. The function does its own auth — `links`/`sync` verify the caller's
+# user JWT, the Apple web-service routes verify the per-pass HMAC token.
+[functions.wallet-pass]
+verify_jwt = false
+
+# payment-webhook: called by MyFatoorah, which sends no Supabase JWT. The
+# function verifies the MyFatoorah signature instead.
+[functions.payment-webhook]
+verify_jwt = false
+
+# mcp: public catalogue reads over MCP (no user session).
+[functions.mcp]
+verify_jwt = false
+
+# supplier-onboard, upload-supplier-document, sync-myfatoorah-suppliers: called
+# server-to-server with a service-role header, so there is no user JWT to
+# verify. Keep the service-role checks inside the functions.
+[functions.supplier-onboard]
+verify_jwt = false
+
+[functions.upload-supplier-document]
+verify_jwt = false
+
+[functions.sync-myfatoorah-suppliers]
+verify_jwt = false
+
+# Every other function keeps the CLI default (verification on):
+# create-payment, create-bulk-payment, create-basket-payment are called from
+# browsers with a user JWT, and auth-gate / claim-preview authenticate their own
+# callers. Omitting a function here leaves its deployed setting untouched.

@@ -26,7 +26,7 @@ const SUPABASE_HOSTNAME = (() => {
 })();
 
 const KNOWN_HOSTS = new Set(
-  ['placehold.co', 'images.unsplash.com', SUPABASE_HOSTNAME].filter(
+  ['images.unsplash.com', SUPABASE_HOSTNAME].filter(
     (host): host is string => Boolean(host),
   ),
 );

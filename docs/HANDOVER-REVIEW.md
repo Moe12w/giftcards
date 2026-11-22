@@ -44,7 +44,7 @@ provider's SDK, and drop the form.
 | --- | --- |
 | `supabase/functions/create-payment` | Inserts `orders` with legacy `offer_id`/`amount_minor` and **never creates `order_items`**. `fulfill_order` (`supabase/migrations/0012_vouchers_and_orders.sql:614`) requires an order item and raises `order has no items`, so payment can succeed but no voucher is ever issued. It also sends `Suppliers[0].InvoiceShare` as the **full** amount, so the platform commission recorded on the order is never collected. `CallBackUrl` is `${APP_PUBLIC_URL}/payment/success`, which does not exist in `web/` (and `APP_PUBLIC_URL` defaults to `https://example.com`). `Idempotency-Key` is sent to the V2 `SendPayment` endpoint, which the code comment itself notes is unsupported. |
 | `supabase/functions/payment-webhook` | Reads `gift_cards`, but that table was renamed to `vouchers` in `0012_vouchers_and_orders.sql:63` — the function fails after fulfilment and on every retry. `deliverClaimLink` is a stub (`// TODO: send the claim link by email`) so recipients never get their link. Signature verification is **skipped entirely when `MYFATOORAH_WEBHOOK_SECRET` is unset** (fails open). |
-| `supabase/functions/wallet-pass` | Queries the renamed `gift_cards` table and returns `not_implemented` (501) for both Apple and Google even when certificates are configured. |
+| `supabase/functions/wallet-pass` | Rewritten: reads `vouchers` (not the renamed `gift_cards`), signs Apple `.pkpass` files and creates Google Wallet objects. Correct but unconfigured until the certificate, service account and `WALLET_PASS_TOKEN_SECRET` are set as secrets — until then it answers `503 wallet_not_configured` and the app shows its "not available yet" copy. See `docs/wallet-pass-setup.md`. |
 | `supabase/functions/claim-gift` | Calls `claim_card`, which does exist and is token-hash + rate-limit based. The mobile claim screens call the `claim_preview` / `claim_voucher` RPCs directly (`src/lib/claim.ts`), so this function is unused — keep it or delete it. |
 
 There is no `/payment/success` or `/payment/error` route anywhere, and no
@@ -90,10 +90,14 @@ webhooks and refunds with tests.
   reads or writes the `statements` table. Vendor CSV export
   (`/vendor/reports/export`) builds the file from orders directly, so the table
   is dead weight until the feature is built (or dropped).
-- **Wallet passes**: the Apple/Google Wallet buttons on
-  `app/(customer)/card/[id]` only show a "not configured" alert; the app never
-  calls the `wallet-pass` function, which returns 501 anyway. Nothing generates a
-  `.pkpass` or a Google Wallet JWT.
+- **Wallet passes**: implemented end to end — the buttons on
+  `app/(customer)/card/[id]` call `src/lib/wallet-pass.ts`, which asks
+  `supabase/functions/wallet-pass` for the links; the function signs the
+  `.pkpass` and mints the Google save JWT. It stays dark until the Apple Pass
+  Type ID certificate and the Google service account exist as secrets (see
+  `docs/wallet-pass-setup.md`), so on a project without them the buttons still
+  show the "not available yet" alert. What remains is credential setup and a
+  real-device test, not code.
 - **Purchase claim email**: not sent by the purchase path. Admin can send a claim
   link manually (`adminEmailClaimLink`, `web/lib/actions/admin.ts:293`) and bulk
   buyers have an outbox (`bulk_email_outbox`), but the consumer flow has no email.
@@ -206,7 +210,8 @@ deletion path from §4.
    tests. Delete the in-app card form.
 4. Onboarding: vendor document upload (storage + action + admin review) and the
    enterprise signup decision.
-5. Wallet passes (Apple first), then statements (or remove the dead table/doc).
+5. Wallet passes: set the credentials and test a real pass on iOS and Android
+   (`docs/wallet-pass-setup.md`), then statements (or remove the dead table/doc).
 6. Add CI: typecheck both apps, run tests, and a migration dry-run.
 
 ---

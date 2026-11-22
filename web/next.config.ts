@@ -75,7 +75,6 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60 * 60 * 24 * 7,
     remotePatterns: [
-      { protocol: 'https', hostname: 'placehold.co' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       ...(projectHostname
         ? [{ protocol: 'https' as const, hostname: projectHostname }]

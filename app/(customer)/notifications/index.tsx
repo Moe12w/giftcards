@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +10,14 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Screen } from '@/src/components/Screen';
+import { useAuth } from '@/src/lib/auth';
 import { listNotifications, markAllNotificationsRead, markNotificationRead } from '@/src/lib/data';
+import {
+  enablePushNotifications,
+  getPushPermission,
+  hasAnsweredPushPrompt,
+  markPushPromptAnswered,
+} from '@/src/lib/push';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import type { AppNotification, NotificationKind } from '@/src/lib/types';
@@ -41,8 +48,13 @@ const KIND_TONE: Record<NotificationKind, IconTileTone> = {
 export default function NotificationsScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
+  // The system permission prompt can only be asked once per install, so it is
+  // requested here, with context, and only if this card has not been answered.
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -62,6 +74,37 @@ export default function NotificationsScreen() {
       load();
     }, [load]),
   );
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+    (async () => {
+      const [permission, answered] = await Promise.all([
+        getPushPermission(),
+        hasAnsweredPushPrompt(),
+      ]);
+      if (active && permission === 'undetermined' && !answered) setShowPushPrompt(true);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
+  async function enablePush() {
+    if (!user?.id) return;
+    setPushBusy(true);
+    try {
+      await enablePushNotifications(user.id);
+    } finally {
+      setPushBusy(false);
+      setShowPushPrompt(false);
+    }
+  }
+
+  function laterPush() {
+    setShowPushPrompt(false);
+    void markPushPromptAnswered();
+  }
 
   const unread = notifications.filter((item) => !item.read).length;
 
@@ -109,6 +152,20 @@ export default function NotificationsScreen() {
         />
       </View>
 
+      {showPushPrompt ? (
+        <Card tone="lavender" style={styles.prompt}>
+          <Text style={styles.promptTitle}>{t('notifications.pushPromptTitle')}</Text>
+          <Text style={styles.promptBody}>{t('notifications.pushPromptBody')}</Text>
+          <Button label={t('notifications.pushPromptEnable')} loading={pushBusy} onPress={enablePush} />
+          <Button
+            label={t('notifications.pushPromptLater')}
+            variant="secondary"
+            disabled={pushBusy}
+            onPress={laterPush}
+          />
+        </Card>
+      ) : null}
+
       {loading ? null : notifications.length === 0 ? (
         <EmptyState
           title={t('notifications.emptyTitle')}
@@ -153,6 +210,14 @@ export default function NotificationsScreen() {
 
 const styles = themedStyles(() => ({
   actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  prompt: { gap: spacing.sm },
+  promptTitle: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },
+  promptBody: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+    lineHeight: 18,
+  },
   list: { gap: spacing.sm },
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   copy: { flex: 1, gap: 1 },

@@ -390,7 +390,7 @@ const en = {
     howClaimingWorks: 'How claiming works',
     getHelp: 'Get help',
     walletNote:
-      'Wallet buttons are visible in the app today. The live Apple and Google Wallet passes will be switched on with the public launch.',
+      'Every gift card can be added to Apple Wallet or Google Wallet from the card screen in the app.',
   },
   vendors: {
     pageTitle: 'Businesses',
@@ -894,7 +894,7 @@ const ar: SiteCopy = {
     howClaimingWorks: 'كيف تتم عملية الاستلام',
     getHelp: 'احصل على المساعدة',
     walletNote:
-      'أزرار المحفظة ظاهرة في التطبيق اليوم. أما بطاقات Apple وGoogle Wallet الفعّالة فسيُفعَّلها مع الإطلاق العلني.',
+      'يمكن إضافة كل بطاقة هدية إلى Apple Wallet أو Google Wallet من شاشة البطاقة في التطبيق.',
   },
   vendors: {
     pageTitle: 'المتاجر',
