@@ -65,6 +65,8 @@ interface VoucherProduct {
   icon: string | null;
   tone: string | null;
   image_url: string | null;
+  terms_and_conditions: string | null;
+  redemption_instructions: string | null;
   partner?:
     | { name: string | null; logo_url: string | null }
     | { name: string | null; logo_url: string | null }[]
@@ -153,6 +155,8 @@ export function mapVoucher(row: VoucherRow): GiftCard {
     total_sessions: row.total_sessions ?? undefined,
     remaining_sessions: row.remaining_sessions ?? undefined,
     voucher_code: row.voucher_code ?? null,
+    redemption_instructions: product?.redemption_instructions ?? null,
+    terms_and_conditions: product?.terms_and_conditions ?? null,
   };
 }
 
@@ -205,7 +209,7 @@ export async function listMyVouchers(options?: PageOptions): Promise<GiftCard[]>
   const { data, error } = await getSupabase()
     .from('vouchers')
     .select(
-      'id, voucher_code, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, image_url, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
+      'id, voucher_code, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, image_url, terms_and_conditions, redemption_instructions, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
     )
     .order('created_at', { ascending: false })
     .range(page.from, page.to);
@@ -580,7 +584,7 @@ export async function listActiveOffers(options?: PageOptions): Promise<Offer[]> 
     const { data, error } = await getSupabase()
       .from('products')
       .select(
-        'id, vendor_id, partner_id, title, title_ar, description, image_url, min_amount_minor, max_amount_minor, preset_amounts_minor, valid_until, is_active, created_at, icon, tone, category_id, occasions, rating, location, fulfilment_type, session_count, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(id, product_id, kind, label, amount_minor, session_count, price_minor, currency, valid_until, active, sort_order)',
+        'id, vendor_id, partner_id, title, title_ar, description, image_url, terms_and_conditions, redemption_instructions, min_amount_minor, max_amount_minor, preset_amounts_minor, valid_until, is_active, created_at, icon, tone, category_id, occasions, rating, location, fulfilment_type, session_count, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(id, product_id, kind, label, amount_minor, session_count, price_minor, currency, valid_until, active, sort_order)',
       )
       .eq('is_active', true)
       .eq('status', 'published')
@@ -609,7 +613,7 @@ export async function listOffersForBusiness(businessId: string): Promise<Offer[]
     const { data, error } = await getSupabase()
       .from('products')
       .select(
-        'id, vendor_id, partner_id, title, title_ar, description, image_url, min_amount_minor, max_amount_minor, preset_amounts_minor, valid_until, is_active, created_at, icon, tone, category_id, occasions, rating, location, fulfilment_type, session_count, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(id, product_id, kind, label, amount_minor, session_count, price_minor, currency, valid_until, active, sort_order)',
+        'id, vendor_id, partner_id, title, title_ar, description, image_url, terms_and_conditions, redemption_instructions, min_amount_minor, max_amount_minor, preset_amounts_minor, valid_until, is_active, created_at, icon, tone, category_id, occasions, rating, location, fulfilment_type, session_count, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(id, product_id, kind, label, amount_minor, session_count, price_minor, currency, valid_until, active, sort_order)',
       )
       .eq('is_active', true)
       .eq('status', 'published')
@@ -631,7 +635,7 @@ export async function getOffer(id: string): Promise<Offer | null> {
     const { data, error } = await getSupabase()
       .from('products')
       .select(
-        'id, vendor_id, partner_id, title, title_ar, description, image_url, min_amount_minor, max_amount_minor, preset_amounts_minor, valid_until, is_active, created_at, icon, tone, category_id, occasions, rating, location, fulfilment_type, session_count, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(id, product_id, kind, label, amount_minor, session_count, price_minor, currency, valid_until, active, sort_order)',
+        'id, vendor_id, partner_id, title, title_ar, description, image_url, terms_and_conditions, redemption_instructions, min_amount_minor, max_amount_minor, preset_amounts_minor, valid_until, is_active, created_at, icon, tone, category_id, occasions, rating, location, fulfilment_type, session_count, vendor:vendors(id, name, name_ar, logo_url, banner_url), partner:enterprise_partners(id, name, logo_url, banner_url), category:categories(slug), variants:product_variants(id, product_id, kind, label, amount_minor, session_count, price_minor, currency, valid_until, active, sort_order)',
       )
       .eq('id', id)
       .maybeSingle();

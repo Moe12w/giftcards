@@ -87,6 +87,10 @@ export interface Offer {
   title_ar: string | null;
   description: string | null;
   image_url: string | null;
+  /** The vendor's terms for this gift, shown on the gift page. */
+  terms_and_conditions?: string | null;
+  /** How the gift is redeemed at the business, shown on the gift page. */
+  redemption_instructions?: string | null;
   min_amount_minor: number;
   max_amount_minor: number;
   preset_amounts_minor: number[];
@@ -150,6 +154,9 @@ export interface GiftCard {
   vendor_id?: string;
   /** Human-readable code the vendor types if the QR cannot be scanned. */
   voucher_code?: string | null;
+  /** Copied from the product so the card can say how it is redeemed. */
+  redemption_instructions?: string | null;
+  terms_and_conditions?: string | null;
 }
 
 /** One redemption against a gift card. */

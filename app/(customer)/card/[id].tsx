@@ -131,6 +131,10 @@ export default function CardDetailScreen() {
   const waiting = card ? isGiftWaiting(card) : false;
   const redeemable = card && !waiting ? canRedeem(card) : false;
   const redeemValue = `giftly:card:${card?.id ?? ''}`;
+  // A partner code is typed into the partner's own app, so it gets no
+  // "scanned in person" note; the product's own instructions still show.
+  const showRedemption =
+    !isSent && (!isPartnerCode || Boolean(card?.redemption_instructions || card?.terms_and_conditions));
 
   if (!ready) {
     return (
@@ -277,6 +281,33 @@ export default function CardDetailScreen() {
         </Card>
       ) : null}
 
+      {showRedemption ? (
+        <Card style={styles.redeemCard}>
+          {isPartnerCode ? null : (
+            <>
+              <Text style={styles.qrTitle}>{t('cards.inPersonTitle')}</Text>
+              <Text style={styles.redeemBody}>
+                {t('cards.inPersonBody', {
+                  vendor: card.partner_name ?? card.vendor_name ?? card.offer_title ?? 'the business',
+                })}
+              </Text>
+            </>
+          )}
+          {card.redemption_instructions ? (
+            <>
+              <Text style={styles.redeemLabel}>{t('cards.redemptionTitle')}</Text>
+              <Text style={styles.redeemBody}>{card.redemption_instructions}</Text>
+            </>
+          ) : null}
+          {card.terms_and_conditions ? (
+            <>
+              <Text style={styles.redeemLabel}>{t('cards.termsTitle')}</Text>
+              <Text style={styles.redeemBody}>{card.terms_and_conditions}</Text>
+            </>
+          ) : null}
+        </Card>
+      ) : null}
+
       <Card style={styles.infoCard}>
         <Row
           label={sessionCard ? t('sessions.packagePrice') : t('cards.originalValue')}
@@ -340,6 +371,14 @@ const styles = themedStyles(() => ({
     marginTop: spacing.xs,
   },
   infoCard: { gap: spacing.sm },
+  redeemCard: { gap: spacing.xs },
+  redeemLabel: {
+    fontSize: fontSizes.sm,
+    fontWeight: '700',
+    color: colors.text,
+    marginTop: spacing.xs,
+  },
+  redeemBody: { fontSize: fontSizes.sm, color: colors.textMuted, lineHeight: 20 },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
   rowLabel: { fontSize: fontSizes.md, color: colors.textMuted },
   rowValue: { fontSize: fontSizes.md, color: colors.text, fontWeight: '600', flexShrink: 1, textAlign: 'right' },

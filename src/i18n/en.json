@@ -532,7 +532,11 @@
     "scheduledBody": "This gift arrives on {{date}}. You can use it from then.",
     "scheduledSoon": "This gift has not arrived yet. It will appear here once it does.",
     "scannedTitle": "Gift scanned",
-    "scannedBody": "The balance has been updated. Returning to your wallet."
+    "scannedBody": "The balance has been updated. Returning to your wallet.",
+    "inPersonTitle": "Redeem in person",
+    "inPersonBody": "Show this code to staff at {{vendor}}. It is scanned at the business — the card's value cannot be spent inside the app or online.",
+    "redemptionTitle": "How to redeem",
+    "termsTitle": "Terms"
   },
   "gifts": {
     "title": "My gifts",

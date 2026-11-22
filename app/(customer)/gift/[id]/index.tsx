@@ -195,6 +195,20 @@ export default function GiftDetailScreen() {
         />
       </Card>
 
+      {offer.redemption_instructions ? (
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('gift.redemption')}</Text>
+          <Text style={styles.body}>{offer.redemption_instructions}</Text>
+        </Card>
+      ) : null}
+
+      {offer.terms_and_conditions ? (
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('gift.terms')}</Text>
+          <Text style={styles.body}>{offer.terms_and_conditions}</Text>
+        </Card>
+      ) : null}
+
       <Card style={styles.section}>
         <ListRow
           icon="search"
