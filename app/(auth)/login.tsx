@@ -8,6 +8,7 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { LanguageToggle } from '@/src/components/LanguageToggle';
 import { Screen } from '@/src/components/Screen';
+import { SocialSignInButtons } from '@/src/components/SocialSignInButtons';
 import { TextField } from '@/src/components/TextField';
 import { useAuth } from '@/src/lib/auth';
 import { useThemeRefresh } from '@/src/lib/theme';
@@ -132,6 +133,14 @@ export default function LoginScreen() {
           onPress={onSubmit}
           loading={submitting}
         />
+
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>{t('auth.orContinueWith')}</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <SocialSignInButtons onError={setFormError} />
       </Card>
 
       <View style={styles.footer}>
@@ -162,6 +171,18 @@ const styles = themedStyles(() => ({
     lineHeight: 19,
   },
   forgot: { alignSelf: 'flex-end', paddingVertical: spacing.xs },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  dividerLine: { flex: 1, height: 2, backgroundColor: colors.borderSoft },
+  dividerText: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+  },
   formError: {
     fontFamily: fonts.medium,
     fontSize: fontSizes.sm,

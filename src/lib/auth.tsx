@@ -9,6 +9,7 @@ import { invalidateCache } from './cache';
 import { demoMode, env, hasSupabaseConfig } from './env';
 import { getSupabase } from './supabase';
 import { registerPushToken } from './push';
+import { signInWithApple as appleSignIn, signInWithGoogle as googleSignIn } from './social-auth';
 
 interface AuthState {
   user: User | null;
@@ -18,6 +19,10 @@ interface AuthState {
   /** True only while a password-recovery flow is active (set by the auth event). */
   recovery: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  /** Opens the native Sign in with Apple sheet. iOS only. */
+  signInWithApple: () => Promise<void>;
+  /** Runs Supabase's Google OAuth flow in an in-app browser session. */
+  signInWithGoogle: () => Promise<void>;
   /**
    * Creates an account. Returns the session when the project confirms emails
    * automatically, and null when the user still has to confirm by email.
@@ -154,6 +159,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (__DEV__) console.warn('[auth] sign in failed', error.message);
           throw error;
         }
+      },
+      async signInWithApple() {
+        await appleSignIn();
+        // A different account may sign in on this device; never reuse its cache.
+        invalidateCache('profile:');
+      },
+      async signInWithGoogle() {
+        await googleSignIn();
+        invalidateCache('profile:');
       },
       async signUp(email, password, fullName) {
         if (demoMode) return { session: null };

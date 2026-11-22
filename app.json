@@ -10,6 +10,7 @@
     "ios": {
       "bundleIdentifier": "qa.giftly.app",
       "supportsTablet": true,
+      "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -53,6 +54,7 @@
       ],
       "expo-image",
       "expo-status-bar",
+      "expo-apple-authentication",
       "expo-web-browser",
       "expo-secure-store"
     ],

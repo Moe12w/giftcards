@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,7 @@ import { Button } from '@/src/components/Button';
 import { Eyebrow } from '@/src/components/Eyebrow';
 import { LanguageToggle } from '@/src/components/LanguageToggle';
 import { Screen } from '@/src/components/Screen';
+import { SocialSignInButtons } from '@/src/components/SocialSignInButtons';
 import { SplashText } from '@/src/components/SplashText';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
@@ -16,6 +17,7 @@ import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 export default function SignUpScreen() {
   useThemeRefresh();
   const { t } = useTranslation();
+  const [socialError, setSocialError] = useState<string | null>(null);
 
   return (
     <Screen scroll={false} contentStyle={styles.content}>
@@ -38,6 +40,15 @@ export default function SignUpScreen() {
 
       <View style={styles.footer}>
         <Button label={t('auth.signUpCta')} onPress={() => router.push('/(auth)/sign-up-email')} />
+
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>{t('auth.orContinueWith')}</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <SocialSignInButtons onError={setSocialError} />
+        {socialError ? <Text style={styles.socialError}>{socialError}</Text> : null}
         <View style={styles.footerRow}>
           <Text style={styles.footerText}>{t('auth.haveAccount')} </Text>
           <Link href="/(auth)/login" asChild>
@@ -78,6 +89,24 @@ const styles = themedStyles(() => ({
     lineHeight: 22,
   },
   footer: { gap: spacing.md, marginTop: 'auto' },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  dividerLine: { flex: 1, height: 2, backgroundColor: colors.borderSoft },
+  dividerText: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+  },
+  socialError: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.sm,
+    color: colors.danger,
+    textAlign: 'center',
+  },
   browseRow: { alignSelf: 'center', paddingVertical: spacing.xs },
   footerRow: {
     flexDirection: 'row',

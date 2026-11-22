@@ -78,7 +78,11 @@
     "signInFailed": "لا يمكننا تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.",
     "signUpFailed": "لا يمكننا إنشاء حسابك حالياً. يرجى المحاولة مرة أخرى.",
     "backToSignIn": "العودة لتسجيل الدخول",
-    "continueBrowsing": "متابعة التصفح"
+    "continueBrowsing": "متابعة التصفح",
+    "orContinueWith": "أو تابع باستخدام",
+    "continueWithGoogle": "المتابعة عبر Google",
+    "socialSignInFailed": "تعذّر إكمال تسجيل الدخول. يرجى المحاولة مرة أخرى.",
+    "socialUnavailable": "خيار تسجيل الدخول هذا غير متاح على هذا الجهاز."
   },
   "guest": {
     "title": "سجّل الدخول للمتابعة",

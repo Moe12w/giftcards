@@ -78,7 +78,11 @@
     "signInFailed": "We could not sign you in right now. Please try again.",
     "signUpFailed": "We could not create your account right now. Please try again.",
     "backToSignIn": "Back to sign in",
-    "continueBrowsing": "Continue browsing"
+    "continueBrowsing": "Continue browsing",
+    "orContinueWith": "or continue with",
+    "continueWithGoogle": "Continue with Google",
+    "socialSignInFailed": "We couldn't complete that sign-in. Please try again.",
+    "socialUnavailable": "This sign-in option isn't available on this device."
   },
   "guest": {
     "title": "Sign in to continue",
