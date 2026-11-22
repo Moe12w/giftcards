@@ -490,9 +490,18 @@ const en = {
     requestSubject: 'Delete my account',
     requestTime:
       'We confirm every request within 7 days, usually much sooner. We may ask one question to check the account is yours.',
+    formEmailLabel: 'Email on the account',
+    formEmailPlaceholder: 'you@example.com',
+    formNoteLabel: 'Anything else we should know? (optional)',
+    formNotePlaceholder: 'For example: I no longer use this email address.',
+    formSubmit: 'Send deletion request',
+    formSuccess: 'Request received. We will confirm by email within 7 days.',
+    formOrEmail: 'Prefer email? Write to',
+    formPrivacy:
+      'Use the address on the account — we can only act on a request from it. We use it for nothing else.',
     deletedTitle: 'What is deleted',
     deletedBody:
-      'Your profile, name, email, phone, delivery addresses, saved recipients, favourites, notifications and push tokens, and any gift baskets you created on your own. You are signed out everywhere.',
+      'Your profile, name, email, phone, saved addresses, saved recipients, favourites, notifications and push tokens, and any gift baskets you created on your own. You are signed out everywhere.',
     keptTitle: 'What we keep',
     keptBody:
       'Order and gift-card records that accounting, tax and dispute handling require. They stay detached from your personal profile, and a gift you already sent or claimed stays valid for its recipient until it expires.',
@@ -1022,9 +1031,18 @@ const ar: SiteCopy = {
     requestSubject: 'حذف حسابي',
     requestTime:
       'نؤكد كل طلب خلال 7 أيام، وغالباً أسرع من ذلك بكثير. قد نطرح سؤالاً واحداً للتأكد من أن الحساب لك.',
+    formEmailLabel: 'البريد المسجّل في الحساب',
+    formEmailPlaceholder: 'you@example.com',
+    formNoteLabel: 'هل هناك ما نحتاج معرفته؟ (اختياري)',
+    formNotePlaceholder: 'مثال: لم أعد أستخدم هذا البريد.',
+    formSubmit: 'إرسال طلب الحذف',
+    formSuccess: 'وصلنا طلبك. سنؤكد بالبريد خلال 7 أيام.',
+    formOrEmail: 'تفضّل البريد؟ راسلنا على',
+    formPrivacy:
+      'استخدم البريد المسجّل في الحساب — لا يمكننا تنفيذ طلب من عنوان آخر. ولا نستخدمه لغير ذلك.',
     deletedTitle: 'ما يُحذف',
     deletedBody:
-      'ملفك الشخصي واسمك وبريدك ورقم هاتفك وعناوين التوصيل والمستلمون المحفوظون والمفضلة والإشعارات ورموز الدفع، وأي سلال هدايا أنشأتها بنفسك. ويتم تسجيل خروجك من كل الأجهزة.',
+      'ملفك الشخصي واسمك وبريدك ورقم هاتفك والعناوين المحفوظة والمستلمون المحفوظون والمفضلة والإشعارات ورموز الدفع، وأي سلال هدايا أنشأتها بنفسك. ويتم تسجيل خروجك من كل الأجهزة.',
     keptTitle: 'ما نحتفظ به',
     keptBody:
       'سجلات الطلبات وبطاقات الهدايا التي تتطلبها المحاسبة والضرائب ومعالجة النزاعات. تبقى منفصلة عن ملفك الشخصي، وتبقى الهدية التي أرسلتها أو استلمتها صالحة لمستلمها حتى انتهاء صلاحيتها.',

@@ -15,22 +15,25 @@ export async function submitContact(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { error } = await supabase.from('support_requests').insert({
-    customer_id: user?.id ?? null,
-    requester_kind: user ? 'customer' : 'visitor',
-    kind: 'contact',
-    subject: subject || `Website contact from ${name}`,
-    body: `From: ${name} <${email}>\n\n${message}`,
-    // `reference` is a ticket reference, not the submitter's email. Keeping
-    // the email only in the body avoids showing two conflicting identities.
-    reference: `CONTACT-${Date.now().toString(36).toUpperCase()}`,
-    status: 'open',
+  // Same RLS wall as /account-deletion: a visitor cannot read back the row they
+  // just inserted, and PostgREST turns that into an insert failure. This RPC is
+  // the public entry point; it derives the ticket reference and the identity.
+  // The email is part of the body, not the reference, so a ticket never shows
+  // two conflicting identities.
+  const { error } = await supabase.rpc('submit_contact_request', {
+    p_name: name,
+    p_email: email,
+    p_subject: subject || null,
+    p_message: message,
   });
-  if (error) back('/contact', error.message);
+  if (error) {
+    const friendly = error.message.includes('invalid_email')
+      ? 'Enter a valid email address.'
+      : error.message.includes('invalid_message')
+        ? 'Please write a message under 5,000 characters.'
+        : error.message;
+    back('/contact', friendly);
+  }
   redirect('/contact?sent=1');
 }
 
@@ -68,6 +71,25 @@ export async function submitEnterpriseEnquiry(formData: FormData) {
   });
   if (error) back('/corporate', error.message);
   redirect('/corporate?sent=1');
+}
+
+export async function submitDeletionRequest(formData: FormData) {
+  const email = String(formData.get('email') ?? '').trim();
+  const note = String(formData.get('note') ?? '').trim();
+  if (!email || !email.includes('@')) {
+    back('/account-deletion', 'Enter the email address on your Giftly account.');
+  }
+
+  const supabase = await createClient();
+  // A signed-out visitor cannot insert into support_requests directly: the
+  // table's INSERT policy rejects a null customer_id. This RPC is the one
+  // purpose-built public entry point, so the form works without a session.
+  const { error } = await supabase.rpc('submit_account_deletion_request', {
+    p_email: email,
+    p_note: note || null,
+  });
+  if (error) back('/account-deletion', error.message);
+  redirect('/account-deletion?sent=1');
 }
 
 export async function joinLaunchList(formData: FormData) {
