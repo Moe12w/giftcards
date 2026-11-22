@@ -22,8 +22,8 @@ export type SocialAuthFailure = 'cancelled' | 'unavailable' | 'failed';
 export class SocialAuthError extends Error {
   readonly reason: SocialAuthFailure;
 
-  constructor(reason: SocialAuthFailure, message?: string) {
-    super(message ?? reason);
+  constructor(reason: SocialAuthFailure) {
+    super(reason);
     this.name = 'SocialAuthError';
     this.reason = reason;
   }
@@ -85,7 +85,7 @@ async function saveAppleName(userId: string, fullName: string): Promise<void> {
 export async function signInWithApple(): Promise<void> {
   if (demoMode) return;
   if (!(await isAppleSignInAvailable())) {
-    throw new SocialAuthError('unavailable', 'Sign in with Apple is not available on this device.');
+    throw new SocialAuthError('unavailable');
   }
 
   // Supabase compares the SHA-256 hash of the nonce it receives against the
@@ -106,12 +106,13 @@ export async function signInWithApple(): Promise<void> {
   } catch (error) {
     const code = (error as { code?: string } | null)?.code;
     if (code === 'ERR_REQUEST_CANCELED') throw new SocialAuthError('cancelled');
-    throw new SocialAuthError('failed', error instanceof Error ? error.message : undefined);
+    if (__DEV__) console.warn('[auth] Apple sign-in failed', error);
+    throw new SocialAuthError('failed');
   }
 
   const identityToken = credential.identityToken;
   if (!identityToken) {
-    throw new SocialAuthError('failed', 'Apple returned no identity token.');
+    throw new SocialAuthError('failed');
   }
 
   const { data, error } = await getSupabase().auth.signInWithIdToken({
@@ -119,7 +120,10 @@ export async function signInWithApple(): Promise<void> {
     token: identityToken,
     nonce: rawNonce,
   });
-  if (error) throw new SocialAuthError('failed', error.message);
+  if (error) {
+    if (__DEV__) console.warn('[auth] Apple token exchange failed', error.message);
+    throw new SocialAuthError('failed');
+  }
 
   const fullName = [
     credential.fullName?.givenName,
@@ -138,7 +142,7 @@ async function completeOAuthRedirect(url: string): Promise<void> {
   try {
     incoming = new URL(url);
   } catch {
-    throw new SocialAuthError('failed', 'The sign-in redirect was malformed.');
+    throw new SocialAuthError('failed');
   }
 
   // Only our own callback may install a session. Without this check a crafted
@@ -152,19 +156,25 @@ async function completeOAuthRedirect(url: string): Promise<void> {
       (normalizePath(incoming.pathname) === `/${CALLBACK_PATH}` &&
         (incoming.host === '' || incoming.host === expected.host)));
   if (!isOurCallback) {
-    throw new SocialAuthError('failed', 'The sign-in redirect did not come from this app.');
+    throw new SocialAuthError('failed');
   }
 
   const providerError = paramFrom(url, 'error_description') ?? paramFrom(url, 'error');
-  if (providerError) throw new SocialAuthError('failed', providerError);
+  if (providerError) {
+    if (__DEV__) console.warn('[auth] OAuth provider error', providerError);
+    throw new SocialAuthError('failed');
+  }
 
   const code = paramFrom(url, 'code');
-  if (!code) throw new SocialAuthError('failed', 'The sign-in redirect carried no code.');
+  if (!code) throw new SocialAuthError('failed');
 
   // The client uses the PKCE flow, so the verifier it stored before opening the
   // browser is what makes this exchange valid.
   const { error } = await getSupabase().auth.exchangeCodeForSession(code);
-  if (error) throw new SocialAuthError('failed', error.message);
+  if (error) {
+    if (__DEV__) console.warn('[auth] code exchange failed', error.message);
+    throw new SocialAuthError('failed');
+  }
 }
 
 /** Signs in with Google through Supabase's OAuth flow. */
@@ -181,7 +191,10 @@ export async function signInWithGoogle(): Promise<void> {
       provider: 'google',
       options: { redirectTo },
     });
-    if (error) throw new SocialAuthError('failed', error.message);
+    if (error) {
+      if (__DEV__) console.warn('[auth] Google OAuth start failed', error.message);
+      throw new SocialAuthError('failed');
+    }
     return;
   }
 
@@ -190,7 +203,8 @@ export async function signInWithGoogle(): Promise<void> {
     options: { redirectTo, skipBrowserRedirect: true },
   });
   if (error || !data?.url) {
-    throw new SocialAuthError('failed', error?.message ?? 'Google returned no sign-in URL.');
+    if (__DEV__) console.warn('[auth] Google OAuth start failed', error?.message);
+    throw new SocialAuthError('failed');
   }
 
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
