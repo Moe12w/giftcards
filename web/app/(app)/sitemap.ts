@@ -38,6 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/terms', meta: { lastModified: now, changeFrequency: 'yearly', priority: 0.3 } },
     { path: '/privacy', meta: { lastModified: now, changeFrequency: 'yearly', priority: 0.3 } },
     { path: '/legal', meta: { lastModified: now, changeFrequency: 'yearly', priority: 0.3 } },
+    { path: '/account-deletion', meta: { lastModified: now, changeFrequency: 'yearly', priority: 0.3 } },
   ];
   for (const audience of ['client', 'vendor', 'enterprise', 'bulk'] as const) {
     for (const doc of ['terms', 'privacy'] as const) {

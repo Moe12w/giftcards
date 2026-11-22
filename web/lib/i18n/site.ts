@@ -473,6 +473,37 @@ const en = {
     contactBodyBefore: 'Giftly, Doha, Qatar. Questions?',
     contactLink: 'Contact us',
   },
+  accountDeletion: {
+    eyebrow: 'Your account',
+    title: 'Delete your Giftly account',
+    lede:
+      'You can delete your Giftly account, and the personal data attached to it, at any time. Do it yourself in the app, or ask us here if you cannot open the app.',
+    inAppTitle: 'Delete it in the app',
+    inAppStep1: 'Open Giftly and sign in.',
+    inAppStep2: 'Open Profile, then choose Delete account.',
+    inAppStep3:
+      'Confirm. The account is deleted immediately and you are signed out.',
+    requestTitle: 'Ask us to delete it',
+    requestBody:
+      'If you cannot sign in, or no longer have the app, email us from the address on the account and we will delete it for you.',
+    requestEmail: 'hello@giftly.qa',
+    requestSubject: 'Delete my account',
+    requestTime:
+      'We confirm every request within 7 days, usually much sooner. We may ask one question to check the account is yours.',
+    deletedTitle: 'What is deleted',
+    deletedBody:
+      'Your profile, name, email, phone, delivery addresses, saved recipients, favourites, notifications and push tokens, and any gift baskets you created on your own. You are signed out everywhere.',
+    keptTitle: 'What we keep',
+    keptBody:
+      'Order and gift-card records that accounting, tax and dispute handling require. They stay detached from your personal profile, and a gift you already sent or claimed stays valid for its recipient until it expires.',
+    businessTitle: 'Business accounts',
+    businessBody:
+      'Vendor, enterprise, bulk buyer and admin accounts cannot be deleted from the app, because other people and open orders depend on them. Email us and we will close the business account and remove its users once open orders are settled.',
+    helpTitle: 'Need help?',
+    helpBody: 'Questions about deletion or your data? Email',
+    helpAfter: 'and we will answer within 30 days.',
+    privacyLink: 'Read the privacy policy',
+  },
   terms: {
     eyebrow: 'Legal',
     title: 'Terms of service',
@@ -974,6 +1005,36 @@ const ar: SiteCopy = {
     contactTitle: 'تواصل معنا',
     contactBodyBefore: 'Giftly، الدوحة، قطر. هل لديك أسئلة؟',
     contactLink: 'تواصل معنا',
+  },
+  accountDeletion: {
+    eyebrow: 'حسابك',
+    title: 'حذف حسابك في Giftly',
+    lede:
+      'يمكنك حذف حسابك في Giftly والبيانات الشخصية المرتبطة به في أي وقت. احذفه بنفسك من التطبيق، أو اطلبه من هنا إن لم تستطع فتح التطبيق.',
+    inAppTitle: 'احذفه من التطبيق',
+    inAppStep1: 'افتح Giftly وسجّل الدخول.',
+    inAppStep2: 'افتح الملف الشخصي ثم اختر حذف الحساب.',
+    inAppStep3: 'أكّد الحذف. يُحذف الحساب فوراً ويتم تسجيل خروجك.',
+    requestTitle: 'اطلب منّا حذفه',
+    requestBody:
+      'إن لم تستطع تسجيل الدخول أو لم يعد لديك التطبيق، راسلنا من البريد المسجّل في الحساب وسنحذفه لك.',
+    requestEmail: 'hello@giftly.qa',
+    requestSubject: 'حذف حسابي',
+    requestTime:
+      'نؤكد كل طلب خلال 7 أيام، وغالباً أسرع من ذلك بكثير. قد نطرح سؤالاً واحداً للتأكد من أن الحساب لك.',
+    deletedTitle: 'ما يُحذف',
+    deletedBody:
+      'ملفك الشخصي واسمك وبريدك ورقم هاتفك وعناوين التوصيل والمستلمون المحفوظون والمفضلة والإشعارات ورموز الدفع، وأي سلال هدايا أنشأتها بنفسك. ويتم تسجيل خروجك من كل الأجهزة.',
+    keptTitle: 'ما نحتفظ به',
+    keptBody:
+      'سجلات الطلبات وبطاقات الهدايا التي تتطلبها المحاسبة والضرائب ومعالجة النزاعات. تبقى منفصلة عن ملفك الشخصي، وتبقى الهدية التي أرسلتها أو استلمتها صالحة لمستلمها حتى انتهاء صلاحيتها.',
+    businessTitle: 'حسابات الأعمال',
+    businessBody:
+      'لا يمكن حذف حسابات المتاجر والشركاء والمشترين بالجملة والإدارة من التطبيق، لأن أشخاصاً آخرين وطلبات مفتوحة تعتمد عليها. راسلنا وسنغلق حساب العمل ونزيل مستخدميه بعد تسوية الطلبات المفتوحة.',
+    helpTitle: 'تحتاج مساعدة؟',
+    helpBody: 'أسئلة عن الحذف أو بياناتك؟ راسلنا على',
+    helpAfter: 'وسنجيب خلال 30 يوماً.',
+    privacyLink: 'اقرأ سياسة الخصوصية',
   },
   terms: {
     eyebrow: 'قانوني',

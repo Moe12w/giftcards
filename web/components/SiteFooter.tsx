@@ -33,6 +33,7 @@ export function SiteFooter() {
       title: t.legal,
       links: [
         { href: '/legal', label: t.legalCentre },
+        { href: '/account-deletion', label: t.deleteAccount },
         { href: '/legal/client/terms', label: t.customerTerms },
         { href: '/legal/vendor/terms', label: t.vendorTerms },
         { href: '/legal/enterprise/terms', label: t.enterpriseTerms },
