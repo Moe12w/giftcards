@@ -202,13 +202,14 @@ export function offersForCollection(offers: Offer[], slug: string): Offer[] {
       return offers.filter(
         (offer) =>
           (offer.category && ['beauty', 'wellness', 'shopping', 'desserts'].includes(offer.category)) ||
-          offer.occasions?.includes('anniversary'),
+          offer.occasions?.includes('anniversary') ||
+          (offer.occasions as string[] | undefined)?.includes('for-her'),
       );
     case 'for-him':
       return offers.filter(
         (offer) =>
-          offer.category &&
-          ['fitness', 'experiences', 'entertainment', 'coffee'].includes(offer.category),
+          (offer.category && ['fitness', 'experiences', 'entertainment', 'coffee'].includes(offer.category)) ||
+          (offer.occasions as string[] | undefined)?.includes('for-him'),
       );
     default:
       return offersForOccasion(offers, slug as OccasionId);

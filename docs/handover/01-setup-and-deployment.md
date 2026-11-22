@@ -18,8 +18,12 @@ Root `.env` is used by the Expo app:
 - `EXPO_PUBLIC_SUPABASE_URL`
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 - `EXPO_PUBLIC_APP_SCHEME`
+- `EXPO_PUBLIC_SITE_URL` (public web app; currently `https://giftcards-jade.vercel.app`)
 - `SUPABASE_ACCESS_TOKEN` (for applying migrations)
 - `SUPABASE_PROJECT_REF`
+
+Only the `EXPO_PUBLIC_*` values are public — they ship inside the app bundle. The
+rest must stay out of any file that reaches a build.
 
 `web/.env.local` is used by the website:
 - `NEXT_PUBLIC_SUPABASE_URL`
@@ -73,6 +77,31 @@ npm run build
 ```
 
 SQL migrations are applied through the Supabase Management API or SQL editor; there is no repo-local helper script. After applying one, record its version in `supabase_migrations.schema_migrations`.
+
+## Expo app builds (EAS)
+
+`.env` is gitignored, and EAS Build uploads the project through Git, so a cloud
+build never sees it. The public app variables therefore live in the `env` block
+of each profile in `eas.json`:
+
+- `EXPO_PUBLIC_SUPABASE_URL`
+- `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+- `EXPO_PUBLIC_APP_SCHEME`
+- `EXPO_PUBLIC_SITE_URL`
+
+Keep `eas.json` and `.env` in step when either value changes. If the project
+moves to EAS environment variables later, remove the `env` blocks so the two
+sources cannot disagree.
+
+Still required before a store build:
+
+- `app.json` → `expo.extra.eas.projectId` is a zero placeholder. Run
+  `npx eas-cli init` after signing in and commit the real id; until then the app
+  skips push-token registration (`src/lib/push.ts`).
+- `eas.json` → `submit.production` is empty. Fill in the Apple id / App Store
+  Connect app id / team id and the Google Play service-account JSON.
+- Android push needs FCM V1 credentials configured in EAS; iOS push needs an APNs
+  key. Both are created in the developer consoles.
 
 ## Deploying Edge Functions
 

@@ -6,12 +6,14 @@ Sits next to [App Store notes for review](./notes-for-review.md). Sources are Go
 
 Play requires **both** an in-app path and a public web resource, with the web URL entered in Play Console's account deletion field ([requirements](https://support.google.com/googleplay/android-developer/answer/13327111), [User Data policy](https://support.google.com/googleplay/android-developer/answer/17190352)).
 
-- Page: `/account-deletion` → production URL `https://giftly.qa/en/account-deletion` (and `/ar/account-deletion`)
+- Page: `/account-deletion` → production URL `https://giftcards-jade.vercel.app/en/account-deletion` (and `/ar/account-deletion`)
 - Source: `web/app/[locale]/(site)/account-deletion/page.tsx`
 - Linked from the site footer ("Delete your account") and listed in `web/app/(app)/sitemap.ts`
 - Static, public, no sign-in, renders in English and Arabic, gives the in-app steps, a `mailto:` request route, what is deleted, what is retained, and why vendor/enterprise/admin accounts go through support.
 
-Verify before submitting: the URL loads signed out in a private window, the email link opens with the subject filled, and the path resolves without the locale prefix redirecting to a 404.
+> **Domain:** `giftly.qa` does not resolve yet (checked 22 Nov 2026). The live site is the Vercel domain above, and the mobile app's `EXPO_PUBLIC_SITE_URL` points there too. Enter the live URL in Play Console now; when the custom domain is attached, change it here, in the Play Console field, and in `EXPO_PUBLIC_SITE_URL`.
+
+Verify before submitting: the URL loads signed out in a private window, the email link opens with the subject filled, and the path resolves without the locale prefix redirecting to a 404. Both locale URLs returned 200 on 22 Nov 2026.
 
 ## 2. Financial features declaration — draft answers
 
@@ -64,7 +66,7 @@ Notes to keep the answers honest:
 
 ## 4. Rejection risks that apply to Giftly
 
-1. **Payments policy.** Play Billing is required for digital goods, not for physical goods and services ([Payments](https://support.google.com/googleplay/android-developer/answer/9858738)). Giftly's defence is that value is redeemable only in person; keep the store listing, screenshots and review notes saying “gift cards you redeem at the business”, never “balance”, “credit” or “digital wallet”. The card screen now states this in-app.
+1. **Payments policy.** Play Billing is required for digital goods, not for physical goods and services ([Payments](https://support.google.com/googleplay/android-developer/answer/9858738)). Giftly's defence is that value is redeemable only in person: vendor cards are scanned at the counter, and partner cards (Sephora, H&M, Lulu) are shown to staff at the partner's store. Keep the store listing, screenshots and review notes saying “gift cards you redeem at the business” — never “balance”, “credit” or “digital wallet”, and never “type this code in the partner's app”. The in-app copy follows the same rule.
 2. **Financial features declaration** wrong or missing — see §2. This is the most common Play-specific gap for gift-card apps.
 3. **Account deletion web link** missing or not public — fixed by the new page; enter the URL.
 4. **Data safety mismatch** — the table above is narrow because there are no analytics SDKs; if one is added later (Sentry, PostHog, Firebase), the form must change in the same release.

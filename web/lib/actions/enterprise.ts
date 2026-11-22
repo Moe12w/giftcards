@@ -6,11 +6,20 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireEnterprise } from '@/lib/auth';
-import { parseMoneyToMinor } from '@/lib/money';
 import { slugify } from '@/lib/format';
-import { normalizeTone } from '@/lib/catalog';
+import { isProductCollection } from '@/lib/collections';
 import { parseBulkTiers } from '@/lib/bulk';
 import { normalizeWebsite, validateImageUpload } from '@/lib/security';
+
+/** The collections picker posts one `occasions` field per selected collection. */
+function parseCollections(formData: FormData): string[] {
+  const values = formData
+    .getAll('occasions')
+    .flatMap((value) => (typeof value === 'string' ? value.split(',') : []))
+    .map((value) => value.trim())
+    .filter(isProductCollection);
+  return [...new Set(values)];
+}
 
 const ONBOARDING_STEPS = ['organisation', 'contact', 'structure', 'done'] as const;
 type EnterpriseOnboardingStep = (typeof ONBOARDING_STEPS)[number];
@@ -72,6 +81,8 @@ async function syncCatalogueProduct(
     active: boolean;
     terms: string | null;
     instructions: string | null;
+    categoryId: string | null;
+    collections: string[];
   },
 ) {
   const slug = slugify(`${values.name}-${enterpriseProductId.slice(0, 6)}`);
@@ -84,6 +95,8 @@ async function syncCatalogueProduct(
     vendor_id: null,
     partner_id: ctx.partner.id,
     enterprise_product_id: enterpriseProductId,
+    category_id: values.categoryId,
+    occasions: values.collections,
     min_amount_minor: values.sellingPrice,
     max_amount_minor: values.sellingPrice,
     preset_amounts_minor: [] as number[],
@@ -94,7 +107,6 @@ async function syncCatalogueProduct(
     is_active: values.active,
     icon: 'gift',
     tone: 'teal',
-    occasions: [] as string[],
     updated_at: new Date().toISOString(),
   };
 
@@ -152,8 +164,10 @@ export async function saveEnterpriseProduct(formData: FormData) {
   const name = str(formData, 'name');
   const denomination = moneyField(formData, 'denomination');
   const sellingPrice = moneyField(formData, 'selling_price');
-  // The platform's take is server-controlled (the partner cannot set its own
-  // commission), so it is read from the partner context, not from the form.
+  const categoryId = optional(formData, 'category_id');
+  const collections = parseCollections(formData);
+  // Commission is still calculated, but it comes from the partner's agreed
+  // settings rather than a field in this form.
   const commissionBps = Math.round(ctx.partner?.commission_bps ?? 0);
   const partnerNet = Math.round((sellingPrice ?? 0) * (1 - commissionBps / 10_000));
 
@@ -176,6 +190,8 @@ export async function saveEnterpriseProduct(formData: FormData) {
     selling_price_minor: sellingPrice,
     wholesale_cost_minor: partnerNet,
     commission_bps: commissionBps,
+    category_id: categoryId,
+    occasions: collections,
     terms_and_conditions: optional(formData, 'terms_and_conditions'),
     redemption_instructions: optional(formData, 'redemption_instructions'),
     expiry_days: intField(formData, 'expiry_days'),
@@ -201,6 +217,8 @@ export async function saveEnterpriseProduct(formData: FormData) {
       active: checkbox(formData, 'is_active'),
       terms: patch.terms_and_conditions,
       instructions: patch.redemption_instructions,
+      categoryId,
+      collections,
     });
     revalidatePath('/enterprise/products');
     revalidatePath(`/enterprise/products/${id}`);
@@ -222,6 +240,8 @@ export async function saveEnterpriseProduct(formData: FormData) {
     active: checkbox(formData, 'is_active'),
     terms: patch.terms_and_conditions,
     instructions: patch.redemption_instructions,
+    categoryId,
+    collections,
   });
   revalidatePath('/enterprise/products');
   revalidatePath('/admin/products');

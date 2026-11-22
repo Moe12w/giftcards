@@ -1189,6 +1189,44 @@ textarea.input {
   font-weight: 600;
 }
 
+/* Collection multi-select in the vendor gift form. The options stay mounted
+   while the dropdown is closed so their values still reach the form action. */
+.collection-picker { position: relative; }
+
+.collection-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 12px 14px;
+  color: var(--ink);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.collection-trigger:focus-visible { box-shadow: 0 0 0 4px var(--lavender); }
+
+.collection-options {
+  position: absolute;
+  z-index: 30;
+  inset-inline: 0;
+  top: calc(100% + 6px);
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.16);
+}
+
+.collection-options[hidden] { display: none; }
+
 /* Radios and checkboxes are controls, not text fields. Without this override the
    generic `.field input` rule above stretches them to 100% width with text-field
    padding, which pushes the option label outside the card on narrow screens. */

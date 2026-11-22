@@ -6,6 +6,8 @@ Paste the section below into App Store Connect → App Information → **Notes f
 
 Giftly is a marketplace for gift cards from businesses in Qatar. A customer buys a gift card for a specific business, sends it to someone (or keeps it), and the recipient redeems it in person at that business. The app has no digital content, no subscriptions and no in-app purchases.
 
+**Two kinds of gift.** Most cards are issued by the business and redeemed by showing a QR code at its counter. A few partner gift cards (for example a department store) carry a code issued by that partner; the recipient shows the code to staff at the partner's store, where it is redeemed. Neither kind can be spent inside the app.
+
 **How a purchase works.** Gift cards can only be spent on real-world goods and services at the business that issued them — coffee, meals, spa treatments, gym sessions, cinema tickets, retail purchases. Checkout leaves the app and opens the business's payment page hosted by MyFatoorah (our payment provider) in a secure in-app browser; we never collect card details inside the app. This is the payment path Apple allows for goods and services consumed outside the app (Guideline 3.1.3(e)), which is why no In-App Purchase is used. Gift card value cannot be converted to cash, is not an open-loop payment instrument, and cannot be used to unlock anything inside the app.
 
 **Browsing without an account.** Browsing the marketplace, search, categories, business pages and gift details work without signing in. Signing in is only required for account features: the wallet of owned cards, baskets, checkout, sending gifts, notifications and personal data. Onboarding finishes in the marketplace rather than forcing a login.
@@ -44,6 +46,7 @@ Giftly is a marketplace for gift cards from businesses in Qatar. A customer buys
 | Sending produces a claim link | `src/lib/claim-link.ts`, `app/(customer)/notifications/[id].tsx` |
 | Account deletion is in-app and immediate | `app/(customer)/profile/delete.tsx` (Profile → Delete account) calls the `delete_my_account` RPC, then signs out |
 | Wallet passes are a convenience, not a purchase | `src/lib/wallet-pass.ts` and `supabase/functions/wallet-pass`; returns `wallet_not_configured` until credentials are set |
+| Partner codes are redeemed in store, not online | `app/(customer)/card/[id].tsx` partner-code block; `src/i18n/en.json` `cards.partnerCodeHint` and `business.partnerGiftBody` |
 | Push is primed, not requested at launch | `src/lib/push.ts` never prompts on sign-in; `app/(customer)/notifications/index.tsx` shows the priming card |
 
 ## Before submitting

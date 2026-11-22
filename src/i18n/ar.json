@@ -319,7 +319,7 @@
     "rating": "تقييم {{rating}}",
     "partner": "شريك",
     "partnerGift": "بطاقة هدية من شريك",
-    "partnerGiftBody": "يُستخدم هذا الرمز في تطبيق الشريك أو عند الدفع. يبقى الرمز والرصيد هنا في محفظتك.",
+    "partnerGiftBody": "يُستخدم هذا الرمز في متجر الشريك. يبقى الرمز والرصيد هنا في محفظتك.",
     "oneGift": "هدية واحدة",
     "manyGifts": "{{count}} هدايا"
   },
@@ -527,7 +527,8 @@
     "details": "تفاصيل البطاقة",
     "partnerCodeTitle": "رمزك",
     "partnerCodeShow": "أظهر الرمز",
-    "partnerCodeHint": "اكتب هذا الرمز في تطبيق {{partner}} لاستخدام الرصيد.",
+    "partnerCodeHint": "أظهر هذا الرمز لموظفي متجر {{partner}} لاستخدام الرصيد.",
+    "partnerQrHint": "امسح رمز QR هذا في متجر {{partner}} لاستخدام الرصيد.",
     "partnerCodeUsed": "استخدمت هذا الرمز",
     "partnerCodeClosed": "تم الاستخدام. هذا الرمز مغلق.",
     "partnerCodeMissing": "تعذر قراءة الرمز. حاول مرة أخرى.",

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { ArrowRight, CalendarHeart, Gift } from 'lucide-react';
+
+import { CollectionPicker } from '@/components/CollectionPicker';
 import type { Product } from '@/lib/types';
 import { minorToInput } from '@/lib/money';
 import { normalizeTone } from '@/lib/catalog';
@@ -195,13 +197,9 @@ export function ProductForm({
           />
         </div>
         <div className="field">
-          <label htmlFor="occasions">{t.occasions}</label>
-          <input
-            id="occasions"
-            name="occasions"
-            defaultValue={(product?.occasions ?? []).join(', ')}
-            placeholder={t.placeholders.occasions}
-          />
+          <span className="field-label" id="product-collections-label">{t.collections.label}</span>
+          <CollectionPicker selected={product?.occasions ?? []} labelId="product-collections-label" />
+          <span className="hint">{t.collections.hint}</span>
         </div>
         <div className="field">
           <label htmlFor="tone">{t.tone}</label>

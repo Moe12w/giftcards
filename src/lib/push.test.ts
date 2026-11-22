@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   getItem: vi.fn(),
   setItem: vi.fn(),
   platform: { OS: 'ios' as string },
+  projectId: 'test-project',
 }));
 
 vi.mock('react-native', () => ({ Platform: mocks.platform }));
@@ -30,7 +31,11 @@ vi.mock('expo-notifications', () => ({
 }));
 
 vi.mock('expo-constants', () => ({
-  default: { expoConfig: { extra: { eas: { projectId: 'test-project' } } } },
+  default: {
+    get expoConfig() {
+      return { extra: { eas: { projectId: mocks.projectId } } };
+    },
+  },
 }));
 
 vi.mock('@react-native-async-storage/async-storage', () => ({
@@ -48,6 +53,7 @@ const TOKEN = 'ExponentPushToken[test-token]';
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.platform.OS = 'ios';
+  mocks.projectId = 'test-project';
   mocks.getItem.mockResolvedValue(null);
   mocks.setItem.mockResolvedValue(undefined);
   mocks.upsert.mockResolvedValue({ error: null });
@@ -131,6 +137,17 @@ describe('enablePushNotifications', () => {
 
     expect(mocks.requestPermissionsAsync).not.toHaveBeenCalled();
     expect(mocks.upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips token registration while the EAS project id is still the placeholder', async () => {
+    mocks.getPermissionsAsync.mockResolvedValue({ status: 'granted' });
+    mocks.projectId = '00000000-0000-0000-0000-000000000000';
+
+    await expect(enablePushNotifications('user-1')).resolves.toBe(true);
+
+    // The OS permission is real, but there is no linked project to mint a token.
+    expect(mocks.getExpoPushTokenAsync).not.toHaveBeenCalled();
+    expect(mocks.upsert).not.toHaveBeenCalled();
   });
 });
 

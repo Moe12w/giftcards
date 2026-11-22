@@ -1063,12 +1063,12 @@ export async function deleteMyAccount(): Promise<void> {
  *
  * An enterprise partner (Sephora, H&M, Lulu Hypermarket) brings its own codes:
  * the partner issues them, we do not resell or re-issue anything. We sell the
- * code like any other gift and the customer types it into the partner's own app
- * or website. We do not measure usage: using the code closes the whole value.
+ * code like any other gift and the customer shows it at the partner's store.
+ * We do not measure usage: using the code closes the whole value.
  * Vendors are the other kind of seller — Giftly issues their gift cards.
  * ---------------------------------------------------------------------- */
 
-/** Reads the partner's own code so the customer can type it in. */
+/** Reads the partner's own code so the customer can show it in store. */
 export async function revealEnterpriseCode(voucherId: string): Promise<string | null> {
   if (!hasSupabaseConfig) return null;
   const { data, error } = await getSupabase().rpc('reveal_enterprise_code', {

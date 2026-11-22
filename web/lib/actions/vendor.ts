@@ -12,6 +12,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { requireVendor } from '@/lib/auth';
 import { slugify } from '@/lib/format';
 import { normalizeTone } from '@/lib/catalog';
+import { isProductCollection } from '@/lib/collections';
 import { parseBulkTiers } from '@/lib/bulk';
 import { parseMoneyToMinor } from '@/lib/money';
 import { normalizeWebsite, safeNextPath, validateImageUpload } from '@/lib/security';
@@ -236,11 +237,19 @@ function parsePresets(raw: string): number[] {
     .filter((value) => value > 0);
 }
 
-function parseOccasions(raw: string): string[] {
-  return raw
-    .split(',')
-    .map((part) => part.trim())
-    .filter(Boolean);
+/**
+ * The collection picker posts one `occasions` field per selected collection.
+ * Comma-separated values are still accepted so an older saved form cannot
+ * silently lose its selection. Unknown slugs are dropped: only the collections
+ * the app actually renders belong in the catalogue.
+ */
+function parseCollections(formData: FormData): string[] {
+  const values = formData
+    .getAll('occasions')
+    .flatMap((value) => (typeof value === 'string' ? value.split(',') : []))
+    .map((value) => value.trim())
+    .filter(isProductCollection);
+  return [...new Set(values)];
 }
 
 /** Uploads a product image under the vendor's own folder in the public media bucket. */
@@ -330,7 +339,7 @@ export async function createProduct(formData: FormData) {
         fulfilmentType === 'experience' ? 'lavender' : 'teal',
       ),
       location: optional(formData, 'location'),
-      occasions: parseOccasions(str(formData, 'occasions')),
+      occasions: parseCollections(formData),
       image_url: null,
     })
     .select('id')
@@ -398,7 +407,7 @@ export async function updateProduct(formData: FormData) {
     is_active: status === 'published',
     tone: normalizeTone(str(formData, 'tone')),
     location: optional(formData, 'location'),
-    occasions: parseOccasions(str(formData, 'occasions')),
+    occasions: parseCollections(formData),
     image_url: null,
     updated_at: new Date().toISOString(),
   };

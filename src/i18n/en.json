@@ -319,7 +319,7 @@
     "rating": "{{rating}} rating",
     "partner": "Partner",
     "partnerGift": "Partner gift card",
-    "partnerGiftBody": "This code is redeemed in the partner's app or at their checkout. Your code and balance stay here in your wallet.",
+    "partnerGiftBody": "This code is redeemed at the partner's store. Your code and balance stay here in your wallet.",
     "oneGift": "1 gift",
     "manyGifts": "{{count}} gifts"
   },
@@ -527,7 +527,8 @@
     "details": "Card details",
     "partnerCodeTitle": "Your code",
     "partnerCodeShow": "Show the code",
-    "partnerCodeHint": "Type this code in the {{partner}} app to spend the credit.",
+    "partnerCodeHint": "Show this code to staff at a {{partner}} store to use the balance.",
+    "partnerQrHint": "Scan this QR at the {{partner}} till to use the balance.",
     "partnerCodeUsed": "I have used this",
     "partnerCodeClosed": "Used. This code is closed.",
     "partnerCodeMissing": "We could not read the code. Try again.",

@@ -131,7 +131,7 @@ export default function CardDetailScreen() {
   const waiting = card ? isGiftWaiting(card) : false;
   const redeemable = card && !waiting ? canRedeem(card) : false;
   const redeemValue = `giftly:card:${card?.id ?? ''}`;
-  // A partner code is typed into the partner's own app, so it gets no
+  // A partner code is shown at the partner's store, so it gets no
   // "scanned in person" note; the product's own instructions still show.
   const showRedemption =
     !isSent && (!isPartnerCode || Boolean(card?.redemption_instructions || card?.terms_and_conditions));
@@ -223,9 +223,17 @@ export default function CardDetailScreen() {
         <Card style={styles.qrCard}>
           <Text style={styles.qrTitle}>{t('cards.partnerCodeTitle')}</Text>
           {partnerCode ? (
-            <Text style={styles.partnerCode} selectable>
-              {partnerCode}
-            </Text>
+            <>
+              {/* Partner gifts carry the partner's own code, so their till
+                  scans this QR directly. It is not a Giftly redemption QR. */}
+              <QRCode value={partnerCode} />
+              <Text style={styles.qrHint}>
+                {t('cards.partnerQrHint', { partner: card?.partner_name ?? 'the partner' })}
+              </Text>
+              <Text style={styles.partnerCode} selectable>
+                {partnerCode}
+              </Text>
+            </>
           ) : (
             <Text style={styles.qrHint}>
               {t('cards.partnerCodeHint', { partner: card?.partner_name ?? 'the partner' })}

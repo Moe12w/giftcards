@@ -25,7 +25,7 @@ const en = {
     support: 'Support',
     supportHint: 'Open a ticket about codes, inventory or payouts.',
     products: 'Products',
-    productsHint: 'Face value, selling price and commission.',
+    productsHint: 'Category, collections, face value and selling price.',
     bulkProducts: 'Bulk products',
     bulkProductsHint: 'Corporate pricing and volume tiers for business buyers.',
     import: 'Import codes',
@@ -127,7 +127,7 @@ const en = {
     eyebrow: 'New product',
     title: 'Define a reward.',
     description:
-      'Set the face value, your selling price and the commission. Codes imported against this product inherit its denomination.',
+      'Choose where the gift appears, then set the face value and your selling price. Codes imported against this product inherit its denomination.',
     readOnly:
       'Your role is read-only. Ask an owner or manager on your team to create products.',
   },
@@ -391,7 +391,7 @@ const ar: EnterpriseCopy = {
     support: 'الدعم',
     supportHint: 'افتح تذكرة بخصوص الرموز أو المخزون أو المستحقات.',
     products: 'المنتجات',
-    productsHint: 'قيمة الرمز وسعر البيع والعمولة.',
+    productsHint: 'الفئة والمجموعات وقيمة الرمز وسعر البيع.',
     bulkProducts: 'منتجات الجملة',
     bulkProductsHint: 'أسعار الشركات وشرائح الكميات لمشتري الأعمال.',
     import: 'استيراد الرموز',
@@ -493,7 +493,7 @@ const ar: EnterpriseCopy = {
     eyebrow: 'منتج جديد',
     title: 'عرّف مكافأة.',
     description:
-      'حدّد القيمة الاسمية وسعر البيع والعمولة. وترث الرموز المستوردة مقابل هذا المنتج قيمته الاسمية.',
+      'اختر مكان ظهور الهدية، ثم حدّد القيمة الاسمية وسعر البيع. وترث الرموز المستوردة مقابل هذا المنتج قيمته الاسمية.',
     readOnly:
       'دورك للقراءة فقط. اطلب من مالك أو مدير في فريقك إنشاء المنتجات.',
   },

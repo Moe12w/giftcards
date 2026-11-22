@@ -34,6 +34,12 @@ export default async function EditEnterpriseProductPage({
   if (!data) notFound();
   const product = data as EnterpriseProduct;
 
+  const { data: categories } = await ctx.supabase
+    .from('categories')
+    .select('id, name')
+    .eq('active', true)
+    .order('sort_order', { ascending: true });
+
   const { data: inventory } = await ctx.supabase
     .from('enterprise_inventory_summary')
     .select('status, denomination_minor')
@@ -109,6 +115,7 @@ export default async function EditEnterpriseProductPage({
         <EnterpriseProductForm
           action={saveEnterpriseProduct}
           product={product}
+          categories={(categories ?? []) as { id: string; name: string }[]}
         />
       )}
     </div>

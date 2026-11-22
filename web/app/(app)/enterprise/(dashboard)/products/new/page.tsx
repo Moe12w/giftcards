@@ -12,6 +12,11 @@ export default async function NewEnterpriseProductPage() {
   const locale = await getLocale();
   const t = pick(enterpriseCopy, locale).productNew;
   const ctx = await requireEnterprise();
+  const { data: categories } = await ctx.supabase
+    .from('categories')
+    .select('id, name')
+    .eq('active', true)
+    .order('sort_order', { ascending: true });
 
   return (
     <div className="dash-content">
@@ -28,7 +33,10 @@ export default async function NewEnterpriseProductPage() {
           {t.readOnly}
         </div>
       ) : (
-        <EnterpriseProductForm action={saveEnterpriseProduct} />
+        <EnterpriseProductForm
+          action={saveEnterpriseProduct}
+          categories={(categories ?? []) as { id: string; name: string }[]}
+        />
       )}
     </div>
   );

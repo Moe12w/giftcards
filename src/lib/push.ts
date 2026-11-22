@@ -64,13 +64,25 @@ export async function markPushPromptAnswered(): Promise<void> {
   }
 }
 
+/**
+ * The EAS project id, or undefined while the app is still unlinked. `app.json`
+ * ships a placeholder UUID until `eas init` runs; asking Expo for a push token
+ * with it fails every time, so it is treated as "not configured" instead.
+ */
+function easProjectId(): string | undefined {
+  const value = Constants.expoConfig?.extra?.eas?.projectId;
+  if (typeof value !== 'string' || !value.trim()) return undefined;
+  // The placeholder shipped in app.json until `eas init` links the project.
+  return value.toLowerCase() === '00000000-0000-0000-0000-000000000000' ? undefined : value;
+}
+
 async function savePushToken(userId: string): Promise<void> {
   if (!hasSupabaseConfig) return;
+  const projectId = easProjectId();
+  // Without a linked EAS project there is no token to obtain.
+  if (!projectId) return;
   try {
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-    const tokenData = await Notifications.getExpoPushTokenAsync(
-      projectId ? { projectId } : undefined,
-    );
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
     const token = tokenData?.data;
     if (!token) return;
 

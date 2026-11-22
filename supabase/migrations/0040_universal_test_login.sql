@@ -1,17 +1,19 @@
 -- 0040_universal_test_login.sql
--- One login for every dashboard.
+-- Fixture account for the advertising migrations, with no usable credential.
 --
--- The email in auth.users is unique, so a single account carries every role:
--- it is the platform admin, the owner of two vendors and the owner of the
--- RetailPlus partner. Logging in as test@test.com therefore opens the admin,
--- vendor and enterprise dashboards without switching accounts.
+-- This used to create test@test.com with the published password test12345 and
+-- grant it the platform admin role plus vendor and enterprise ownership. That
+-- was a credential shipped in the migration chain, so it is gone now. Demo
+-- logins live in supabase/seed.sql, which is never pushed to production.
 --
--- The seeded per-role accounts stay in place (they are how the individual
--- roles are tested), but every test account now shares one password.
+-- The row stays because 0059 and 0060 use this id as the creator of the demo
+-- advertising placements, and those columns reference auth.users. It is created
+-- with a random password that nobody knows and cannot be reset by email, so it
+-- can never be signed into. Privileges are no longer granted here.
+--
+-- Databases that already ran the old version are cleaned up by
+-- 0164_disable_universal_test_login.sql.
 
--- ---------------------------------------------------------------------------
--- 1. The universal account
--- ---------------------------------------------------------------------------
 insert into auth.users (
   id, instance_id, email, encrypted_password, email_confirmed_at, created_at, updated_at,
   raw_user_meta_data, raw_app_meta_data, aud, role,
@@ -21,12 +23,15 @@ values (
   '99999999-9999-4999-8999-999999999999'::uuid,
   '00000000-0000-0000-0000-000000000000'::uuid,
   'test@test.com',
-  extensions.crypt('test12345', extensions.gen_salt('bf', 10)),
+  extensions.crypt(
+    encode(extensions.gen_random_bytes(32), 'hex'),
+    extensions.gen_salt('bf', 10)
+  ),
   now(), now(), now(),
   jsonb_build_object(
     'sub', '99999999-9999-4999-8999-999999999999'::uuid,
     'email', 'test@test.com',
-    'full_name', 'Test Account',
+    'full_name', 'Fixture Account',
     'email_verified', true
   ),
   '{"provider":"email","providers":["email"]}'::jsonb,
@@ -50,59 +55,9 @@ where id = '99999999-9999-4999-8999-999999999999'::uuid
   );
 
 -- The insert above fires handle_new_user(), which makes a profile and a
--- 'customer' role row. Both are corrected here.
+-- 'customer' role row. The profile is kept so the fixture looks like a user.
 insert into public.profiles (id, full_name, email, preferred_language)
-values ('99999999-9999-4999-8999-999999999999'::uuid, 'Test Account', 'test@test.com', 'en')
+values ('99999999-9999-4999-8999-999999999999'::uuid, 'Fixture Account', 'test@test.com', 'en')
 on conflict (id) do update
   set email = excluded.email,
       full_name = coalesce(public.profiles.full_name, excluded.full_name);
-
-insert into public.user_roles (user_id, role)
-values ('99999999-9999-4999-8999-999999999999'::uuid, 'admin')
-on conflict (user_id) do update set role = excluded.role;
-
--- The admin role row is enough: is_admin() reads user_roles first. The
--- profiles.is_admin flag stays untouched so the guard trigger is not tripped.
-
--- Vendor access: The Coffee House and Dune Spa, both as owner. The vendors are
--- seeded, so a database built from migrations alone has no rows to link and the
--- insert-select simply adds none.
-insert into public.vendor_members (vendor_id, user_id, role, active)
-select v.id, '99999999-9999-4999-8999-999999999999'::uuid, 'owner', true
-from public.vendors v
-where v.id in (
-  '58852d5f-8486-42fa-a423-b199925159b0'::uuid,
-  '2533ec89-f5b1-4409-9273-c87bf133d095'::uuid
-)
-on conflict (vendor_id, user_id) do update
-  set role = excluded.role,
-      active = true;
-
--- Enterprise access: RetailPlus Rewards, as owner. Same guard as the vendors
--- above: the partner is seeded, not migrated.
-insert into public.enterprise_members (partner_id, user_id, role, active)
-select p.id, '99999999-9999-4999-8999-999999999999'::uuid, 'owner', true
-from public.enterprise_partners p
-where p.id = '96d72e91-21e8-47bd-8298-8f991a2ca84e'::uuid
-on conflict (partner_id, user_id) do update
-  set role = excluded.role,
-      active = true;
-
--- ---------------------------------------------------------------------------
--- 2. One password for every seeded test account
--- ---------------------------------------------------------------------------
-update auth.users
-set encrypted_password = extensions.crypt('test12345', extensions.gen_salt('bf', 10)),
-    updated_at = now()
-where email like '%@giftly.test';
-
--- ---------------------------------------------------------------------------
--- 3. Business contact records point at the universal account
--- ---------------------------------------------------------------------------
-update public.enterprise_partners
-set contact_email = 'test@test.com'
-where contact_email = 'partner@giftly.test';
-
-update public.vendor_applications
-set business_email = 'test@test.com'
-where business_email = 'owner@giftly.test';

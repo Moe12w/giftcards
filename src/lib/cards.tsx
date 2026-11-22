@@ -53,7 +53,7 @@ export interface CardsContextValue {
   canRedeem: (card: GiftCard) => boolean;
   /** Reads the partner's own code for a partner gift. */
   revealPartnerCode: (cardId: string) => Promise<string | null>;
-  /** Marks a partner gift as used in the partner's app. */
+  /** Marks a partner gift as used at the partner's store. */
   markPartnerCodeUsed: (cardId: string) => Promise<boolean>;
   /** Re-reads the wallet from the database. */
   reload: () => Promise<void>;
