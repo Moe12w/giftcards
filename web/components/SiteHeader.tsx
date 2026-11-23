@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { ChevronDown, Menu, X } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { LanguageButton } from '@/components/LanguageSwitch';
 import { useLocale } from '@/components/I18nProvider';
@@ -19,9 +19,14 @@ export function SiteHeader() {
   const links = [
     { href: '/vendors', label: copy.nav.vendors },
     { href: '/ai-gift-cards', label: copy.nav.aiGiftCards },
-    { href: '/corporate', label: copy.nav.business },
     { href: '/faq', label: copy.nav.howItWorks },
     { href: '/contact', label: copy.nav.contact },
+  ];
+
+  const businessLinks = [
+    { href: '/vendor/register', label: copy.nav.vendorSignUp },
+    { href: '/enterprise/register', label: copy.nav.partnerSignUp },
+    { href: '/corporate', label: copy.nav.businessOverview },
   ];
 
   return (
@@ -39,6 +44,23 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
+          <details className="nav-dropdown">
+            <summary>
+              {copy.nav.business} <ChevronDown size={13} aria-hidden="true" />
+            </summary>
+            <div className="nav-dropdown-panel">
+              {businessLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={pathname === link.href ? 'page' : undefined}
+                  onClick={() => setOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </details>
         </nav>
         <div className="header-actions">
           <LanguageButton />
