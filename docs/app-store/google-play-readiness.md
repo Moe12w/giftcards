@@ -11,7 +11,7 @@ Play requires **both** an in-app path and a public web resource, with the web UR
 - Linked from the site footer ("Delete your account") and listed in `web/app/(app)/sitemap.ts`
 - Static, public, no sign-in, renders in English and Arabic, gives the in-app steps, a `mailto:` request route, what is deleted, what is retained, and why vendor/enterprise/admin accounts go through support.
 
-> **Domain:** `giftly.qa` does not resolve yet (checked 22 Nov 2026). The live site is the Vercel domain above, and the mobile app's `EXPO_PUBLIC_SITE_URL` points there too. Enter the live URL in Play Console now; when the custom domain is attached, change it here, in the Play Console field, and in `EXPO_PUBLIC_SITE_URL`.
+> **Domain:** `tazilla.com.qa` does not resolve yet (checked 22 Nov 2026). The live site is the Vercel domain above, and the mobile app's `EXPO_PUBLIC_SITE_URL` points there too. Enter the live URL in Play Console now; when the custom domain is attached, change it here, in the Play Console field, and in `EXPO_PUBLIC_SITE_URL`.
 
 Verify before submitting: the URL loads signed out in a private window, the email link opens with the subject filled, and the path resolves without the locale prefix redirecting to a 404. Both locale URLs returned 200 on 22 Nov 2026.
 
@@ -57,7 +57,7 @@ Notes to keep the answers honest:
 ### Also declare
 
 - **Account creation:** yes → the in-app delete path and the web deletion URL are both required, which is why §1 exists.
-- **App access:** login required for wallet, checkout, sending, notifications, profile → give the reviewer `appreview@giftly.qa` and its password in the App access section, not only in free text ([prepare for review](https://support.google.com/googleplay/android-developer/answer/9859455)).
+- **App access:** login required for wallet, checkout, sending, notifications, profile → give the reviewer `appreview@tazilla.com.qa` and its password in the App access section, not only in free text ([prepare for review](https://support.google.com/googleplay/android-developer/answer/9859455)).
 - **Ads:** no ads.
 - **Content rating questionnaire:** utility/productivity or reference; no user-generated public content, no gambling, no violence. Gift messages are private, not public UGC.
 - **Target audience:** 18+ or 13+; not children.

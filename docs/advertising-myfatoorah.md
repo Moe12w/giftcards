@@ -15,7 +15,7 @@ Everything is entered in the admin panel: **Admin → Advertising → Payments**
 | API key | MyFatoorah portal → Integration Settings → API Key |
 | API base URL | `https://apitest.myfatoorah.com` for test, the Qatar live URL from MyFatoorah's API Key page for production |
 | Webhook secret key | Portal → Webhooks → *secure key*. The webhook route refuses events when this is missing |
-| App public URL | Public origin of this app, e.g. `https://giftly.qa`. Used to build the callback and webhook URLs |
+| App public URL | Public origin of this app, e.g. `https://tazilla.com.qa`. Used to build the callback and webhook URLs |
 
 Environment variables (`MYFATOORAH_API_KEY`, `MYFATOORAH_BASE_URL`,
 `MYFATOORAH_WEBHOOK_SECRET`, `APP_PUBLIC_URL`) are only a fallback: a value saved

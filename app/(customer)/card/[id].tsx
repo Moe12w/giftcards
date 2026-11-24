@@ -130,7 +130,7 @@ export default function CardDetailScreen() {
   // A gift bought for a future date is in the wallet but must not be spendable yet.
   const waiting = card ? isGiftWaiting(card) : false;
   const redeemable = card && !waiting ? canRedeem(card) : false;
-  const redeemValue = `giftly:card:${card?.id ?? ''}`;
+  const redeemValue = `tazilla:card:${card?.id ?? ''}`;
   // A partner code is shown at the partner's store, so it gets no
   // "scanned in person" note; the product's own instructions still show.
   const showRedemption =

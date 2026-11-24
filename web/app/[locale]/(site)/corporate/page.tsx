@@ -190,7 +190,7 @@ export default async function EnterprisePage() {
             <div className="split-list" style={{ marginTop: 20 }}>
               <div>
                 <span className="k">{c.labels.email}</span>
-                <span className="v">corporate@giftly.qa</span>
+                <span className="v">corporate@tazilla.com.qa</span>
               </div>
               <div>
                 <span className="k">{c.labels.phone}</span>

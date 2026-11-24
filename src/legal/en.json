@@ -5,9 +5,9 @@
     "brand": "Tazilla",
     "cr": "238473",
     "address": "Doha, State of Qatar",
-    "legalEmail": "legal@giftly.qa",
-    "privacyEmail": "privacy@giftly.qa",
-    "supportEmail": "hello@giftly.qa"
+    "legalEmail": "legal@tazilla.com.qa",
+    "privacyEmail": "privacy@tazilla.com.qa",
+    "supportEmail": "hello@tazilla.com.qa"
   },
   "ui": {
     "legalCentre": "Legal centre",
@@ -102,7 +102,7 @@
           "h": "4. Eligibility, accounts and business verification",
           "p": [
             "You must be at least 18 years old and have legal capacity to enter into a binding contract. If you use the Platform for an organisation, you confirm that you are authorised to bind that organisation and that the organisation accepts these Terms.",
-            "You must provide accurate, current and complete information, keep it up to date, and use only accounts that belong to you or your organisation. You are responsible for protecting your login credentials, devices and one-time codes, and for all activity under your account. You must notify us immediately at hello@giftly.qa if you suspect unauthorised access.",
+            "You must provide accurate, current and complete information, keep it up to date, and use only accounts that belong to you or your organisation. You are responsible for protecting your login credentials, devices and one-time codes, and for all activity under your account. You must notify us immediately at hello@tazilla.com.qa if you suspect unauthorised access.",
             "Business users must complete our onboarding and know-your-customer checks, including providing a valid commercial registration, trade licence, tax information, beneficial ownership information, authorised signatory details and any other document we reasonably request. We may verify information with public registers, Payment Processors, banks and other service providers. Approval is discretionary and may be refused, limited, suspended or withdrawn.",
             "We may refuse, suspend or close an account where we suspect fraud, sanctions, money laundering, terrorist financing, unlawful conduct, misrepresentation, a risk to customers, or a breach of these Terms. We may also do so where required by law, a regulator, a Payment Processor or a court."
           ]
@@ -132,7 +132,7 @@
             "An Order is an offer to purchase. It is accepted when the Issuer or the Platform, acting on the Issuer's instructions, confirms issuance or delivery. We may reject or cancel an Order where a Gift Card is unavailable, a price or listing is wrong, a payment fails, fraud is suspected, or the law requires it.",
             "Gift Cards are delivered digitally by email, SMS, shareable link, in-app wallet or another method shown at checkout. Delivery is complete when the Code is sent to the contact details you provided or made available in your account. You are responsible for checking the recipient details before confirming the Order. Risk in the Code passes to you or the recipient on delivery.",
             "You may cancel an Order before a Code is issued or delivered. Once a Code has been issued or delivered, cancellation, return, exchange and refund are subject to the Issuer's terms and applicable Qatari law, including mandatory consumer rights. A Gift Card that has been redeemed, shared, copied or partly used will normally not be refundable.",
-            "If a Gift Card is not delivered, is defective, cannot be redeemed, or the Issuer refuses to honour it, contact the Issuer first and then contact us at hello@giftly.qa. We may help investigate and may, where appropriate, facilitate a replacement or refund from the Issuer. We do not become the Issuer or merchant of record by helping. Nothing in this section limits a consumer's statutory rights."
+            "If a Gift Card is not delivered, is defective, cannot be redeemed, or the Issuer refuses to honour it, contact the Issuer first and then contact us at hello@tazilla.com.qa. We may help investigate and may, where appropriate, facilitate a replacement or refund from the Issuer. We do not become the Issuer or merchant of record by helping. Nothing in this section limits a consumer's statutory rights."
           ]
         },
         {
@@ -218,8 +218,8 @@
         {
           "h": "17. Contact and notices",
           "p": [
-            "Legal notices to Nexgen must be sent to legal@giftly.qa and, where required, by registered mail to our registered address in Doha, Qatar. Notices to you may be sent to the email address or phone number on your account, posted in the Platform, or delivered through the app. You are responsible for keeping your contact details current.",
-            "Our details: Nexgen Software Publishing Solution, commercial registration number 238473, Doha, State of Qatar. Brand: Tazilla. Legal: legal@giftly.qa. Privacy: privacy@giftly.qa. Support: hello@giftly.qa."
+            "Legal notices to Nexgen must be sent to legal@tazilla.com.qa and, where required, by registered mail to our registered address in Doha, Qatar. Notices to you may be sent to the email address or phone number on your account, posted in the Platform, or delivered through the app. You are responsible for keeping your contact details current.",
+            "Our details: Nexgen Software Publishing Solution, commercial registration number 238473, Doha, State of Qatar. Brand: Tazilla. Legal: legal@tazilla.com.qa. Privacy: privacy@tazilla.com.qa. Support: hello@tazilla.com.qa."
           ]
         }
       ],
@@ -235,9 +235,9 @@
         {
           "h": "1. Who is responsible for your data",
           "p": [
-            "Nexgen is the controller of personal data that it processes for its own purposes, including account creation, platform security, checkout orchestration, customer support, analytics, marketing and legal compliance. Our registered address is Doha, State of Qatar. Our privacy contact is privacy@giftly.qa.",
+            "Nexgen is the controller of personal data that it processes for its own purposes, including account creation, platform security, checkout orchestration, customer support, analytics, marketing and legal compliance. Our registered address is Doha, State of Qatar. Our privacy contact is privacy@tazilla.com.qa.",
             "For some data, another party is the controller. A Vendor is normally an independent controller of the data it receives to fulfil and redeem its own gift cards and to run its own business. An Enterprise Client or Bulk Buyer is normally the controller of the employee, customer or recipient data it uploads or instructs us to process. In those cases, Nexgen acts as a processor or a separate controller only for the limited purposes described in this Policy and the applicable role schedule.",
-            "We have a Privacy Officer responsible for data protection. You can contact the Privacy Officer at privacy@giftly.qa. If you are a customer of a Vendor, Enterprise Client or Bulk Buyer and want to exercise rights over data that party controls, please contact that party first. We will assist it as required."
+            "We have a Privacy Officer responsible for data protection. You can contact the Privacy Officer at privacy@tazilla.com.qa. If you are a customer of a Vendor, Enterprise Client or Bulk Buyer and want to exercise rights over data that party controls, please contact that party first. We will assist it as required."
           ]
         },
         {
@@ -319,7 +319,7 @@
           "h": "8. International transfers",
           "p": [
             "Some of our service providers may store or process personal data outside Qatar. Where we transfer personal data internationally, we take steps required by the Data Privacy Law to protect it, including contractual safeguards, security assessments and, where required, your consent. The Data Privacy Law generally permits cross-border flows unless the processing breaches the law or may cause serious harm to personal data or individual privacy.",
-            "Our cloud and database providers may process data in the region or in other countries where they operate. You can ask us for more information about the safeguards used for a particular transfer by contacting privacy@giftly.qa."
+            "Our cloud and database providers may process data in the region or in other countries where they operate. You can ask us for more information about the safeguards used for a particular transfer by contacting privacy@tazilla.com.qa."
           ]
         },
         {
@@ -355,14 +355,14 @@
         {
           "h": "12. Marketing and communications",
           "p": [
-            "We send marketing only where we have your consent or another lawful basis. You can withdraw consent or opt out at any time using the unsubscribe link in an email, the settings in the app, or by contacting privacy@giftly.qa. We may still send service messages, receipts, security alerts and legal notices that are necessary for the Platform.",
+            "We send marketing only where we have your consent or another lawful basis. You can withdraw consent or opt out at any time using the unsubscribe link in an email, the settings in the app, or by contacting privacy@tazilla.com.qa. We may still send service messages, receipts, security alerts and legal notices that are necessary for the Platform.",
             "If you are a business contact, we may rely on our legitimate interests to send relevant business communications, subject to your right to object. We do not sell personal data or rent email lists."
           ]
         },
         {
           "h": "13. Children",
           "p": [
-            "The Platform is intended for adults aged 18 and over. We do not knowingly collect personal data from children. If a gift card is intended for a minor, the parent or guardian must manage the purchase, redemption and any data. If we learn that we have collected a child's data without guardian consent, we will delete it. A guardian may contact privacy@giftly.qa to request access or deletion."
+            "The Platform is intended for adults aged 18 and over. We do not knowingly collect personal data from children. If a gift card is intended for a minor, the parent or guardian must manage the purchase, redemption and any data. If we learn that we have collected a child's data without guardian consent, we will delete it. A guardian may contact privacy@tazilla.com.qa to request access or deletion."
           ]
         },
         {
@@ -374,7 +374,7 @@
         {
           "h": "15. Automated decisions and analytics",
           "p": [
-            "We may use automated tools for fraud detection, risk scoring, recommendations and analytics. We do not make solely automated decisions that produce legal or similarly significant effects without human review. You can ask for human review of an automated decision that affects you by contacting privacy@giftly.qa.",
+            "We may use automated tools for fraud detection, risk scoring, recommendations and analytics. We do not make solely automated decisions that produce legal or similarly significant effects without human review. You can ask for human review of an automated decision that affects you by contacting privacy@tazilla.com.qa.",
             "We may produce aggregated or de-identified statistics. Aggregated data that cannot identify an individual is not personal data, but we apply appropriate safeguards before sharing it."
           ]
         },
@@ -382,7 +382,7 @@
           "h": "16. Changes and contact",
           "p": [
             "We may update this Policy to reflect changes in law, our services or our data practices. The current version is posted on the Platform with its last-updated date. For material changes, we will provide reasonable notice. If you do not agree, you should stop using the Platform and may close your account.",
-            "For any privacy question, request or complaint, contact our Privacy Officer at privacy@giftly.qa or write to Nexgen Software Publishing Solution, Doha, State of Qatar. We aim to respond within 30 days. If you are not satisfied, you may complain to NCSA/CDP. Our legal contact is legal@giftly.qa."
+            "For any privacy question, request or complaint, contact our Privacy Officer at privacy@tazilla.com.qa or write to Nexgen Software Publishing Solution, Doha, State of Qatar. We aim to respond within 30 days. If you are not satisfied, you may complain to NCSA/CDP. Our legal contact is legal@tazilla.com.qa."
           ]
         }
       ],
@@ -438,7 +438,7 @@
           "h": "17.1 Buyer and recipient data",
           "p": [
             "We process your account, order, payment, delivery and support data to provide the Platform, deliver gifts, prevent fraud and comply with law. When you send a gift, we share the recipient's name, delivery details, message and order information with the Issuer and our delivery providers so the gift can be delivered and redeemed.",
-            "If you are a recipient, we receive your details from the sender or the Issuer. We use them to deliver and support the gift, prevent fraud and, where permitted, to provide you with information about the gift. You can contact privacy@giftly.qa to exercise your rights. If the sender or Issuer controls the data, we will direct your request to them or assist them."
+            "If you are a recipient, we receive your details from the sender or the Issuer. We use them to deliver and support the gift, prevent fraud and, where permitted, to provide you with information about the gift. You can contact privacy@tazilla.com.qa to exercise your rights. If the sender or Issuer controls the data, we will direct your request to them or assist them."
           ]
         },
         {
@@ -732,7 +732,7 @@
         {
           "h": "17.3 Marketing, retention and rights",
           "p": [
-            "You must not use recipient data for spam or unrelated marketing. You must honour opt-outs and keep your own suppression lists. We assist with data subject requests relating to data we control or process for you. You can contact privacy@giftly.qa for more information."
+            "You must not use recipient data for spam or unrelated marketing. You must honour opt-outs and keep your own suppression lists. We assist with data subject requests relating to data we control or process for you. You can contact privacy@tazilla.com.qa for more information."
           ]
         }
       ]

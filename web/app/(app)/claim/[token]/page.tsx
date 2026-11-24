@@ -44,7 +44,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
   if (!gift) notFound();
 
   const amount = Number(gift.amount_minor ?? 0);
-  const appUrl = `giftly://claim/${token}`;
+  const appUrl = `tazilla://claim/${token}`;
 
   return (
     <main className="section">

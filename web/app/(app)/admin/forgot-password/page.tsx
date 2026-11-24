@@ -44,7 +44,7 @@ export default async function AdminForgotPasswordPage({
         <input type="hidden" name="portal" value="admin" />
         <div className="field">
           <label htmlFor="email">{t.adminEmail}</label>
-          <input id="email" name="email" type="email" autoComplete="email" required placeholder="admin@giftly.qa" />
+          <input id="email" name="email" type="email" autoComplete="email" required placeholder="admin@tazilla.com.qa" />
         </div>
         <button className="btn coral block" type="submit">
           {t.sendResetLink} <Send size={16} />

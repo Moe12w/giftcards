@@ -676,13 +676,13 @@ export interface ScanLookupResult {
 
 /**
  * Works out what was scanned. The app can show a voucher id
- * (giftly:card:...), a wallet link, or the printed code itself.
+ * (tazilla:card:...), a wallet link, or the printed code itself.
  */
 function parseScanPayload(raw: string): { id?: string; code?: string } {
   const value = (raw ?? '').trim();
   if (!value) return {};
 
-  const scheme = value.match(/^giftly:(?:card|redeem|voucher|pass):([0-9a-f-]{36})$/i);
+  const scheme = value.match(/^tazilla:(?:card|redeem|voucher|pass):([0-9a-f-]{36})$/i);
   if (scheme) return { id: scheme[1] };
 
   const uuid = value.match(

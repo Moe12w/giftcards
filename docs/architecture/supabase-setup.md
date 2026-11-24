@@ -22,7 +22,7 @@ can talk to the database:
 ```bash
 EXPO_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key>
-EXPO_PUBLIC_APP_SCHEME=giftly
+EXPO_PUBLIC_APP_SCHEME=tazilla
 ```
 
 For the CLI and the seeding scripts, add the local-only values in the same file:
@@ -49,7 +49,7 @@ Two settings in **Supabase Dashboard → Authentication → URL Configuration** 
 
 | Setting | Value | Why |
 |---|---|---|
-| Redirect URLs | `giftly://**`, `http://localhost:8081/**` | the password reset email sends the user back into the app |
+| Redirect URLs | `tazilla://**`, `http://localhost:8081/**` | the password reset email sends the user back into the app |
 | Auto-confirm email | **on** while testing | without an SMTP provider the built in mailer cannot deliver, so sign ups would fail |
 
 They can also be set through the Management API:
@@ -58,7 +58,7 @@ They can also be set through the Management API:
 curl -X PATCH "https://api.supabase.com/v1/projects/<ref>/config/auth" \
   -H "Authorization: Bearer <access token>" \
   -H "Content-Type: application/json" \
-  -d '{"uri_allow_list":"giftly://**,http://localhost:8081/**","mailer_autoconfirm":true}'
+  -d '{"uri_allow_list":"tazilla://**,http://localhost:8081/**","mailer_autoconfirm":true}'
 ```
 
 ### Sending real email
@@ -157,12 +157,12 @@ with the Admin API using the service role key. Create one account per role:
 | Account | Role | How to grant it |
 |---|---|---|
 | `test@test.com` | everything | `user_roles` row with role `admin`, plus `vendor_members` and `enterprise_members` rows |
-| `customer@giftly.test` | customer | default — no role row needed |
-| `owner@giftly.test` | vendor owner | `vendor_members` row with role `owner` |
-| `manager@giftly.test` | vendor manager | `vendor_members` row with role `manager` |
-| `staff@giftly.test` | redemption staff | `vendor_members` row with role `redemption_staff` |
-| `partner@giftly.test` | enterprise user | `enterprise_members` row |
-| `admin@giftly.test` | admin | `user_roles` row with role `admin` |
+| `customer@tazilla.test` | customer | default — no role row needed |
+| `owner@tazilla.test` | vendor owner | `vendor_members` row with role `owner` |
+| `manager@tazilla.test` | vendor manager | `vendor_members` row with role `manager` |
+| `staff@tazilla.test` | redemption staff | `vendor_members` row with role `redemption_staff` |
+| `partner@tazilla.test` | enterprise user | `enterprise_members` row |
+| `admin@tazilla.test` | admin | `user_roles` row with role `admin` |
 
 Example for the vendor owner:
 
@@ -170,11 +170,11 @@ Example for the vendor owner:
 insert into public.vendor_members (vendor_id, user_id, role)
 select v.id, u.id, 'owner'
 from public.vendors v, auth.users u
-where v.slug = 'the-coffee-house' and u.email = 'owner@giftly.test'
+where v.slug = 'the-coffee-house' and u.email = 'owner@tazilla.test'
 on conflict do nothing;
 
 insert into public.user_roles (user_id, role)
-select id, 'admin' from auth.users where email = 'admin@giftly.test'
+select id, 'admin' from auth.users where email = 'admin@tazilla.test'
 on conflict (user_id) do update set role = 'admin';
 ```
 
@@ -204,12 +204,12 @@ Test accounts created by the seed (password for all: `test12345`):
 | Email | Role |
 |---|---|
 | `test@test.com` | **everything** — admin, vendor owner and enterprise owner |
-| `customer@giftly.test` | customer |
-| `owner@giftly.test` | vendor owner (The Coffee House + Dune Spa) |
-| `manager@giftly.test` | vendor manager |
-| `staff@giftly.test` | redemption staff |
-| `partner@giftly.test` | enterprise partner |
-| `admin@giftly.test` | platform admin |
+| `customer@tazilla.test` | customer |
+| `owner@tazilla.test` | vendor owner (The Coffee House + Dune Spa) |
+| `manager@tazilla.test` | vendor manager |
+| `staff@tazilla.test` | redemption staff |
+| `partner@tazilla.test` | enterprise partner |
+| `admin@tazilla.test` | platform admin |
 
 `test@test.com` is the account to use on the deployed site: one login opens the
 admin, vendor and enterprise dashboards. The email in `auth.users` is unique, so

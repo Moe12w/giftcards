@@ -142,7 +142,7 @@ webhooks and refunds with tests.
 1. **Known admin account created by a migration.**
    `supabase/migrations/0040_universal_test_login.sql` inserts
    `test@test.com` with password `test12345` as platform admin, vendor owner and
-   enterprise owner, and resets every `%@giftly.test` password to the same value.
+   enterprise owner, and resets every `%@tazilla.test` password to the same value.
    Because it is a migration, `supabase db push` applies it to production. If the
    production project has had migrations applied, **that account exists there
    now**:

@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
 
     const requestedReturn = String(body.returnUrl ?? '').trim();
     const trustedReturn =
-      requestedReturn.startsWith('giftly://') ||
+      requestedReturn.startsWith('tazilla://') ||
       requestedReturn === config.appPublicUrl ||
       requestedReturn.startsWith(`${config.appPublicUrl}/`);
     const returnTo = trustedReturn ? `&return_to=${encodeURIComponent(requestedReturn)}` : '';

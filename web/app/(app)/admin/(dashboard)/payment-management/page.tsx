@@ -147,7 +147,7 @@ export default async function AdminPaymentManagementPage({
                   id="app_public_url"
                   name="app_public_url"
                   defaultValue={config.appPublicUrl}
-                  placeholder="https://giftly.qa"
+                  placeholder="https://tazilla.com.qa"
                 />
                 <span className="hint">Used for payment return and error URLs.</span>
               </div>

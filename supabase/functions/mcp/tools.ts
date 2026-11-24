@@ -147,7 +147,7 @@ const ORDER_FIELDS =
   'id,order_ref,status,payment_status,currency,subtotal_minor,discount_minor,fee_minor,total_minor,created_at,updated_at,paid_at,delivery_method,scheduled_for,recipient_name,order_items(id,product_id,product_variant_id,quantity,unit_price_minor,total_minor,currency,gift_message,recipient_name,product:products(title,fulfilment_type,vendor:vendors(name)))';
 
 const SITE_URL = (
-  Deno.env.get('GIFTLY_SITE_URL') ?? 'https://giftcards-jade.vercel.app'
+  Deno.env.get('TAZILLA_SITE_URL') ?? 'https://giftcards-jade.vercel.app'
 ).replace(/\/$/, '');
 
 const DELIVERY_METHODS = ['email', 'sms', 'link', 'in_app', 'whatsapp'] as const;

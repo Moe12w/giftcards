@@ -5,10 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "giftly",
+    "scheme": "tazilla",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "qa.giftly.app",
+      "bundleIdentifier": "qa.tazilla.app",
       "supportsTablet": true,
       "usesAppleSignIn": true,
       "infoPlist": {
@@ -16,7 +16,7 @@
       }
     },
     "android": {
-      "package": "qa.giftly.app",
+      "package": "qa.tazilla.app",
       "adaptiveIcon": {
         "backgroundColor": "#72c2b8",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

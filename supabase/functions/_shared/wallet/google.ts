@@ -109,7 +109,7 @@ async function ensureClass(
   serviceAccount: GoogleServiceAccount,
   issuerId: string,
 ): Promise<void> {
-  const classId = `${issuerId}.giftly_giftcard_v1`;
+  const classId = `${issuerId}.tazilla_giftcard_v1`;
   if (classReadyFor === classId) return;
 
   const response = await authorized(serviceAccount, `${WALLET_API}/giftCardClass`, {

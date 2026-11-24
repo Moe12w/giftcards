@@ -10,7 +10,7 @@ const COFFEE_ID = '58852d5f-8486-42fa-a423-b199925159b0';
 const COFFEE_PRODUCT = 'b4b0f99f-b29c-41ce-9b2b-9ae9eebb269f';
 
 function uuid(name) {
-  const h = crypto.createHash('sha1').update('giftly-demo:' + name).digest('hex');
+  const h = crypto.createHash('sha1').update('tazilla-demo:' + name).digest('hex');
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
 function q(value) {

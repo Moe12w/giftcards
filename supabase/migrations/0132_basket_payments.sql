@@ -60,11 +60,11 @@ begin
     raise exception 'not_a_participant';
   end if;
 
-  select coalesce(nullif(full_name, ''), 'Giftly customer')
+  select coalesce(nullif(full_name, ''), 'Tazilla customer')
     into v_name
   from public.profiles
   where id = o.buyer_id;
-  v_name := coalesce(v_name, 'Giftly customer');
+  v_name := coalesce(v_name, 'Tazilla customer');
 
   for v_item in
     select
@@ -94,7 +94,7 @@ begin
     )
     values (
       o.basket_id, v_item.product_id, v_item.vendor_id,
-      coalesce(v_item.business_name, 'Giftly'),
+      coalesce(v_item.business_name, 'Tazilla'),
       coalesce(v_item.title, 'Gift card'),
       v_item.total_minor,
       v_item.icon, v_item.tone, v_item.logo_url, v_item.banner_url,

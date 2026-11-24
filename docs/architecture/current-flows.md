@@ -52,7 +52,7 @@ The old `vendor_invites` table/RPCs remain in the database for historical rows b
 
 - `AdminSupplierPanel` — vendor and enterprise admin detail pages.
 - `FinancialsView` — vendor and enterprise Financials pages.
-- `BulkCart` / `BulkOfferPurchase` — bulk buying; basket state in localStorage (`giftly.bulk-basket`).
+- `BulkCart` / `BulkOfferPurchase` — bulk buying; basket state in localStorage (`tazilla.bulk-basket`).
 
 ## Intentionally duplicated
 

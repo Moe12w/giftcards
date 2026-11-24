@@ -37,20 +37,20 @@ describe('wallet pass content', () => {
   });
 
   it('uses the same QR message the app already shows', () => {
-    expect(barcodeMessage(VALUE_CARD.id)).toBe(`giftly:card:${VALUE_CARD.id}`);
+    expect(barcodeMessage(VALUE_CARD.id)).toBe(`tazilla:card:${VALUE_CARD.id}`);
   });
 
   it('builds a store card with the balance, barcode and web service', () => {
     const pass = applePass({
       voucher: VALUE_CARD,
-      passTypeId: 'pass.qa.giftly.card',
+      passTypeId: 'pass.qa.tazilla.card',
       teamId: 'TEAM123456',
       webServiceUrl: 'https://example.supabase.co/functions/v1/wallet-pass',
       authenticationToken: 'token',
     }) as Record<string, any>;
 
     expect(pass.serialNumber).toBe(VALUE_CARD.id);
-    expect(pass.passTypeIdentifier).toBe('pass.qa.giftly.card');
+    expect(pass.passTypeIdentifier).toBe('pass.qa.tazilla.card');
     expect(pass.teamIdentifier).toBe('TEAM123456');
     expect(pass.authenticationToken).toBe('token');
     expect(pass.expirationDate).toBe(VALUE_CARD.expiresAt);
@@ -66,7 +66,7 @@ describe('wallet pass content', () => {
   it('shows sessions instead of money on an experience card', () => {
     const pass = applePass({
       voucher: SESSION_CARD,
-      passTypeId: 'pass.qa.giftly.card',
+      passTypeId: 'pass.qa.tazilla.card',
       teamId: 'TEAM123456',
       webServiceUrl: 'https://example.test',
       authenticationToken: 'token',
@@ -79,7 +79,7 @@ describe('wallet pass content', () => {
   it('omits the expiry when the gift never expires', () => {
     const pass = applePass({
       voucher: { ...VALUE_CARD, expiresAt: null },
-      passTypeId: 'pass.qa.giftly.card',
+      passTypeId: 'pass.qa.tazilla.card',
       teamId: 'TEAM123456',
       webServiceUrl: 'https://example.test',
       authenticationToken: 'token',
@@ -91,7 +91,7 @@ describe('wallet pass content', () => {
 
   it('derives a stable Google object id', () => {
     expect(googleObjectId('3388000000011111111', VALUE_CARD.id)).toBe(
-      '3388000000011111111.giftly_8a1f0c2e11114a2b9c3d000000000001',
+      '3388000000011111111.tazilla_8a1f0c2e11114a2b9c3d000000000001',
     );
   });
 

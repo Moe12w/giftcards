@@ -31,7 +31,7 @@ export function formatMoney(minor: number, currency: string): string {
 
 /** The string the vendor scanner already understands. */
 export function barcodeMessage(voucherId: string): string {
-  return `giftly:card:${voucherId}`;
+  return `tazilla:card:${voucherId}`;
 }
 
 function expiryText(expiresAt: string | null): string {
@@ -86,7 +86,7 @@ export function applePass(input: {
       auxiliaryFields: [],
       backFields: [
         { key: 'how', label: 'HOW TO USE', value: HOW_TO_USE },
-        { key: 'support', label: 'SUPPORT', value: 'https://giftly.qa' },
+        { key: 'support', label: 'SUPPORT', value: 'https://tazilla.com.qa' },
       ],
     },
     barcodes: [
@@ -102,13 +102,13 @@ export function applePass(input: {
 
 /** The class every Tazilla gift card object belongs to. */
 export function googleClassId(issuerId: string): string {
-  return `${issuerId}.giftly_giftcard_v1`;
+  return `${issuerId}.tazilla_giftcard_v1`;
 }
 
 /** Derived from the voucher, so an object can always be addressed again. */
 export function googleObjectId(issuerId: string, voucherId: string): string {
   const suffix = voucherId.replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
-  return `${issuerId}.giftly_${suffix}`;
+  return `${issuerId}.tazilla_${suffix}`;
 }
 
 export function googleGiftCardObject(input: {
@@ -137,7 +137,7 @@ export function googleGiftCardObject(input: {
     id: googleObjectId(input.issuerId, voucher.id),
     classId: googleClassId(input.issuerId),
     state: closed ? 'EXPIRED' : 'ACTIVE',
-    cardNumber: (voucher.id.replace(/-/g, '').slice(0, 12) || 'GIFTLY').toUpperCase(),
+    cardNumber: (voucher.id.replace(/-/g, '').slice(0, 12) || 'TAZILLA').toUpperCase(),
     hexBackgroundColor: '#0B4A44',
     barcode: {
       type: 'QR_CODE',

@@ -57,7 +57,7 @@ export default async function AdminTeamPage({
               </div>
               <div className="field">
                 <label htmlFor="email">Email address</label>
-                <input id="email" name="email" type="email" required placeholder="colleague@giftly.qa" />
+                <input id="email" name="email" type="email" required placeholder="colleague@tazilla.com.qa" />
               </div>
               <div className="field">
                 <label htmlFor="password">Temporary password</label>

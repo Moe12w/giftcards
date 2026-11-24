@@ -62,7 +62,7 @@ export function SiteFooter() {
               {t.tagline}
             </p>
             <p className="small" style={{ marginTop: 14 }}>
-              Doha, Qatar · hello@giftly.qa
+              Doha, Qatar · hello@tazilla.com.qa
             </p>
           </div>
           {columns.map((column) => (

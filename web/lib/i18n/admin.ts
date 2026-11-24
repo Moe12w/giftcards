@@ -723,7 +723,7 @@ const en = {
     emailApiKeyHint:
       'Create a key in Resend and paste it here. It is stored privately and never shown again.',
     emailFromLabel: 'Sender',
-    emailFromHint: 'The name and address recipients see, for example Tazilla <gifts@giftly.qa>.',
+    emailFromHint: 'The name and address recipients see, for example Tazilla <gifts@tazilla.com.qa>.',
     emailRemoveKey: 'Remove the saved key',
     emailTestTo: 'Send a test to',
     emailSendTest: 'Send test email',
@@ -1497,7 +1497,7 @@ const ar: AdminCopy = {
     emailApiKeySaved: 'المحفوظ: {hint} — اتركه فارغاً للإبقاء عليه',
     emailApiKeyHint: 'أنشئ مفتاحاً في Resend والصقه هنا. يُحفظ بشكل خاص ولا يظهر مرة أخرى.',
     emailFromLabel: 'المرسِل',
-    emailFromHint: 'الاسم والعنوان الذي يراه المستلم، مثال: Tazilla <gifts@giftly.qa>.',
+    emailFromHint: 'الاسم والعنوان الذي يراه المستلم، مثال: Tazilla <gifts@tazilla.com.qa>.',
     emailRemoveKey: 'حذف المفتاح المحفوظ',
     emailTestTo: 'إرسال اختبار إلى',
     emailSendTest: 'إرسال بريد اختباري',

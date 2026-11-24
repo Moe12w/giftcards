@@ -5,73 +5,73 @@ begin;
 
 -- ---------------------------------------------------------------- shops
 insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)
-values ('73894d8e-c672-5a45-839b-86e521a7bb81', '22222222-2222-4222-8222-222222222222', 'Oasis Café', 'واحة القهوة', 'oasis-cafe', 'Oasis Café — a Giftly partner in West Bay.',
+values ('73894d8e-c672-5a45-839b-86e521a7bb81', '22222222-2222-4222-8222-222222222222', 'Oasis Café', 'واحة القهوة', 'oasis-cafe', 'Oasis Café — a Tazilla partner in West Bay.',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop', 'https://picsum.photos/seed/oasis-cafe-banner/1200/400', 'West Bay',
   (select id from public.categories where slug = 'coffee'), 'approved', 1000, 4.5, true, now(), true, true)
 on conflict (id) do nothing;
 
 insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)
-values ('310e264f-bf4c-518f-84d1-b59dc5f8d0e6', '22222222-2222-4222-8222-222222222222', 'Doha Flower Studio', 'استوديو الدوحة للزهور', 'doha-flower-studio', 'Doha Flower Studio — a Giftly partner in Al Sadd.',
+values ('310e264f-bf4c-518f-84d1-b59dc5f8d0e6', '22222222-2222-4222-8222-222222222222', 'Doha Flower Studio', 'استوديو الدوحة للزهور', 'doha-flower-studio', 'Doha Flower Studio — a Tazilla partner in Al Sadd.',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop', 'https://picsum.photos/seed/doha-flower-studio-banner/1200/400', 'Al Sadd',
   (select id from public.categories where slug = 'shopping'), 'approved', 1000, 4.6, true, now(), true, true)
 on conflict (id) do nothing;
 
 insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)
-values ('57b11d4c-e61f-5229-8d5c-c355c7662aa6', '22222222-2222-4222-8222-222222222222', 'Katara Chocolate', 'شوكولاتة كتارا', 'katara-chocolate', 'Katara Chocolate — a Giftly partner in Katara.',
+values ('57b11d4c-e61f-5229-8d5c-c355c7662aa6', '22222222-2222-4222-8222-222222222222', 'Katara Chocolate', 'شوكولاتة كتارا', 'katara-chocolate', 'Katara Chocolate — a Tazilla partner in Katara.',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop', 'https://picsum.photos/seed/katara-chocolate-banner/1200/400', 'Katara',
   (select id from public.categories where slug = 'desserts'), 'approved', 1000, 4.7, true, now(), true, true)
 on conflict (id) do nothing;
 
 insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)
-values ('fe17b24b-cc20-5816-869f-05fdc41860f3', '22222222-2222-4222-8222-222222222222', 'Pearl Sushi House', 'بيت السوشي اللؤلؤي', 'pearl-sushi-house', 'Pearl Sushi House — a Giftly partner in The Pearl.',
+values ('fe17b24b-cc20-5816-869f-05fdc41860f3', '22222222-2222-4222-8222-222222222222', 'Pearl Sushi House', 'بيت السوشي اللؤلؤي', 'pearl-sushi-house', 'Pearl Sushi House — a Tazilla partner in The Pearl.',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop', 'https://picsum.photos/seed/pearl-sushi-house-banner/1200/400', 'The Pearl',
   (select id from public.categories where slug = 'dining'), 'approved', 1000, 4.8, true, now(), true, true)
 on conflict (id) do nothing;
 
 insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)
-values ('d03f263d-2fbe-50f0-82bb-a83b438425a1', '22222222-2222-4222-8222-222222222222', 'Desert Rose Spa', 'منتجع وردة الصحراء', 'desert-rose-spa', 'Desert Rose Spa — a Giftly partner in Lusail.',
+values ('d03f263d-2fbe-50f0-82bb-a83b438425a1', '22222222-2222-4222-8222-222222222222', 'Desert Rose Spa', 'منتجع وردة الصحراء', 'desert-rose-spa', 'Desert Rose Spa — a Tazilla partner in Lusail.',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop', 'https://picsum.photos/seed/desert-rose-spa-banner/1200/400', 'Lusail',
   (select id from public.categories where slug = 'wellness'), 'approved', 1000, 4.9, false, now(), true, true)
 on conflict (id) do nothing;
 
 insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)
-values ('3edf933f-f5a0-59a5-85bc-8894e211d5c3', '22222222-2222-4222-8222-222222222222', 'Lusail Cinema Club', 'نادي السينما لوسيل', 'lusail-cinema-club', 'Lusail Cinema Club — a Giftly partner in Lusail.',
+values ('3edf933f-f5a0-59a5-85bc-8894e211d5c3', '22222222-2222-4222-8222-222222222222', 'Lusail Cinema Club', 'نادي السينما لوسيل', 'lusail-cinema-club', 'Lusail Cinema Club — a Tazilla partner in Lusail.',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop', 'https://picsum.photos/seed/lusail-cinema-club-banner/1200/400', 'Lusail',
   (select id from public.categories where slug = 'entertainment'), 'approved', 1000, 4.5, false, now(), true, true)
 on conflict (id) do nothing;
 
 insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)
-values ('cc470813-0785-5ccd-8f5e-07b285083d0c', '22222222-2222-4222-8222-222222222222', 'Souq Art Gallery', 'معرض سوق الفن', 'souq-art-gallery', 'Souq Art Gallery — a Giftly partner in Souq Waqif.',
+values ('cc470813-0785-5ccd-8f5e-07b285083d0c', '22222222-2222-4222-8222-222222222222', 'Souq Art Gallery', 'معرض سوق الفن', 'souq-art-gallery', 'Souq Art Gallery — a Tazilla partner in Souq Waqif.',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop', 'https://picsum.photos/seed/souq-art-gallery-banner/1200/400', 'Souq Waqif',
   (select id from public.categories where slug = 'shopping'), 'approved', 1000, 4.6, false, now(), true, true)
 on conflict (id) do nothing;
 
 insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)
-values ('90d06878-72d4-5366-81b7-e270099a42af', '22222222-2222-4222-8222-222222222222', 'Qatar Adventure Co.', 'شركة قطر للمغامرات', 'qatar-adventure-co', 'Qatar Adventure Co. — a Giftly partner in Sealine.',
+values ('90d06878-72d4-5366-81b7-e270099a42af', '22222222-2222-4222-8222-222222222222', 'Qatar Adventure Co.', 'شركة قطر للمغامرات', 'qatar-adventure-co', 'Qatar Adventure Co. — a Tazilla partner in Sealine.',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop', 'https://picsum.photos/seed/qatar-adventure-co-banner/1200/400', 'Sealine',
   (select id from public.categories where slug = 'experiences'), 'approved', 1000, 4.7, false, now(), true, true)
 on conflict (id) do nothing;
 
 insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)
-values ('ac923eae-8816-567f-8e63-49881864d461', '22222222-2222-4222-8222-222222222222', 'Doha Book Café', 'مقهى الدوحة للكتب', 'doha-book-cafe', 'Doha Book Café — a Giftly partner in Msheireb.',
+values ('ac923eae-8816-567f-8e63-49881864d461', '22222222-2222-4222-8222-222222222222', 'Doha Book Café', 'مقهى الدوحة للكتب', 'doha-book-cafe', 'Doha Book Café — a Tazilla partner in Msheireb.',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop', 'https://picsum.photos/seed/doha-book-cafe-banner/1200/400', 'Msheireb',
   (select id from public.categories where slug = 'coffee'), 'approved', 1000, 4.8, false, now(), true, true)
 on conflict (id) do nothing;
 
 insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)
-values ('a172ad4f-0c9b-53a4-80ea-22ea7995fdd0', '22222222-2222-4222-8222-222222222222', 'Bloom Nails & Beauty', 'بلوم للأظافر والجمال', 'bloom-nails-beauty', 'Bloom Nails & Beauty — a Giftly partner in Al Waab.',
+values ('a172ad4f-0c9b-53a4-80ea-22ea7995fdd0', '22222222-2222-4222-8222-222222222222', 'Bloom Nails & Beauty', 'بلوم للأظافر والجمال', 'bloom-nails-beauty', 'Bloom Nails & Beauty — a Tazilla partner in Al Waab.',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop', 'https://picsum.photos/seed/bloom-nails-beauty-banner/1200/400', 'Al Waab',
   (select id from public.categories where slug = 'beauty'), 'approved', 1000, 4.9, false, now(), true, true)
 on conflict (id) do nothing;
 
 insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)
-values ('84d79f52-14bd-5dff-8861-63dfe6214328', '22222222-2222-4222-8222-222222222222', 'Fitness First Doha', 'فيتنس فيرست الدوحة', 'fitness-first-doha', 'Fitness First Doha — a Giftly partner in Lusail.',
+values ('84d79f52-14bd-5dff-8861-63dfe6214328', '22222222-2222-4222-8222-222222222222', 'Fitness First Doha', 'فيتنس فيرست الدوحة', 'fitness-first-doha', 'Fitness First Doha — a Tazilla partner in Lusail.',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop', 'https://picsum.photos/seed/fitness-first-doha-banner/1200/400', 'Lusail',
   (select id from public.categories where slug = 'fitness'), 'approved', 1000, 4.5, false, now(), true, true)
 on conflict (id) do nothing;
 
 insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)
-values ('19857c6f-a014-576d-8b6e-276b69c643bc', '22222222-2222-4222-8222-222222222222', 'Golden Fork Restaurant', 'مطعم الشوكة الذهبية', 'golden-fork', 'Golden Fork Restaurant — a Giftly partner in West Bay.',
+values ('19857c6f-a014-576d-8b6e-276b69c643bc', '22222222-2222-4222-8222-222222222222', 'Golden Fork Restaurant', 'مطعم الشوكة الذهبية', 'golden-fork', 'Golden Fork Restaurant — a Tazilla partner in West Bay.',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop', 'https://picsum.photos/seed/golden-fork-banner/1200/400', 'West Bay',
   (select id from public.categories where slug = 'dining'), 'approved', 1000, 4.6, false, now(), true, true)
 on conflict (id) do nothing;
@@ -1054,7 +1054,7 @@ values ((select id from public.advertising_placements where key = 'collection_co
 
 -- ---------------------------------------------------------- test wallet
 insert into public.orders (id, buyer_id, status, payment_reference, order_ref, currency, subtotal_minor, total_minor, sender_name, recipient_name, recipient_email, delivery_method, payment_status, payment_provider, paid_at)
-values ('a2446803-8f20-532e-83bc-1d532eccb707', 'a8d7bca6-22a4-47d3-9298-0d45f4e1d93c', 'paid', 'DEMO-WALLET-MOHMED-001', 'GR-DEMO-MOHMED-001', 'QAR', 35000, 35000, 'Giftly Demo', 'Mohmed', 'mohmed528omer@gmail.com', 'in_app', 'paid', 'manual', now())
+values ('a2446803-8f20-532e-83bc-1d532eccb707', 'a8d7bca6-22a4-47d3-9298-0d45f4e1d93c', 'paid', 'DEMO-WALLET-MOHMED-001', 'GR-DEMO-MOHMED-001', 'QAR', 35000, 35000, 'Tazilla Demo', 'Mohmed', 'mohmed528omer@gmail.com', 'in_app', 'paid', 'manual', now())
 on conflict (id) do nothing;
 
 insert into public.order_items (id, order_id, product_id, vendor_id, quantity, unit_price_minor, total_minor, commission_minor, vendor_share_minor, currency, recipient_name, recipient_email, delivery_method)

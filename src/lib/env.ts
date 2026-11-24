@@ -6,7 +6,7 @@
 export const env = {
   supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ?? '',
   supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',
-  appScheme: process.env.EXPO_PUBLIC_APP_SCHEME ?? 'giftly',
+  appScheme: process.env.EXPO_PUBLIC_APP_SCHEME ?? 'tazilla',
   /** The public web app, used to build claim links that open in a browser. */
   siteUrl: process.env.EXPO_PUBLIC_SITE_URL ?? '',
   /** Public endpoint of the login gate Edge Function used to rate-limit sign-ins. */

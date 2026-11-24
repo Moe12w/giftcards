@@ -143,7 +143,7 @@ Set these in Supabase → Edge Functions → Secrets if they are not present:
 - `MYFATOORAH_WEBHOOK_SECRET`
 - `APP_PUBLIC_URL`
 - `MYFATOORAH_BASE_URL` (optional; defaults to `https://apitest.myfatoorah.com`)
-- `GIFTLY_SITE_URL` (optional; MCP fallback)
+- `TAZILLA_SITE_URL` (optional; MCP fallback)
 
 The admin-entered settings in `system_settings` take priority over these secrets.
 

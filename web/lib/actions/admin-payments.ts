@@ -202,7 +202,7 @@ export async function adminProcessMyFatoorahRefund(formData: FormData) {
       ? [{ SupplierCode: Number(payment.supplier_code), SupplierDeductedAmount: minorToMajor(amountMinor) }]
       : [];
 
-  const externalIdentifier = `giftly-refund-${orderId}-${Date.now()}`;
+  const externalIdentifier = `tazilla-refund-${orderId}-${Date.now()}`;
   try {
     const response = await fetch(`${config.baseUrl}/v2/MakeSupplierRefund`, {
       method: 'POST',

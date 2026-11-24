@@ -17,7 +17,7 @@ export const SUPPORTED_LANGUAGES = ['en', 'ar'] as const;
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
 /** The customer's explicit choice, so it survives a reload. */
-export const LANGUAGE_KEY = 'giftly.language';
+export const LANGUAGE_KEY = 'tazilla.language';
 
 async function detectLanguage(): Promise<Language> {
   try {

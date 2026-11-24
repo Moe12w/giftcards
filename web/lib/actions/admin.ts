@@ -421,7 +421,7 @@ export async function adminSaveEmailSettings(formData: FormData) {
     back('/admin/settings', 'That API key looks too short. Paste the whole key from the provider dashboard.');
   }
   if (!from || !from.includes('@')) {
-    back('/admin/settings', 'Add the sender address, for example Tazilla <gifts@giftly.qa>.');
+    back('/admin/settings', 'Add the sender address, for example Tazilla <gifts@tazilla.com.qa>.');
   }
 
   const now = new Date().toISOString();

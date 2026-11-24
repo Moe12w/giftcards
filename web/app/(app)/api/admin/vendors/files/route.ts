@@ -169,7 +169,7 @@ export async function GET(request: Request) {
   return new Response(Buffer.from(zipped), {
     headers: {
       'Content-Type': 'application/zip',
-      'Content-Disposition': `attachment; filename="giftly-vendor-files-${suffix}-${date}.zip"`,
+      'Content-Disposition': `attachment; filename="tazilla-vendor-files-${suffix}-${date}.zip"`,
       'Cache-Control': 'no-store',
     },
   });

@@ -81,8 +81,8 @@ export default async function EnterpriseReportsPage({
           products.length,
       )
     : 0;
-  const giftlyCut = Math.round((soldValue * commissionBps) / 10000);
-  const partnerNet = soldValue - giftlyCut;
+  const tazillaCut = Math.round((soldValue * commissionBps) / 10000);
+  const partnerNet = soldValue - tazillaCut;
   const outstandingValue = inventory
     .filter((item) => item.status === 'available')
     .reduce((sum, item) => sum + Number(item.denomination_minor ?? 0), 0);
@@ -199,9 +199,9 @@ export default async function EnterpriseReportsPage({
               <span className="small muted">{fill(t.priceTimesSold, { count: items.length })}</span>
             </div>
             <div className="card gold">
-              <span className="small muted">{t.giftlyCut}</span>
+              <span className="small muted">{t.tazillaCut}</span>
               <div className="strong" style={{ fontSize: '1.6rem', marginTop: 6 }}>
-                {formatMoney(giftlyCut)}
+                {formatMoney(tazillaCut)}
               </div>
               <span className="small muted">
                 {fill(t.percentOfEveryCode, { percent: (commissionBps / 100).toFixed(2) })}

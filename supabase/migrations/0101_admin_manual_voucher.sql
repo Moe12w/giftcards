@@ -112,7 +112,7 @@ begin
   values (
     auth.uid(), 'paid', 'paid', coalesce(v_product.currency, 'QAR'),
     v_amount, 0, 0, v_amount, v_order_ref, 'manual-' || gen_random_uuid()::text,
-    'manual', 'Giftly (issued by an admin)', p_recipient_name, p_gift_message, now()
+    'manual', 'Tazilla (issued by an admin)', p_recipient_name, p_gift_message, now()
   )
   returning id into v_order_id;
 

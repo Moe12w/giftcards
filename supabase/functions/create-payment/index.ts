@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
     // Only allow our own app scheme or the configured site as a return target.
     const requestedReturn = String(body.returnUrl ?? '').trim();
     const trustedReturn =
-      requestedReturn.startsWith('giftly://') ||
+      requestedReturn.startsWith('tazilla://') ||
       requestedReturn === config.appPublicUrl ||
       requestedReturn.startsWith(`${config.appPublicUrl}/`);
     const returnTo = trustedReturn && config.appPublicUrl

@@ -278,7 +278,7 @@ export default async function HomePage() {
                 </div>
                 <div className="offer-body">
                   <span className="small muted">
-                    {offer.partner?.name ?? offer.vendors?.name ?? t.giftlyPartner}
+                    {offer.partner?.name ?? offer.vendors?.name ?? t.tazillaPartner}
                   </span>
                   <h3>{offer.title}</h3>
                   <div className="offer-meta">

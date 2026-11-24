@@ -1,7 +1,7 @@
 -- 0165_partner_product_placement.sql
 -- Partner products are merchandise like vendor products: they belong in a
 -- category and in one or more collections. The only difference is that the
--- codes are supplied by the partner instead of issued by Giftly.
+-- codes are supplied by the partner instead of issued by Tazilla.
 --
 -- The marketplace catalogue (public.products) already carried these fields,
 -- but the partner's own record could not, so saveEnterpriseProduct() had to

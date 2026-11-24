@@ -77,7 +77,7 @@ const en = {
     titleReady: 'Gifts people are sending this week.',
     emptyGiftsTitle: 'No live gifts yet',
     emptyGiftsBody: 'Once our businesses publish their offers, they will appear right here.',
-    giftlyPartner: 'Tazilla partner',
+    tazillaPartner: 'Tazilla partner',
     eyebrowSimple: 'Simple by design',
     titleSimple: 'From “thinking of you” to sent, in under a minute.',
     step1Title: 'Choose a gift',
@@ -489,7 +489,7 @@ const en = {
     requestTitle: 'Ask us to delete it',
     requestBody:
       'If you cannot sign in, or no longer have the app, email us from the address on the account and we will delete it for you.',
-    requestEmail: 'hello@giftly.qa',
+    requestEmail: 'hello@tazilla.com.qa',
     requestSubject: 'Delete my account',
     requestTime:
       'We confirm every request within 7 days, usually much sooner. We may ask one question to check the account is yours.',
@@ -627,7 +627,7 @@ const ar: SiteCopy = {
     titleReady: 'هدايا يتبادلها الناس هذا الأسبوع.',
     emptyGiftsTitle: 'لا توجد هدايا منشورة بعد',
     emptyGiftsBody: 'فور نشر متاجرنا لعروضها، ستظهر هنا مباشرة.',
-    giftlyPartner: 'شريك على Tazilla',
+    tazillaPartner: 'شريك على Tazilla',
     eyebrowSimple: 'بسيطة بالتصميم',
     titleSimple: 'من «فكّرت فيك» إلى الإرسال، في أقل من دقيقة.',
     step1Title: 'اختر هدية',
@@ -1033,7 +1033,7 @@ const ar: SiteCopy = {
     requestTitle: 'اطلب منّا حذفه',
     requestBody:
       'إن لم تستطع تسجيل الدخول أو لم يعد لديك التطبيق، راسلنا من البريد المسجّل في الحساب وسنحذفه لك.',
-    requestEmail: 'hello@giftly.qa',
+    requestEmail: 'hello@tazilla.com.qa',
     requestSubject: 'حذف حسابي',
     requestTime:
       'نؤكد كل طلب خلال 7 أيام، وغالباً أسرع من ذلك بكثير. قد نطرح سؤالاً واحداً للتأكد من أن الحساب لك.',

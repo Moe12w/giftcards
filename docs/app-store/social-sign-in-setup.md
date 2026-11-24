@@ -41,7 +41,7 @@ Related code: `src/components/SocialSignInButtons.tsx` (buttons),
 
 - [ ] developer.apple.com → **Certificates, Identifiers & Profiles** →
       **Identifiers** → filter **App IDs**.
-- [ ] Create (or open) the App ID for `qa.giftly.app`.
+- [ ] Create (or open) the App ID for `qa.tazilla.app`.
       *Bundle ID must be explicit, not a wildcard — Sign in with Apple does not
       work on wildcard App IDs.*
 - [ ] In **Capabilities**, tick **Sign in with Apple** → **Save**.
@@ -72,14 +72,14 @@ Dashboard → **Authentication** → **Providers** → **Apple** → enable.
       present an Apple ID token. For this project:
 
   ```
-  qa.giftly.app, host.exp.Exponent, qa.giftly.app.dev
+  qa.tazilla.app, host.exp.Exponent, qa.tazilla.app.dev
   ```
 
-  - `qa.giftly.app` — the production/TestFlight app.
+  - `qa.tazilla.app` — the production/TestFlight app.
   - `host.exp.Exponent` — **required to test in Expo Go**; Expo Go presents its
     own App ID, and Apple sign-in fails without it. Remove it before launch if
     you prefer a tighter list (it cannot be abused without Expo Go installed).
-  - `qa.giftly.app.dev` — only if you build a development variant with that
+  - `qa.tazilla.app.dev` — only if you build a development variant with that
     bundle id. Every bundle id variant that Apple can issue a token for must be
     listed, or that build fails with an audience error.
 
@@ -153,11 +153,11 @@ how the app is run:
 
 | How you run it | Redirect URL to allow-list |
 | --- | --- |
-| Release / TestFlight / production build | `giftly://auth-callback` |
-| Development build | `giftly://auth-callback` (same scheme) |
+| Release / TestFlight / production build | `tazilla://auth-callback` |
+| Development build | `tazilla://auth-callback` (same scheme) |
 | Expo Go | `exp://<host>:<port>/--/auth-callback` |
 
-- [ ] Add `giftly://auth-callback` to **Redirect URLs**.
+- [ ] Add `tazilla://auth-callback` to **Redirect URLs**.
 - [ ] For Expo Go testing only, start the app, and add the exact
       `exp://…/--/auth-callback` URL that `oauthRedirectUrl()` produces (log it
       once in `src/lib/social-auth.ts`, or read the `exp://` URL printed by
@@ -166,8 +166,8 @@ how the app is run:
 - [ ] Keep **Site URL** pointing at the public web app.
 
 The app only accepts a callback that matches
-`giftly://auth-callback`/`exp://…/--/auth-callback` exactly — a crafted
-`giftly://` link cannot install a session (see `completeOAuthRedirect`).
+`tazilla://auth-callback`/`exp://…/--/auth-callback` exactly — a crafted
+`tazilla://` link cannot install a session (see `completeOAuthRedirect`).
 
 ---
 

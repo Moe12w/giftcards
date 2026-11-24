@@ -252,8 +252,8 @@ export default async function VendorSettingsPage({
               {documents.length === 0 ? (
                 <p className="small muted">
                   {t.noDocuments}{' '}
-                  <a href="mailto:hello@giftly.qa" style={{ textDecoration: 'underline' }}>
-                    hello@giftly.qa
+                  <a href="mailto:hello@tazilla.com.qa" style={{ textDecoration: 'underline' }}>
+                    hello@tazilla.com.qa
                   </a>
                   .
                 </p>

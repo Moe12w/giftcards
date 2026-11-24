@@ -16,7 +16,7 @@ The accounting/statements feature is currently in the wrong places: it lives in 
    - Paid orders table (order ref, product, date, total, your share) like `analytics/page.tsx:284-325`
    - Export button: `<a className="btn sm primary" href={`/vendor/reports/export?range=${range}`}>` (enterprise pattern, `page.tsx:149`)
 
-2. `web/app/vendor/(dashboard)/reports/export/route.ts` — CSV export modeled exactly on `web/app/enterprise/(dashboard)/reports/export/route.ts` (reuse its `csvCell` + BOM + response-header pattern): `requireVendor()`, `range` param, query the same paid `order_items` as the page, columns: `order_ref, product, total_minor, commission_minor, vendor_share_minor, currency, created_at`, filename `giftly-sales-${vendor.slug}-${date}.csv`.
+2. `web/app/vendor/(dashboard)/reports/export/route.ts` — CSV export modeled exactly on `web/app/enterprise/(dashboard)/reports/export/route.ts` (reuse its `csvCell` + BOM + response-header pattern): `requireVendor()`, `range` param, query the same paid `order_items` as the page, columns: `order_ref, product, total_minor, commission_minor, vendor_share_minor, currency, created_at`, filename `tazilla-sales-${vendor.slug}-${date}.csv`.
 
 **Modified files:**
 

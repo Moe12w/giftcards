@@ -83,6 +83,6 @@ grant execute on function public.mcp_take_rate_limit(text, integer, integer)
   to service_role;
 
 comment on table public.mcp_rate_limits is
-  'Shared request counters for the public Giftly MCP Edge Function.';
+  'Shared request counters for the public Tazilla MCP Edge Function.';
 comment on function public.mcp_take_rate_limit(text, integer, integer) is
   'Atomically counts a request in a fixed window and returns whether it is allowed.';

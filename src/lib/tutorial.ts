@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { AccentTone } from './types';
 
-export const TUTORIAL_KEY = 'giftly.tutorial.seen';
+export const TUTORIAL_KEY = 'tazilla.tutorial.seen';
 
 export type TutorialLanguage = 'en' | 'ar';
 

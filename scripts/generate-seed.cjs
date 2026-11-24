@@ -45,7 +45,7 @@ const daysFromNow = (days) => new Date(Date.now() + days * 86_400_000).toISOStri
 // Deterministic UUIDs so the seed is repeatable and cross-references work.
 function uuidFor(key) {
   const crypto = require('crypto');
-  const hash = crypto.createHash('sha256').update(`giftly-seed:${key}`).digest('hex');
+  const hash = crypto.createHash('sha256').update(`tazilla-seed:${key}`).digest('hex');
   return [
     hash.slice(0, 8),
     hash.slice(8, 12),
@@ -123,12 +123,12 @@ push('-- ---------------------------------------------------------------------')
 push('-- Test accounts (password for all of them: TazillaTest123)');
 push('-- ---------------------------------------------------------------------');
 const USERS = [
-  ['11111111-1111-4111-8111-111111111111', 'customer@giftly.test', 'Demo Customer'],
-  ['22222222-2222-4222-8222-222222222222', 'owner@giftly.test', 'Vendor Owner'],
-  ['33333333-3333-4333-8333-333333333333', 'manager@giftly.test', 'Vendor Manager'],
-  ['44444444-4444-4444-8444-444444444444', 'staff@giftly.test', 'Redemption Staff'],
-  ['55555555-5555-4555-8555-555555555555', 'partner@giftly.test', 'Enterprise Partner'],
-  ['66666666-6666-4666-8666-666666666666', 'admin@giftly.test', 'Platform Admin'],
+  ['11111111-1111-4111-8111-111111111111', 'customer@tazilla.test', 'Demo Customer'],
+  ['22222222-2222-4222-8222-222222222222', 'owner@tazilla.test', 'Vendor Owner'],
+  ['33333333-3333-4333-8333-333333333333', 'manager@tazilla.test', 'Vendor Manager'],
+  ['44444444-4444-4444-8444-444444444444', 'staff@tazilla.test', 'Redemption Staff'],
+  ['55555555-5555-4555-8555-555555555555', 'partner@tazilla.test', 'Enterprise Partner'],
+  ['66666666-6666-4666-8666-666666666666', 'admin@tazilla.test', 'Platform Admin'],
 ];
 
 // The people who bought the vouchers the vendors still have to serve.
@@ -143,7 +143,7 @@ const BUYER_NAMES = [
 ].filter((name) => name && name !== 'Demo User');
 const BUYERS = BUYER_NAMES.map((name) => [
   uuidFor(`buyer:${name}`),
-  `${name.toLowerCase().replace(/[^a-z]+/g, '.')}@giftly.test`,
+  `${name.toLowerCase().replace(/[^a-z]+/g, '.')}@tazilla.test`,
   name,
 ]);
 const ALL_USERS = [...USERS, ...BUYERS];
@@ -272,10 +272,10 @@ push('');
 // Vendor applications: one approved, one waiting for review.
 push('insert into public.vendor_applications (vendor_id, status, step, business_name, business_category, business_description, business_email, business_phone, business_location, submitted_at) values');
 push(
-  `  (${q(uuidFor('vendor-1'))}, 'approved', 'review', 'The Coffee House', 'coffee', 'A speciality coffee bar in West Bay.', 'owner@giftly.test', '+974 5555 0101', 'West Bay, Doha', now()),`,
+  `  (${q(uuidFor('vendor-1'))}, 'approved', 'review', 'The Coffee House', 'coffee', 'A speciality coffee bar in West Bay.', 'owner@tazilla.test', '+974 5555 0101', 'West Bay, Doha', now()),`,
 );
 push(
-  `  (${q(uuidFor('vendor-5'))}, 'pending_review', 'review', 'Peak Fitness', 'fitness', 'Personal training and group classes in Lusail.', 'owner@giftly.test', '+974 5555 0101', 'Lusail, Doha', now())`,
+  `  (${q(uuidFor('vendor-5'))}, 'pending_review', 'review', 'Peak Fitness', 'fitness', 'Personal training and group classes in Lusail.', 'owner@tazilla.test', '+974 5555 0101', 'Lusail, Doha', now())`,
 );
 push('on conflict do nothing;');
 push('');
@@ -439,7 +439,7 @@ MOCK_ORDERS.forEach((order, index) => {
       ? "'redeemed'"
       : "'claimed'";
   voucherValues.push(
-    `  (${q(voucherId)}, ${q(`GFT-${voucherId.slice(0, 6).toUpperCase()}`)}, ${q(`giftly:redeem:GFT-${voucherId.slice(0, 6).toUpperCase()}`)}, ${q(productId)}, ${q(variantId)}, ${q(uuidFor(offer.vendor_id))}, ${q(itemId)}, ${q(buyerId(order.gift_card_id))}, ${q(card?.recipient_name ?? 'Demo Customer')}, ${q(card?.recipient_email ?? null)}, ${q(card?.recipient_email ?? null)}, '${isSession ? 'experience' : 'monetary'}', ${voucherStatus}, ${order.amount_minor}, ${isSession ? 'null' : (card?.balance_minor ?? order.amount_minor)}, ${totalSessions}, ${remaining}, ${isSession ? (totalSessions - (remaining ?? 0)) : 0}, 'QAR', ${q(card?.expires_at ?? null)}, ${claimedBy}, ${q(card?.claimed_at ?? order.created_at)}, ${q(card?.delivery_status ?? 'delivered')}, null, ${q(card?.message ?? null)}, ${q(order.created_at)}, ${q(order.created_at)})`,
+    `  (${q(voucherId)}, ${q(`GFT-${voucherId.slice(0, 6).toUpperCase()}`)}, ${q(`tazilla:redeem:GFT-${voucherId.slice(0, 6).toUpperCase()}`)}, ${q(productId)}, ${q(variantId)}, ${q(uuidFor(offer.vendor_id))}, ${q(itemId)}, ${q(buyerId(order.gift_card_id))}, ${q(card?.recipient_name ?? 'Demo Customer')}, ${q(card?.recipient_email ?? null)}, ${q(card?.recipient_email ?? null)}, '${isSession ? 'experience' : 'monetary'}', ${voucherStatus}, ${order.amount_minor}, ${isSession ? 'null' : (card?.balance_minor ?? order.amount_minor)}, ${totalSessions}, ${remaining}, ${isSession ? (totalSessions - (remaining ?? 0)) : 0}, 'QAR', ${q(card?.expires_at ?? null)}, ${claimedBy}, ${q(card?.claimed_at ?? order.created_at)}, ${q(card?.delivery_status ?? 'delivered')}, null, ${q(card?.message ?? null)}, ${q(order.created_at)}, ${q(order.created_at)})`,
   );
 
   ledgerValues.push(
@@ -472,7 +472,7 @@ MOCK_CARDS.filter((card) => !MOCK_ORDERS.some((order) => order.gift_card_id === 
         ', ' +
         q('GFT-' + voucherId.slice(0, 6).toUpperCase()) +
         ', ' +
-        q('giftly:redeem:GFT-' + voucherId.slice(0, 6).toUpperCase()) +
+        q('tazilla:redeem:GFT-' + voucherId.slice(0, 6).toUpperCase()) +
         ', ' +
         q(productId) +
         ', ' +
@@ -578,7 +578,7 @@ for (const card of MOCK_VENDOR_CARDS) {
   const code = `GFT-${voucherId.slice(0, 6).toUpperCase()}`;
 
   vendorCardValues.push(
-    `  (${q(voucherId)}, ${q(code)}, ${q(`giftly:redeem:${code}`)}, ${q(uuidFor(offer.id))}, ${q(uuidFor(offer.vendor_id))}, ${q(uuidFor(`buyer:${card.recipient_name}`))}, ${q(card.recipient_name)}, ${q(card.recipient_email)}, '${isSession ? 'experience' : 'monetary'}', 'claimed', ${card.original_value_minor}, ${isSession ? 'null' : card.balance_minor}, ${totalSessions}, ${remaining}, ${used}, 'QAR', ${q(card.expires_at)}, ${q(uuidFor(`buyer:${card.recipient_name}`))}, ${q(card.claimed_at)}, 'opened', ${q(card.message)}, ${q(card.created_at)}, ${q(card.created_at)})`,
+    `  (${q(voucherId)}, ${q(code)}, ${q(`tazilla:redeem:${code}`)}, ${q(uuidFor(offer.id))}, ${q(uuidFor(offer.vendor_id))}, ${q(uuidFor(`buyer:${card.recipient_name}`))}, ${q(card.recipient_name)}, ${q(card.recipient_email)}, '${isSession ? 'experience' : 'monetary'}', 'claimed', ${card.original_value_minor}, ${isSession ? 'null' : card.balance_minor}, ${totalSessions}, ${remaining}, ${used}, 'QAR', ${q(card.expires_at)}, ${q(uuidFor(`buyer:${card.recipient_name}`))}, ${q(card.claimed_at)}, 'opened', ${q(card.message)}, ${q(card.created_at)}, ${q(card.created_at)})`,
   );
   vendorLedgerValues.push(
     `  (${q(uuidFor(`${card.id}:issue`))}, ${q(voucherId)}, null, 'issue', ${card.original_value_minor}, ${isSession ? totalSessions : 0}, ${q(card.created_at)})`,
@@ -632,7 +632,7 @@ push('  id, owner_id, name, slug, website, contact_name, contact_email, contact_
 push('  industry, expected_volume, status, integration_config, settlement_terms');
 push(') values');
 push(
-  `  (${q(PARTNER_ID)}, '55555555-5555-4555-8555-555555555555', 'RetailPlus Rewards', 'retailplus-rewards', 'https://retailplus.example', 'Nadia Haddad', 'partner@giftly.test', '+974 5555 0900', 'Retail', '25,000 codes / quarter', 'active', '{}'::jsonb, '{"model":"wholesale","net_days":30}'::jsonb)`,
+  `  (${q(PARTNER_ID)}, '55555555-5555-4555-8555-555555555555', 'RetailPlus Rewards', 'retailplus-rewards', 'https://retailplus.example', 'Nadia Haddad', 'partner@tazilla.test', '+974 5555 0900', 'Retail', '25,000 codes / quarter', 'active', '{}'::jsonb, '{"model":"wholesale","net_days":30}'::jsonb)`,
 );
 push('on conflict (id) do nothing;');
 push('');
@@ -681,7 +681,7 @@ push('');
 // The encryption key used by the seeded inventory.
 push('-- The encryption key for the seeded inventory. Replace it in production.');
 push("insert into public.system_settings (key, value, description, is_public)");
-push("values ('enterprise.code_encryption_key', jsonb_build_object('key', 'giftly-dev-enterprise-code-key-please-rotate'), 'Development key for enterprise code encryption.', false)");
+push("values ('enterprise.code_encryption_key', jsonb_build_object('key', 'tazilla-dev-enterprise-code-key-please-rotate'), 'Development key for enterprise code encryption.', false)");
 push('on conflict (key) do update set value = excluded.value;');
 push('');
 
@@ -784,7 +784,7 @@ push('');
 push('-- ---------------------------------------------------------------------');
 push('-- A claimable gift for the public claim link');
 push('-- ---------------------------------------------------------------------');
-const CLAIM_TOKEN = 'giftly-demo-claim-token-0000000000000001';
+const CLAIM_TOKEN = 'tazilla-demo-claim-token-0000000000000001';
 const claimVoucherId = uuidFor('voucher:claimable');
 const claimProduct = MOCK_OFFERS.find((offer) => offer.id === 'offer-1');
 push('insert into public.vouchers (');
@@ -798,7 +798,7 @@ push(
     ', ' +
     q('GFT-CLAIM01') +
     ', ' +
-    q('giftly:redeem:GFT-CLAIM01') +
+    q('tazilla:redeem:GFT-CLAIM01') +
     ', ' +
     q(require('crypto').createHash('sha256').update(CLAIM_TOKEN).digest('hex')) +
     ', ' +

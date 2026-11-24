@@ -23,7 +23,7 @@ Tazilla is a marketplace for gift cards from businesses in Qatar. A customer buy
 
 **Demo account**
 
-- Email: `[[demo-review@giftly.qa]]`
+- Email: `[[demo-review@tazilla.com.qa]]`
 - Password: `[[…]]`
 
 **Payments during review.** Payments are live rather than sandboxed. If you would prefer not to make a real purchase, tell us and we will issue a card to the demo account for inspection instead; the wallet, QR, send, claim and redemption screens can all be reviewed without paying.
@@ -34,7 +34,7 @@ Tazilla is a marketplace for gift cards from businesses in Qatar. A customer buy
 
 **No account creation from review.** If you would rather not create an account, the demo account above has the customer role and no payment method attached.
 
-**Contact.** `[[support@giftly.qa]]` · `[[+974 …]]`
+**Contact.** `[[support@tazilla.com.qa]]` · `[[+974 …]]`
 
 ## Where each claim comes from
 

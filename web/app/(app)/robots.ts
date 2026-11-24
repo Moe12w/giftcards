@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://giftly.qa').replace(
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tazilla.com.qa').replace(
   /\/$/,
   '',
 );

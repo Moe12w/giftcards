@@ -29,7 +29,7 @@ import {
 import { ValidationError } from './validate.ts';
 
 const SERVER_INFO = {
-  name: 'giftly-ai-gift-cards',
+  name: 'tazilla-ai-gift-cards',
   title: 'Tazilla AI Gift Cards',
   version: '1.0.0',
 };

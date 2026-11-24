@@ -1097,7 +1097,7 @@ export async function closeEnterpriseCode(
  * written when the backend serves an ad, and clicks are deduplicated there.
  * ---------------------------------------------------------------------- */
 
-const AD_VIEWER_KEY = 'giftly.advertising.viewer';
+const AD_VIEWER_KEY = 'tazilla.advertising.viewer';
 const AD_SESSION_ID = `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 
 /** A stable anonymous key so frequency caps work between launches. */

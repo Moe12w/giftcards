@@ -21,7 +21,7 @@ import { aiGiftCards } from '@/lib/i18n/ai';
 import { pick } from '@/lib/i18n';
 import { getPublicLocale } from '@/lib/i18n/server';
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://giftly.qa').replace(
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tazilla.com.qa').replace(
   /\/$/,
   '',
 );
@@ -93,7 +93,7 @@ export default async function AiGiftCardsPage() {
       contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'customer support',
-        email: 'hello@giftly.qa',
+        email: 'hello@tazilla.com.qa',
         areaServed: 'QA',
         availableLanguage: ['en', 'ar'],
       },
@@ -388,7 +388,7 @@ export default async function AiGiftCardsPage() {
 
               <pre>{`{
   "mcpServers": {
-    "giftly": {
+    "tazilla": {
       "type": "http",
       "url": "${t.mcp.endpoint}"
     }

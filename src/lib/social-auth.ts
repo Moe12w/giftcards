@@ -32,7 +32,7 @@ export class SocialAuthError extends Error {
 /** Path the OAuth provider sends the user back to. Must be allow-listed in Supabase. */
 const CALLBACK_PATH = 'auth-callback';
 
-/** The deep link the browser-based providers return to (`giftly://auth-callback`). */
+/** The deep link the browser-based providers return to (`tazilla://auth-callback`). */
 export function oauthRedirectUrl(): string {
   return Linking.createURL(CALLBACK_PATH);
 }
@@ -152,7 +152,7 @@ async function completeOAuthRedirect(url: string): Promise<void> {
     incoming.protocol === expected.protocol &&
     ((incoming.host === expected.host &&
       normalizePath(incoming.pathname) === normalizePath(expected.pathname)) ||
-      // Expo may encode the path as the host (`giftly://auth-callback`).
+      // Expo may encode the path as the host (`tazilla://auth-callback`).
       (normalizePath(incoming.pathname) === `/${CALLBACK_PATH}` &&
         (incoming.host === '' || incoming.host === expected.host)));
   if (!isOurCallback) {

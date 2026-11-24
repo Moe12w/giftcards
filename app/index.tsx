@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Redirect } from 'expo-router';
 
-const ONBOARDING_KEY = 'giftly.onboarding.seen';
+const ONBOARDING_KEY = 'tazilla.onboarding.seen';
 
 /**
  * App entry point. First launch shows onboarding, afterwards the customer app.

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const ONBOARDING_KEY = 'giftly.onboarding.seen';
+export const ONBOARDING_KEY = 'tazilla.onboarding.seen';
 
 export async function markOnboardingSeen(): Promise<void> {
   try {

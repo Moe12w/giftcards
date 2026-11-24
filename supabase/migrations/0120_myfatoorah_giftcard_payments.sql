@@ -392,7 +392,7 @@ begin
     i := i + 1;
     h := p_hashes -> (i - 1);
     -- Partner codes are issued by the existing paid-order trigger
-    -- (issue_enterprise_code). Do not create a Giftly voucher for them.
+    -- (issue_enterprise_code). Do not create a Tazilla voucher for them.
     if item.item_fulfilment_type = 'enterprise_code' then
       continue;
     end if;

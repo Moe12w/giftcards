@@ -141,7 +141,7 @@ export default async function VendorReportsPage({
               <span className="small muted">{fill(t.priceTimesSold, { count: totals.paidItems })}</span>
             </div>
             <div className="card gold">
-              <span className="small muted">{t.giftlyCut}</span>
+              <span className="small muted">{t.tazillaCut}</span>
               <div className="strong" style={{ fontSize: '1.6rem', marginTop: 6 }}>
                 {formatMoney(commission)}
               </div>

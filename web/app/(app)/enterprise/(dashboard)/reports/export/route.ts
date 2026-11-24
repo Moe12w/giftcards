@@ -62,7 +62,7 @@ export async function GET(request: Request) {
   }
 
   const csv = `\uFEFF${lines.join('\r\n')}`;
-  const filename = `giftly-inventory-${ctx.partner.slug}-${new Date().toISOString().slice(0, 10)}.csv`;
+  const filename = `tazilla-inventory-${ctx.partner.slug}-${new Date().toISOString().slice(0, 10)}.csv`;
 
   return new Response(csv, {
     headers: {

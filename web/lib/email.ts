@@ -14,7 +14,7 @@ import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { escapeHtml } from '@/lib/security';
 
-export const DEFAULT_EMAIL_FROM = 'Tazilla <gifts@giftly.qa>';
+export const DEFAULT_EMAIL_FROM = 'Tazilla <gifts@tazilla.com.qa>';
 
 /** How long a saved configuration is reused before it is read again. */
 const CONFIG_TTL_MS = 30_000;
@@ -185,7 +185,7 @@ export function claimUrl(token: string): string {
 
 /** The in-app link, for recipients who already have the app. */
 export function appClaimUrl(token: string): string {
-  return `giftly://claim/${token}`;
+  return `tazilla://claim/${token}`;
 }
 
 /**

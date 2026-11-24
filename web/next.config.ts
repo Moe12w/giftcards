@@ -21,7 +21,7 @@ const projectHostname = supabaseHostname();
  * Dashboards, auth callbacks and /api are deliberately absent: they must keep
  * hitting their dynamic routes untouched.
  */
-const LOCALE_COOKIE = 'giftly.locale';
+const LOCALE_COOKIE = 'tazilla.locale';
 const publicRewritePaths = [
   '',
   'faq',

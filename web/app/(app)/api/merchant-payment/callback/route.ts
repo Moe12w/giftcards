@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   // when MyFatoorah follows this redirect. Never trust an arbitrary URL.
   const requestedReturn = url.searchParams.get('return_to') ?? '';
   const returnTo =
-    requestedReturn.startsWith('giftly://') ||
+    requestedReturn.startsWith('tazilla://') ||
     (appUrl && (requestedReturn === appUrl || requestedReturn.startsWith(`${appUrl}/`)))
       ? requestedReturn
       : '';

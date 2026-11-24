@@ -11,7 +11,7 @@ import { darkColors, lightColors, setActivePalette, type Palette } from '@/src/t
 
 export type ThemeMode = 'light' | 'dark';
 
-const STORAGE_KEY = 'giftly.themeMode';
+const STORAGE_KEY = 'tazilla.themeMode';
 
 interface ThemeValue {
   mode: ThemeMode;

@@ -23,7 +23,7 @@ export interface GiftDraft {
   basketCode: string | null;
 }
 
-const STORAGE_KEY = 'giftly.gift-draft';
+const STORAGE_KEY = 'tazilla.gift-draft';
 
 export const EMPTY_DRAFT: GiftDraft = {
   offerId: null,

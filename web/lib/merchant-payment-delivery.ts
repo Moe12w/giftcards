@@ -42,7 +42,7 @@ export async function deliverClaimLinks(orderId: string, claims: VoucherClaim[])
         title: String(product?.title ?? 'Gift card'),
         amountLabel: `${order.currency || 'QAR'} ${(Number(order.total_minor || 0) / 100).toFixed(2)}`,
         link: `${appUrl}/claim/${claim.claimToken}`,
-        appLink: `giftly://claim/${claim.claimToken}`,
+        appLink: `tazilla://claim/${claim.claimToken}`,
         message: order.gift_message,
       }).then((result) => ({ result, voucherId: claim.voucherId })),
     ),

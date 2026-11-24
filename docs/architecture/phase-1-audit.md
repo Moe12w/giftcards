@@ -64,7 +64,7 @@ assets/       icons, fonts (Figtree, SpaceMono)
 `cards`, `orders`, `account`. Plus redirect shims at `/offer/:id` → `/gift/:id` and
 `/send/join` → `/basket/join`.
 
-**Deep links:** scheme `giftly`. `Linking.createURL` is called exactly once
+**Deep links:** scheme `tazilla`. `Linking.createURL` is called exactly once
 (`app/(customer)/basket/[id].tsx:171`) for basket invite codes. Claim links are minted
 server-side in `payment-webhook` (`randomToken(32)`, SHA-256 stored). No `Linking.addEventListener`
 — URL handling is left entirely to Expo Router.
@@ -109,7 +109,7 @@ All 31 are genuinely implemented — none are stubs. Two are unused: `StatCard` 
 | `MOCK_RECIPIENTS` | `send/recipient.tsx`, `send/contacts.tsx` (+2 inline contacts), `(tabs)/send.tsx`, `profile/recipients.tsx`, `gift/[id]/design.tsx` |
 | `MOCK_PAYMENT_METHODS` | `profile/payment-methods.tsx`, **`src/components/PaymentMethods.tsx`** (shared checkout component) |
 | `MOCK_LOCATIONS` | `business/[id].tsx` |
-| `DEMO_CLAIM` | all four `claim/[token]` screens — the token param is ignored, the QR encodes a constant `GIFTLY-DEMO-2026` |
+| `DEMO_CLAIM` | all four `claim/[token]` screens — the token param is ignored, the QR encodes a constant `TAZILLA-DEMO-2026` |
 | `MOCK_CARDS` + `MOCK_VENDOR_CARDS` + `MOCK_REDEMPTIONS` | `src/lib/cards.tsx` (seed for the whole wallet + vendor dashboard) |
 | `MOCK_BASKETS` + `MOCK_OFFERS` | `src/lib/baskets.tsx` (seed + simulated contribution offer pool) |
 | hard-coded vendor list | `app/(vendor)/vendor.tsx:31-39` — 7 of 12 vendors |
@@ -167,10 +167,10 @@ Supabase mode queries `offers`, `gift_cards`, `card_balances`, `orders`.
 
 | Key | Contents |
 |---|---|
-| `giftly.cards.v1` | `{cards, entries}` — the whole mock ledger + in-app redemptions |
-| `giftly.baskets.v1` | `GiftBasket[]` — baskets, items, participants, activity |
-| `giftly.gift-draft` | the multi-step gift flow draft |
-| `giftly.onboarding.seen` | `'1'` (defined twice: `src/lib/onboarding.ts` and `app/index.tsx`) |
+| `tazilla.cards.v1` | `{cards, entries}` — the whole mock ledger + in-app redemptions |
+| `tazilla.baskets.v1` | `GiftBasket[]` — baskets, items, participants, activity |
+| `tazilla.gift-draft` | the multi-step gift flow draft |
+| `tazilla.onboarding.seen` | `'1'` (defined twice: `src/lib/onboarding.ts` and `app/index.tsx`) |
 | `sb-<ref>-auth-token` | Supabase session (only when configured) |
 
 No `SecureStore`, no MMKV, no filesystem. The language choice is **not persisted**.

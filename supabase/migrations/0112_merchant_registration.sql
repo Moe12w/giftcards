@@ -87,7 +87,7 @@ begin
     perform public.merchant_notify_user(
       v_uid,
       'merchant',
-      'Welcome to Giftly',
+      'Welcome to Tazilla',
       'Your business account is ready. Finish your setup from the dashboard whenever you like.',
       jsonb_build_object('vendor_id', v_vendor_id)
     );
@@ -140,7 +140,7 @@ begin
     perform public.merchant_notify_user(
       v_uid,
       'merchant',
-      'Welcome to Giftly',
+      'Welcome to Tazilla',
       'Your organisation account is ready. Finish your setup from the dashboard whenever you like.',
       jsonb_build_object('partner_id', v_partner_id)
     );

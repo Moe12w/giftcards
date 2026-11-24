@@ -3,7 +3,7 @@ export interface BasketLine {
   quantity: number;
 }
 
-const KEY = 'giftly.bulk-basket';
+const KEY = 'tazilla.bulk-basket';
 
 /** Client-side basket shared between the offer page and the checkout page. */
 export function readBulkBasket(): BasketLine[] {
@@ -24,7 +24,7 @@ export function writeBulkBasket(lines: BasketLine[]): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(KEY, JSON.stringify(lines));
-    window.dispatchEvent(new CustomEvent('giftly:basket', { detail: lines }));
+    window.dispatchEvent(new CustomEvent('tazilla:basket', { detail: lines }));
   } catch {
     // Private mode: the basket stays in memory for this page only.
   }

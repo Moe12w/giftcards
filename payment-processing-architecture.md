@@ -438,7 +438,7 @@ const major = (minor: bigint | number) => Number((Number(minor) / 100).toFixed(2
   },
   "NotificationOption": "LINK",
   "IntegrationUrls": {
-    "Redirection": "https://giftly.qa/payment/return",
+    "Redirection": "https://tazilla.com.qa/payment/return",
     "Webhook": "https://<project>.supabase.co/functions/v1/payment-webhook"
   },
   "Suppliers": [
@@ -682,7 +682,7 @@ if (error) throw error;
 
 const result = await WebBrowser.openAuthSessionAsync(
   data.paymentUrl,
-  'giftly://payment/return',      // your deep link
+  'tazilla://payment/return',      // your deep link
 );
 
 // Regardless of result.type, ask the server — the browser result is not proof.
@@ -690,8 +690,8 @@ router.replace({ pathname: '/(customer)/checkout/processing', params: { orderId 
 ```
 
 - `processing.tsx` must **poll** `orders.payment_status` (via a small RPC or `supabase.from('orders').select('payment_status')`) every 2 s for ~90 s instead of the current 1.6 s fake timer.
-- Set `IntegrationUrls.Redirection` to `https://giftly.qa/payment/return`, and have that page (or a universal link) bounce to `giftly://payment/return`.
-- Add `scheme: "giftly"` in `app.json` (check what exists) and the associated-domains/asset-links files if you want universal links.
+- Set `IntegrationUrls.Redirection` to `https://tazilla.com.qa/payment/return`, and have that page (or a universal link) bounce to `tazilla://payment/return`.
+- Add `scheme: "tazilla"` in `app.json` (check what exists) and the associated-domains/asset-links files if you want universal links.
 - Show a "Pay in browser" state with a clear "return to app" instruction.
 
 This replaces the simulated checkout with a real one and is the least risky change in the app.
