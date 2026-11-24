@@ -1,4 +1,4 @@
-# Tazilla — AI gift cards, MCP and Expo delivery report
+# Tazella — AI gift cards, MCP and Expo delivery report
 
 Date: 15 November 2026
 
@@ -31,7 +31,7 @@ Related documents:
 ### 1.2 Bilingual support
 
 - `src/i18n/index.ts` detects the device locale through `expo-localization`, persists
-  the customer choice under the `tazilla.language` AsyncStorage key, and applies
+  the customer choice under the `tazella.language` AsyncStorage key, and applies
   right-to-left layout for Arabic.
 - The EN / ع `LanguageToggle` is available on the login screen, in the profile
   header and as a home-screen shortcut.
@@ -41,7 +41,7 @@ Related documents:
 - `src/lib/tutorial.ts` holds an eight-step bilingual customer tour covering gift
   cards, gift baskets and app usage.
 - `app/(customer)/tutorial.tsx` renders it with the shared `OnboardingSlide`.
-- Completion is stored under `tazilla.tutorial.seen`; the customer home screen
+- Completion is stored under `tazella.tutorial.seen`; the customer home screen
   auto-opens the tour once and the profile can replay it.
 
 ### 1.4 Status
@@ -79,7 +79,7 @@ Public:
 
 | Check | Result |
 | --- | --- |
-| `initialize` | HTTP 200, protocol version `2025-06-18`, server `tazilla-ai-gift-cards`, capabilities `{ tools: { listChanged: false } }` |
+| `initialize` | HTTP 200, protocol version `2025-06-18`, server `tazella-ai-gift-cards`, capabilities `{ tools: { listChanged: false } }` |
 | `tools/list` | 6 tools returned with JSON schemas |
 | `search_businesses` | HTTP 200, returned matching Qatar businesses with gift counts |
 | Invalid input (`get_business_details` with bad UUID) | Tool error `invalid_arguments` with validation message |
@@ -140,7 +140,7 @@ Rate limit:
 
 - Copy was updated this session to the complete purchase flow (EN + AR): the
   assistant prepares the gift card order, sends a secure payment link in the chat,
-  the customer pays through the Tazilla checkout, and the gift card is issued after
+  the customer pays through the Tazella checkout, and the gift card is issued after
   payment.
 
 ### 3.3 Audit results
@@ -173,7 +173,7 @@ Rate limit:
 ## 5. Known limitations and follow-ups
 
 1. `web/.env.local` sets `NEXT_PUBLIC_SITE_URL=http://localhost:3000`; production
-   must set `NEXT_PUBLIC_SITE_URL=https://tazilla.com.qa` so canonical and OG URLs are
+   must set `NEXT_PUBLIC_SITE_URL=https://tazella.com.qa` so canonical and OG URLs are
    correct.
 2. Arabic is currently served through the locale cookie rather than a separate
    Arabic path; consider path-based Arabic routes before expecting Arabic
@@ -202,7 +202,7 @@ Rate limit:
 
 Remaining operational follow-ups:
 
-- Set `NEXT_PUBLIC_SITE_URL=https://tazilla.com.qa` for the production web deployment.
+- Set `NEXT_PUBLIC_SITE_URL=https://tazella.com.qa` for the production web deployment.
 - Deploy the Next marketing site and push the Expo OTA update.
 - Test ChatGPT / Claude connectors against the deployed MCP endpoint and record results.
 - Publish the final deliverables and commit/push when git access is available.

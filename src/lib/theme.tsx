@@ -11,7 +11,7 @@ import { darkColors, lightColors, setActivePalette, type Palette } from '@/src/t
 
 export type ThemeMode = 'light' | 'dark';
 
-const STORAGE_KEY = 'tazilla.themeMode';
+const STORAGE_KEY = 'tazella.themeMode';
 
 interface ThemeValue {
   mode: ThemeMode;

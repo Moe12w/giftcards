@@ -21,7 +21,7 @@ import type { AccentTone } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
 /**
- * Invite landing page. A shared link (tazilla://invite/CODE or /invite/CODE)
+ * Invite landing page. A shared link (tazella://invite/CODE or /invite/CODE)
  * opens straight into the basket so a visitor can see the recipient, the cards
  * already inside and who is contributing, then join in one tap.
  */

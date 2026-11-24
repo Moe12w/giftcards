@@ -1,5 +1,5 @@
 // supabase/functions/mcp/index.ts
-// Tazilla MCP server — Streamable HTTP transport, stateless JSON responses.
+// Tazella MCP server — Streamable HTTP transport, stateless JSON responses.
 //
 // Deploy with JWT verification off so AI clients can reach the public read
 // tools:
@@ -29,12 +29,12 @@ import {
 import { ValidationError } from './validate.ts';
 
 const SERVER_INFO = {
-  name: 'tazilla-ai-gift-cards',
-  title: 'Tazilla AI Gift Cards',
+  name: 'tazella-ai-gift-cards',
+  title: 'Tazella AI Gift Cards',
   version: '1.0.0',
 };
 
-const INSTRUCTIONS = `Tazilla is a gift card marketplace in Qatar. Use these tools to help a customer discover local businesses and their gift cards, compare amounts or experience packages, and prepare a pending order.
+const INSTRUCTIONS = `Tazella is a gift card marketplace in Qatar. Use these tools to help a customer discover local businesses and their gift cards, compare amounts or experience packages, and prepare a pending order.
 
 Rules:
 - Always start with search_businesses, then get_business_details or get_gift_cards, then get_gift_card_details before ordering.
@@ -42,11 +42,11 @@ Rules:
 - Prices are in QAR and are stored in fils: 1 QAR = 100 fils.
 - Monetary gift cards are ordered with amount_minor. Experience gift cards are ordered with variant_id.
 - create_gift_card_order only prepares a pending order. It does not take payment or issue a gift card.
-- After the customer confirms the prepared order, call create_payment_link (or send_payment_link) to get a secure MyFatoorah URL, then share that URL in the chat. The customer pays through the Tazilla checkout; the gift card is issued only after verified payment.
-- Default channel is link: share the returned payment_url in the chat. Use email/sms/all only when the customer explicitly asks Tazilla or MyFatoorah to send it.
+- After the customer confirms the prepared order, call create_payment_link (or send_payment_link) to get a secure MyFatoorah URL, then share that URL in the chat. The customer pays through the Tazella checkout; the gift card is issued only after verified payment.
+- Default channel is link: share the returned payment_url in the chat. Use email/sms/all only when the customer explicitly asks Tazella or MyFatoorah to send it.
 - Reuse the same idempotency_key when retrying the same order; never create a second link for one intent.
 - Never claim a gift card has been purchased or issued until check_order_status or get_payment_link confirms paid.
-- Order tools need the customer's Tazilla access token as an Authorization: Bearer header.
+- Order tools need the customer's Tazella access token as an Authorization: Bearer header.
 - Confirm the business, gift card, amount or package, quantity and recipient with the customer before preparing an order.`;
 
 const corsHeaders = {
@@ -302,7 +302,7 @@ Deno.serve(async (req) => {
                 id,
                 toolErrorResult(
                   'auth_required',
-                  'Sign in to Tazilla first. This tool needs the customer\'s Tazilla access token as a Bearer token. No order data is available without it.',
+                  'Sign in to Tazella first. This tool needs the customer\'s Tazella access token as a Bearer token. No order data is available without it.',
                 ),
               ),
               200,

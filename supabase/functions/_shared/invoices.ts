@@ -101,7 +101,7 @@ export async function createInvoiceForOrder(admin: any, input: CreateInvoiceInpu
   const { amountMinor, suppliers } = await allocationForOrder(admin, input.orderId);
 
   const payload: Record<string, unknown> = {
-    CustomerName: input.customerName || 'Tazilla customer',
+    CustomerName: input.customerName || 'Tazella customer',
     NotificationOption: input.notificationOption ?? 'LNK',
     InvoiceValue: minorToMajor(amountMinor),
     DisplayCurrencyIso: 'QAR',

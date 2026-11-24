@@ -44,7 +44,7 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 
 const DEMO_USER = {
   id: 'demo-user',
-  email: 'demo@tazilla.com.qa',
+  email: 'demo@tazella.com.qa',
   user_metadata: { full_name: 'Demo User' },
 } as unknown as User;
 

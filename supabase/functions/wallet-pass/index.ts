@@ -51,7 +51,7 @@ function pkpassResponse(body: Uint8Array): Response {
     status: 200,
     headers: {
       'Content-Type': PKPASS,
-      'Content-Disposition': 'attachment; filename="tazilla.pkpass"',
+      'Content-Disposition': 'attachment; filename="tazella.pkpass"',
       'Cache-Control': 'no-store',
     },
   });

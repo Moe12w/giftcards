@@ -77,7 +77,7 @@ export async function submitDeletionRequest(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const note = String(formData.get('note') ?? '').trim();
   if (!email || !email.includes('@')) {
-    back('/account-deletion', 'Enter the email address on your Tazilla account.');
+    back('/account-deletion', 'Enter the email address on your Tazella account.');
   }
 
   const supabase = await createClient();
@@ -102,7 +102,7 @@ export async function joinLaunchList(formData: FormData) {
     requester_kind: 'visitor',
     kind: 'launch_list',
     subject: 'App launch list',
-    body: `Please tell me when the Tazilla app is available: ${email}`,
+    body: `Please tell me when the Tazella app is available: ${email}`,
     reference: `LAUNCH-${Date.now().toString(36).toUpperCase()}`,
     status: 'open',
   });

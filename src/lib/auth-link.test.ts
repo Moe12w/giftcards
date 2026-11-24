@@ -17,7 +17,7 @@ vi.mock('./supabase', () => ({
 }));
 
 vi.mock('expo-linking', () => ({
-  createURL: (path: string) => `tazilla://${path.replace(/^\//, '')}`,
+  createURL: (path: string) => `tazella://${path.replace(/^\//, '')}`,
 }));
 
 describe('handleAuthUrl recovery link validation', () => {
@@ -28,7 +28,7 @@ describe('handleAuthUrl recovery link validation', () => {
 
   it('rejects a crafted host that merely contains reset-password', async () => {
     const accepted = await handleAuthUrl(
-      'tazilla://reset-password.attacker.tld/cb#access_token=attacker&refresh_token=attacker',
+      'tazella://reset-password.attacker.tld/cb#access_token=attacker&refresh_token=attacker',
     );
     expect(accepted).toBe(false);
     expect(mocks.setSession).not.toHaveBeenCalled();
@@ -37,7 +37,7 @@ describe('handleAuthUrl recovery link validation', () => {
 
   it('accepts the app recovery link and installs its tokens', async () => {
     const accepted = await handleAuthUrl(
-      'tazilla://reset-password#access_token=good&refresh_token=good',
+      'tazella://reset-password#access_token=good&refresh_token=good',
     );
     expect(accepted).toBe(true);
     expect(mocks.setSession).toHaveBeenCalledWith({
@@ -47,7 +47,7 @@ describe('handleAuthUrl recovery link validation', () => {
   });
 
   it('does not exchange a code arriving on a foreign host', async () => {
-    const accepted = await handleAuthUrl('tazilla://reset-password.evil/cb?code=attacker');
+    const accepted = await handleAuthUrl('tazella://reset-password.evil/cb?code=attacker');
     expect(accepted).toBe(false);
     expect(mocks.exchangeCodeForSession).not.toHaveBeenCalled();
   });

@@ -4,8 +4,8 @@
 -- An enterprise partner (Sephora, H&M, Lulu Hypermarket) is a business in the
 -- marketplace in every way a vendor is: it has its own name, its own logo, its
 -- own gifts and its own dashboard. The differences are who issues the code —
--- the partner's own company, not Tazilla, and it is redeemed in the partner's own
--- app or website, which makes Tazilla a seller of those codes, not a reseller.
+-- the partner's own company, not Tazella, and it is redeemed in the partner's own
+-- app or website, which makes Tazella a seller of those codes, not a reseller.
 --
 -- These changes make that true in the data:
 --   - a catalogue gift can belong to a partner

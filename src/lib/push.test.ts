@@ -118,7 +118,7 @@ describe('enablePushNotifications', () => {
 
     expect(mocks.getExpoPushTokenAsync).not.toHaveBeenCalled();
     expect(mocks.upsert).not.toHaveBeenCalled();
-    expect(mocks.setItem).toHaveBeenCalledWith('tazilla.pushPrompt.answered', '1');
+    expect(mocks.setItem).toHaveBeenCalledWith('tazella.pushPrompt.answered', '1');
   });
 
   it('does not prompt again when the OS already denied permission', async () => {

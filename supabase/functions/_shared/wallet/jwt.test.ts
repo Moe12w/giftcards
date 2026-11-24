@@ -29,7 +29,7 @@ describe('google wallet JWT', () => {
 
   it('signs a save JWT the token endpoint would accept', async () => {
     const { privateKey, publicKey } = keyPair();
-    const object = { id: '3388000000011111111.tazilla_abc' };
+    const object = { id: '3388000000011111111.tazella_abc' };
     const jwt = await signRs256(
       googleSaveClaims({
         clientEmail: 'passes@project.iam.gserviceaccount.com',

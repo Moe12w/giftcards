@@ -241,7 +241,7 @@ export default async function AdminSettingsPage({
             </div>
             <div className="field" style={{ flex: '2 1 320px' }}>
               <label htmlFor="value">{c.labels.value}</label>
-              <input id="value" name="value" placeholder='hello@tazilla.com.qa or {"enabled":true}' />
+              <input id="value" name="value" placeholder='hello@tazella.com.qa or {"enabled":true}' />
               <span className="hint">{t.jsonHint}</span>
             </div>
             <label className="checkbox-row">

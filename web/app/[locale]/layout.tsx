@@ -40,17 +40,17 @@ export async function generateMetadata({ params }: PublicLayoutProps): Promise<M
     },
     title: {
       default: isArabic
-        ? 'Tazilla — بطاقات هدايا وتجارب ومكافآت مؤسسية في قطر'
-        : 'Tazilla — Gift cards, experiences and corporate rewards in Qatar',
-      template: '%s · Tazilla',
+        ? 'Tazella — بطاقات هدايا وتجارب ومكافآت مؤسسية في قطر'
+        : 'Tazella — Gift cards, experiences and corporate rewards in Qatar',
+      template: '%s · Tazella',
     },
     description: isArabic
-      ? 'Tazilla هو سوق بطاقات الهدايا في قطر. أرسل بطاقة هدية، أو احجز تجربة، أو كافئ فريقاً بالكامل.'
-      : 'Tazilla is Qatar’s gift card marketplace. Send a gift card, book an experience, or reward a whole team — all in one place.',
+      ? 'Tazella هو سوق بطاقات الهدايا في قطر. أرسل بطاقة هدية، أو احجز تجربة، أو كافئ فريقاً بالكامل.'
+      : 'Tazella is Qatar’s gift card marketplace. Send a gift card, book an experience, or reward a whole team — all in one place.',
     openGraph: {
       title: isArabic
-        ? 'Tazilla — اصنع هدية يحبّونها فعلاً'
-        : 'Tazilla — Give a gift they will actually use',
+        ? 'Tazella — اصنع هدية يحبّونها فعلاً'
+        : 'Tazella — Give a gift they will actually use',
       description: isArabic
         ? 'بطاقات هدايا وتجارب ومكافآت مؤسسية من أفضل الأنشطة المستقلة في قطر.'
         : 'Gift cards, experiences and corporate rewards from the best independent businesses in Qatar.',

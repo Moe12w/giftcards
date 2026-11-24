@@ -166,7 +166,7 @@ export async function MerchantPaymentsOverview({
             ) : null}
             {!bundle.supplier.paymentEligibility ? (
               <p className="small muted" style={{ margin: 0 }}>
-                Live payments are enabled by Tazilla after MyFatoorah confirms the supplier is Active and your
+                Live payments are enabled by Tazella after MyFatoorah confirms the supplier is Active and your
                 onboarding checks are complete.
               </p>
             ) : null}

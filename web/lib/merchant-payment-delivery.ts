@@ -38,11 +38,11 @@ export async function deliverClaimLinks(orderId: string, claims: VoucherClaim[])
       sendClaimLinkEmail({
         to: String(order.recipient_email),
         name: order.recipient_name,
-        senderName: 'Tazilla',
+        senderName: 'Tazella',
         title: String(product?.title ?? 'Gift card'),
         amountLabel: `${order.currency || 'QAR'} ${(Number(order.total_minor || 0) / 100).toFixed(2)}`,
         link: `${appUrl}/claim/${claim.claimToken}`,
-        appLink: `tazilla://claim/${claim.claimToken}`,
+        appLink: `tazella://claim/${claim.claimToken}`,
         message: order.gift_message,
       }).then((result) => ({ result, voucherId: claim.voucherId })),
     ),

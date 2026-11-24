@@ -79,9 +79,9 @@ export default async function ContactPage() {
               </span>
               <h3 style={{ marginTop: 14 }}>{c.labels.email}</h3>
               <p className="small" style={{ marginTop: 6 }}>
-                hello@tazilla.com.qa
+                hello@tazella.com.qa
                 <br />
-                corporate@tazilla.com.qa
+                corporate@tazella.com.qa
               </p>
             </div>
             <div className="card lavender">

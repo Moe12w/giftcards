@@ -8,7 +8,7 @@
 -- when the code is used, the whole value is spent, so the code simply closes.
 --
 -- Until now the partner's code stayed encrypted and the buyer received a
--- Tazilla code, so nothing could actually be used in the partner's app.
+-- Tazella code, so nothing could actually be used in the partner's app.
 -- These functions hand the partner's own code to the buyer, close it from
 -- either side, and keep the stock and the money straight.
 -- ---------------------------------------------------------------------------

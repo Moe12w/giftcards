@@ -14,7 +14,7 @@ import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { escapeHtml } from '@/lib/security';
 
-export const DEFAULT_EMAIL_FROM = 'Tazilla <gifts@tazilla.com.qa>';
+export const DEFAULT_EMAIL_FROM = 'Tazella <gifts@tazella.com.qa>';
 
 /** How long a saved configuration is reused before it is read again. */
 const CONFIG_TTL_MS = 30_000;
@@ -163,12 +163,12 @@ export async function sendSupportReplyEmail({
     : `New reply on your support ticket: ${ticketSubject}`;
 
   const text = isArabic
-    ? `${greeting}\n\nرد فريق دعم Tazilla على تذكرتك "${ticketSubject}":\n\n${reply}\n\nافتح تطبيق Tazilla ثم الملف الشخصي ← الدعم لمتابعة المحادثة.\n\n— Tazilla`
-    : `${greeting}\n\nTazilla support replied to your ticket "${ticketSubject}":\n\n${reply}\n\nOpen the Tazilla app and go to Profile → Support to continue the conversation.\n\n— Tazilla`;
+    ? `${greeting}\n\nرد فريق دعم Tazella على تذكرتك "${ticketSubject}":\n\n${reply}\n\nافتح تطبيق Tazella ثم الملف الشخصي ← الدعم لمتابعة المحادثة.\n\n— Tazella`
+    : `${greeting}\n\nTazella support replied to your ticket "${ticketSubject}":\n\n${reply}\n\nOpen the Tazella app and go to Profile → Support to continue the conversation.\n\n— Tazella`;
 
   const html = isArabic
-    ? `<p>${escapeHtml(greeting)}</p><p>رد فريق دعم Tazilla على تذكرتك <strong>${escapeHtml(ticketSubject)}</strong>:</p><blockquote>${escapeHtml(reply).replace(/\n/g, '<br />')}</blockquote><p>افتح تطبيق Tazilla ثم الملف الشخصي ← الدعم لمتابعة المحادثة.</p><p>— Tazilla</p>`
-    : `<p>${escapeHtml(greeting)}</p><p>Tazilla support replied to your ticket <strong>${escapeHtml(ticketSubject)}</strong>:</p><blockquote>${escapeHtml(reply).replace(/\n/g, '<br />')}</blockquote><p>Open the Tazilla app and go to Profile → Support to continue the conversation.</p><p>— Tazilla</p>`;
+    ? `<p>${escapeHtml(greeting)}</p><p>رد فريق دعم Tazella على تذكرتك <strong>${escapeHtml(ticketSubject)}</strong>:</p><blockquote>${escapeHtml(reply).replace(/\n/g, '<br />')}</blockquote><p>افتح تطبيق Tazella ثم الملف الشخصي ← الدعم لمتابعة المحادثة.</p><p>— Tazella</p>`
+    : `<p>${escapeHtml(greeting)}</p><p>Tazella support replied to your ticket <strong>${escapeHtml(ticketSubject)}</strong>:</p><blockquote>${escapeHtml(reply).replace(/\n/g, '<br />')}</blockquote><p>Open the Tazella app and go to Profile → Support to continue the conversation.</p><p>— Tazella</p>`;
 
   return sendEmail({ to, subject, html, text });
 }
@@ -185,7 +185,7 @@ export function claimUrl(token: string): string {
 
 /** The in-app link, for recipients who already have the app. */
 export function appClaimUrl(token: string): string {
-  return `tazilla://claim/${token}`;
+  return `tazella://claim/${token}`;
 }
 
 /**
@@ -245,10 +245,10 @@ export async function sendClaimLinkEmail({
     : `${senderName} sent you ${title}`;
   const subject = isArabic ? `لديك هدية من ${senderName}` : `You have a gift from ${senderName}`;
   const cta = isArabic ? 'استلم هديتك' : 'Claim your gift';
-  const appCta = isArabic ? 'افتحها في تطبيق Tazilla' : 'Open it in the Tazilla app';
+  const appCta = isArabic ? 'افتحها في تطبيق Tazella' : 'Open it in the Tazella app';
   const footnote = isArabic
-    ? 'الهدية محفوظة في تطبيق Tazilla ويمكن استخدامها على أجزاء. الرابط صالح لمرة واحدة.'
-    : 'The gift card lives in the Tazilla app and can be spent in parts. This link works once.';
+    ? 'الهدية محفوظة في تطبيق Tazella ويمكن استخدامها على أجزاء. الرابط صالح لمرة واحدة.'
+    : 'The gift card lives in the Tazella app and can be spent in parts. This link works once.';
 
   const text = [
     greeting,
@@ -258,14 +258,14 @@ export async function sendClaimLinkEmail({
     `${cta}: ${link}`,
     `${appCta}: ${appLink}`,
     footnote,
-    '— Tazilla',
+    '— Tazella',
   ]
     .filter(Boolean)
     .join('\n\n');
 
   const html = `<!doctype html><html><body style="margin:0;padding:24px;background:#fff8ec;font-family:'Figtree','Segoe UI',Arial,sans-serif;color:#1c1c1c">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border:2px solid #1c1c1c;border-radius:20px;padding:28px">
-    <p style="margin:0 0 8px;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:#6e6e6e">Tazilla</p>
+    <p style="margin:0 0 8px;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:#6e6e6e">Tazella</p>
     <p style="margin:0 0 6px;font-size:16px">${escapeHtml(greeting)}</p>
     <h1 style="margin:0 0 10px;font-size:26px;line-height:1.15">${escapeHtml(headline)}</h1>
     <p style="margin:0 0 4px;font-size:18px;font-weight:700">${escapeHtml(amountLabel)}</p>

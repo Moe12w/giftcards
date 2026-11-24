@@ -20,7 +20,7 @@ import { Platform } from 'react-native';
 import { getSupabase } from './supabase';
 import { hasSupabaseConfig } from './env';
 
-const PUSH_PROMPT_KEY = 'tazilla.pushPrompt.answered';
+const PUSH_PROMPT_KEY = 'tazella.pushPrompt.answered';
 
 export type PushPermission = 'granted' | 'denied' | 'undetermined';
 

@@ -51,7 +51,7 @@ export async function GET(request: Request) {
   }
 
   const csv = `\uFEFF${lines.join('\r\n')}`;
-  const filename = `tazilla-sales-${ctx.vendor.slug ?? ctx.vendor.id}-${new Date().toISOString().slice(0, 10)}.csv`;
+  const filename = `tazella-sales-${ctx.vendor.slug ?? ctx.vendor.id}-${new Date().toISOString().slice(0, 10)}.csv`;
 
   return new Response(csv, {
     headers: {

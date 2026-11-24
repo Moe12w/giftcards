@@ -40,7 +40,7 @@ export default function ClaimQrScreen() {
   return (
     <Screen>
       <Text style={styles.title}>{t('claimExtra.qrTitle')}</Text>
-      <QRCode value={`tazilla:redeem:${gift?.voucherId ?? ''}`} />
+      <QRCode value={`tazella:redeem:${gift?.voucherId ?? ''}`} />
       <Text style={styles.hint}>{t('cards.scanHint')}</Text>
       <Text style={styles.privacy}>{t('cards.codeOnce')}</Text>
       <Button

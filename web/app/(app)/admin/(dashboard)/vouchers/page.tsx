@@ -319,7 +319,7 @@ export default async function AdminVouchersPage({
                         <td>
                           {product?.title ?? t.gift}
                           <br />
-                          <span className="sub">{vendor?.name ?? 'Tazilla'}</span>
+                          <span className="sub">{vendor?.name ?? 'Tazella'}</span>
                         </td>
                         <td>
                           <span className="tag">{fulfilmentLabel(voucher.fulfilment_type, locale)}</span>

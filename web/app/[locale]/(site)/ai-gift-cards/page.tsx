@@ -21,7 +21,7 @@ import { aiGiftCards } from '@/lib/i18n/ai';
 import { pick } from '@/lib/i18n';
 import { getPublicLocale } from '@/lib/i18n/server';
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tazilla.com.qa').replace(
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tazella.com.qa').replace(
   /\/$/,
   '',
 );
@@ -47,7 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: t.meta.ogTitle,
       description: t.meta.ogDescription,
       url: canonical,
-      siteName: 'Tazilla',
+      siteName: 'Tazella',
       locale: locale === 'ar' ? 'ar_QA' : 'en_QA',
       type: 'website',
     },
@@ -80,7 +80,7 @@ export default async function AiGiftCardsPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      name: 'Tazilla',
+      name: 'Tazella',
       url: SITE_URL,
       description: isArabic
         ? 'سوق بطاقات الهدايا والتجارب والمكافآت المؤسسية في قطر.'
@@ -93,7 +93,7 @@ export default async function AiGiftCardsPage() {
       contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'customer support',
-        email: 'hello@tazilla.com.qa',
+        email: 'hello@tazella.com.qa',
         areaServed: 'QA',
         availableLanguage: ['en', 'ar'],
       },
@@ -107,7 +107,7 @@ export default async function AiGiftCardsPage() {
       inLanguage: isArabic ? 'ar-QA' : 'en-QA',
       isPartOf: {
         '@type': 'WebSite',
-        name: 'Tazilla',
+        name: 'Tazella',
         url: SITE_URL,
       },
       about: {
@@ -121,7 +121,7 @@ export default async function AiGiftCardsPage() {
         areaServed: 'Qatar',
         provider: {
           '@type': 'Organization',
-          name: 'Tazilla',
+          name: 'Tazella',
           url: SITE_URL,
         },
       },
@@ -388,7 +388,7 @@ export default async function AiGiftCardsPage() {
 
               <pre>{`{
   "mcpServers": {
-    "tazilla": {
+    "tazella": {
       "type": "http",
       "url": "${t.mcp.endpoint}"
     }

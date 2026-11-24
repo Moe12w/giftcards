@@ -264,7 +264,7 @@ export default async function AdminOrderDetailPage({
                           <br />
                           <span className="sub">{fulfilmentLabel(product?.fulfilment_type ?? 'monetary', locale)}</span>
                         </td>
-                        <td className="small">{vendor?.name ?? 'Tazilla'}</td>
+                        <td className="small">{vendor?.name ?? 'Tazella'}</td>
                         <td className="small">
                           {variant ? (
                             <>

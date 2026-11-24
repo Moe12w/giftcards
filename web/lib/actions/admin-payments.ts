@@ -202,7 +202,7 @@ export async function adminProcessMyFatoorahRefund(formData: FormData) {
       ? [{ SupplierCode: Number(payment.supplier_code), SupplierDeductedAmount: minorToMajor(amountMinor) }]
       : [];
 
-  const externalIdentifier = `tazilla-refund-${orderId}-${Date.now()}`;
+  const externalIdentifier = `tazella-refund-${orderId}-${Date.now()}`;
   try {
     const response = await fetch(`${config.baseUrl}/v2/MakeSupplierRefund`, {
       method: 'POST',
@@ -210,7 +210,7 @@ export async function adminProcessMyFatoorahRefund(formData: FormData) {
       body: JSON.stringify({
         KeyType: 'InvoiceId',
         Key: payment.invoice_id,
-        Comment: 'Gift card order refund initiated by Tazilla administrator.',
+        Comment: 'Gift card order refund initiated by Tazella administrator.',
         ExternalIdentifier: externalIdentifier,
         Suppliers: suppliers,
       }),

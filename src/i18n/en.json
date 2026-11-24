@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Tazilla",
+    "appName": "Tazella",
     "ok": "OK",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -86,7 +86,7 @@
   },
   "guest": {
     "title": "Sign in to continue",
-    "body": "Browsing Tazilla is free. Sign in or create an account to save gifts, use your wallet and check out.",
+    "body": "Browsing Tazella is free. Sign in or create an account to save gifts, use your wallet and check out.",
     "signIn": "Sign in",
     "createAccount": "Create account",
     "browse": "Keep browsing",
@@ -180,7 +180,7 @@
     "back": "Back",
     "skip": "Skip tour",
     "done": "Start exploring",
-    "howItWorks": "How Tazilla works",
+    "howItWorks": "How Tazella works",
     "howItWorksBody": "A quick tour of gift cards, baskets and sending",
     "languageChanged": "Language changed"
   },
@@ -259,7 +259,7 @@
       },
       "new-arrivals": {
         "title": "New arrivals",
-        "subtitle": "Fresh gift cards on Tazilla"
+        "subtitle": "Fresh gift cards on Tazella"
       },
       "popular": {
         "title": "Popular gift cards",
@@ -481,7 +481,7 @@
     "successBody": "We'll let you know when {{name}} opens it.",
     "sendWhatsappCta": "Send on WhatsApp",
     "whatsappSuccessBody": "Tap below to send the gift to {{name}} on WhatsApp.",
-    "whatsappMessage": "🎁🎉✨ *OPEN YOUR GIFT!* ✨🎉🎁\n\n{{name}}, something bright just landed for you 💛\nA Tazilla gift card worth *{{amount}}* is waiting to be unwrapped!\n\n🎊 Tap into Tazilla, claim it, and go treat yourself 🎊\n🛍️💫✨",
+    "whatsappMessage": "🎁🎉✨ *OPEN YOUR GIFT!* ✨🎉🎁\n\n{{name}}, something bright just landed for you 💛\nA Tazella gift card worth *{{amount}}* is waiting to be unwrapped!\n\n🎊 Tap into Tazella, claim it, and go treat yourself 🎊\n🛍️💫✨",
     "whatsappOpened": "WhatsApp opened — send the message to finish.",
     "whatsappError": "Couldn't open WhatsApp. Check the number and try again.",
     "whatsappNoPhone": "Add a recipient phone number to send on WhatsApp.",
@@ -497,7 +497,7 @@
     "applePay": "Apple Pay",
     "googlePay": "Google Pay",
     "newCard": "New card",
-    "securePaymentNote": "You'll finish the payment on MyFatoorah's secure page. Card details are entered there — Tazilla never sees or stores them, and Apple Pay or Google Pay appears there when the business has it enabled."
+    "securePaymentNote": "You'll finish the payment on MyFatoorah's secure page. Card details are entered there — Tazella never sees or stores them, and Apple Pay or Google Pay appears there when the business has it enabled."
   },
   "cards": {
     "title": "My cards",
@@ -628,7 +628,7 @@
     "pushPromptBody": "We will tell you when a gift is claimed, when a card is about to expire, and when a scheduled gift is due. No promotions unless you ask for them.",
     "pushPromptEnable": "Turn on notifications",
     "pushPromptLater": "Not now",
-    "pushBlocked": "Notifications are blocked for Tazilla in your device settings. Allow them there and the switch will turn on again.",
+    "pushBlocked": "Notifications are blocked for Tazella in your device settings. Allow them there and the switch will turn on again.",
     "pushOpenSettings": "Open settings",
     "giftUpdates": "Gift updates",
     "promotions": "Promotions",
@@ -657,7 +657,7 @@
     "promoBody": "New offers are waiting for you in Explore.",
     "support": "Support reply",
     "supportReply": "Support replied to your ticket",
-    "supportReplyBody": "The Tazilla team answered your request. Open it to read the reply and continue the conversation.",
+    "supportReplyBody": "The Tazella team answered your request. Open it to read the reply and continue the conversation.",
     "viewTicket": "View ticket"
   },
   "account": {
@@ -699,7 +699,7 @@
     "deleteAccount": "Delete account",
     "logout": "Log out",
     "support": "Help & support",
-    "about": "About Tazilla",
+    "about": "About Tazella",
     "version": "App version",
     "currentPassword": "Current password",
     "newPassword": "New password",
@@ -726,7 +726,7 @@
     "deleteFailed": "We couldn't delete this account. If it is linked to a business, contact support.",
     "privacyBody": "Control who can see your profile and how your data is used.",
     "securityBody": "Manage your password, devices and sign-in protection.",
-    "preferencesBody": "Choose how Tazilla looks and feels.",
+    "preferencesBody": "Choose how Tazella looks and feels.",
     "languageBody": "Choose the language for the app.",
     "notifications": "Notifications",
     "darkMode": "Dark mode",
@@ -780,7 +780,7 @@
   "info": {
     "terms": {
       "title": "Terms & conditions",
-      "body": "By using Tazilla you agree to these terms. Gift cards are issued by the participating business and are subject to their own terms. Tazilla facilitates the sale and delivery of gift cards but is not the merchant of record for the underlying goods or services.\n\nGift cards cannot be exchanged for cash. Lost or shared codes are the responsibility of the holder. We may update these terms from time to time and will post the latest version here."
+      "body": "By using Tazella you agree to these terms. Gift cards are issued by the participating business and are subject to their own terms. Tazella facilitates the sale and delivery of gift cards but is not the merchant of record for the underlying goods or services.\n\nGift cards cannot be exchanged for cash. Lost or shared codes are the responsibility of the holder. We may update these terms from time to time and will post the latest version here."
     },
     "privacy": {
       "title": "Privacy policy",
@@ -788,11 +788,11 @@
     },
     "about": {
       "title": "About us",
-      "body": "Tazilla is a marketplace for local gift cards. We help people send thoughtful gifts in seconds and help local businesses reach new customers.\n\nBuilt with care for Qatar and the region."
+      "body": "Tazella is a marketplace for local gift cards. We help people send thoughtful gifts in seconds and help local businesses reach new customers.\n\nBuilt with care for Qatar and the region."
     },
     "version": {
       "title": "App version",
-      "body": "Tazilla 1.0.0\nExpo SDK 58"
+      "body": "Tazella 1.0.0\nExpo SDK 58"
     }
   },
   "states": {
@@ -830,7 +830,7 @@
     },
     "maintenance": {
       "title": "We'll be right back",
-      "body": "Tazilla is under maintenance."
+      "body": "Tazella is under maintenance."
     },
     "session-expired": {
       "title": "Session expired",
@@ -961,10 +961,10 @@
     "chooseBasketCreate": "Start a new gift box",
     "addedToBasket": "{{vendor}} added to {{basket}}",
     "reasonTreat": "A little treat they'll love",
-    "reasonLoved": "Loved by the Tazilla community",
+    "reasonLoved": "Loved by the Tazella community",
     "reasonNearby": "Popular in {{area}}",
     "reasonNew": "New pick #{{index}}",
-    "footnote": "Handpicked for you by Tazilla."
+    "footnote": "Handpicked for you by Tazella."
   },
   "basket": {
     "tab": "Gift Basket",
@@ -1155,7 +1155,7 @@
     "replyPlaceholder": "Add more detail or answer the team.",
     "sendReply": "Send reply",
     "noReplies": "No replies yet. The team will answer here.",
-    "supportTeam": "Tazilla support",
+    "supportTeam": "Tazella support",
     "replyFailed": "We couldn't send your reply. Check your connection and try again.",
     "status": {
       "open": "Open",

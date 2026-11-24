@@ -63,23 +63,23 @@ select
   'authenticated', 'authenticated',
   '', '', '', '', ''
 from (values
-  ('11111111-1111-4111-8111-111111111111'::uuid, 'customer@tazilla.test', 'Demo Customer'),
-  ('22222222-2222-4222-8222-222222222222'::uuid, 'owner@tazilla.test', 'Vendor Owner'),
-  ('33333333-3333-4333-8333-333333333333'::uuid, 'manager@tazilla.test', 'Vendor Manager'),
-  ('44444444-4444-4444-8444-444444444444'::uuid, 'staff@tazilla.test', 'Redemption Staff'),
-  ('55555555-5555-4555-8555-555555555555'::uuid, 'partner@tazilla.test', 'Enterprise Partner'),
-  ('66666666-6666-4666-8666-666666666666'::uuid, 'admin@tazilla.test', 'Platform Admin'),
+  ('11111111-1111-4111-8111-111111111111'::uuid, 'customer@tazella.test', 'Demo Customer'),
+  ('22222222-2222-4222-8222-222222222222'::uuid, 'owner@tazella.test', 'Vendor Owner'),
+  ('33333333-3333-4333-8333-333333333333'::uuid, 'manager@tazella.test', 'Vendor Manager'),
+  ('44444444-4444-4444-8444-444444444444'::uuid, 'staff@tazella.test', 'Redemption Staff'),
+  ('55555555-5555-4555-8555-555555555555'::uuid, 'partner@tazella.test', 'Enterprise Partner'),
+  ('66666666-6666-4666-8666-666666666666'::uuid, 'admin@tazella.test', 'Platform Admin'),
   -- One account for every dashboard: admin, vendor owner and enterprise owner.
   ('99999999-9999-4999-8999-999999999999'::uuid, 'test@test.com', 'Test Account'),
-  ('72215636-34c1-4635-9479-dba62aa65c56'::uuid, 'layla@tazilla.test', 'Layla'),
-  ('131437af-94dd-46ed-b3dd-8576e10ceaba'::uuid, 'omar@tazilla.test', 'Omar'),
-  ('29eb9902-b88e-4490-8785-737206825852'::uuid, 'noor@tazilla.test', 'Noor'),
-  ('77a7a268-c84b-42ac-a7db-e25fe395b6fe'::uuid, 'sara@tazilla.test', 'Sara'),
-  ('cdca534d-1d61-46ef-a179-13588d899a74'::uuid, 'mariam@tazilla.test', 'Mariam'),
-  ('83924abf-bf07-4e7b-8d09-9313fbbba40f'::uuid, 'faris@tazilla.test', 'Faris'),
-  ('c20aca36-9957-41f4-9b53-9c2a415178b4'::uuid, 'hind@tazilla.test', 'Hind'),
-  ('ff2c387d-ec50-4a87-bd8c-dd8b2e277828'::uuid, 'aisha@tazilla.test', 'Aisha'),
-  ('7e322058-fbcb-4c77-8da8-8b52d393d709'::uuid, 'ahmed@tazilla.test', 'Ahmed')
+  ('72215636-34c1-4635-9479-dba62aa65c56'::uuid, 'layla@tazella.test', 'Layla'),
+  ('131437af-94dd-46ed-b3dd-8576e10ceaba'::uuid, 'omar@tazella.test', 'Omar'),
+  ('29eb9902-b88e-4490-8785-737206825852'::uuid, 'noor@tazella.test', 'Noor'),
+  ('77a7a268-c84b-42ac-a7db-e25fe395b6fe'::uuid, 'sara@tazella.test', 'Sara'),
+  ('cdca534d-1d61-46ef-a179-13588d899a74'::uuid, 'mariam@tazella.test', 'Mariam'),
+  ('83924abf-bf07-4e7b-8d09-9313fbbba40f'::uuid, 'faris@tazella.test', 'Faris'),
+  ('c20aca36-9957-41f4-9b53-9c2a415178b4'::uuid, 'hind@tazella.test', 'Hind'),
+  ('ff2c387d-ec50-4a87-bd8c-dd8b2e277828'::uuid, 'aisha@tazella.test', 'Aisha'),
+  ('7e322058-fbcb-4c77-8da8-8b52d393d709'::uuid, 'ahmed@tazella.test', 'Ahmed')
 ) as u(id, email, name)
 on conflict (id) do update
   set encrypted_password = excluded.encrypted_password,
@@ -89,12 +89,12 @@ insert into auth.identities (id, user_id, provider_id, identity_data, provider, 
 select
   gen_random_uuid(), id, id::text, jsonb_build_object('sub', id, 'email', email), 'email', now(), now(), now()
 from auth.users
-where email in ('customer@tazilla.test', 'owner@tazilla.test', 'manager@tazilla.test', 'staff@tazilla.test', 'partner@tazilla.test', 'admin@tazilla.test', 'test@test.com', 'layla@tazilla.test', 'omar@tazilla.test', 'noor@tazilla.test', 'sara@tazilla.test', 'mariam@tazilla.test', 'faris@tazilla.test', 'hind@tazilla.test', 'aisha@tazilla.test', 'ahmed@tazilla.test')
+where email in ('customer@tazella.test', 'owner@tazella.test', 'manager@tazella.test', 'staff@tazella.test', 'partner@tazella.test', 'admin@tazella.test', 'test@test.com', 'layla@tazella.test', 'omar@tazella.test', 'noor@tazella.test', 'sara@tazella.test', 'mariam@tazella.test', 'faris@tazella.test', 'hind@tazella.test', 'aisha@tazella.test', 'ahmed@tazella.test')
 on conflict do nothing;
 
 insert into public.profiles (id, full_name, email, preferred_language)
 select id, raw_user_meta_data ->> 'full_name', email, 'en' from auth.users
-where email in ('customer@tazilla.test', 'owner@tazilla.test', 'manager@tazilla.test', 'staff@tazilla.test', 'partner@tazilla.test', 'admin@tazilla.test', 'test@test.com', 'layla@tazilla.test', 'omar@tazilla.test', 'noor@tazilla.test', 'sara@tazilla.test', 'mariam@tazilla.test', 'faris@tazilla.test', 'hind@tazilla.test', 'aisha@tazilla.test', 'ahmed@tazilla.test')
+where email in ('customer@tazella.test', 'owner@tazella.test', 'manager@tazella.test', 'staff@tazella.test', 'partner@tazella.test', 'admin@tazella.test', 'test@test.com', 'layla@tazella.test', 'omar@tazella.test', 'noor@tazella.test', 'sara@tazella.test', 'mariam@tazella.test', 'faris@tazella.test', 'hind@tazella.test', 'aisha@tazella.test', 'ahmed@tazella.test')
 on conflict (id) do nothing;
 
 insert into public.user_roles (user_id, role) values
@@ -157,8 +157,8 @@ insert into public.vendor_locations (id, vendor_id, area, address, hours) values
   ('2f4b439f-9cf4-483b-aa84-182df4f9db4e', '6e1c69d0-03ed-4901-9e43-e791b30b9d11', 'Msheireb', 'Galleria Mall, Msheireb, Doha', '10:00 – 22:00');
 
 insert into public.vendor_applications (vendor_id, status, step, business_name, business_category, business_description, business_email, business_phone, business_location, submitted_at) values
-  ('58852d5f-8486-42fa-a423-b199925159b0', 'approved', 'review', 'The Coffee House', 'coffee', 'A speciality coffee bar in West Bay.', 'owner@tazilla.test', '+974 5555 0101', 'West Bay, Doha', now()),
-  ('94666bd9-01bd-41d7-99c5-30cedea926b8', 'pending_review', 'review', 'Peak Fitness', 'fitness', 'Personal training and group classes in Lusail.', 'owner@tazilla.test', '+974 5555 0101', 'Lusail, Doha', now())
+  ('58852d5f-8486-42fa-a423-b199925159b0', 'approved', 'review', 'The Coffee House', 'coffee', 'A speciality coffee bar in West Bay.', 'owner@tazella.test', '+974 5555 0101', 'West Bay, Doha', now()),
+  ('94666bd9-01bd-41d7-99c5-30cedea926b8', 'pending_review', 'review', 'Peak Fitness', 'fitness', 'Personal training and group classes in Lusail.', 'owner@tazella.test', '+974 5555 0101', 'Lusail, Doha', now())
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------
@@ -453,9 +453,9 @@ insert into public.vouchers (
   ('cdaa4695-ccb7-4a49-a5b5-ad2db5bd165f', 'GFT-CDAA46', '5500f6a0-3313-48cb-8da0-1ba7a4ffd4fd', 'b6b3a259-41e4-4515-94e3-51ba7fcecf30', '128ee37e-7489-47ae-95e8-6011db656ee2', '775eb3c1-0631-43c7-b3fe-1878b976f6cb', '29eb9902-b88e-4490-8785-737206825852', 'Ahmed', 'ahmed@example.com', 'ahmed@example.com', 'monetary', 'redeemed', 15000, 0, null, null, 0, 'QAR', '2027-04-10T01:53:35.710Z', '11111111-1111-4111-8111-111111111111', '2026-10-22T01:53:35.710Z', 'opened', null, 'Movie night!', '2026-10-20T01:53:35.710Z', '2026-10-20T01:53:35.710Z'),
   ('343986e9-2fc5-4947-b0c3-569afa626166', 'GFT-343986', 'fb1eba99-75be-4372-b1c5-7cf8f5022d2b', '3f4e19d3-a56b-4978-b985-93a5a7848393', '32e841cf-effd-4eec-86ae-21c1dd586d3d', null, 'cdca534d-1d61-46ef-a179-13588d899a74', 'Noor', 'noor@example.com', 'noor@example.com', 'monetary', 'claimed', 25000, 25000, null, null, 0, 'QAR', '2027-11-11T01:53:35.710Z', '11111111-1111-4111-8111-111111111111', '2026-11-11T01:53:35.710Z', 'opened', null, 'For your next chapter.', '2026-11-11T01:53:35.710Z', '2026-11-11T01:53:35.710Z'),
   ('c059a4d4-a549-40ed-82b5-a1bc85065dea', 'GFT-C059A4', '8b7ce14b-6487-4d08-8d04-94b7d0586f15', 'd123cac2-73a0-4e08-b1d8-b5e13c8bc13c', '94666bd9-01bd-41d7-99c5-30cedea926b8', null, 'cdca534d-1d61-46ef-a179-13588d899a74', 'Khalid', 'khalid@example.com', 'khalid@example.com', 'experience', 'claimed', 30000, null, 8, 8, 0, 'QAR', '2026-11-06T01:53:35.710Z', '11111111-1111-4111-8111-111111111111', '2026-04-25T01:53:35.710Z', 'opened', null, null, '2026-04-25T01:53:35.710Z', '2026-04-25T01:53:35.710Z'),
-  ('de675b96-177a-49ed-86f3-484ed95695a1', 'GFT-DE675B', '1517be53-64d4-46a5-8c04-014ff805e85c', '58c1de44-fc46-465c-a635-399f194e5f02', '94666bd9-01bd-41d7-99c5-30cedea926b8', null, 'cdca534d-1d61-46ef-a179-13588d899a74', 'Demo User', 'demo@tazilla.com.qa', 'demo@tazilla.com.qa', 'experience', 'claimed', 45000, null, 10, 10, 0, 'QAR', '2027-05-10T01:53:35.710Z', '11111111-1111-4111-8111-111111111111', '2026-11-08T01:53:35.710Z', 'opened', null, 'Ten classes, whenever you feel like it.', '2026-11-08T01:53:35.710Z', '2026-11-08T01:53:35.710Z'),
-  ('9c853fac-f41c-47a0-9587-7a0105f003a2', 'GFT-9C853F', 'fd744a39-6265-4970-9888-db8b64144a2d', '6e3948ef-f7a4-4842-b16e-5e7db7b22204', '2533ec89-f5b1-4409-9273-c87bf133d095', null, '83924abf-bf07-4e7b-8d09-9313fbbba40f', 'Demo User', 'demo@tazilla.com.qa', 'demo@tazilla.com.qa', 'experience', 'claimed', 90000, null, 5, 5, 0, 'QAR', '2027-09-07T01:53:35.710Z', '11111111-1111-4111-8111-111111111111', '2026-11-09T01:53:35.710Z', 'opened', null, 'Five massages to use whenever you need them.', '2026-11-09T01:53:35.710Z', '2026-11-09T01:53:35.710Z'),
-  ('49fb02cb-0b0c-49c3-9621-e6d8f86bf2d7', 'GFT-49FB02', '17e13801-4be7-4d49-8bb3-e643da6fd4ee', '5fe38d65-a4bd-4a56-9679-40e3c31ead88', 'c1b1dbb8-0f25-4708-8065-00a2cbf3d36e', null, 'c20aca36-9957-41f4-9b53-9c2a415178b4', 'Demo User', 'demo@tazilla.com.qa', 'demo@tazilla.com.qa', 'experience', 'claimed', 25000, null, 1, 1, 0, 'QAR', '2027-05-20T01:53:35.710Z', '11111111-1111-4111-8111-111111111111', '2026-11-11T01:53:35.710Z', 'opened', null, 'A little me time.', '2026-11-11T01:53:35.710Z', '2026-11-11T01:53:35.710Z');
+  ('de675b96-177a-49ed-86f3-484ed95695a1', 'GFT-DE675B', '1517be53-64d4-46a5-8c04-014ff805e85c', '58c1de44-fc46-465c-a635-399f194e5f02', '94666bd9-01bd-41d7-99c5-30cedea926b8', null, 'cdca534d-1d61-46ef-a179-13588d899a74', 'Demo User', 'demo@tazella.com.qa', 'demo@tazella.com.qa', 'experience', 'claimed', 45000, null, 10, 10, 0, 'QAR', '2027-05-10T01:53:35.710Z', '11111111-1111-4111-8111-111111111111', '2026-11-08T01:53:35.710Z', 'opened', null, 'Ten classes, whenever you feel like it.', '2026-11-08T01:53:35.710Z', '2026-11-08T01:53:35.710Z'),
+  ('9c853fac-f41c-47a0-9587-7a0105f003a2', 'GFT-9C853F', 'fd744a39-6265-4970-9888-db8b64144a2d', '6e3948ef-f7a4-4842-b16e-5e7db7b22204', '2533ec89-f5b1-4409-9273-c87bf133d095', null, '83924abf-bf07-4e7b-8d09-9313fbbba40f', 'Demo User', 'demo@tazella.com.qa', 'demo@tazella.com.qa', 'experience', 'claimed', 90000, null, 5, 5, 0, 'QAR', '2027-09-07T01:53:35.710Z', '11111111-1111-4111-8111-111111111111', '2026-11-09T01:53:35.710Z', 'opened', null, 'Five massages to use whenever you need them.', '2026-11-09T01:53:35.710Z', '2026-11-09T01:53:35.710Z'),
+  ('49fb02cb-0b0c-49c3-9621-e6d8f86bf2d7', 'GFT-49FB02', '17e13801-4be7-4d49-8bb3-e643da6fd4ee', '5fe38d65-a4bd-4a56-9679-40e3c31ead88', 'c1b1dbb8-0f25-4708-8065-00a2cbf3d36e', null, 'c20aca36-9957-41f4-9b53-9c2a415178b4', 'Demo User', 'demo@tazella.com.qa', 'demo@tazella.com.qa', 'experience', 'claimed', 25000, null, 1, 1, 0, 'QAR', '2027-05-20T01:53:35.710Z', '11111111-1111-4111-8111-111111111111', '2026-11-11T01:53:35.710Z', 'opened', null, 'A little me time.', '2026-11-11T01:53:35.710Z', '2026-11-11T01:53:35.710Z');
 
 insert into public.ledger_entries (id, voucher_id, order_id, entry_type, amount_minor, sessions, created_at) values
   ('b1898e4c-a9dd-41a5-8519-03318dd94d5f', '2ed5a24c-32f9-4560-a149-4d03dbe90d7a', 'ee7e2424-161a-48ba-ac59-bfb4d393f758', 'issue', 20000, 0, '2026-11-06T01:53:35.710Z'),
@@ -530,7 +530,7 @@ insert into public.enterprise_partners (
   industry, expected_volume, status, integration_config, settlement_terms,
   logo_url, banner_url, notes
 ) values
-  ('96d72e91-21e8-47bd-8298-8f991a2ca84e', '55555555-5555-4555-8555-555555555555', 'RetailPlus Rewards', 'retailplus-rewards', 'https://retailplus.example', 'Nadia Haddad', 'partner@tazilla.test', '+974 5555 0900', 'Retail', '25,000 codes / quarter', 'active', '{}'::jsonb, '{"model":"wholesale","net_days":30}'::jsonb, 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=900&h=300&fit=crop', 'Everyday rewards for shopping, dining and fuel across Qatar. Use your RetailPlus gift card at any till or online checkout.')
+  ('96d72e91-21e8-47bd-8298-8f991a2ca84e', '55555555-5555-4555-8555-555555555555', 'RetailPlus Rewards', 'retailplus-rewards', 'https://retailplus.example', 'Nadia Haddad', 'partner@tazella.test', '+974 5555 0900', 'Retail', '25,000 codes / quarter', 'active', '{}'::jsonb, '{"model":"wholesale","net_days":30}'::jsonb, 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=900&h=300&fit=crop', 'Everyday rewards for shopping, dining and fuel across Qatar. Use your RetailPlus gift card at any till or online checkout.')
 on conflict (id) do nothing;
 
 insert into public.enterprise_members (partner_id, user_id, role) values
@@ -560,7 +560,7 @@ insert into public.products (
 
 -- The encryption key for the seeded inventory. Replace it in production.
 insert into public.system_settings (key, value, description, is_public)
-values ('enterprise.code_encryption_key', jsonb_build_object('key', 'tazilla-dev-enterprise-code-key-please-rotate'), 'Development key for enterprise code encryption.', false)
+values ('enterprise.code_encryption_key', jsonb_build_object('key', 'tazella-dev-enterprise-code-key-please-rotate'), 'Development key for enterprise code encryption.', false)
 on conflict (key) do update set value = excluded.value;
 
 insert into public.enterprise_import_batches (id, partner_id, filename, source, status, created_by) values

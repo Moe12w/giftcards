@@ -71,7 +71,7 @@ export default async function AdminLoginPage({
             type="email"
             autoComplete="email"
             required
-            placeholder="admin@tazilla.com.qa"
+            placeholder="admin@tazella.com.qa"
           />
         </div>
         <div className="field">

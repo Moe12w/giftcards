@@ -7,7 +7,7 @@
 
 export type Locale = 'en' | 'ar';
 
-export const LOCALE_COOKIE = 'tazilla.locale';
+export const LOCALE_COOKIE = 'tazella.locale';
 
 export interface Copy<T> {
   en: T;

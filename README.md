@@ -1,6 +1,6 @@
-# Tazilla — Gift Card Marketplace
+# Tazella — Gift Card Marketplace
 
-Tazilla is a Qatari gift-card marketplace with three apps in one repository:
+Tazella is a Qatari gift-card marketplace with three apps in one repository:
 
 - `app/` + `src/` — Expo / React Native **customer app**
 - `web/` — Next.js **website and dashboards** for vendors, enterprise partners,

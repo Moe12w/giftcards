@@ -86,7 +86,7 @@
   },
   "guest": {
     "title": "سجّل الدخول للمتابعة",
-    "body": "تصفح Tazilla مجاني. سجّل الدخول أو أنشئ حسابًا لحفظ الهدايا واستخدام محفظتك وإتمام الشراء.",
+    "body": "تصفح Tazella مجاني. سجّل الدخول أو أنشئ حسابًا لحفظ الهدايا واستخدام محفظتك وإتمام الشراء.",
     "signIn": "تسجيل الدخول",
     "createAccount": "إنشاء حساب",
     "browse": "متابعة التصفح",
@@ -481,7 +481,7 @@
     "successBody": "سنخبرك عندما يفتحها {{name}}.",
     "sendWhatsappCta": "أرسل عبر واتساب",
     "whatsappSuccessBody": "اضغط أدناه لإرسال الهدية إلى {{name}} عبر واتساب.",
-    "whatsappMessage": "🎁🎉✨ *افتح هديتك!* ✨🎉🎁\n\n{{name}}، وصلتك مفاجأة تلمع 💛\nبطاقة هدايا من Tazilla بقيمة *{{amount}}* بانتظارك!\n\n🎊 افتح تطبيق Tazilla، استلم هديتك، واختر ما يعجبك 🎊\n🛍️💫✨",
+    "whatsappMessage": "🎁🎉✨ *افتح هديتك!* ✨🎉🎁\n\n{{name}}، وصلتك مفاجأة تلمع 💛\nبطاقة هدايا من Tazella بقيمة *{{amount}}* بانتظارك!\n\n🎊 افتح تطبيق Tazella، استلم هديتك، واختر ما يعجبك 🎊\n🛍️💫✨",
     "whatsappOpened": "تم فتح واتساب — أرسل الرسالة لإكمال الإرسال.",
     "whatsappError": "تعذر فتح واتساب. تحقق من الرقم وحاول مرة أخرى.",
     "whatsappNoPhone": "أضف رقم هاتف المستلم للإرسال عبر واتساب.",
@@ -497,7 +497,7 @@
     "applePay": "Apple Pay",
     "googlePay": "Google Pay",
     "newCard": "بطاقة جديدة",
-    "securePaymentNote": "ستُكمل الدفع على صفحة MyFatoorah الآمنة. تُدخل بيانات البطاقة هناك، ولا يراها Tazilla ولا يحفظها، ويظهر Apple Pay أو Google Pay عند تفعيله لدى المتجر."
+    "securePaymentNote": "ستُكمل الدفع على صفحة MyFatoorah الآمنة. تُدخل بيانات البطاقة هناك، ولا يراها Tazella ولا يحفظها، ويظهر Apple Pay أو Google Pay عند تفعيله لدى المتجر."
   },
   "cards": {
     "title": "بطاقاتي",
@@ -657,7 +657,7 @@
     "promoBody": "عروض جديدة بانتظارك في استكشف.",
     "support": "رد الدعم",
     "supportReply": "رد الدعم على تذكرتك",
-    "supportReplyBody": "أجاب فريق Tazilla على طلبك. افتحه لقراءة الرد ومتابعة المحادثة.",
+    "supportReplyBody": "أجاب فريق Tazella على طلبك. افتحه لقراءة الرد ومتابعة المحادثة.",
     "viewTicket": "عرض التذكرة"
   },
   "account": {
@@ -961,10 +961,10 @@
     "chooseBasketCreate": "ابدأ سلة هدايا جديدة",
     "addedToBasket": "تمت إضافة {{vendor}} إلى {{basket}}",
     "reasonTreat": "لمسة لطيفة ستسعدهم",
-    "reasonLoved": "محبوبة من مجتمع Tazilla",
+    "reasonLoved": "محبوبة من مجتمع Tazella",
     "reasonNearby": "رائجة في {{area}}",
     "reasonNew": "اختيار جديد #{{index}}",
-    "footnote": "اختيارات منتقاة لك من Tazilla."
+    "footnote": "اختيارات منتقاة لك من Tazella."
   },
   "basket": {
     "tab": "سلة الهدايا",
@@ -1155,7 +1155,7 @@
     "replyPlaceholder": "أضف تفاصيل أكثر أو أجب الفريق.",
     "sendReply": "إرسال الرد",
     "noReplies": "لا توجد ردود بعد. سيجيب الفريق هنا.",
-    "supportTeam": "دعم Tazilla",
+    "supportTeam": "دعم Tazella",
     "replyFailed": "لم نتمكن من إرسال ردك. تحقق من الاتصال وحاول مرة أخرى.",
     "status": {
       "open": "مفتوحة",

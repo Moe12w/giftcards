@@ -29,11 +29,11 @@ subdomain of that URL.
 
 1. developer.apple.com → Certificates, Identifiers & Profiles → **Identifiers**
    → **Pass Type IDs** → `+`.
-   - Identifier: `pass.qa.tazilla.card` (or your own; it must start with `pass.`
+   - Identifier: `pass.qa.tazella.card` (or your own; it must start with `pass.`
      and match `APPLE_PASS_TYPE_ID` exactly, including case).
 2. Select the new Pass Type ID → **Create Certificate** → follow the CSR flow.
 3. Download the `.cer`, double-click it (it lands in Keychain as
-   `Pass Type ID: pass.qa.tazilla.card`), select the certificate **and its private
+   `Pass Type ID: pass.qa.tazella.card`), select the certificate **and its private
    key**, right-click → **Export 2 items** → `.p12`, give it a password. That
    password is `APPLE_PASS_PASSWORD` below.
 4. Download the WWDR intermediate (G4 is the current one):
@@ -83,7 +83,7 @@ openssl rsa  -noout -modulus -in key.pem
    account's `client_email` (`...iam.gserviceaccount.com`) with **Developer**
    access, and accept the invite if Google emails one.
 
-The gift card **class** (`<issuerId>.tazilla_giftcard_v1`) is created by the
+The gift card **class** (`<issuerId>.tazella_giftcard_v1`) is created by the
 function on the first `links` call; you do not create it by hand. Its review
 status is `UNDER_REVIEW`, which is fine for testing with accounts you add as
 test users in the console. Public distribution needs Google's approval.
@@ -112,7 +112,7 @@ export PROJECT_REF=<project-ref>
 
 npx supabase secrets set --project-ref "$PROJECT_REF" \
   WALLET_PASS_TOKEN_SECRET='<the 96 hex chars>' \
-  APPLE_PASS_TYPE_ID='pass.qa.tazilla.card' \
+  APPLE_PASS_TYPE_ID='pass.qa.tazella.card' \
   APPLE_TEAM_ID='<10-char team id>' \
   APPLE_PASS_CERT_PEM="$(flatten cert.pem)" \
   APPLE_PASS_KEY_PEM="$(flatten key.pem)" \
@@ -227,7 +227,7 @@ Then, in order:
 
 1. **Apple** — open the `apple` URL in Safari **on the iPhone** (not Chrome, and
    not by copying the URL into the app; Safari is what hands `.pkpass` to
-   Wallet). The sheet should say "Tazilla — <vendor> gift card" → **Add**. The
+   Wallet). The sheet should say "Tazella — <vendor> gift card" → **Add**. The
    pass should show the vendor, balance and QR code.
 2. Open the pass, tap the ⓘ → it should refresh without an error, which proves
    the web service call works (the same URL serves the rebuilt pass).
@@ -255,7 +255,7 @@ Function output, including signing errors, is in Supabase → Edge Functions →
 | `503 {"error":"wallet_not_configured"}` on the pass URL | Same as above. |
 | `401` on the pass URL | The token no longer matches: `WALLET_PASS_TOKEN_SECRET` was changed or the voucher id in the URL is not the one the token was made for. Ask for a fresh link. |
 | Logs: `APPLE_PASS_KEY_PEM could not be decrypted with APPLE_PASS_PASSWORD` | `key.pem` is still encrypted and `APPLE_PASS_PASSWORD` is missing or wrong. Export with `-nodes` and clear the password. |
-| Wallet says the pass cannot be installed | The certificate is not the Pass Type ID certificate for `APPLE_PASS_TYPE_ID`, or the WWDR cert is the wrong generation (needs G4 for a current pass certificate). Check with `openssl x509 -in cert.pem -noout -subject` — it must read `Pass Type ID: pass.qa.tazilla.card`. |
+| Wallet says the pass cannot be installed | The certificate is not the Pass Type ID certificate for `APPLE_PASS_TYPE_ID`, or the WWDR cert is the wrong generation (needs G4 for a current pass certificate). Check with `openssl x509 -in cert.pem -noout -subject` — it must read `Pass Type ID: pass.qa.tazella.card`. |
 | Pass installs but shows no balance / stale balance | The Apple pass is rebuilt on every fetch, so a stale one means the voucher row itself is stale; pull to refresh the pass. |
 | Google link missing, `googleError: "provider_error"` | The service account was not invited in the Wallet Business Console, the Google Wallet API is not enabled, or the key JSON is malformed. Logs show `google_class_failed:<status>` or `google_token_failed:<status>`. |
 | Google save page: "This pass cannot be added" | `GOOGLE_WALLET_ISSUER_ID` is not the issuer that owns the class, or the signed-in Google account is not a test user while the class is `UNDER_REVIEW`. |

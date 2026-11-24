@@ -13,7 +13,7 @@ interface Entry<T> {
   at: number;
 }
 
-const PREFIX = '@tazilla/cache/v1/';
+const PREFIX = '@tazella/cache/v1/';
 const memory = new Map<string, Entry<unknown>>();
 const inflight = new Map<string, Promise<unknown>>();
 const pendingWrites = new Map<string, Entry<unknown>>();

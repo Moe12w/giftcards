@@ -131,7 +131,7 @@ export default async function AdminAdvertisingPaymentsPage({
                   id="app_public_url"
                   name="app_public_url"
                   defaultValue={appUrl}
-                  placeholder="https://tazilla.com.qa"
+                  placeholder="https://tazella.com.qa"
                 />
                 <span className="hint">
                   Used to build the callback and webhook URLs. Leave blank to use <span className="mono">APP_PUBLIC_URL</span>.

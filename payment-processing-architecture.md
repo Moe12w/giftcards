@@ -1,4 +1,4 @@
-# Tazilla Payments Architecture — MyFatoorah Multi-Vendor
+# Tazella Payments Architecture — MyFatoorah Multi-Vendor
 
 > **HISTORICAL PLANNING DOCUMENT — DO NOT USE AS CURRENT INSTRUCTION.**
 > The migration numbers and proposed file names below do not match what was
@@ -83,7 +83,7 @@ P1–P4 are part of Phase 0 and are prerequisites for everything else.
 Customer / AI assistant / dashboard
         │
         ▼
-   Tazilla server (Edge Function or Next.js server action)
+   Tazella server (Edge Function or Next.js server action)
         │  1. create/read order + order_items (prices, commission, vendor share)
         │  2. POST /v3/payments  (or /v3/sessions for embedded)
         ▼
@@ -375,7 +375,7 @@ Handler: verify HMAC with `MYFATOORAH_WEBHOOK_SECRET`, upsert into `payment_even
 ### 4.5 What the vendor sees afterwards
 
 - Status card: *Pending KYC / Approved / Rejected (reason) / Suspended*.
-- Commission: `commission_bps` from the vendor row, shown as a percentage ("Tazilla keeps 12.5%").
+- Commission: `commission_bps` from the vendor row, shown as a percentage ("Tazella keeps 12.5%").
 - Balance block, read from `GetSupplierDashboard`: `TotalAwaitingBalance`, `TotalAwaitingToTransfer`, `TotalDepositedAmount`, `TotalNumberOfTransactions`. These are MyFatoorah's figures; cache them in the DB only if you need history.
 - A "Payments are live" flag = supplier `approved` **and** `IsActive`.
 
@@ -438,7 +438,7 @@ const major = (minor: bigint | number) => Number((Number(minor) / 100).toFixed(2
   },
   "NotificationOption": "LINK",
   "IntegrationUrls": {
-    "Redirection": "https://tazilla.com.qa/payment/return",
+    "Redirection": "https://tazella.com.qa/payment/return",
     "Webhook": "https://<project>.supabase.co/functions/v1/payment-webhook"
   },
   "Suppliers": [
@@ -469,7 +469,7 @@ Response (v3):
 
 - Platform commission = `order_items.commission_minor` (already written by MCP; compute the same way in the app).
 - `ProposedDepositShare` carries it: supplier gets `vendor_share_minor`, platform gets `commission_minor`.
-- MyFatoorah's own transaction fee is taken from the platform side by default. Decide explicitly (⚠ confirm with the account manager) whether Tazilla absorbs it or passes it on; if passed on, adjust `ProposedDepositShare` down and record the difference in `orders.fee_minor`. Do not change `commission_minor` retroactively.
+- MyFatoorah's own transaction fee is taken from the platform side by default. Decide explicitly (⚠ confirm with the account manager) whether Tazella absorbs it or passes it on; if passed on, adjust `ProposedDepositShare` down and record the difference in `orders.fee_minor`. Do not change `commission_minor` retroactively.
 - Store the provider's own numbers from the webhook (`Amount.ServiceCharge`, `ReceivableAmount`) in `payment_events.payload`; do not try to recompute them.
 
 ### 5.4 Baskets with several businesses
@@ -603,8 +603,8 @@ Rules:
 `send_payment_link`
 
 - `channel: "email"` requires an e-mail; `"sms"` requires `MobileCountryCode` + number; `"all"` both.
-- MyFatoorah sends the message; Tazilla stores `sent_to` **masked** (`s***@example.com`, `+974****566`).
-- If you prefer Tazilla-branded e-mail, keep `channel: "link"` and send through your own provider (Resend/Supabase) instead. The MCP tool should default to `link` and only send through MyFatoorah when the caller explicitly asks.
+- MyFatoorah sends the message; Tazella stores `sent_to` **masked** (`s***@example.com`, `+974****566`).
+- If you prefer Tazella-branded e-mail, keep `channel: "link"` and send through your own provider (Resend/Supabase) instead. The MCP tool should default to `link` and only send through MyFatoorah when the caller explicitly asks.
 
 `get_payment_link`
 
@@ -682,7 +682,7 @@ if (error) throw error;
 
 const result = await WebBrowser.openAuthSessionAsync(
   data.paymentUrl,
-  'tazilla://payment/return',      // your deep link
+  'tazella://payment/return',      // your deep link
 );
 
 // Regardless of result.type, ask the server — the browser result is not proof.
@@ -690,8 +690,8 @@ router.replace({ pathname: '/(customer)/checkout/processing', params: { orderId 
 ```
 
 - `processing.tsx` must **poll** `orders.payment_status` (via a small RPC or `supabase.from('orders').select('payment_status')`) every 2 s for ~90 s instead of the current 1.6 s fake timer.
-- Set `IntegrationUrls.Redirection` to `https://tazilla.com.qa/payment/return`, and have that page (or a universal link) bounce to `tazilla://payment/return`.
-- Add `scheme: "tazilla"` in `app.json` (check what exists) and the associated-domains/asset-links files if you want universal links.
+- Set `IntegrationUrls.Redirection` to `https://tazella.com.qa/payment/return`, and have that page (or a universal link) bounce to `tazella://payment/return`.
+- Add `scheme: "tazella"` in `app.json` (check what exists) and the associated-domains/asset-links files if you want universal links.
 - Show a "Pay in browser" state with a clear "return to app" instruction.
 
 This replaces the simulated checkout with a real one and is the least risky change in the app.
@@ -724,7 +724,7 @@ Package: `myfatoorah-reactnative` (latest 1.4.0, native module — **not** avail
 
 ### 10.1 Deposits
 
-MyFatoorah pays suppliers on the `DepositTerms` set at creation (Daily / Weekly / Monthly / OnDemand). Tazilla does **not** initiate payouts. Therefore:
+MyFatoorah pays suppliers on the `DepositTerms` set at creation (Daily / Weekly / Monthly / OnDemand). Tazella does **not** initiate payouts. Therefore:
 
 - Keep `payouts` as a local mirror: one row per deposit returned by `GET /v2/GetSupplierDeposits`, `status = 'paid'`, `myfatoorah_ref` = the provider reference, `amount_minor` = deposit × 100.
 - `GET /v2/GetSupplierDashboard` gives `TotalAwaitingBalance`, `TotalAwaitingToTransfer`, `TotalDepositedAmount`, `TotalBalance` — use it for the vendor/partner "Earnings" page.
@@ -838,8 +838,8 @@ Each phase is shippable on its own and leaves the app working.
 
 1. **Who absorbs MyFatoorah's transaction fee** — platform or supplier? It changes `ProposedDepositShare` maths.
 2. **Refund/clawback path**: is `TransferBalance` allowed for this, or should refunds be handled by the account manager?
-3. **Supplier deposits**: are the terms set per supplier at creation final, or can Tazilla change them later (`EditSupplier` review)?
-4. **Enterprise partners**: are they expected to be MyFatoorah suppliers too, or does the partner settle with Tazilla outside MyFatoorah? The design above assumes supplier = yes; if not, partner items need a different split model.
+3. **Supplier deposits**: are the terms set per supplier at creation final, or can Tazella change them later (`EditSupplier` review)?
+4. **Enterprise partners**: are they expected to be MyFatoorah suppliers too, or does the partner settle with Tazella outside MyFatoorah? The design above assumes supplier = yes; if not, partner items need a different split model.
 5. **Qatar live base URL**: confirm `api-qa.myfatoorah.com` and `qa.myfatoorah.com/sessions/v1/session.js` for your account (the docs list them, but confirm with the account manager).
 6. **React Native SDK key handling**: can the RN SDK run with a session-only credential, or does it require the secret API key on-device? If it requires the secret, Phase 5 must use the WebView option instead.
 7. **Embedded `paymentData` decryption**: use MyFatoorah's sample for the exact algorithm; do not invent it.

@@ -16,7 +16,7 @@ declare
   v_body text;
 begin
   -- Bulk fulfillment sets this flag and writes one batched notification.
-  if current_setting('tazilla.bulk_fulfill', true) = '1' then
+  if current_setting('tazella.bulk_fulfill', true) = '1' then
     return new;
   end if;
 
@@ -91,7 +91,7 @@ declare
   v_item_ids uuid[] := '{}'::uuid[];
   v_partner_code text;
 begin
-  perform set_config('tazilla.bulk_fulfill', '1', true);
+  perform set_config('tazella.bulk_fulfill', '1', true);
   select * into v_order from public.bulk_orders where id = p_bulk_order_id for update;
   if not found then
     raise exception 'bulk order not found';
@@ -99,7 +99,7 @@ begin
 
   -- Idempotent: a paid, fulfilled order never issues a second set of cards.
   if v_order.status = 'fulfilled' then
-    perform set_config('tazilla.bulk_fulfill', '', true);
+    perform set_config('tazella.bulk_fulfill', '', true);
     return v_order.id;
   end if;
 
@@ -196,7 +196,7 @@ begin
         updated_at = now()
     where id = v_order.id;
 
-    perform set_config('tazilla.bulk_fulfill', '', true);
+    perform set_config('tazella.bulk_fulfill', '', true);
     insert into public.notifications (user_id, kind, title_key, body_key, payload)
     select v_order.buyer_user_id, 'received', 'notifications.received', 'notifications.receivedBody',
            jsonb_build_object('bulk_order_id', v_order.id, 'count', v_issued)
@@ -278,7 +278,7 @@ begin
       updated_at = now()
   where id = v_order.id;
 
-  perform set_config('tazilla.bulk_fulfill', '', true);
+  perform set_config('tazella.bulk_fulfill', '', true);
     insert into public.notifications (user_id, kind, title_key, body_key, payload)
     select v_order.buyer_user_id, 'received', 'notifications.received', 'notifications.receivedBody',
            jsonb_build_object('bulk_order_id', v_order.id, 'count', v_issued)

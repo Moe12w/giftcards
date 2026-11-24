@@ -2,16 +2,16 @@
   "updated": "16 November 2026",
   "company": {
     "legalName": "Nexgen Software Publishing Solution",
-    "brand": "Tazilla",
+    "brand": "Tazella",
     "cr": "238473",
     "address": "Doha, State of Qatar",
-    "legalEmail": "legal@tazilla.com.qa",
-    "privacyEmail": "privacy@tazilla.com.qa",
-    "supportEmail": "hello@tazilla.com.qa"
+    "legalEmail": "legal@tazella.com.qa",
+    "privacyEmail": "privacy@tazella.com.qa",
+    "supportEmail": "hello@tazella.com.qa"
   },
   "ui": {
     "legalCentre": "Legal centre",
-    "legalCentreLede": "The terms and privacy notices that apply to each side of the Tazilla marketplace.",
+    "legalCentreLede": "The terms and privacy notices that apply to each side of the Tazella marketplace.",
     "terms": "Terms & Conditions",
     "privacy": "Privacy Policy",
     "lastUpdated": "Last updated",
@@ -29,7 +29,7 @@
   "audiences": {
     "client": {
       "label": "Customers",
-      "short": "People who buy, send, receive or hold a Tazilla gift card.",
+      "short": "People who buy, send, receive or hold a Tazella gift card.",
       "termsTitle": "Customer Terms & Conditions",
       "privacyTitle": "Customer Privacy Policy"
     },
@@ -56,14 +56,14 @@
     "terms": {
       "title": "Terms & Conditions",
       "intro": [
-        "These Terms & Conditions (the Terms) are a legal agreement between you and Nexgen Software Publishing Solution, a company registered in the State of Qatar under commercial registration number 238473 and operating the Tazilla brand and platform (Nexgen, we, us or our).",
-        "They govern your access to and use of the Tazilla website, mobile application, business dashboards, application programming interfaces and related services (together, the Platform). By creating an account, browsing, listing, buying, sending, importing, allocating or redeeming a gift card, or otherwise using the Platform, you agree to these Terms. If you do not agree, you must not use the Platform."
+        "These Terms & Conditions (the Terms) are a legal agreement between you and Nexgen Software Publishing Solution, a company registered in the State of Qatar under commercial registration number 238473 and operating the Tazella brand and platform (Nexgen, we, us or our).",
+        "They govern your access to and use of the Tazella website, mobile application, business dashboards, application programming interfaces and related services (together, the Platform). By creating an account, browsing, listing, buying, sending, importing, allocating or redeeming a gift card, or otherwise using the Platform, you agree to these Terms. If you do not agree, you must not use the Platform."
       ],
       "opening": [
         {
-          "h": "1. About Tazilla and these Terms",
+          "h": "1. About Tazella and these Terms",
           "p": [
-            "Tazilla is a technology marketplace. It allows independent businesses to describe and list closed-loop gift cards, and allows customers, enterprise clients and approved bulk buyers to discover, purchase, send, store, allocate and redeem those gift cards in a single digital experience.",
+            "Tazella is a technology marketplace. It allows independent businesses to describe and list closed-loop gift cards, and allows customers, enterprise clients and approved bulk buyers to discover, purchase, send, store, allocate and redeem those gift cards in a single digital experience.",
             "These Terms apply to everyone who uses the Platform. Some users also accept a role-specific schedule: the Vendor Schedule, the Enterprise Client Schedule or the Bulk Buyer Schedule. A role-specific schedule forms part of these Terms and prevails over the general sections to the extent of any conflict for that role. Customer-specific provisions are set out in the Customer Schedule.",
             "The Platform is operated from Qatar. We may offer parts of the Platform in English and Arabic. Both language versions are intended to have the same meaning. To the extent Qatari law requires consumer information in Arabic, the Arabic version prevails for that information. Otherwise, the English version prevails to the extent permitted by applicable law."
           ]
@@ -74,7 +74,7 @@
             "In these Terms, the following words have the meanings below unless the context requires otherwise."
           ],
           "b": [
-            "Platform: the Tazilla website, mobile application, dashboards, APIs, checkout, delivery tools, wallet integrations and related services.",
+            "Platform: the Tazella website, mobile application, dashboards, APIs, checkout, delivery tools, wallet integrations and related services.",
             "Customer: a person who buys, sends, receives or holds a gift card for personal or family use, and who is not acting for a trade, business or profession.",
             "Vendor: a business that lists gifts on the Platform and issues the gift card or code that is sold.",
             "Enterprise Client: an organisation that uses the enterprise portal to import its own codes, run a reward programme, or allocate gift cards to employees, customers or other recipients.",
@@ -95,14 +95,14 @@
             "Nexgen operates a technology marketplace. Nexgen is not the Issuer of any Vendor gift card, is not the merchant of record for the underlying goods or services, and is not a party to the contract between a Customer and a Vendor, or between an Enterprise Client or Bulk Buyer and an Issuer.",
             "Nexgen does not issue e-money, operate a payment account, acquire merchant transactions, hold customer funds, act as escrow, trustee or fiduciary, or settle funds between buyers and sellers. All payments are processed by a Payment Processor. Each Vendor, Enterprise Client or Bulk Buyer contracts directly with its Payment Processor and maintains its own merchant or business account with that processor. Nexgen never receives, holds, controls or settles the purchase price.",
             "Nexgen provides listing, discovery, checkout orchestration, delivery, wallet presentation, code storage, reporting and support tools. Nexgen does not control the Issuer's business, does not guarantee that an Issuer will remain solvent or willing to honour a Gift Card, and does not verify every statement an Issuer makes beyond the checks described in these Terms.",
-            "Any statement on the Platform that a gift is 'sold by Tazilla' or similar is a marketing shorthand. It does not make Nexgen the seller, Issuer, merchant of record or payment provider. The identity of the Issuer is shown on the listing, order confirmation, gift card and redemption page."
+            "Any statement on the Platform that a gift is 'sold by Tazella' or similar is a marketing shorthand. It does not make Nexgen the seller, Issuer, merchant of record or payment provider. The identity of the Issuer is shown on the listing, order confirmation, gift card and redemption page."
           ]
         },
         {
           "h": "4. Eligibility, accounts and business verification",
           "p": [
             "You must be at least 18 years old and have legal capacity to enter into a binding contract. If you use the Platform for an organisation, you confirm that you are authorised to bind that organisation and that the organisation accepts these Terms.",
-            "You must provide accurate, current and complete information, keep it up to date, and use only accounts that belong to you or your organisation. You are responsible for protecting your login credentials, devices and one-time codes, and for all activity under your account. You must notify us immediately at hello@tazilla.com.qa if you suspect unauthorised access.",
+            "You must provide accurate, current and complete information, keep it up to date, and use only accounts that belong to you or your organisation. You are responsible for protecting your login credentials, devices and one-time codes, and for all activity under your account. You must notify us immediately at hello@tazella.com.qa if you suspect unauthorised access.",
             "Business users must complete our onboarding and know-your-customer checks, including providing a valid commercial registration, trade licence, tax information, beneficial ownership information, authorised signatory details and any other document we reasonably request. We may verify information with public registers, Payment Processors, banks and other service providers. Approval is discretionary and may be refused, limited, suspended or withdrawn.",
             "We may refuse, suspend or close an account where we suspect fraud, sanctions, money laundering, terrorist financing, unlawful conduct, misrepresentation, a risk to customers, or a breach of these Terms. We may also do so where required by law, a regulator, a Payment Processor or a court."
           ]
@@ -132,7 +132,7 @@
             "An Order is an offer to purchase. It is accepted when the Issuer or the Platform, acting on the Issuer's instructions, confirms issuance or delivery. We may reject or cancel an Order where a Gift Card is unavailable, a price or listing is wrong, a payment fails, fraud is suspected, or the law requires it.",
             "Gift Cards are delivered digitally by email, SMS, shareable link, in-app wallet or another method shown at checkout. Delivery is complete when the Code is sent to the contact details you provided or made available in your account. You are responsible for checking the recipient details before confirming the Order. Risk in the Code passes to you or the recipient on delivery.",
             "You may cancel an Order before a Code is issued or delivered. Once a Code has been issued or delivered, cancellation, return, exchange and refund are subject to the Issuer's terms and applicable Qatari law, including mandatory consumer rights. A Gift Card that has been redeemed, shared, copied or partly used will normally not be refundable.",
-            "If a Gift Card is not delivered, is defective, cannot be redeemed, or the Issuer refuses to honour it, contact the Issuer first and then contact us at hello@tazilla.com.qa. We may help investigate and may, where appropriate, facilitate a replacement or refund from the Issuer. We do not become the Issuer or merchant of record by helping. Nothing in this section limits a consumer's statutory rights."
+            "If a Gift Card is not delivered, is defective, cannot be redeemed, or the Issuer refuses to honour it, contact the Issuer first and then contact us at hello@tazella.com.qa. We may help investigate and may, where appropriate, facilitate a replacement or refund from the Issuer. We do not become the Issuer or merchant of record by helping. Nothing in this section limits a consumer's statutory rights."
           ]
         },
         {
@@ -218,8 +218,8 @@
         {
           "h": "17. Contact and notices",
           "p": [
-            "Legal notices to Nexgen must be sent to legal@tazilla.com.qa and, where required, by registered mail to our registered address in Doha, Qatar. Notices to you may be sent to the email address or phone number on your account, posted in the Platform, or delivered through the app. You are responsible for keeping your contact details current.",
-            "Our details: Nexgen Software Publishing Solution, commercial registration number 238473, Doha, State of Qatar. Brand: Tazilla. Legal: legal@tazilla.com.qa. Privacy: privacy@tazilla.com.qa. Support: hello@tazilla.com.qa."
+            "Legal notices to Nexgen must be sent to legal@tazella.com.qa and, where required, by registered mail to our registered address in Doha, Qatar. Notices to you may be sent to the email address or phone number on your account, posted in the Platform, or delivered through the app. You are responsible for keeping your contact details current.",
+            "Our details: Nexgen Software Publishing Solution, commercial registration number 238473, Doha, State of Qatar. Brand: Tazella. Legal: legal@tazella.com.qa. Privacy: privacy@tazella.com.qa. Support: hello@tazella.com.qa."
           ]
         }
       ],
@@ -228,16 +228,16 @@
     "privacy": {
       "title": "Privacy Policy",
       "intro": [
-        "This Privacy Policy explains how Nexgen Software Publishing Solution (Nexgen, we, us or our), commercial registration number 238473, collects, uses, shares, stores and protects personal data when you use the Tazilla website, mobile application, dashboards, APIs and related services (the Platform).",
+        "This Privacy Policy explains how Nexgen Software Publishing Solution (Nexgen, we, us or our), commercial registration number 238473, collects, uses, shares, stores and protects personal data when you use the Tazella website, mobile application, dashboards, APIs and related services (the Platform).",
         "We are committed to handling personal data transparently, fairly and securely, in line with Law No. 13 of 2016 on Protecting Personal Data Privacy (the Data Privacy Law) and other applicable Qatari law. This Policy should be read with our Terms & Conditions."
       ],
       "opening": [
         {
           "h": "1. Who is responsible for your data",
           "p": [
-            "Nexgen is the controller of personal data that it processes for its own purposes, including account creation, platform security, checkout orchestration, customer support, analytics, marketing and legal compliance. Our registered address is Doha, State of Qatar. Our privacy contact is privacy@tazilla.com.qa.",
+            "Nexgen is the controller of personal data that it processes for its own purposes, including account creation, platform security, checkout orchestration, customer support, analytics, marketing and legal compliance. Our registered address is Doha, State of Qatar. Our privacy contact is privacy@tazella.com.qa.",
             "For some data, another party is the controller. A Vendor is normally an independent controller of the data it receives to fulfil and redeem its own gift cards and to run its own business. An Enterprise Client or Bulk Buyer is normally the controller of the employee, customer or recipient data it uploads or instructs us to process. In those cases, Nexgen acts as a processor or a separate controller only for the limited purposes described in this Policy and the applicable role schedule.",
-            "We have a Privacy Officer responsible for data protection. You can contact the Privacy Officer at privacy@tazilla.com.qa. If you are a customer of a Vendor, Enterprise Client or Bulk Buyer and want to exercise rights over data that party controls, please contact that party first. We will assist it as required."
+            "We have a Privacy Officer responsible for data protection. You can contact the Privacy Officer at privacy@tazella.com.qa. If you are a customer of a Vendor, Enterprise Client or Bulk Buyer and want to exercise rights over data that party controls, please contact that party first. We will assist it as required."
           ]
         },
         {
@@ -319,7 +319,7 @@
           "h": "8. International transfers",
           "p": [
             "Some of our service providers may store or process personal data outside Qatar. Where we transfer personal data internationally, we take steps required by the Data Privacy Law to protect it, including contractual safeguards, security assessments and, where required, your consent. The Data Privacy Law generally permits cross-border flows unless the processing breaches the law or may cause serious harm to personal data or individual privacy.",
-            "Our cloud and database providers may process data in the region or in other countries where they operate. You can ask us for more information about the safeguards used for a particular transfer by contacting privacy@tazilla.com.qa."
+            "Our cloud and database providers may process data in the region or in other countries where they operate. You can ask us for more information about the safeguards used for a particular transfer by contacting privacy@tazella.com.qa."
           ]
         },
         {
@@ -355,14 +355,14 @@
         {
           "h": "12. Marketing and communications",
           "p": [
-            "We send marketing only where we have your consent or another lawful basis. You can withdraw consent or opt out at any time using the unsubscribe link in an email, the settings in the app, or by contacting privacy@tazilla.com.qa. We may still send service messages, receipts, security alerts and legal notices that are necessary for the Platform.",
+            "We send marketing only where we have your consent or another lawful basis. You can withdraw consent or opt out at any time using the unsubscribe link in an email, the settings in the app, or by contacting privacy@tazella.com.qa. We may still send service messages, receipts, security alerts and legal notices that are necessary for the Platform.",
             "If you are a business contact, we may rely on our legitimate interests to send relevant business communications, subject to your right to object. We do not sell personal data or rent email lists."
           ]
         },
         {
           "h": "13. Children",
           "p": [
-            "The Platform is intended for adults aged 18 and over. We do not knowingly collect personal data from children. If a gift card is intended for a minor, the parent or guardian must manage the purchase, redemption and any data. If we learn that we have collected a child's data without guardian consent, we will delete it. A guardian may contact privacy@tazilla.com.qa to request access or deletion."
+            "The Platform is intended for adults aged 18 and over. We do not knowingly collect personal data from children. If a gift card is intended for a minor, the parent or guardian must manage the purchase, redemption and any data. If we learn that we have collected a child's data without guardian consent, we will delete it. A guardian may contact privacy@tazella.com.qa to request access or deletion."
           ]
         },
         {
@@ -374,7 +374,7 @@
         {
           "h": "15. Automated decisions and analytics",
           "p": [
-            "We may use automated tools for fraud detection, risk scoring, recommendations and analytics. We do not make solely automated decisions that produce legal or similarly significant effects without human review. You can ask for human review of an automated decision that affects you by contacting privacy@tazilla.com.qa.",
+            "We may use automated tools for fraud detection, risk scoring, recommendations and analytics. We do not make solely automated decisions that produce legal or similarly significant effects without human review. You can ask for human review of an automated decision that affects you by contacting privacy@tazella.com.qa.",
             "We may produce aggregated or de-identified statistics. Aggregated data that cannot identify an individual is not personal data, but we apply appropriate safeguards before sharing it."
           ]
         },
@@ -382,7 +382,7 @@
           "h": "16. Changes and contact",
           "p": [
             "We may update this Policy to reflect changes in law, our services or our data practices. The current version is posted on the Platform with its last-updated date. For material changes, we will provide reasonable notice. If you do not agree, you should stop using the Platform and may close your account.",
-            "For any privacy question, request or complaint, contact our Privacy Officer at privacy@tazilla.com.qa or write to Nexgen Software Publishing Solution, Doha, State of Qatar. We aim to respond within 30 days. If you are not satisfied, you may complain to NCSA/CDP. Our legal contact is legal@tazilla.com.qa."
+            "For any privacy question, request or complaint, contact our Privacy Officer at privacy@tazella.com.qa or write to Nexgen Software Publishing Solution, Doha, State of Qatar. We aim to respond within 30 days. If you are not satisfied, you may complain to NCSA/CDP. Our legal contact is legal@tazella.com.qa."
           ]
         }
       ],
@@ -395,7 +395,7 @@
         {
           "h": "18. Customer Schedule",
           "p": [
-            "This schedule applies if you use Tazilla as a Customer. It adds to, and does not replace, the general Terms."
+            "This schedule applies if you use Tazella as a Customer. It adds to, and does not replace, the general Terms."
           ]
         },
         {
@@ -422,7 +422,7 @@
         {
           "h": "18.4 Your account and communications",
           "p": [
-            "You are responsible for your account, your recipients and your communications. You must not use Tazilla to send unlawful, harassing, discriminatory or misleading messages. We may suspend an account that sends spam or abuses recipients.",
+            "You are responsible for your account, your recipients and your communications. You must not use Tazella to send unlawful, harassing, discriminatory or misleading messages. We may suspend an account that sends spam or abuses recipients.",
             "We send service messages about orders, delivery, security and legal changes. We send marketing only with consent or another lawful basis, and you can opt out at any time. Opting out of marketing does not stop service messages."
           ]
         }
@@ -438,7 +438,7 @@
           "h": "17.1 Buyer and recipient data",
           "p": [
             "We process your account, order, payment, delivery and support data to provide the Platform, deliver gifts, prevent fraud and comply with law. When you send a gift, we share the recipient's name, delivery details, message and order information with the Issuer and our delivery providers so the gift can be delivered and redeemed.",
-            "If you are a recipient, we receive your details from the sender or the Issuer. We use them to deliver and support the gift, prevent fraud and, where permitted, to provide you with information about the gift. You can contact privacy@tazilla.com.qa to exercise your rights. If the sender or Issuer controls the data, we will direct your request to them or assist them."
+            "If you are a recipient, we receive your details from the sender or the Issuer. We use them to deliver and support the gift, prevent fraud and, where permitted, to provide you with information about the gift. You can contact privacy@tazella.com.qa to exercise your rights. If the sender or Issuer controls the data, we will direct your request to them or assist them."
           ]
         },
         {
@@ -468,7 +468,7 @@
           "h": "18.1 Independent issuer and merchant of record",
           "p": [
             "You are an independent business, not an employee, agent, partner, joint venturer or representative of Nexgen. You are solely responsible for your products, services, prices, staff, premises, licences, taxes and customer service. You have full authority to list and sell your gift cards and to bind your business to this schedule.",
-            "You are the Issuer and merchant of record for every gift card you list. You are solely responsible for honouring it, for the goods or services it represents, for its value, expiry, restrictions, redemption and refunds, and for all consumer, health, safety, tax and advertising obligations. Nexgen is not your agent and does not issue, underwrite, guarantee or redeem your gift cards. You must not describe Nexgen or Tazilla as the issuer, seller, merchant of record or payment provider of your gift cards."
+            "You are the Issuer and merchant of record for every gift card you list. You are solely responsible for honouring it, for the goods or services it represents, for its value, expiry, restrictions, redemption and refunds, and for all consumer, health, safety, tax and advertising obligations. Nexgen is not your agent and does not issue, underwrite, guarantee or redeem your gift cards. You must not describe Nexgen or Tazella as the issuer, seller, merchant of record or payment provider of your gift cards."
           ]
         },
         {
@@ -732,7 +732,7 @@
         {
           "h": "17.3 Marketing, retention and rights",
           "p": [
-            "You must not use recipient data for spam or unrelated marketing. You must honour opt-outs and keep your own suppression lists. We assist with data subject requests relating to data we control or process for you. You can contact privacy@tazilla.com.qa for more information."
+            "You must not use recipient data for spam or unrelated marketing. You must honour opt-outs and keep your own suppression lists. We assist with data subject requests relating to data we control or process for you. You can contact privacy@tazella.com.qa for more information."
           ]
         }
       ]

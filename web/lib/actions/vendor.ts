@@ -676,13 +676,13 @@ export interface ScanLookupResult {
 
 /**
  * Works out what was scanned. The app can show a voucher id
- * (tazilla:card:...), a wallet link, or the printed code itself.
+ * (tazella:card:...), a wallet link, or the printed code itself.
  */
 function parseScanPayload(raw: string): { id?: string; code?: string } {
   const value = (raw ?? '').trim();
   if (!value) return {};
 
-  const scheme = value.match(/^tazilla:(?:card|redeem|voucher|pass):([0-9a-f-]{36})$/i);
+  const scheme = value.match(/^tazella:(?:card|redeem|voucher|pass):([0-9a-f-]{36})$/i);
   if (scheme) return { id: scheme[1] };
 
   const uuid = value.match(
@@ -712,7 +712,7 @@ async function resolveScannedVoucher(
 ): Promise<{ ok: false; error: string } | { ok: true; voucher: ScannedVoucher }> {
   const parsed = parseScanPayload(payload);
   if (!parsed.id && !parsed.code) {
-    return { ok: false, error: 'That code is not a Tazilla gift.' };
+    return { ok: false, error: 'That code is not a Tazella gift.' };
   }
 
   let query = ctx.supabase

@@ -4581,10 +4581,10 @@ table.data .sub {
 
 /* A small rotating icon for in-progress uploads and saves. */
 .spin {
-  animation: tazilla-spin 0.9s linear infinite;
+  animation: tazella-spin 0.9s linear infinite;
 }
 
-@keyframes tazilla-spin {
+@keyframes tazella-spin {
   to {
     transform: rotate(360deg);
   }
@@ -4653,7 +4653,7 @@ button[data-pending]::before {
   border: 2px solid currentColor;
   border-inline-end-color: transparent;
   border-radius: 50%;
-  animation: tazilla-spin 0.7s linear infinite;
+  animation: tazella-spin 0.7s linear infinite;
 }
 
 /* ---------------------------------------------------------------------------

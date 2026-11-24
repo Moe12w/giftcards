@@ -179,7 +179,7 @@ export async function saveEnterpriseProduct(formData: FormData) {
     back(id ? `/enterprise/products/${id}` : '/enterprise/products', 'Enter a valid price.');
   }
   if (commissionBps < 0 || commissionBps > 10_000) {
-    back(id ? `/enterprise/products/${id}` : '/enterprise/products', "Tazilla's cut must be between 0 and 100%.");
+    back(id ? `/enterprise/products/${id}` : '/enterprise/products', "Tazella's cut must be between 0 and 100%.");
   }
 
   const patch = {

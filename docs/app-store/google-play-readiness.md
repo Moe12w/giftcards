@@ -1,4 +1,4 @@
-# Google Play readiness — Tazilla
+# Google Play readiness — Tazella
 
 Sits next to [App Store notes for review](./notes-for-review.md). Sources are Google's own policy pages; the date-sensitive numbers (API level, 16 KB, closed testing) were checked in November 2026.
 
@@ -11,7 +11,7 @@ Play requires **both** an in-app path and a public web resource, with the web UR
 - Linked from the site footer ("Delete your account") and listed in `web/app/(app)/sitemap.ts`
 - Static, public, no sign-in, renders in English and Arabic, gives the in-app steps, a `mailto:` request route, what is deleted, what is retained, and why vendor/enterprise/admin accounts go through support.
 
-> **Domain:** `tazilla.com.qa` does not resolve yet (checked 22 Nov 2026). The live site is the Vercel domain above, and the mobile app's `EXPO_PUBLIC_SITE_URL` points there too. Enter the live URL in Play Console now; when the custom domain is attached, change it here, in the Play Console field, and in `EXPO_PUBLIC_SITE_URL`.
+> **Domain:** `tazella.com.qa` does not resolve yet (checked 22 Nov 2026). The live site is the Vercel domain above, and the mobile app's `EXPO_PUBLIC_SITE_URL` points there too. Enter the live URL in Play Console now; when the custom domain is attached, change it here, in the Play Console field, and in `EXPO_PUBLIC_SITE_URL`.
 
 Verify before submitting: the URL loads signed out in a private window, the email link opens with the subject filled, and the path resolves without the locale prefix redirecting to a 404. Both locale URLs returned 200 on 22 Nov 2026.
 
@@ -21,9 +21,9 @@ Every app must complete this form on **App content**, including apps on testing 
 
 **Recommended:** select **Other**, then use the free-text field:
 
-> Tazilla is a marketplace for gift cards and experience vouchers from third-party businesses in Qatar. Tazilla does not hold, transfer, lend or invest user funds, does not operate a wallet or stored-value account, and does not offer banking, credit, insurance, trading or money transfer. Payments for an order are collected by our licensed payment provider (MyFatoorah) at checkout and settled to the business that supplies the gift. Gift card value is redeemed only in person at the issuing business.
+> Tazella is a marketplace for gift cards and experience vouchers from third-party businesses in Qatar. Tazella does not hold, transfer, lend or invest user funds, does not operate a wallet or stored-value account, and does not offer banking, credit, insurance, trading or money transfer. Payments for an order are collected by our licensed payment provider (MyFatoorah) at checkout and settled to the business that supplies the gift. Gift card value is redeemed only in person at the issuing business.
 
-Why "Other" rather than "none": the app sells stored-value codes and can place a purchased card in Apple Wallet or Google Wallet. Declaring "none" while the review team can see gift-card balances and wallet buttons is exactly the kind of mismatch that produces a rejection, and the description keeps the extra review narrow. Do **not** select *Mobile payments and digital wallets* or *Rewards, points, frequent flier miles* — those describe products Tazilla does not operate, and they pull in requirements (licensing, disclosures) that do not apply.
+Why "Other" rather than "none": the app sells stored-value codes and can place a purchased card in Apple Wallet or Google Wallet. Declaring "none" while the review team can see gift-card balances and wallet buttons is exactly the kind of mismatch that produces a rejection, and the description keeps the extra review narrow. Do **not** select *Mobile payments and digital wallets* or *Rewards, points, frequent flier miles* — those describe products Tazella does not operate, and they pull in requirements (licensing, disclosures) that do not apply.
 
 Policy context: [Financial Services](https://support.google.com/googleplay/android-developer/answer/9876821) covers “apps that expose users to deceptive or harmful financial products” — lending, banking, crypto, trading, insurance. A marketplace selling third-party retail gift cards is at the edge, not inside it; the declaration text above is what keeps it there.
 
@@ -46,10 +46,10 @@ Complete on **App content → Data safety**. It must match what the app and its 
 
 Notes to keep the answers honest:
 
-- **Payment info: not collected.** Card details are entered on MyFatoorah's hosted page in an in-app browser. Tazilla stores a payment reference and status, which is purchase history, not payment info.
+- **Payment info: not collected.** Card details are entered on MyFatoorah's hosted page in an in-app browser. Tazella stores a payment reference and status, which is purchase history, not payment info.
 - **No location, contacts, calendar, photos, files, health, SMS, call logs, web browsing or installed apps.** There is no camera or media picker in the build.
 - **No advertising or device advertising ID.** No ads declaration ("app does not contain ads").
-- **Shared = No** for every row. Supabase (hosting/database), MyFatoorah (payments) and Expo's push service are service providers acting on Tazilla's behalf, which the form treats as processing rather than sharing.
+- **Shared = No** for every row. Supabase (hosting/database), MyFatoorah (payments) and Expo's push service are service providers acting on Tazella's behalf, which the form treats as processing rather than sharing.
 - **Data is encrypted in transit** — yes (HTTPS/TLS to Supabase and MyFatoorah).
 - **Users can request data deletion** — yes; the form asks for the deletion request URL, use the same `/account-deletion` page.
 - **Committed to the Play Families policy** — no; the app is not directed at children.
@@ -57,16 +57,16 @@ Notes to keep the answers honest:
 ### Also declare
 
 - **Account creation:** yes → the in-app delete path and the web deletion URL are both required, which is why §1 exists.
-- **App access:** login required for wallet, checkout, sending, notifications, profile → give the reviewer `appreview@tazilla.com.qa` and its password in the App access section, not only in free text ([prepare for review](https://support.google.com/googleplay/android-developer/answer/9859455)).
+- **App access:** login required for wallet, checkout, sending, notifications, profile → give the reviewer `appreview@tazella.com.qa` and its password in the App access section, not only in free text ([prepare for review](https://support.google.com/googleplay/android-developer/answer/9859455)).
 - **Ads:** no ads.
 - **Content rating questionnaire:** utility/productivity or reference; no user-generated public content, no gambling, no violence. Gift messages are private, not public UGC.
 - **Target audience:** 18+ or 13+; not children.
 - **News app:** no. **Government app:** no. **Health:** no.
 - **Permissions declaration:** none needed today — the manifest only carries `POST_NOTIFICATIONS`, which is not a restricted permission ([sensitive permissions](https://support.google.com/googleplay/android-developer/answer/16558241)).
 
-## 4. Rejection risks that apply to Tazilla
+## 4. Rejection risks that apply to Tazella
 
-1. **Payments policy.** Play Billing is required for digital goods, not for physical goods and services ([Payments](https://support.google.com/googleplay/android-developer/answer/9858738)). Tazilla's defence is that value is redeemable only in person: vendor cards are scanned at the counter, and partner cards (Sephora, H&M, Lulu) are shown to staff at the partner's store. Keep the store listing, screenshots and review notes saying “gift cards you redeem at the business” — never “balance”, “credit” or “digital wallet”, and never “type this code in the partner's app”. The in-app copy follows the same rule.
+1. **Payments policy.** Play Billing is required for digital goods, not for physical goods and services ([Payments](https://support.google.com/googleplay/android-developer/answer/9858738)). Tazella's defence is that value is redeemable only in person: vendor cards are scanned at the counter, and partner cards (Sephora, H&M, Lulu) are shown to staff at the partner's store. Keep the store listing, screenshots and review notes saying “gift cards you redeem at the business” — never “balance”, “credit” or “digital wallet”, and never “type this code in the partner's app”. The in-app copy follows the same rule.
 2. **Financial features declaration** wrong or missing — see §2. This is the most common Play-specific gap for gift-card apps.
 3. **Account deletion web link** missing or not public — fixed by the new page; enter the URL.
 4. **Data safety mismatch** — the table above is narrow because there are no analytics SDKs; if one is added later (Sentry, PostHog, Firebase), the form must change in the same release.

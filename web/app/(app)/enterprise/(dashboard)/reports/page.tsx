@@ -74,15 +74,15 @@ export default async function EnterpriseReportsPage({
   const redeemedValue = redeemedInRange.reduce((sum, item) => sum + Number(item.denomination_minor ?? 0), 0);
   const soldValue = items.reduce((sum, item) => sum + Number(item.total_minor ?? 0), 0);
 
-  // The partner sets the price, Tazilla takes its cut, the rest is theirs.
+  // The partner sets the price, Tazella takes its cut, the rest is theirs.
   const commissionBps = products.length
     ? Math.round(
         products.reduce((sum, product) => sum + Number(product.commission_bps ?? 0), 0) /
           products.length,
       )
     : 0;
-  const tazillaCut = Math.round((soldValue * commissionBps) / 10000);
-  const partnerNet = soldValue - tazillaCut;
+  const tazellaCut = Math.round((soldValue * commissionBps) / 10000);
+  const partnerNet = soldValue - tazellaCut;
   const outstandingValue = inventory
     .filter((item) => item.status === 'available')
     .reduce((sum, item) => sum + Number(item.denomination_minor ?? 0), 0);
@@ -199,9 +199,9 @@ export default async function EnterpriseReportsPage({
               <span className="small muted">{fill(t.priceTimesSold, { count: items.length })}</span>
             </div>
             <div className="card gold">
-              <span className="small muted">{t.tazillaCut}</span>
+              <span className="small muted">{t.tazellaCut}</span>
               <div className="strong" style={{ fontSize: '1.6rem', marginTop: 6 }}>
-                {formatMoney(tazillaCut)}
+                {formatMoney(tazellaCut)}
               </div>
               <span className="small muted">
                 {fill(t.percentOfEveryCode, { percent: (commissionBps / 100).toFixed(2) })}

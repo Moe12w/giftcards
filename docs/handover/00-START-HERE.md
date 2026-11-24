@@ -4,17 +4,17 @@ This is the first document to read if you have just been given this codebase.
 
 ## What the product is
 
-Tazilla is a Qatari gift-card marketplace with three kinds of business:
+Tazella is a Qatari gift-card marketplace with three kinds of business:
 
 | Type | Sells | How it is redeemed |
 |---|---|---|
-| **Vendor** | Tazilla-issued gift cards or experiences | Customer or staff scans/redeems in the Tazilla system |
+| **Vendor** | Tazella-issued gift cards or experiences | Customer or staff scans/redeems in the Tazella system |
 | **Enterprise partner** | Codes the partner already issues itself (e.g. Sephora, H&M, Lulu Hypermarket) | Customer enters the code in the partner's own app or website |
 | **Bulk buyer** | Buys many gift cards at once for staff or clients | Codes/links are sent to recipients |
 
-The difference between the two sellers is who creates the code. For a **vendor**, Tazilla
-issues the gift card and staff redeem it in the Tazilla system. For an **enterprise partner**,
-the partner's own company generates the codes and redeems them in its own channel; Tazilla
+The difference between the two sellers is who creates the code. For a **vendor**, Tazella
+issues the gift card and staff redeem it in the Tazella system. For an **enterprise partner**,
+the partner's own company generates the codes and redeems them in its own channel; Tazella
 lists and sells them but is **not a reseller** — the codes are not bought from the partner in
 bulk and resold, and the partner's brand and redemption stay with the partner.
 

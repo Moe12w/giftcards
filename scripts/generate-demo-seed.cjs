@@ -10,7 +10,7 @@ const COFFEE_ID = '58852d5f-8486-42fa-a423-b199925159b0';
 const COFFEE_PRODUCT = 'b4b0f99f-b29c-41ce-9b2b-9ae9eebb269f';
 
 function uuid(name) {
-  const h = crypto.createHash('sha1').update('tazilla-demo:' + name).digest('hex');
+  const h = crypto.createHash('sha1').update('tazella-demo:' + name).digest('hex');
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
 function q(value) {
@@ -112,7 +112,7 @@ add('-- ---------------------------------------------------------------- shops')
 shops.forEach((shop, i) => {
   const id = uuid('vendor-' + shop.slug);
   add(`insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)`);
-  add(`values (${q(id)}, ${q(OWNER_ID)}, ${q(shop.name)}, ${q(shop.ar)}, ${q(shop.slug)}, ${q(shop.name + ' — a Tazilla partner in ' + shop.city + '.')},`);
+  add(`values (${q(id)}, ${q(OWNER_ID)}, ${q(shop.name)}, ${q(shop.ar)}, ${q(shop.slug)}, ${q(shop.name + ' — a Tazella partner in ' + shop.city + '.')},`);
   add(`  ${q(logo(shop.name, shop.color))}, ${q(img(shop.slug + '-banner', 1200, 400))}, ${q(shop.city)},`);
   add(`  (select id from public.categories where slug = ${q(shop.cat)}), 'approved', 1000, ${(4.5 + (i % 5) * 0.1).toFixed(1)}, ${i < 4 ? 'true' : 'false'}, now(), true, true)`);
   add(`on conflict (id) do nothing;`);
@@ -192,7 +192,7 @@ placements.forEach((placement) => {
 add('-- ---------------------------------------------------------- test wallet');
 const orderId = uuid('order-wallet-mohmed');
 add(`insert into public.orders (id, buyer_id, status, payment_reference, order_ref, currency, subtotal_minor, total_minor, sender_name, recipient_name, recipient_email, delivery_method, payment_status, payment_provider, paid_at)`);
-add(`values (${q(orderId)}, ${q(USER_ID)}, 'paid', 'DEMO-WALLET-MOHMED-001', 'GR-DEMO-MOHMED-001', 'QAR', 35000, 35000, 'Tazilla Demo', 'Mohmed', 'mohmed528omer@gmail.com', 'in_app', 'paid', 'manual', now())`);
+add(`values (${q(orderId)}, ${q(USER_ID)}, 'paid', 'DEMO-WALLET-MOHMED-001', 'GR-DEMO-MOHMED-001', 'QAR', 35000, 35000, 'Tazella Demo', 'Mohmed', 'mohmed528omer@gmail.com', 'in_app', 'paid', 'manual', now())`);
 add(`on conflict (id) do nothing;`);
 add('');
 

@@ -57,7 +57,7 @@ export default async function AdminTeamPage({
               </div>
               <div className="field">
                 <label htmlFor="email">Email address</label>
-                <input id="email" name="email" type="email" required placeholder="colleague@tazilla.com.qa" />
+                <input id="email" name="email" type="email" required placeholder="colleague@tazella.com.qa" />
               </div>
               <div className="field">
                 <label htmlFor="password">Temporary password</label>
@@ -68,7 +68,7 @@ export default async function AdminTeamPage({
                 Create admin account
               </button>
               <p className="small muted" style={{ margin: 0 }}>
-                Existing accounts are never overwritten. Ask the person to contact Tazilla if they already have one.
+                Existing accounts are never overwritten. Ask the person to contact Tazella if they already have one.
               </p>
             </form>
           </div>

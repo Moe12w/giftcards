@@ -62,7 +62,7 @@ export function SiteFooter() {
               {t.tagline}
             </p>
             <p className="small" style={{ marginTop: 14 }}>
-              Doha, Qatar · hello@tazilla.com.qa
+              Doha, Qatar · hello@tazella.com.qa
             </p>
           </div>
           {columns.map((column) => (
@@ -80,7 +80,7 @@ export function SiteFooter() {
         </div>
         <div className="footer-bottom">
           <span>
-            © {new Date().getFullYear()} Tazilla. {t.rights}
+            © {new Date().getFullYear()} Tazella. {t.rights}
           </span>
           <span>{t.madeFor}</span>
         </div>

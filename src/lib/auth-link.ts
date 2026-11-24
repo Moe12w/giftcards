@@ -25,7 +25,7 @@ function paramFrom(url: string, key: string): string | null {
  * Returns true when the link carried a usable session.
  *
  * Token flows are accepted only on the password-recovery deep link, so a
- * crafted `tazilla://...?access_token=...` cannot be used to sign somebody into
+ * crafted `tazella://...?access_token=...` cannot be used to sign somebody into
  * another account.
  */
 export async function handleAuthUrl(url: string | null): Promise<boolean> {
@@ -35,7 +35,7 @@ export async function handleAuthUrl(url: string | null): Promise<boolean> {
     const supabase = getSupabase();
 
     // Compare against the exact link we generate. A substring test on the raw
-    // URL would also match `tazilla://reset-password.attacker.tld/...`, letting a
+    // URL would also match `tazella://reset-password.attacker.tld/...`, letting a
     // crafted link install an attacker-controlled session.
     const expected = new URL(passwordResetLink());
     const incoming = new URL(url);
@@ -45,8 +45,8 @@ export async function handleAuthUrl(url: string | null): Promise<boolean> {
     const isRecoveryLink =
       incoming.protocol === expected.protocol &&
       ((incoming.host === expected.host && incomingPath === expectedPath) ||
-        // Expo may encode the path as the host (`tazilla://reset-password`) or
-        // as a real path (`tazilla:///reset-password`); accept both exact forms.
+        // Expo may encode the path as the host (`tazella://reset-password`) or
+        // as a real path (`tazella:///reset-password`); accept both exact forms.
         (incomingPath === '/reset-password' && (incoming.host === '' || incoming.host === expected.host)));
     if (!isRecoveryLink) return false;
 

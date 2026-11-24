@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
 
     const requestedReturn = String(body.returnUrl ?? '').trim();
     const trustedReturn =
-      requestedReturn.startsWith('tazilla://') ||
+      requestedReturn.startsWith('tazella://') ||
       requestedReturn === config.appPublicUrl ||
       requestedReturn.startsWith(`${config.appPublicUrl}/`);
     const returnTo = trustedReturn ? `&return_to=${encodeURIComponent(requestedReturn)}` : '';
@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
       const invoice = await createInvoiceForOrder(admin, {
         orderId: order.id,
         reference: order.id,
-        customerName: basket.recipient_name || 'Tazilla customer',
+        customerName: basket.recipient_name || 'Tazella customer',
         customerEmail: userData.user.email ?? undefined,
         language: body.language,
         callbackUrl: `${appUrl}/api/merchant-payment/callback?order=${order.id}${returnTo}`,

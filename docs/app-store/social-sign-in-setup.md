@@ -41,7 +41,7 @@ Related code: `src/components/SocialSignInButtons.tsx` (buttons),
 
 - [ ] developer.apple.com → **Certificates, Identifiers & Profiles** →
       **Identifiers** → filter **App IDs**.
-- [ ] Create (or open) the App ID for `qa.tazilla.app`.
+- [ ] Create (or open) the App ID for `qa.tazella.app`.
       *Bundle ID must be explicit, not a wildcard — Sign in with Apple does not
       work on wildcard App IDs.*
 - [ ] In **Capabilities**, tick **Sign in with Apple** → **Save**.
@@ -72,14 +72,14 @@ Dashboard → **Authentication** → **Providers** → **Apple** → enable.
       present an Apple ID token. For this project:
 
   ```
-  qa.tazilla.app, host.exp.Exponent, qa.tazilla.app.dev
+  qa.tazella.app, host.exp.Exponent, qa.tazella.app.dev
   ```
 
-  - `qa.tazilla.app` — the production/TestFlight app.
+  - `qa.tazella.app` — the production/TestFlight app.
   - `host.exp.Exponent` — **required to test in Expo Go**; Expo Go presents its
     own App ID, and Apple sign-in fails without it. Remove it before launch if
     you prefer a tighter list (it cannot be abused without Expo Go installed).
-  - `qa.tazilla.app.dev` — only if you build a development variant with that
+  - `qa.tazella.app.dev` — only if you build a development variant with that
     bundle id. Every bundle id variant that Apple can issue a token for must be
     listed, or that build fails with an audience error.
 
@@ -100,7 +100,7 @@ you create.
 ### 3.1 Consent screen
 
 - [ ] console.cloud.google.com → **Google Auth Platform** → **Branding**:
-      app name `Tazilla`, support email, logo, and the links Google asks for
+      app name `Tazella`, support email, logo, and the links Google asks for
       (homepage, privacy policy, terms).
 - [ ] **Data Access (Scopes)** — keep exactly these, nothing more:
       `openid`, `.../auth/userinfo.email`, `.../auth/userinfo.profile`.
@@ -153,11 +153,11 @@ how the app is run:
 
 | How you run it | Redirect URL to allow-list |
 | --- | --- |
-| Release / TestFlight / production build | `tazilla://auth-callback` |
-| Development build | `tazilla://auth-callback` (same scheme) |
+| Release / TestFlight / production build | `tazella://auth-callback` |
+| Development build | `tazella://auth-callback` (same scheme) |
 | Expo Go | `exp://<host>:<port>/--/auth-callback` |
 
-- [ ] Add `tazilla://auth-callback` to **Redirect URLs**.
+- [ ] Add `tazella://auth-callback` to **Redirect URLs**.
 - [ ] For Expo Go testing only, start the app, and add the exact
       `exp://…/--/auth-callback` URL that `oauthRedirectUrl()` produces (log it
       once in `src/lib/social-auth.ts`, or read the `exp://` URL printed by
@@ -166,8 +166,8 @@ how the app is run:
 - [ ] Keep **Site URL** pointing at the public web app.
 
 The app only accepts a callback that matches
-`tazilla://auth-callback`/`exp://…/--/auth-callback` exactly — a crafted
-`tazilla://` link cannot install a session (see `completeOAuthRedirect`).
+`tazella://auth-callback`/`exp://…/--/auth-callback` exactly — a crafted
+`tazella://` link cannot install a session (see `completeOAuthRedirect`).
 
 ---
 

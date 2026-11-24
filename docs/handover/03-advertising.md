@@ -6,7 +6,7 @@ This document explains the advertising product in plain English. It replaces the
 
 Advertising is **slot rental**, not bidding and not an auction.
 
-Tazilla owns advertising areas called **placements** — for example the homepage hero carousel, a carousel for a category, a carousel for a collection, search results, and gift-card pages. Each placement has numbered **slots**. Slot 1 is the best position and costs more.
+Tazella owns advertising areas called **placements** — for example the homepage hero carousel, a carousel for a category, a carousel for a collection, search results, and gift-card pages. Each placement has numbered **slots**. Slot 1 is the best position and costs more.
 
 An advertiser chooses:
 - a placement,

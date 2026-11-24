@@ -130,7 +130,7 @@ export default function CardDetailScreen() {
   // A gift bought for a future date is in the wallet but must not be spendable yet.
   const waiting = card ? isGiftWaiting(card) : false;
   const redeemable = card && !waiting ? canRedeem(card) : false;
-  const redeemValue = `tazilla:card:${card?.id ?? ''}`;
+  const redeemValue = `tazella:card:${card?.id ?? ''}`;
   // A partner code is shown at the partner's store, so it gets no
   // "scanned in person" note; the product's own instructions still show.
   const showRedemption =
@@ -225,7 +225,7 @@ export default function CardDetailScreen() {
           {partnerCode ? (
             <>
               {/* Partner gifts carry the partner's own code, so their till
-                  scans this QR directly. It is not a Tazilla redemption QR. */}
+                  scans this QR directly. It is not a Tazella redemption QR. */}
               <QRCode value={partnerCode} />
               <Text style={styles.qrHint}>
                 {t('cards.partnerQrHint', { partner: card?.partner_name ?? 'the partner' })}

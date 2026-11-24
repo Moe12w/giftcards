@@ -147,7 +147,7 @@ export default async function AdminPaymentManagementPage({
                   id="app_public_url"
                   name="app_public_url"
                   defaultValue={config.appPublicUrl}
-                  placeholder="https://tazilla.com.qa"
+                  placeholder="https://tazella.com.qa"
                 />
                 <span className="hint">Used for payment return and error URLs.</span>
               </div>
@@ -194,7 +194,7 @@ export default async function AdminPaymentManagementPage({
             </div>
             <div className="callout warn">
               Commission and deposit terms are provider-managed. Do not set a supplier commission in MyFatoorah
-              expecting Tazilla to deduct it again — this integration records provider values only.
+              expecting Tazella to deduct it again — this integration records provider values only.
             </div>
           </div>
         </section>

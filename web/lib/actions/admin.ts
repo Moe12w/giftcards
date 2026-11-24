@@ -235,7 +235,7 @@ export async function adminIssueManualVoucher(formData: FormData) {
     const result = await sendClaimLinkEmail({
       to: recipientEmail,
       name: recipientName,
-      senderName: vendor?.name ?? 'Tazilla',
+      senderName: vendor?.name ?? 'Tazella',
       title: product?.title ?? 'a gift card',
       amountLabel: `QAR ${(Number(created?.initial_value_minor ?? amount ?? 0) / 100).toFixed(2)}`,
       link: claimUrl(row.claim_token),
@@ -305,7 +305,7 @@ export async function adminEmailClaimLink(formData: FormData) {
   const result = await sendClaimLinkEmail({
     to: voucher.recipient_email as string,
     name: voucher.recipient_name,
-    senderName: vendor?.name ?? 'Tazilla',
+    senderName: vendor?.name ?? 'Tazella',
     title: product?.title ?? 'a gift card',
     amountLabel: `QAR ${(Number(voucher.initial_value_minor ?? 0) / 100).toFixed(2)}`,
     link: claimUrl(token as string),
@@ -360,7 +360,7 @@ export async function adminSendQueuedEmails() {
     const body = String(row.body ?? '');
     const result = await sendEmail({
       to: row.recipient_email,
-      subject: row.subject ?? 'Your Tazilla gift card',
+      subject: row.subject ?? 'Your Tazella gift card',
       html: plainHtmlFromText(body),
       text: body,
     });
@@ -421,7 +421,7 @@ export async function adminSaveEmailSettings(formData: FormData) {
     back('/admin/settings', 'That API key looks too short. Paste the whole key from the provider dashboard.');
   }
   if (!from || !from.includes('@')) {
-    back('/admin/settings', 'Add the sender address, for example Tazilla <gifts@tazilla.com.qa>.');
+    back('/admin/settings', 'Add the sender address, for example Tazella <gifts@tazella.com.qa>.');
   }
 
   const now = new Date().toISOString();
@@ -479,7 +479,7 @@ export async function adminSendTestEmail(formData: FormData) {
   }
 
   const body = [
-    'This is a test from the Tazilla admin settings.',
+    'This is a test from the Tazella admin settings.',
     '',
     `Sender: ${config.from}`,
     `Settings from: ${config.source === 'database' ? 'the dashboard' : 'the environment'}`,
@@ -489,7 +489,7 @@ export async function adminSendTestEmail(formData: FormData) {
 
   const result = await sendEmail({
     to,
-    subject: 'Tazilla email test',
+    subject: 'Tazella email test',
     html: plainHtmlFromText(body),
     text: body,
   });
@@ -607,7 +607,7 @@ export async function adminReplySupport(formData: FormData) {
     request_id: id,
     author_id: ctx.user.id,
     author_role: 'admin',
-    author_name: ctx.profile?.full_name ?? 'Tazilla support',
+    author_name: ctx.profile?.full_name ?? 'Tazella support',
     body,
   });
   if (error) back('/admin/support', error.message);

@@ -1,6 +1,6 @@
-# Tazilla MCP server
+# Tazella MCP server
 
-A separate Supabase Edge Function that exposes the Tazilla gift-card catalogue to
+A separate Supabase Edge Function that exposes the Tazella gift-card catalogue to
 MCP-compatible AI assistants over **Streamable HTTP**. It does not touch the
 Expo app or its startup.
 
@@ -26,7 +26,7 @@ The endpoint is stateless. It accepts JSON-RPC `POST` requests and returns JSON
    Public read tools must be reachable without a Supabase key. The function
    verifies customer JWTs itself for the two order tools.
 
-3. Optional: set `TAZILLA_SITE_URL` (for example `https://tazilla.com.qa`) if the
+3. Optional: set `TAZELLA_SITE_URL` (for example `https://tazella.com.qa`) if the
    public site URL differs from the fallback. `SUPABASE_URL` and
    `SUPABASE_SERVICE_ROLE_KEY` are provided by the Edge Function runtime.
 
@@ -66,7 +66,7 @@ Most MCP clients accept a remote HTTP server entry:
 ```json
 {
   "mcpServers": {
-    "tazilla": {
+    "tazella": {
       "type": "http",
       "url": "https://rxrrbznwnsgzpinirzme.supabase.co/functions/v1/mcp"
     }
@@ -79,7 +79,7 @@ For the order tools, add the customer token:
 ```json
 {
   "mcpServers": {
-    "tazilla": {
+    "tazella": {
       "type": "http",
       "url": "https://rxrrbznwnsgzpinirzme.supabase.co/functions/v1/mcp",
       "headers": {

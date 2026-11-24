@@ -20,7 +20,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { buildPkpass, type AppleWalletConfig } from './apple';
 
 const PASSPHRASE = 'pkpass-test';
-const PASS_TYPE_ID = 'pass.qa.tazilla.card';
+const PASS_TYPE_ID = 'pass.qa.tazella.card';
 const TEAM_ID = 'TEAM123456';
 const WWDR_CN = 'Apple WWDR test intermediate';
 
@@ -29,16 +29,16 @@ const PASS_JSON = {
   passTypeIdentifier: PASS_TYPE_ID,
   serialNumber: '8a1f0c2e-1111-4a2b-9c3d-000000000001',
   teamIdentifier: TEAM_ID,
-  organizationName: 'Tazilla',
+  organizationName: 'Tazella',
   description: 'Bayt Al Shaar gift card',
-  logoText: 'Tazilla',
+  logoText: 'Tazella',
   storeCard: {
     primaryFields: [{ key: 'balance', label: 'BALANCE', value: 'QAR 75.00' }],
   },
   barcodes: [
     {
       format: 'PKBarcodeFormatQR',
-      message: 'tazilla:card:8a1f0c2e-1111-4a2b-9c3d-000000000001',
+      message: 'tazella:card:8a1f0c2e-1111-4a2b-9c3d-000000000001',
       messageEncoding: 'iso-8859-1',
     },
   ],

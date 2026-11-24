@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Tazilla",
-    "slug": "tazilla",
+    "name": "Tazella",
+    "slug": "tazella",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "tazilla",
+    "scheme": "tazella",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "qa.tazilla.app",
+      "bundleIdentifier": "qa.tazella.app",
       "supportsTablet": true,
       "usesAppleSignIn": true,
       "infoPlist": {
@@ -16,7 +16,7 @@
       }
     },
     "android": {
-      "package": "qa.tazilla.app",
+      "package": "qa.tazella.app",
       "adaptiveIcon": {
         "backgroundColor": "#72c2b8",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

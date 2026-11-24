@@ -3,7 +3,7 @@
 -- unauthenticated claim-preview Edge Function. Possession of a bearer claim link
 -- was therefore enough to obtain the code before signing in or binding the gift.
 -- The web preview already omits this field; the mobile QR uses
--- `tazilla:redeem:<voucherId>` when no code is supplied. Removing the column from
+-- `tazella:redeem:<voucherId>` when no code is supplied. Removing the column from
 -- the RPC result keeps preview read-only and makes the post-claim gate real.
 
 drop function if exists public.claim_preview(text, text);

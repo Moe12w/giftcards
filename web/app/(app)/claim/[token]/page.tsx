@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: 'You received a gift card' };
 /**
  * The web side of the claim link.
  *
- * The full claiming happens in the Tazilla app (that is where the gift is
+ * The full claiming happens in the Tazella app (that is where the gift is
  * stored), so this page shows what the gift is and opens the app. The token is
  * only ever passed to the database, which hashes it.
  */
@@ -44,7 +44,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
   if (!gift) notFound();
 
   const amount = Number(gift.amount_minor ?? 0);
-  const appUrl = `tazilla://claim/${token}`;
+  const appUrl = `tazella://claim/${token}`;
 
   return (
     <main className="section">
@@ -54,9 +54,9 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
           <p className="eyebrow mint" style={{ marginTop: 16 }}>
             {gift.sender_name ? `${gift.sender_name} sent you a gift` : 'You received a gift card'}
           </p>
-          <h1 style={{ marginTop: 8 }}>{gift.product_title ?? 'Tazilla gift card'}</h1>
+          <h1 style={{ marginTop: 8 }}>{gift.product_title ?? 'Tazella gift card'}</h1>
           <p style={{ marginTop: 10 }}>
-            {gift.vendor_name ?? 'Tazilla'}
+            {gift.vendor_name ?? 'Tazella'}
             {amount > 0 ? <> · {formatMoney(amount, locale)}</> : null}
           </p>
 
@@ -67,11 +67,11 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
           ) : null}
 
           <a className="btn primary" href={appUrl} style={{ marginTop: 20 }}>
-            <Smartphone size={16} /> Open in the Tazilla app
+            <Smartphone size={16} /> Open in the Tazella app
           </a>
 
           <p className="small muted" style={{ marginTop: 14 }}>
-            The gift is stored in the Tazilla app, where it can be spent in parts and added to your wallet.
+            The gift is stored in the Tazella app, where it can be spent in parts and added to your wallet.
           </p>
 
           <div className="btn-row" style={{ justifyContent: 'center', marginTop: 12 }}>

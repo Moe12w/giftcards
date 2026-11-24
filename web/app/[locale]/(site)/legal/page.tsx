@@ -62,8 +62,8 @@ export default async function LegalCentrePage() {
           <h2 style={{ marginTop: 0 }}>{isArabic ? 'كيف تقرأ هذه الوثائق' : 'How to read these documents'}</h2>
           <p>
             {isArabic
-              ? 'لكل دور شروطه وسياسة خصوصية خاصة به. تنطبق الشروط العامة على الجميع، ويضيف الملحق الخاص بدورك الأحكام التي تنطبق على طريقة تعاملك مع المنصة. وإذا كنت تستخدم Tazilla بأكثر من صفة، فقد تنطبق عليك أكثر من وثيقة.'
-              : 'Each role has its own terms and privacy notice. The general sections apply to everyone, and your role schedule adds the provisions that match the way you use the Platform. If you use Tazilla in more than one capacity, more than one document may apply to you.'}
+              ? 'لكل دور شروطه وسياسة خصوصية خاصة به. تنطبق الشروط العامة على الجميع، ويضيف الملحق الخاص بدورك الأحكام التي تنطبق على طريقة تعاملك مع المنصة. وإذا كنت تستخدم Tazella بأكثر من صفة، فقد تنطبق عليك أكثر من وثيقة.'
+              : 'Each role has its own terms and privacy notice. The general sections apply to everyone, and your role schedule adds the provisions that match the way you use the Platform. If you use Tazella in more than one capacity, more than one document may apply to you.'}
           </p>
           <p className="small muted">
             {isArabic

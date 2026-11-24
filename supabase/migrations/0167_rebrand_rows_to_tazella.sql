@@ -1,5 +1,5 @@
--- 0167_rebrand_rows_to_tazilla.sql
--- The seed files and the migrations that created them now say Tazilla, but those
+-- 0167_rebrand_rows_to_tazella.sql
+-- The seed files and the migrations that created them now say Tazella, but those
 -- only affect a fresh database. An environment seeded before the rebrand still
 -- holds "Giftly" in account emails, demo copy, notifications and the bodies of
 -- three functions, so this migration rewrites what is already stored.
@@ -11,7 +11,7 @@
 --   * system_settings 'enterprise.code_encryption_key' — that value is key
 --     material, not copy. Renaming it would make stored enterprise codes
 --     undecryptable; rotating it is a separate, deliberate operation.
---   * vouchers carry no QR payload (column dropped in 0147); the `tazilla:` /
+--   * vouchers carry no QR payload (column dropped in 0147); the `tazella:` /
 --     `giftly:` prefixes only ever existed at generation time in code.
 
 -- ---------------------------------------------------------------------------
@@ -21,69 +21,69 @@
 -- holds both the old and the new demo addresses) from colliding on the unique
 -- email instead of failing the whole migration.
 update auth.users u
-set email = replace(u.email, '@giftly.test', '@tazilla.test')
+set email = replace(u.email, '@giftly.test', '@tazella.test')
 where u.email like '%@giftly.test'
   and not exists (
     select 1 from auth.users x
-    where x.email = replace(u.email, '@giftly.test', '@tazilla.test')
+    where x.email = replace(u.email, '@giftly.test', '@tazella.test')
   );
 
 update auth.identities i
-set provider_id = replace(i.provider_id, '@giftly.test', '@tazilla.test'),
+set provider_id = replace(i.provider_id, '@giftly.test', '@tazella.test'),
     identity_data = jsonb_set(
       i.identity_data,
       '{email}',
-      to_jsonb(replace(i.identity_data ->> 'email', '@giftly.test', '@tazilla.test'))
+      to_jsonb(replace(i.identity_data ->> 'email', '@giftly.test', '@tazella.test'))
     )
 where i.provider_id like '%@giftly.test'
   and i.identity_data ? 'email'
   and not exists (
     select 1 from auth.identities x
-    where x.provider_id = replace(i.provider_id, '@giftly.test', '@tazilla.test')
+    where x.provider_id = replace(i.provider_id, '@giftly.test', '@tazella.test')
   );
 
 update public.profiles
-set email = replace(email, '@giftly.test', '@tazilla.test')
+set email = replace(email, '@giftly.test', '@tazella.test')
 where email like '%@giftly.test';
 
 update public.vendor_applications
-set business_email = replace(business_email, '@giftly.test', '@tazilla.test')
+set business_email = replace(business_email, '@giftly.test', '@tazella.test')
 where business_email like '%@giftly.test';
 
 update public.enterprise_partners
-set contact_email = replace(contact_email, '@giftly.test', '@tazilla.test')
+set contact_email = replace(contact_email, '@giftly.test', '@tazella.test')
 where contact_email like '%@giftly.test';
 
 -- Demo recipients on the sample vouchers and their order lines.
 update public.vouchers
-set recipient_email = replace(recipient_email, '@giftly.app', '@tazilla.com.qa')
+set recipient_email = replace(recipient_email, '@giftly.app', '@tazella.com.qa')
 where recipient_email like '%@giftly.app';
 
 update public.order_items
-set recipient_email = replace(recipient_email, '@giftly.app', '@tazilla.com.qa')
+set recipient_email = replace(recipient_email, '@giftly.app', '@tazella.com.qa')
 where recipient_email like '%@giftly.app';
 
 -- ---------------------------------------------------------------------------
 -- Demo copy and records created by earlier versions of the code
 -- ---------------------------------------------------------------------------
 update public.vendors
-set description = replace(description, 'Giftly', 'Tazilla')
+set description = replace(description, 'Giftly', 'Tazella')
 where description like '%Giftly%';
 
 update public.orders
-set sender_name = 'Tazilla (issued by an admin)'
+set sender_name = 'Tazella (issued by an admin)'
 where sender_name = 'Giftly (issued by an admin)';
 
 update public.notifications
-set title_key = replace(title_key, 'Giftly', 'Tazilla')
+set title_key = replace(title_key, 'Giftly', 'Tazella')
 where title_key like '%Giftly%';
 
 update public.notifications
-set body_key = replace(body_key, 'Giftly', 'Tazilla')
+set body_key = replace(body_key, 'Giftly', 'Tazella')
 where body_key like '%Giftly%';
 
 update public.gift_basket_items
-set vendor_name = 'Tazilla'
+set vendor_name = 'Tazella'
 where vendor_name = 'Giftly';
 
 -- ---------------------------------------------------------------------------
@@ -186,7 +186,7 @@ begin
   values (
     auth.uid(), 'paid', 'paid', coalesce(v_product.currency, 'QAR'),
     v_amount, 0, 0, v_amount, v_order_ref, 'manual-' || gen_random_uuid()::text,
-    'manual', 'Tazilla (issued by an admin)', p_recipient_name, p_gift_message, now()
+    'manual', 'Tazella (issued by an admin)', p_recipient_name, p_gift_message, now()
   )
   returning id into v_order_id;
 
@@ -322,7 +322,7 @@ begin
     perform public.merchant_notify_user(
       v_uid,
       'merchant',
-      'Welcome to Tazilla',
+      'Welcome to Tazella',
       'Your business account is ready. Finish your setup from the dashboard whenever you like.',
       jsonb_build_object('vendor_id', v_vendor_id)
     );
@@ -375,7 +375,7 @@ begin
     perform public.merchant_notify_user(
       v_uid,
       'merchant',
-      'Welcome to Tazilla',
+      'Welcome to Tazella',
       'Your organisation account is ready. Finish your setup from the dashboard whenever you like.',
       jsonb_build_object('partner_id', v_partner_id)
     );
@@ -428,11 +428,11 @@ begin
     raise exception 'not_a_participant';
   end if;
 
-  select coalesce(nullif(full_name, ''), 'Tazilla customer')
+  select coalesce(nullif(full_name, ''), 'Tazella customer')
     into v_name
   from public.profiles
   where id = o.buyer_id;
-  v_name := coalesce(v_name, 'Tazilla customer');
+  v_name := coalesce(v_name, 'Tazella customer');
 
   for v_item in
     select
@@ -462,7 +462,7 @@ begin
     )
     values (
       o.basket_id, v_item.product_id, v_item.vendor_id,
-      coalesce(v_item.business_name, 'Tazilla'),
+      coalesce(v_item.business_name, 'Tazella'),
       coalesce(v_item.title, 'Gift card'),
       v_item.total_minor,
       v_item.icon, v_item.tone, v_item.logo_url, v_item.banner_url,

@@ -10,7 +10,7 @@
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://rxrrbznwnsgzpinirzme.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_6nK1rXEzxhVA_eEl-ckZxQ_HzJqVj64",
-        "EXPO_PUBLIC_APP_SCHEME": "tazilla",
+        "EXPO_PUBLIC_APP_SCHEME": "tazella",
         "EXPO_PUBLIC_SITE_URL": "https://giftcards-jade.vercel.app"
       }
     },
@@ -19,7 +19,7 @@
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://rxrrbznwnsgzpinirzme.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_6nK1rXEzxhVA_eEl-ckZxQ_HzJqVj64",
-        "EXPO_PUBLIC_APP_SCHEME": "tazilla",
+        "EXPO_PUBLIC_APP_SCHEME": "tazella",
         "EXPO_PUBLIC_SITE_URL": "https://giftcards-jade.vercel.app"
       }
     },
@@ -28,7 +28,7 @@
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://rxrrbznwnsgzpinirzme.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_6nK1rXEzxhVA_eEl-ckZxQ_HzJqVj64",
-        "EXPO_PUBLIC_APP_SCHEME": "tazilla",
+        "EXPO_PUBLIC_APP_SCHEME": "tazella",
         "EXPO_PUBLIC_SITE_URL": "https://giftcards-jade.vercel.app"
       }
     }

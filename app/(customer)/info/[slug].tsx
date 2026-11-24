@@ -92,8 +92,8 @@ function LegalScreen({
           title={bundle.ui.legalCentre}
           subtitle={
             locale === 'ar'
-              ? 'الشروط وسياسة الخصوصية التي تنطبق عليك كعميل في Tazilla.'
-              : 'The terms and privacy policy that apply to you as a Tazilla customer.'
+              ? 'الشروط وسياسة الخصوصية التي تنطبق عليك كعميل في Tazella.'
+              : 'The terms and privacy policy that apply to you as a Tazella customer.'
           }
           onBack={() => router.back()}
         />
@@ -101,8 +101,8 @@ function LegalScreen({
         <Card tone="teal">
           <Text style={styles.hubNote}>
             {locale === 'ar'
-              ? 'هذه هي الشروط وسياسة الخصوصية التي تنطبق على العملاء الذين يشترون بطاقات هدايا Tazilla أو يرسلونها أو يستلمونها أو يحتفظون بها عبر التطبيق.'
-              : 'These are the terms and privacy policy that apply to customers who buy, send, receive or hold a gift card in the Tazilla app.'}
+              ? 'هذه هي الشروط وسياسة الخصوصية التي تنطبق على العملاء الذين يشترون بطاقات هدايا Tazella أو يرسلونها أو يستلمونها أو يحتفظون بها عبر التطبيق.'
+              : 'These are the terms and privacy policy that apply to customers who buy, send, receive or hold a gift card in the Tazella app.'}
           </Text>
         </Card>
 

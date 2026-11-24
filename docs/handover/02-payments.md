@@ -1,6 +1,6 @@
 # Payments
 
-This document explains every way money enters Tazilla. Read it before changing anything in a payment path.
+This document explains every way money enters Tazella. Read it before changing anything in a payment path.
 
 ## The one rule
 
@@ -42,7 +42,7 @@ Customer confirms
   → payment-webhook Edge Function verifies signature and deduplicates
   → /api/merchant-payment/confirm re-queries MyFatoorah
   → myfatoorah_payment_confirmed marks the order paid and writes the ledger
-  → myfatoorah_fulfill_order issues Tazilla cards
+  → myfatoorah_fulfill_order issues Tazella cards
      OR bulk_fulfill_from_payment issues bulk/partner codes
   → claim links are sent for ordinary gift cards
 ```
@@ -94,7 +94,7 @@ Vendors and enterprise partners use the same supplier model:
 | Submitted to MyFatoorah | Supplier/application sent |
 | Under verification | Provider KYC pending |
 | Additional information required | Provider asked for more data |
-| Approved / Active | Provider confirmed Active and Tazilla enabled payments |
+| Approved / Active | Provider confirmed Active and Tazella enabled payments |
 | Rejected | Provider rejected the supplier |
 | Suspended | Platform suspended the business; separate from provider status |
 

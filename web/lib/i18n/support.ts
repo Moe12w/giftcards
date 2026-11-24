@@ -5,7 +5,7 @@ import type { Copy } from './index';
 const en = {
   eyebrow: 'Help & support',
   title: 'Support tickets',
-  description: 'Send a request to the Tazilla team and follow its status here.',
+  description: 'Send a request to the Tazella team and follow its status here.',
   newTicket: 'New request',
   subject: 'Subject',
   subjectPlaceholder: 'What do you need help with?',
@@ -13,7 +13,7 @@ const en = {
   messagePlaceholder: 'Tell us what happened, with any order or card reference.',
   reference: 'Order or card reference (optional)',
   send: 'Send to support',
-  sent: 'Your request was sent to the Tazilla team.',
+  sent: 'Your request was sent to the Tazella team.',
   history: 'Your requests',
   historyHint: 'Everything you send here also appears in the admin inbox.',
   empty: 'No requests yet',
@@ -25,13 +25,13 @@ const en = {
   replyPlaceholder: 'Add more detail or answer the team.',
   sendReply: 'Send reply',
   noReplies: 'No replies yet. The team will answer here.',
-  supportTeam: 'Tazilla support',
+  supportTeam: 'Tazella support',
 };
 
 const ar: typeof en = {
   eyebrow: 'المساعدة والدعم',
   title: 'تذاكر الدعم',
-  description: 'أرسل طلباً إلى فريق Tazilla وتابع حالته من هنا.',
+  description: 'أرسل طلباً إلى فريق Tazella وتابع حالته من هنا.',
   newTicket: 'طلب جديد',
   subject: 'الموضوع',
   subjectPlaceholder: 'بماذا تحتاج المساعدة؟',
@@ -39,7 +39,7 @@ const ar: typeof en = {
   messagePlaceholder: 'أخبرنا بما حدث، مع رقم الطلب أو البطاقة إن وُجد.',
   reference: 'رقم الطلب أو البطاقة (اختياري)',
   send: 'إرسال إلى الدعم',
-  sent: 'تم إرسال طلبك إلى فريق Tazilla.',
+  sent: 'تم إرسال طلبك إلى فريق Tazella.',
   history: 'طلباتك',
   historyHint: 'كل ما ترسله هنا يظهر أيضاً في صندوق المسؤول.',
   empty: 'لا توجد طلبات بعد',
@@ -51,7 +51,7 @@ const ar: typeof en = {
   replyPlaceholder: 'أضف تفاصيل أكثر أو أجب الفريق.',
   sendReply: 'إرسال الرد',
   noReplies: 'لا توجد ردود بعد. سيجيب الفريق هنا.',
-  supportTeam: 'دعم Tazilla',
+  supportTeam: 'دعم Tazella',
 };
 
 export const supportCopy: Copy<typeof en> = { en, ar };

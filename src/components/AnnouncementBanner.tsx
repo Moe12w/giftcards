@@ -9,7 +9,7 @@ import { Card } from '@/src/components/Card';
 import type { AnnouncementSetting } from '@/src/lib/app-config';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
-const DISMISSED_KEY = '@tazilla/announcement-dismissed';
+const DISMISSED_KEY = '@tazella/announcement-dismissed';
 
 /** Optional home banner. Dismissal is remembered per message, not forever. */
 export function AnnouncementBanner({ announcement }: { announcement: AnnouncementSetting }) {

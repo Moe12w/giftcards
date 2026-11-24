@@ -87,7 +87,7 @@ const en = {
     noTeamMembers: 'No team members linked yet.',
     teamMember: 'Team member',
     teamAccessNote:
-      'Team access is managed by the Tazilla team. Ask us to add or remove a colleague.',
+      'Team access is managed by the Tazella team. Ask us to add or remove a colleague.',
     inventory: 'Inventory',
   },
   products: {
@@ -264,9 +264,9 @@ const en = {
     stillAvailable: 'Still available',
     leftToSell: '{amount} of codes left to sell',
     money: 'Money',
-    priceAndCut: 'You set the price, Tazilla takes a cut',
+    priceAndCut: 'You set the price, Tazella takes a cut',
     priceTimesSold: 'The price you set, times {count} codes sold',
-    tazillaCut: 'Tazilla’s cut',
+    tazellaCut: 'Tazella’s cut',
     percentOfEveryCode: '{percent} of every code sold',
     yourShare: 'Your share',
     afterOurCut: 'What is left for you, after our cut',
@@ -308,7 +308,7 @@ const en = {
     contactPhone: 'Contact phone',
     expectedVolume: 'Expected annual volume',
     volumePlaceholder: '500 codes',
-    notesForTazilla: 'Notes for the Tazilla team',
+    notesForTazella: 'Notes for the Tazella team',
     notesPlaceholder: 'Anything we should know about your programme.',
     yourName: 'Your name',
     yourNameHint: 'Shown on your account and to teammates.',
@@ -328,8 +328,8 @@ const en = {
     noTeamMembers: 'No team members linked yet.',
     teamMember: 'Team member',
     addColleagueNote:
-      'To add or remove a colleague, contact your Tazilla account manager.',
-    contactTazilla: 'Contact Tazilla',
+      'To add or remove a colleague, contact your Tazella account manager.',
+    contactTazella: 'Contact Tazella',
     corporateSite: 'Corporate site',
   },
   login: {
@@ -453,7 +453,7 @@ const ar: EnterpriseCopy = {
     noTeamMembers: 'لا يوجد أعضاء في الفريق مرتبطون بعد.',
     teamMember: 'عضو في الفريق',
     teamAccessNote:
-      'يتولى فريق Tazilla إدارة صلاحيات الفريق. تواصل معنا لإضافة زميل أو إزالته.',
+      'يتولى فريق Tazella إدارة صلاحيات الفريق. تواصل معنا لإضافة زميل أو إزالته.',
     inventory: 'المخزون',
   },
   products: {
@@ -629,9 +629,9 @@ const ar: EnterpriseCopy = {
     stillAvailable: 'ما زالت متاحة',
     leftToSell: '{amount} من الرموز المتبقية للبيع',
     money: 'الأموال',
-    priceAndCut: 'أنت تحدد السعر، وتأخذ Tazilla عمولتها',
+    priceAndCut: 'أنت تحدد السعر، وتأخذ Tazella عمولتها',
     priceTimesSold: 'السعر الذي حددته، مضروباً في {count} رمز مُباع',
-    tazillaCut: 'عمولة Tazilla',
+    tazellaCut: 'عمولة Tazella',
     percentOfEveryCode: '{percent} من كل رمز يُباع',
     yourShare: 'حصتك',
     afterOurCut: 'ما يبقى لك بعد عمولتنا',
@@ -673,7 +673,7 @@ const ar: EnterpriseCopy = {
     contactPhone: 'هاتف جهة الاتصال',
     expectedVolume: 'الحجم السنوي المتوقع',
     volumePlaceholder: '500 رمز',
-    notesForTazilla: 'ملاحظات لفريق Tazilla',
+    notesForTazella: 'ملاحظات لفريق Tazella',
     notesPlaceholder: 'أي شيء ينبغي أن نعرفه عن برنامجك.',
     yourName: 'اسمك',
     yourNameHint: 'يظهر على حسابك وعلى صفحات زملائك.',
@@ -693,8 +693,8 @@ const ar: EnterpriseCopy = {
     noTeamMembers: 'لا يوجد أعضاء في الفريق مرتبطون بعد.',
     teamMember: 'عضو في الفريق',
     addColleagueNote:
-      'لإضافة زميل أو إزالته، تواصل مع مدير حسابك في Tazilla.',
-    contactTazilla: 'تواصل مع Tazilla',
+      'لإضافة زميل أو إزالته، تواصل مع مدير حسابك في Tazella.',
+    contactTazella: 'تواصل مع Tazella',
     corporateSite: 'الموقع المؤسسي',
   },
   login: {

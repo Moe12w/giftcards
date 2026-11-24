@@ -240,7 +240,7 @@ export async function listRedemptionsFor(
     kind: row.sessions ? 'session' : 'monetary',
     sessions: row.sessions ? Math.abs(row.sessions) : undefined,
     amount_minor: row.amount_minor ? Math.abs(row.amount_minor) : undefined,
-    actor: 'Tazilla',
+    actor: 'Tazella',
     created_at: row.created_at,
   }));
 }
@@ -1065,7 +1065,7 @@ export async function deleteMyAccount(): Promise<void> {
  * the partner issues them, we do not resell or re-issue anything. We sell the
  * code like any other gift and the customer shows it at the partner's store.
  * We do not measure usage: using the code closes the whole value.
- * Vendors are the other kind of seller — Tazilla issues their gift cards.
+ * Vendors are the other kind of seller — Tazella issues their gift cards.
  * ---------------------------------------------------------------------- */
 
 /** Reads the partner's own code so the customer can show it in store. */
@@ -1097,7 +1097,7 @@ export async function closeEnterpriseCode(
  * written when the backend serves an ad, and clicks are deduplicated there.
  * ---------------------------------------------------------------------- */
 
-const AD_VIEWER_KEY = 'tazilla.advertising.viewer';
+const AD_VIEWER_KEY = 'tazella.advertising.viewer';
 const AD_SESSION_ID = `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 
 /** A stable anonymous key so frequency caps work between launches. */
