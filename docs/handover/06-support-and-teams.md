@@ -2,7 +2,7 @@
 
 ## Support tickets
 
-Users can contact Marajukoo from:
+Users can contact Tazilla from:
 - the website contact form,
 - the corporate enquiry form,
 - the app's support screens,
@@ -41,7 +41,7 @@ Owner or manager can add a person with:
 - temporary password,
 - role (`manager` or `redemption_staff`).
 
-The account is created immediately and can log in at `/vendor/login`. Existing accounts are never overwritten — if the person already has a Marajukoo account, contact support.
+The account is created immediately and can log in at `/vendor/login`. Existing accounts are never overwritten — if the person already has a Tazilla account, contact support.
 
 Only the owner can add another manager. Members can be removed or have their role changed (not the owner).
 

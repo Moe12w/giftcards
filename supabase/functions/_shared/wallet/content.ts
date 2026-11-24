@@ -59,9 +59,9 @@ export function applePass(input: {
     passTypeIdentifier: input.passTypeId,
     serialNumber: voucher.id,
     teamIdentifier: input.teamId,
-    organizationName: 'Marajukoo',
+    organizationName: 'Tazilla',
     description: `${voucher.vendorName} gift card`,
-    logoText: 'Marajukoo',
+    logoText: 'Tazilla',
     foregroundColor: 'rgb(255,255,255)',
     backgroundColor: 'rgb(11,74,68)',
     labelColor: 'rgb(203,232,227)',
@@ -100,7 +100,7 @@ export function applePass(input: {
   };
 }
 
-/** The class every Marajukoo gift card object belongs to. */
+/** The class every Tazilla gift card object belongs to. */
 export function googleClassId(issuerId: string): string {
   return `${issuerId}.giftly_giftcard_v1`;
 }

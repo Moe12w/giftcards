@@ -47,7 +47,7 @@ export async function createTeamMemberAccount(input: NewTeamMember): Promise<Tea
     if (message.includes('already') || message.includes('exist')) {
       return {
         ok: false,
-        error: 'An account with that email already exists. Ask them to sign in, or contact Marajukoo support.',
+        error: 'An account with that email already exists. Ask them to sign in, or contact Tazilla support.',
       };
     }
     return { ok: false, error: 'Could not create the account. Please try again.' };

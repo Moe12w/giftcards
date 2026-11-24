@@ -1,5 +1,5 @@
 # Statement Export Feature Design Document
-## Marajukoo Platform - Vendor/Business Accounting Statements
+## Tazilla Platform - Vendor/Business Accounting Statements
 
 *Document Version: 1.0 - Greenfield implementation for statement export functionality*
 *Designed for: Expo Router + React Native + Supabase PostgreSQL backend*

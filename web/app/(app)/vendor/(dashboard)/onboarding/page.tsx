@@ -65,7 +65,7 @@ export default async function VendorOnboardingPage({
 
   const notice =
     params.welcome === '1'
-      ? 'Welcome to Marajukoo. Your dashboard is ready — finish this short setup whenever you like.'
+      ? 'Welcome to Tazilla. Your dashboard is ready — finish this short setup whenever you like.'
       : params.saved === '1'
         ? 'Saved. You can leave at any time and continue from your dashboard.'
         : null;
@@ -263,7 +263,7 @@ export default async function VendorOnboardingPage({
                     <div className="field full">
                       <label htmlFor="country">Country</label>
                       <input id="country" value="Qatar" readOnly disabled />
-                      <span className="hint">Marajukoo currently operates in Qatar.</span>
+                      <span className="hint">Tazilla currently operates in Qatar.</span>
                     </div>
                   </div>
 

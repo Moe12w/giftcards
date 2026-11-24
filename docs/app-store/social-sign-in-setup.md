@@ -100,7 +100,7 @@ you create.
 ### 3.1 Consent screen
 
 - [ ] console.cloud.google.com → **Google Auth Platform** → **Branding**:
-      app name `Marajukoo`, support email, logo, and the links Google asks for
+      app name `Tazilla`, support email, logo, and the links Google asks for
       (homepage, privacy policy, terms).
 - [ ] **Data Access (Scopes)** — keep exactly these, nothing more:
       `openid`, `.../auth/userinfo.email`, `.../auth/userinfo.profile`.

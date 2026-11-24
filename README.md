@@ -1,6 +1,6 @@
-# Marajukoo — Gift Card Marketplace
+# Tazilla — Gift Card Marketplace
 
-Marajukoo is a Qatari gift-card marketplace with three apps in one repository:
+Tazilla is a Qatari gift-card marketplace with three apps in one repository:
 
 - `app/` + `src/` — Expo / React Native **customer app**
 - `web/` — Next.js **website and dashboards** for vendors, enterprise partners,

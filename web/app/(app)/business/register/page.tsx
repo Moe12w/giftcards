@@ -46,7 +46,7 @@ export default async function BusinessRegisterPage({
       points={[
         'Exclusive bulk prices and volume tiers, visible only to approved business accounts',
         'Bulk checkout, order history, invoices and gift card distribution',
-        'Approval managed by Marajukoo for secure corporate purchasing',
+        'Approval managed by Tazilla for secure corporate purchasing',
       ]}
     >
       <span className="eyebrow lavender"><Building2 size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /> Business / Bulk Buyer</span>

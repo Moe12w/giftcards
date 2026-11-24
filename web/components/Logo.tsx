@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 /**
- * The Marajukoo mark: a gift card with an M drawn as a ribbon, plus a gold
+ * The Tazilla mark: a gift card with a T drawn as a ribbon, plus a gold
  * sparkle. Drawn inline so it stays crisp at every size and inherits the
  * sticker treatment (ink border, hard shadow) from `.logo-mark`.
  */
@@ -27,7 +27,7 @@ export function LogoMark({ size = 24, className }: { size?: number; className?: 
         strokeWidth="2.4"
       />
       <path
-        d="M9.4 22.6V13.1c0-.9 1-1.3 1.6-.6l5 5.7 5-5.7c.6-.7 1.6-.3 1.6.6v9.5"
+        d="M9.6 13h12.8M16 13v9.6"
         stroke="#1c1c1c"
         strokeWidth="2.6"
         strokeLinecap="round"
@@ -38,7 +38,7 @@ export function LogoMark({ size = 24, className }: { size?: number; className?: 
   );
 }
 
-export function Logo({ href = '/', label = 'Marajukoo' }: { href?: string; label?: string }) {
+export function Logo({ href = '/', label = 'Tazilla' }: { href?: string; label?: string }) {
   return (
     <Link href={href} className="logo" aria-label={`${label} home`}>
       <span className="logo-mark">

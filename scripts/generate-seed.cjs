@@ -120,7 +120,7 @@ push('');
 // Test users
 // ---------------------------------------------------------------------------
 push('-- ---------------------------------------------------------------------');
-push('-- Test accounts (password for all of them: MarajukooTest123)');
+push('-- Test accounts (password for all of them: TazillaTest123)');
 push('-- ---------------------------------------------------------------------');
 const USERS = [
   ['11111111-1111-4111-8111-111111111111', 'customer@giftly.test', 'Demo Customer'],
@@ -157,7 +157,7 @@ push('select');
 push('  u.id,');
 push("  '00000000-0000-0000-0000-000000000000'::uuid,");
 push('  u.email,');
-push("  extensions.crypt('MarajukooTest123', extensions.gen_salt('bf', 10)),");
+push("  extensions.crypt('TazillaTest123', extensions.gen_salt('bf', 10)),");
 push('  now(), now(), now(),');
 push("  jsonb_build_object('sub', u.id, 'email', u.email, 'full_name', u.name, 'email_verified', true),");
 push("  '{\"provider\":\"email\",\"providers\":[\"email\"]}'::jsonb,");

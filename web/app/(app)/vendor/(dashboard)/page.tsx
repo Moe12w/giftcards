@@ -180,7 +180,7 @@ export default async function VendorOverviewPage() {
 
       <SetupChecklist
         title="Complete your business setup"
-        subtitle="A few steps to get the most out of Marajukoo. You can dismiss this any time."
+        subtitle="A few steps to get the most out of Tazilla. You can dismiss this any time."
         items={setupItems}
         dismissLabel="Dismiss setup checklist"
         storageKey={`vendor-setup-${vendor.id}`}

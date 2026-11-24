@@ -73,7 +73,7 @@ export function AuthCardArt({ size = 'hero' }: AuthCardArtProps) {
             <CardPlate brand="Dune Spa" amount="250" meta="SPA" color={colors.pink} />
           </View>
           <View style={[styles.position, styles.front]}>
-            <CardPlate brand="Marajukoo" amount="500" meta="GIFT" color={colors.teal} />
+            <CardPlate brand="Tazilla" amount="500" meta="GIFT" color={colors.teal} />
           </View>
         </Animated.View>
       </View>

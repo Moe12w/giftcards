@@ -712,7 +712,7 @@ async function resolveScannedVoucher(
 ): Promise<{ ok: false; error: string } | { ok: true; voucher: ScannedVoucher }> {
   const parsed = parseScanPayload(payload);
   if (!parsed.id && !parsed.code) {
-    return { ok: false, error: 'That code is not a Marajukoo gift.' };
+    return { ok: false, error: 'That code is not a Tazilla gift.' };
   }
 
   let query = ctx.supabase

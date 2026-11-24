@@ -1,4 +1,4 @@
-# Marajukoo — AI gift cards, MCP and Expo delivery report
+# Tazilla — AI gift cards, MCP and Expo delivery report
 
 Date: 15 November 2026
 
@@ -140,7 +140,7 @@ Rate limit:
 
 - Copy was updated this session to the complete purchase flow (EN + AR): the
   assistant prepares the gift card order, sends a secure payment link in the chat,
-  the customer pays through the Marajukoo checkout, and the gift card is issued after
+  the customer pays through the Tazilla checkout, and the gift card is issued after
   payment.
 
 ### 3.3 Audit results

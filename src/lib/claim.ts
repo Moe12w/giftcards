@@ -63,7 +63,7 @@ export async function fetchClaimGift(token: string): Promise<ClaimGift | null> {
 
   return {
     voucherId: row.voucher_id,
-    vendor: row.vendor_name ?? 'Marajukoo',
+    vendor: row.vendor_name ?? 'Tazilla',
     title: row.product_title ?? '',
     amountMinor: Number(row.amount_minor ?? 0),
     remainingValueMinor: row.remaining_value_minor,

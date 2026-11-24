@@ -210,7 +210,7 @@ export async function adminProcessMyFatoorahRefund(formData: FormData) {
       body: JSON.stringify({
         KeyType: 'InvoiceId',
         Key: payment.invoice_id,
-        Comment: 'Gift card order refund initiated by Marajukoo administrator.',
+        Comment: 'Gift card order refund initiated by Tazilla administrator.',
         ExternalIdentifier: externalIdentifier,
         Suppliers: suppliers,
       }),

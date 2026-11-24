@@ -82,7 +82,7 @@ const en = {
   },
   chrome: {
     portal: 'Platform admin',
-    workspace: 'Marajukoo Qatar',
+    workspace: 'Tazilla Qatar',
     workspaceMeta: 'Marketplace operations',
     admin: 'Admin',
     publicSite: 'Public site',
@@ -393,7 +393,7 @@ const en = {
   vendorDetail: {
     backToVendors: 'Back to vendors',
     eyebrow: 'Vendor',
-    marketplaceDescription: 'Vendor on the Marajukoo marketplace.',
+    marketplaceDescription: 'Vendor on the Tazilla marketplace.',
     publicPage: 'Public page',
     contact: 'Contact',
     saved: 'Vendor updated.',
@@ -463,7 +463,7 @@ const en = {
   customers: {
     eyebrow: 'Network',
     title: 'Customers',
-    description: 'Everyone with a Marajukoo account, their order history and account standing.',
+    description: 'Everyone with a Tazilla account, their order history and account standing.',
     saved: 'Customer updated.',
     accounts: 'Accounts',
     haveOrdered: 'Have placed an order',
@@ -666,7 +666,7 @@ const en = {
     emailNotSent:
       'The reply is saved in the thread, but the email did not go out. Check the sender under Settings → Email delivery.',
     sendReply: 'Send reply',
-    supportTeam: 'Marajukoo support',
+    supportTeam: 'Tazilla support',
     websiteVisitor: 'Website visitor',
     updateStatus: 'Update status',
   },
@@ -723,7 +723,7 @@ const en = {
     emailApiKeyHint:
       'Create a key in Resend and paste it here. It is stored privately and never shown again.',
     emailFromLabel: 'Sender',
-    emailFromHint: 'The name and address recipients see, for example Marajukoo <gifts@giftly.qa>.',
+    emailFromHint: 'The name and address recipients see, for example Tazilla <gifts@giftly.qa>.',
     emailRemoveKey: 'Remove the saved key',
     emailTestTo: 'Send a test to',
     emailSendTest: 'Send test email',
@@ -764,7 +764,7 @@ const en = {
     adminOnly: 'Admin only',
     signIn: 'Sign in.',
     signInButton: 'Sign in',
-    restricted: 'This portal is restricted to Marajukoo platform administrators.',
+    restricted: 'This portal is restricted to Tazilla platform administrators.',
     resetSent: 'If that email has an account, a reset link is on its way.',
     adminEmail: 'Admin email',
     password: 'Password',
@@ -865,7 +865,7 @@ const ar: AdminCopy = {
   },
   chrome: {
     portal: 'إدارة المنصة',
-    workspace: 'Marajukoo قطر',
+    workspace: 'Tazilla قطر',
     workspaceMeta: 'عمليات السوق',
     admin: 'إدارة',
     publicSite: 'الموقع العام',
@@ -1172,7 +1172,7 @@ const ar: AdminCopy = {
   vendorDetail: {
     backToVendors: 'العودة إلى البائعين',
     eyebrow: 'البائع',
-    marketplaceDescription: 'بائع في سوق Marajukoo.',
+    marketplaceDescription: 'بائع في سوق Tazilla.',
     publicPage: 'الصفحة العامة',
     contact: 'التواصل',
     saved: 'تم تحديث البائع.',
@@ -1242,7 +1242,7 @@ const ar: AdminCopy = {
   customers: {
     eyebrow: 'الشبكة',
     title: 'العملاء',
-    description: 'كل من يملك حساباً في Marajukoo وسجل طلباته وحالة حسابه.',
+    description: 'كل من يملك حساباً في Tazilla وسجل طلباته وحالة حسابه.',
     saved: 'تم تحديث العميل.',
     accounts: 'الحسابات',
     haveOrdered: 'قاموا بطلب',
@@ -1443,7 +1443,7 @@ const ar: AdminCopy = {
     emailNotSent:
       'تم حفظ الرد في المحادثة، لكن البريد لم يُرسل. تحقق من المرسِل في الإعدادات ← تسليم البريد.',
     sendReply: 'إرسال الرد',
-    supportTeam: 'دعم Marajukoo',
+    supportTeam: 'دعم Tazilla',
     websiteVisitor: 'زائر الموقع',
     updateStatus: 'تحديث الحالة',
   },
@@ -1497,7 +1497,7 @@ const ar: AdminCopy = {
     emailApiKeySaved: 'المحفوظ: {hint} — اتركه فارغاً للإبقاء عليه',
     emailApiKeyHint: 'أنشئ مفتاحاً في Resend والصقه هنا. يُحفظ بشكل خاص ولا يظهر مرة أخرى.',
     emailFromLabel: 'المرسِل',
-    emailFromHint: 'الاسم والعنوان الذي يراه المستلم، مثال: Marajukoo <gifts@giftly.qa>.',
+    emailFromHint: 'الاسم والعنوان الذي يراه المستلم، مثال: Tazilla <gifts@giftly.qa>.',
     emailRemoveKey: 'حذف المفتاح المحفوظ',
     emailTestTo: 'إرسال اختبار إلى',
     emailSendTest: 'إرسال بريد اختباري',
@@ -1537,7 +1537,7 @@ const ar: AdminCopy = {
     adminOnly: 'للمشرفين فقط',
     signIn: 'تسجيل الدخول.',
     signInButton: 'تسجيل الدخول',
-    restricted: 'هذه البوابة مخصصة لمسؤولي منصة Marajukoo فقط.',
+    restricted: 'هذه البوابة مخصصة لمسؤولي منصة Tazilla فقط.',
     resetSent: 'إذا كان لهذا البريد حساب، فرابط إعادة التعيين في طريقه إليك.',
     adminEmail: 'بريد المشرف',
     password: 'كلمة المرور',

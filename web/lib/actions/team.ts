@@ -40,7 +40,7 @@ export async function vendorCreateStaff(formData: FormData) {
     { onConflict: 'vendor_id,user_id' },
   );
   if (error) {
-    back(path, 'The account was created but could not be added to the team. Contact Marajukoo support.');
+    back(path, 'The account was created but could not be added to the team. Contact Tazilla support.');
   }
 
   await ctx.supabase.rpc('write_audit', {
@@ -81,7 +81,7 @@ export async function enterpriseCreateMember(formData: FormData) {
     { onConflict: 'partner_id,user_id' },
   );
   if (error) {
-    back(path, 'The account was created but could not be added to the team. Contact Marajukoo support.');
+    back(path, 'The account was created but could not be added to the team. Contact Tazilla support.');
   }
 
   await ctx.supabase.rpc('write_audit', {

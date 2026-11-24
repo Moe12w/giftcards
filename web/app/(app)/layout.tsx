@@ -20,17 +20,17 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
     title: {
       default: isArabic
-        ? 'Marajukoo — بطاقات هدايا وتجارب ومكافآت مؤسسية في قطر'
-        : 'Marajukoo — Gift cards, experiences and corporate rewards in Qatar',
-      template: '%s · Marajukoo',
+        ? 'Tazilla — بطاقات هدايا وتجارب ومكافآت مؤسسية في قطر'
+        : 'Tazilla — Gift cards, experiences and corporate rewards in Qatar',
+      template: '%s · Tazilla',
     },
     description: isArabic
-      ? 'Marajukoo هو سوق بطاقات الهدايا في قطر. أرسل بطاقة هدية، أو احجز تجربة، أو كافئ فريقاً بالكامل.'
-      : 'Marajukoo is Qatar’s gift card marketplace. Send a gift card, book an experience, or reward a whole team — all in one place.',
+      ? 'Tazilla هو سوق بطاقات الهدايا في قطر. أرسل بطاقة هدية، أو احجز تجربة، أو كافئ فريقاً بالكامل.'
+      : 'Tazilla is Qatar’s gift card marketplace. Send a gift card, book an experience, or reward a whole team — all in one place.',
     openGraph: {
       title: isArabic
-        ? 'Marajukoo — اصنع هدية يحبّونها فعلاً'
-        : 'Marajukoo — Give a gift they will actually use',
+        ? 'Tazilla — اصنع هدية يحبّونها فعلاً'
+        : 'Tazilla — Give a gift they will actually use',
       description: isArabic
         ? 'بطاقات هدايا وتجارب ومكافآت مؤسسية من أفضل الأنشطة المستقلة في قطر.'
         : 'Gift cards, experiences and corporate rewards from the best independent businesses in Qatar.',

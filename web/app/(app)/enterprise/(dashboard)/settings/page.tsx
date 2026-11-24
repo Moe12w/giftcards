@@ -93,7 +93,7 @@ export default async function EnterpriseSettingsPage({
                     min={0}
                     defaultValue={partner.branches_count ?? ''}
                   />
-                  <span className="hint">How many branches or outlets accept Marajukoo.</span>
+                  <span className="hint">How many branches or outlets accept Tazilla.</span>
                 </div>
                 <div className="field">
                   <label htmlFor="country">Country of registration</label>
@@ -116,7 +116,7 @@ export default async function EnterpriseSettingsPage({
                   <input id="expected_volume" name="expected_volume" defaultValue={partner.expected_volume ?? ''} placeholder={t.volumePlaceholder} />
                 </div>
                 <div className="field full">
-                  <label htmlFor="notes">{t.notesForMarajukoo}</label>
+                  <label htmlFor="notes">{t.notesForTazilla}</label>
                   <textarea id="notes" name="notes" defaultValue={partner.notes ?? ''} placeholder={t.notesPlaceholder} />
                 </div>
                 <div className="field full">

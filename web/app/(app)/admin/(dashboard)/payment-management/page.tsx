@@ -194,7 +194,7 @@ export default async function AdminPaymentManagementPage({
             </div>
             <div className="callout warn">
               Commission and deposit terms are provider-managed. Do not set a supplier commission in MyFatoorah
-              expecting Marajukoo to deduct it again — this integration records provider values only.
+              expecting Tazilla to deduct it again — this integration records provider values only.
             </div>
           </div>
         </section>

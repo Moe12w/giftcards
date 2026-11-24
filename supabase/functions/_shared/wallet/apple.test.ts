@@ -29,9 +29,9 @@ const PASS_JSON = {
   passTypeIdentifier: PASS_TYPE_ID,
   serialNumber: '8a1f0c2e-1111-4a2b-9c3d-000000000001',
   teamIdentifier: TEAM_ID,
-  organizationName: 'Marajukoo',
+  organizationName: 'Tazilla',
   description: 'Bayt Al Shaar gift card',
-  logoText: 'Marajukoo',
+  logoText: 'Tazilla',
   storeCard: {
     primaryFields: [{ key: 'balance', label: 'BALANCE', value: 'QAR 75.00' }],
   },

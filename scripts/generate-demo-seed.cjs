@@ -111,7 +111,7 @@ add('-- ---------------------------------------------------------------- shops')
 shops.forEach((shop, i) => {
   const id = uuid('vendor-' + shop.slug);
   add(`insert into public.vendors (id, owner_id, name, name_ar, slug, description, logo_url, banner_url, city, category_id, status, commission_bps, rating, is_featured, approved_at, advertising_enabled, advertising_verified)`);
-  add(`values (${q(id)}, ${q(OWNER_ID)}, ${q(shop.name)}, ${q(shop.ar)}, ${q(shop.slug)}, ${q(shop.name + ' — a Marajukoo partner in ' + shop.city + '.')},`);
+  add(`values (${q(id)}, ${q(OWNER_ID)}, ${q(shop.name)}, ${q(shop.ar)}, ${q(shop.slug)}, ${q(shop.name + ' — a Tazilla partner in ' + shop.city + '.')},`);
   add(`  ${q(logo(shop.name, shop.color))}, ${q(img(shop.slug + '-banner', 1200, 400))}, ${q(shop.city)},`);
   add(`  (select id from public.categories where slug = ${q(shop.cat)}), 'approved', 1000, ${(4.5 + (i % 5) * 0.1).toFixed(1)}, ${i < 4 ? 'true' : 'false'}, now(), true, true)`);
   add(`on conflict (id) do nothing;`);
@@ -191,7 +191,7 @@ placements.forEach((placement) => {
 add('-- ---------------------------------------------------------- test wallet');
 const orderId = uuid('order-wallet-mohmed');
 add(`insert into public.orders (id, buyer_id, status, payment_reference, order_ref, currency, subtotal_minor, total_minor, sender_name, recipient_name, recipient_email, delivery_method, payment_status, payment_provider, paid_at)`);
-add(`values (${q(orderId)}, ${q(USER_ID)}, 'paid', 'DEMO-WALLET-MOHMED-001', 'GR-DEMO-MOHMED-001', 'QAR', 35000, 35000, 'Marajukoo Demo', 'Mohmed', 'mohmed528omer@gmail.com', 'in_app', 'paid', 'manual', now())`);
+add(`values (${q(orderId)}, ${q(USER_ID)}, 'paid', 'DEMO-WALLET-MOHMED-001', 'GR-DEMO-MOHMED-001', 'QAR', 35000, 35000, 'Tazilla Demo', 'Mohmed', 'mohmed528omer@gmail.com', 'in_app', 'paid', 'manual', now())`);
 add(`on conflict (id) do nothing;`);
 add('');
 

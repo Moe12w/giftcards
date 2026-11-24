@@ -16,19 +16,19 @@ const mcpEndpoint = supabaseUrl ? `${supabaseUrl}/functions/v1/mcp` : '';
 
 const en = {
   meta: {
-    title: 'AI Gift Card Shopping in Qatar | Marajukoo',
+    title: 'AI Gift Card Shopping in Qatar | Tazilla',
     description:
-      "Discover Qatari businesses and gift cards with AI assistants. Compare amounts, check details, and pay through a secure Marajukoo payment link sent in the conversation.",
+      "Discover Qatari businesses and gift cards with AI assistants. Compare amounts, check details, and pay through a secure Tazilla payment link sent in the conversation.",
     ogTitle: 'AI gift card shopping in Qatar',
     ogDescription:
-      'Discover local businesses, compare gift cards, and pay through a secure Marajukoo payment link from the AI conversation to the issued gift card.',
+      'Discover local businesses, compare gift cards, and pay through a secure Tazilla payment link from the AI conversation to the issued gift card.',
   },
   hero: {
     eyebrow: 'AI gift card shopping in Qatar',
     titleLine1: 'AI gift card shopping',
     titleLine2: 'in Qatar',
     lede:
-      "Discover Qatar's local businesses, compare gift cards and prepare a gift in one conversation. Marajukoo's AI assistant prepares the order, sends you a secure payment link in the chat, and you pay through the Marajukoo checkout — the gift card is then issued.",
+      "Discover Qatar's local businesses, compare gift cards and prepare a gift in one conversation. Tazilla's AI assistant prepares the order, sends you a secure payment link in the chat, and you pay through the Tazilla checkout — the gift card is then issued.",
     primaryCta: 'Browse gift cards',
     secondaryCta: 'See how it works',
     trustLocal: 'Qatari local businesses',
@@ -56,7 +56,7 @@ const en = {
       {
         title: 'Discover businesses and cards',
         body:
-          'Marajukoo searches approved local businesses and returns their available gift cards, amounts and experience packages.',
+          'Tazilla searches approved local businesses and returns their available gift cards, amounts and experience packages.',
       },
       {
         title: 'Compare before you choose',
@@ -66,17 +66,17 @@ const en = {
       {
         title: 'Prepare the order securely',
         body:
-          "Review the recipient and message, then prepare the order. The assistant sends you a secure payment link in the chat; you pay through the Marajukoo checkout and the gift card is issued after payment.",
+          "Review the recipient and message, then prepare the order. The assistant sends you a secure payment link in the chat; you pay through the Tazilla checkout and the gift card is issued after payment.",
       },
     ],
     note:
-      'The assistant prepares the order and sends you a secure payment link in the chat. Payment happens through the Marajukoo checkout, and the gift card is issued after payment.',
+      'The assistant prepares the order and sends you a secure payment link in the chat. Payment happens through the Tazilla checkout, and the gift card is issued after payment.',
   },
   why: {
     eyebrow: 'Why AI gift card shopping',
     title: 'The gift card shop that answers back.',
     body:
-      'A conversation is often the fastest way to find a thoughtful gift. Marajukoo gives the assistant real catalogue data instead of guesses.',
+      'A conversation is often the fastest way to find a thoughtful gift. Tazilla gives the assistant real catalogue data instead of guesses.',
     benefits: [
       {
         title: 'Discover through conversation',
@@ -86,7 +86,7 @@ const en = {
       {
         title: 'Local options, not filler',
         body:
-          'Independent cafés, salons, spas and experiences in Qatar, reviewed before they appear on Marajukoo.',
+          'Independent cafés, salons, spas and experiences in Qatar, reviewed before they appear on Tazilla.',
       },
       {
         title: 'Answers before you buy',
@@ -104,40 +104,40 @@ const en = {
     eyebrow: 'Compatible AI platforms',
     title: 'Built on MCP, not one assistant.',
     body:
-      'MCP is an open standard for connecting assistants to tools and data. Marajukoo builds the connection once so more than one platform can use it.',
+      'MCP is an open standard for connecting assistants to tools and data. Tazilla builds the connection once so more than one platform can use it.',
     statusLabel: 'Status',
     platforms: [
       {
         name: 'ChatGPT',
         body:
-          'A remote MCP connector is being tested with the Marajukoo server before full purchasing is announced.',
+          'A remote MCP connector is being tested with the Tazilla server before full purchasing is announced.',
         status: 'Connector testing in progress',
       },
       {
         name: 'Claude',
         body:
-          'Claude supports remote MCP connections. The Marajukoo connector is being tested before full purchasing is announced.',
+          'Claude supports remote MCP connections. The Tazilla connector is being tested before full purchasing is announced.',
         status: 'Connector testing in progress',
       },
       {
         name: 'Other MCP assistants',
         body:
-          'Any assistant that supports remote Streamable HTTP MCP can connect to the public Marajukoo server when its client allows custom connectors.',
+          'Any assistant that supports remote Streamable HTTP MCP can connect to the public Tazilla server when its client allows custom connectors.',
         status: 'MCP server available',
       },
     ],
     disclaimer:
-      'We are testing these connections before declaring that a platform can complete a purchase. Until a connector is verified, the assistant can run the complete gift flow — prepare the order, send the secure payment link and take the payment through the Marajukoo checkout — before any platform is declared ready to complete a purchase.',
+      'We are testing these connections before declaring that a platform can complete a purchase. Until a connector is verified, the assistant can run the complete gift flow — prepare the order, send the secure payment link and take the payment through the Tazilla checkout — before any platform is declared ready to complete a purchase.',
   },
   forBusiness: {
     eyebrow: 'For businesses',
     title: 'Make your gift cards discoverable through AI.',
     body:
-      'Join the Marajukoo marketplace and your published gift cards become part of a catalogue that MCP-compatible assistants can search and present to customers.',
+      'Join the Tazilla marketplace and your published gift cards become part of a catalogue that MCP-compatible assistants can search and present to customers.',
     bullets: [
-      'A presence in Marajukoo\'s public gift card catalogue',
+      'A presence in Tazilla\'s public gift card catalogue',
       'Clear amounts, packages and redemption instructions',
-      'Orders prepared and paid securely through the chat and Marajukoo checkout',
+      'Orders prepared and paid securely through the chat and Tazilla checkout',
       'Your existing vendor dashboard for orders and redemptions',
     ],
     cta: 'Talk to our team',
@@ -147,7 +147,7 @@ const en = {
     eyebrow: 'For AI platforms',
     title: 'One connection, many assistants.',
     body:
-      'Marajukoo exposes its catalogue through MCP, an open standard for connecting assistants to tools and data. That means an assistant can search real local businesses and gift cards without a custom integration for every platform.',
+      'Tazilla exposes its catalogue through MCP, an open standard for connecting assistants to tools and data. That means an assistant can search real local businesses and gift cards without a custom integration for every platform.',
     endpointLabel: 'MCP server URL',
     endpoint: mcpEndpoint,
     toolsLabel: 'Available tools',
@@ -163,7 +163,7 @@ const en = {
       'send_payment_link',
     ],
     note:
-      'The public catalogue tools work without a Marajukoo account. Preparing an order and creating a payment link require a signed-in Marajukoo customer; the assistant shares a secure MyFatoorah link in the chat. Payment happens through the Marajukoo checkout, and the gift card is issued after verified payment.',
+      'The public catalogue tools work without a Tazilla account. Preparing an order and creating a payment link require a signed-in Tazilla customer; the assistant shares a secure MyFatoorah link in the chat. Payment happens through the Tazilla checkout, and the gift card is issued after verified payment.',
     docsCta: 'Connection details for platforms',
   },
   faq: {
@@ -173,7 +173,7 @@ const en = {
       {
         q: 'How does the AI purchase flow work?',
         a:
-          'The assistant runs the complete gift flow: it prepares the gift card order, sends you a secure payment link in the chat, and you pay through the Marajukoo checkout. The gift card is issued after payment. We are testing platform connectors before declaring that a platform can complete the purchase.',      },
+          'The assistant runs the complete gift flow: it prepares the gift card order, sends you a secure payment link in the chat, and you pay through the Tazilla checkout. The gift card is issued after payment. We are testing platform connectors before declaring that a platform can complete the purchase.',      },
       {
         q: 'What can the assistant actually do?',
         a:
@@ -182,22 +182,22 @@ const en = {
       {
         q: 'Does the assistant charge my card?',
         a:
-          'No. The assistant does not charge your card directly. It sends you a secure payment link in the chat; you pay through the Marajukoo checkout and the gift card is issued after payment.',
+          'No. The assistant does not charge your card directly. It sends you a secure payment link in the chat; you pay through the Tazilla checkout and the gift card is issued after payment.',
       },
       {
-        q: 'Can I use Marajukoo in Arabic?',
+        q: 'Can I use Tazilla in Arabic?',
         a:
           'Yes. The website and app support Arabic and English, and you can ask an assistant about businesses, amounts and terms in Arabic.',
       },
       {
         q: 'Are the gift cards from local businesses?',
         a:
-          'Marajukoo focuses on independent businesses in Qatar, including cafés, salons, spas and experiences. Every business is reviewed before it appears in the marketplace.',
+          'Tazilla focuses on independent businesses in Qatar, including cafés, salons, spas and experiences. Every business is reviewed before it appears in the marketplace.',
       },
       {
         q: 'How do I start?',
         a:
-          'Ask an MCP-compatible assistant about Marajukoo. The assistant prepares the gift card, sends a secure payment link in the chat and takes the payment through the Marajukoo checkout; download the app to claim, store and use the issued card.',
+          'Ask an MCP-compatible assistant about Tazilla. The assistant prepares the gift card, sends a secure payment link in the chat and takes the payment through the Tazilla checkout; download the app to claim, store and use the issued card.',
       },
     ],
   },
@@ -205,7 +205,7 @@ const en = {
     title: 'Keep exploring',
     links: [
       { label: 'Browse local businesses', href: '/vendors' },
-      { label: 'How Marajukoo works', href: '/faq' },
+      { label: 'How Tazilla works', href: '/faq' },
       { label: 'Corporate gifting', href: '/corporate' },
       { label: 'Get the app', href: '/download' },
       { label: 'Contact us', href: '/contact' },
@@ -215,7 +215,7 @@ const en = {
     eyebrow: 'Ready when you are',
     title: 'Find a gift worth talking about.',
     body:
-      'Start with a local business, or let your assistant do the searching. Marajukoo brings discovery, comparison and redemption together.',
+      'Start with a local business, or let your assistant do the searching. Tazilla brings discovery, comparison and redemption together.',
     primary: 'Browse gift cards',
     secondary: 'Get the app',
   },
@@ -225,7 +225,7 @@ type AiCopy = typeof en;
 
 const ar: AiCopy = {
   meta: {
-    title: 'تسوّق بطاقات الهدايا بالذكاء الاصطناعي في قطر | Marajukoo',
+    title: 'تسوّق بطاقات الهدايا بالذكاء الاصطناعي في قطر | Tazilla',
     description:
       'اكتشف متاجر قطر واستكشف بطاقات الهدايا عبر مساعدي الذكاء الاصطناعي. قارن المبالغ، واطّلع على التفاصيل، وادفع عبر رابط دفع آمن يرسله المساعد في المحادثة ثم تصدر البطاقة بعد الدفع.',
     ogTitle: 'تسوّق بطاقات الهدايا بالذكاء الاصطناعي في قطر',
@@ -237,7 +237,7 @@ const ar: AiCopy = {
     titleLine1: 'تسوّق بطاقات الهدايا',
     titleLine2: 'بالذكاء الاصطناعي في قطر',
     lede:
-      'اكتشف متاجر قطر المحلية، وقارن بطاقات الهدايا، وجهّز هديتك في محادثة واحدة. يعد المساعد الذكاء الاصطناعي الطلب، ويرسل رابط دفع آمن في المحادثة، وتدفع عبر تجربة Marajukoo — ثم تُصدر البطاقة بعد الدفع.',
+      'اكتشف متاجر قطر المحلية، وقارن بطاقات الهدايا، وجهّز هديتك في محادثة واحدة. يعد المساعد الذكاء الاصطناعي الطلب، ويرسل رابط دفع آمن في المحادثة، وتدفع عبر تجربة Tazilla — ثم تُصدر البطاقة بعد الدفع.',
     primaryCta: 'تصفّح بطاقات الهدايا',
     secondaryCta: 'كيف يعمل',
     trustLocal: 'متاجر قطرية محلية',
@@ -265,7 +265,7 @@ const ar: AiCopy = {
       {
         title: 'اكتشف المتاجر والبطاقات',
         body:
-          'يبحث Marajukoo في المتاجر المحلية المعتمدة ويعرض بطاقات الهدايا والمبالغ والباقات المتاحة.',
+          'يبحث Tazilla في المتاجر المحلية المعتمدة ويعرض بطاقات الهدايا والمبالغ والباقات المتاحة.',
       },
       {
         title: 'قارن قبل أن تختار',
@@ -275,17 +275,17 @@ const ar: AiCopy = {
       {
         title: 'جهّز الطلب بأمان',
         body:
-          'راجع بيانات المستلم والرسالة، ثم جهّز الطلب. يرسل المساعد رابط دفع آمن في المحادثة، وتدفع عبر تجربة Marajukoo، ويُصدر بعد الدفع.',
+          'راجع بيانات المستلم والرسالة، ثم جهّز الطلب. يرسل المساعد رابط دفع آمن في المحادثة، وتدفع عبر تجربة Tazilla، ويُصدر بعد الدفع.',
       },
     ],
     note:
-      'المساعد يجهّز الطلب ويرسل رابط دفع آمن في المحادثة. الدفع يتم عبر تجربة Marajukoo، ويُصدر بعد الدفع.',
+      'المساعد يجهّز الطلب ويرسل رابط دفع آمن في المحادثة. الدفع يتم عبر تجربة Tazilla، ويُصدر بعد الدفع.',
   },
   why: {
     eyebrow: 'لماذا التسوّق بالذكاء الاصطناعي؟',
     title: 'متجر بطاقات هدايا يجاوبك.',
     body:
-      'المحادثة غالباً أسرع طريقة للعثور على هدية مميزة. يمنح Marajukoo المساعد بيانات حقيقية من الكتالوج بدلاً من التخمين.',
+      'المحادثة غالباً أسرع طريقة للعثور على هدية مميزة. يمنح Tazilla المساعد بيانات حقيقية من الكتالوج بدلاً من التخمين.',
     benefits: [
       {
         title: 'اكتشاف بالمحادثة',
@@ -295,7 +295,7 @@ const ar: AiCopy = {
       {
         title: 'خيارات محلية حقيقية',
         body:
-          'مقاهي وصالونات ومراكز سبا وتجارب مستقلة في قطر، تتم مراجعتها قبل ظهورها على Marajukoo.',
+          'مقاهي وصالونات ومراكز سبا وتجارب مستقلة في قطر، تتم مراجعتها قبل ظهورها على Tazilla.',
       },
       {
         title: 'إجابات قبل الشراء',
@@ -313,40 +313,40 @@ const ar: AiCopy = {
     eyebrow: 'منصات الذكاء الاصطناعي المتوافقة',
     title: 'مبنية على MCP، لا على مساعد واحد.',
     body:
-      'MCP معيار مفتوح لربط المساعدات بالأدوات والبيانات. يبني Marajukoo الاتصال مرة واحدة لتستخدمه أكثر من منصة.',
+      'MCP معيار مفتوح لربط المساعدات بالأدوات والبيانات. يبني Tazilla الاتصال مرة واحدة لتستخدمه أكثر من منصة.',
     statusLabel: 'الحالة',
     platforms: [
       {
         name: 'ChatGPT',
         body:
-          'يجري اختبار موصل MCP عن بُعد مع خادم Marajukoo قبل الإعلان عن إتاحة الشراء الكامل.',
+          'يجري اختبار موصل MCP عن بُعد مع خادم Tazilla قبل الإعلان عن إتاحة الشراء الكامل.',
         status: 'اختبار الموصل جارٍ',
       },
       {
         name: 'Claude',
         body:
-          'يدعم Claude اتصالات MCP عن بُعد. يجري اختبار موصل Marajukoo قبل الإعلان عن إتاحة الشراء الكامل.',
+          'يدعم Claude اتصالات MCP عن بُعد. يجري اختبار موصل Tazilla قبل الإعلان عن إتاحة الشراء الكامل.',
         status: 'اختبار الموصل جارٍ',
       },
       {
         name: 'مساعدات MCP الأخرى',
         body:
-          'أي مساعد يدعم MCP عبر Streamable HTTP يمكنه الاتصال بخادم Marajukoo العام عندما يسمح عميله بالموصلات المخصصة.',
+          'أي مساعد يدعم MCP عبر Streamable HTTP يمكنه الاتصال بخادم Tazilla العام عندما يسمح عميله بالموصلات المخصصة.',
         status: 'خادم MCP متاح',
       },
     ],
     disclaimer:
-      'نختبر هذه الاتصالات قبل أن نعلن أن منصة ما قادرة على إتمام الشراء. حتى يتم التحقق من الموصل، يمكن للمساعد أن يشغّل التدفق الكامل: يجهّز الطلب، ويرسل رابط الدفع الآمن، ويتولى الدفع عبر تجربة Marajukoo — قبل أن تُعلن منصة عن إتمام الشراء.',
+      'نختبر هذه الاتصالات قبل أن نعلن أن منصة ما قادرة على إتمام الشراء. حتى يتم التحقق من الموصل، يمكن للمساعد أن يشغّل التدفق الكامل: يجهّز الطلب، ويرسل رابط الدفع الآمن، ويتولى الدفع عبر تجربة Tazilla — قبل أن تُعلن منصة عن إتمام الشراء.',
   },
   forBusiness: {
     eyebrow: 'للأعمال',
     title: 'اجعل بطاقات هداياك قابلة للاكتشاف عبر الذكاء الاصطناعي.',
     body:
-      'انضم إلى سوق Marajukoo، لتصبح بطاقات هداياك المنشورة جزءاً من كتالوج يمكن للمساعدات المتوافقة مع MCP البحث فيه وعرضه للعملاء.',
+      'انضم إلى سوق Tazilla، لتصبح بطاقات هداياك المنشورة جزءاً من كتالوج يمكن للمساعدات المتوافقة مع MCP البحث فيه وعرضه للعملاء.',
     bullets: [
-      'حضور في كتالوج Marajukoo العام لبطاقات الهدايا',
+      'حضور في كتالوج Tazilla العام لبطاقات الهدايا',
       'مبالغ وباقات وتعليمات استخدام واضحة',
-      'طلبات مجهّزة ومدفوعة بأمان عبر المحادثة وتجربة Marajukoo',
+      'طلبات مجهّزة ومدفوعة بأمان عبر المحادثة وتجربة Tazilla',
       'لوحة المتجر الحالية لمتابعة الطلبات والاستبدال',
     ],
     cta: 'تحدّث إلى فريقنا',
@@ -356,7 +356,7 @@ const ar: AiCopy = {
     eyebrow: 'لمنصات الذكاء الاصطناعي',
     title: 'اتصال واحد، مساعدات متعددة.',
     body:
-      'يتيح Marajukoo كتالوجه عبر MCP، وهو معيار مفتوح لربط المساعدات بالأدوات والبيانات. لذلك يستطيع المساعد البحث في متاجر محلية حقيقية وبطاقات هدايا دون تكامل مخصص لكل منصة.',
+      'يتيح Tazilla كتالوجه عبر MCP، وهو معيار مفتوح لربط المساعدات بالأدوات والبيانات. لذلك يستطيع المساعد البحث في متاجر محلية حقيقية وبطاقات هدايا دون تكامل مخصص لكل منصة.',
     endpointLabel: 'عنوان خادم MCP',
     endpoint: mcpEndpoint,
     toolsLabel: 'الأدوات المتاحة',
@@ -372,7 +372,7 @@ const ar: AiCopy = {
       'send_payment_link',
     ],
     note:
-      'أدوات الكتالوج العامة تعمل دون حساب Marajukoo. تجهيز الطلب وإنشاء رابط الدفع يتطلبان عميلاً مسجّلاً في Marajukoo؛ ثم يشارك المساعد رابط MyFatoorah آمن في المحادثة. الدفع يتم عبر تجربة Marajukoo، ويُصدر بعد تأكيد الدفع.',
+      'أدوات الكتالوج العامة تعمل دون حساب Tazilla. تجهيز الطلب وإنشاء رابط الدفع يتطلبان عميلاً مسجّلاً في Tazilla؛ ثم يشارك المساعد رابط MyFatoorah آمن في المحادثة. الدفع يتم عبر تجربة Tazilla، ويُصدر بعد تأكيد الدفع.',
     docsCta: 'تفاصيل الاتصال للمنصات',
   },
   faq: {
@@ -382,7 +382,7 @@ const ar: AiCopy = {
       {
         q: 'كيف يعمل تدفق شراء الذكاء الاصطناعي؟',
         a:
-          'يعمل خادم Marajukoo عبر MCP: يجهّز طلب البطاقة الهدية، ويرسل رابط الدفع الآمن في المحادثة، وتدفع عبر تجربة Marajukoo، ويُصدر بعد الدفع. نختبر موصلات المنصات قبل أن تُعلن أن منصة ما قادرة على إتمام الشراء.',
+          'يعمل خادم Tazilla عبر MCP: يجهّز طلب البطاقة الهدية، ويرسل رابط الدفع الآمن في المحادثة، وتدفع عبر تجربة Tazilla، ويُصدر بعد الدفع. نختبر موصلات المنصات قبل أن تُعلن أن منصة ما قادرة على إتمام الشراء.',
       },
       {
         q: 'ما الذي يستطيع المساعد فعله فعلاً؟',
@@ -392,22 +392,22 @@ const ar: AiCopy = {
       {
         q: 'هل يخصم المساعد المبلغ من بطاقتي؟',
         a:
-          'لا. لا يخصم المساعد من بطاقيتك مباشرة؛ بل يرسل رابط دفع آمن في المحادثة، وتدفع عبر تجربة Marajukoo، ويُصدر بعد الدفع.',
+          'لا. لا يخصم المساعد من بطاقيتك مباشرة؛ بل يرسل رابط دفع آمن في المحادثة، وتدفع عبر تجربة Tazilla، ويُصدر بعد الدفع.',
       },
       {
-        q: 'هل يمكنني استخدام Marajukoo بالعربية؟',
+        q: 'هل يمكنني استخدام Tazilla بالعربية؟',
         a:
           'نعم. الموقع والتطبيق يدعمان العربية والإنجليزية، ويمكنك سؤال المساعد بالعربية عن المتاجر والمبالغ والشروط.',
       },
       {
         q: 'هل بطاقات الهدايا من متاجر محلية؟',
         a:
-          'يركز Marajukoo على المتاجر المستقلة في قطر، مثل المقاهي والصالونات ومراكز السبا والتجارب. تتم مراجعة كل متجر قبل ظهوره في السوق.',
+          'يركز Tazilla على المتاجر المستقلة في قطر، مثل المقاهي والصالونات ومراكز السبا والتجارب. تتم مراجعة كل متجر قبل ظهوره في السوق.',
       },
       {
         q: 'كيف أبدأ؟',
         a:
-          'اسأل مساعداً متوافقاً مع MCP عن Marajukoo. يجهّز المساعد البطاقة الهدية، ويرسل رابط الدفع الآمن في المحادثة، ويتولى الدفع عبر تجربة Marajukoo؛ وحمّل التطبيق لاستلام البطاقة المصدرة وحفظها واستخدامها.',
+          'اسأل مساعداً متوافقاً مع MCP عن Tazilla. يجهّز المساعد البطاقة الهدية، ويرسل رابط الدفع الآمن في المحادثة، ويتولى الدفع عبر تجربة Tazilla؛ وحمّل التطبيق لاستلام البطاقة المصدرة وحفظها واستخدامها.',
       },
     ],
   },
@@ -415,7 +415,7 @@ const ar: AiCopy = {
     title: 'تابع الاستكشاف',
     links: [
       { label: 'تصفّح المتاجر المحلية', href: '/vendors' },
-      { label: 'كيف تعمل Marajukoo', href: '/faq' },
+      { label: 'كيف تعمل Tazilla', href: '/faq' },
       { label: 'الهدايا المؤسسية', href: '/corporate' },
       { label: 'حمّل التطبيق', href: '/download' },
       { label: 'تواصل معنا', href: '/contact' },
@@ -425,7 +425,7 @@ const ar: AiCopy = {
     eyebrow: 'جاهز عندما تكون جاهزاً',
     title: 'اعثر على هدية تستحق الحديث عنها.',
     body:
-      'ابدأ بمتجر محلي، أو دع مساعدك يبحث لك. يجمع Marajukoo الاكتشاف والمقارنة والاستخدام في مكان واحد.',
+      'ابدأ بمتجر محلي، أو دع مساعدك يبحث لك. يجمع Tazilla الاكتشاف والمقارنة والاستخدام في مكان واحد.',
     primary: 'تصفّح بطاقات الهدايا',
     secondary: 'حمّل التطبيق',
   },

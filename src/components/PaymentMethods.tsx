@@ -1,5 +1,5 @@
 // src/components/PaymentMethods.tsx
-// Marajukoo never handles card data. The customer is sent to MyFatoorah's hosted
+// Tazilla never handles card data. The customer is sent to MyFatoorah's hosted
 // page, which offers whatever the business has enabled (card, Apple Pay,
 // Google Pay). The parent screen owns the actual payment action.
 import React from 'react';

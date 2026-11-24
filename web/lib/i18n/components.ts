@@ -8,7 +8,7 @@ import type { Copy } from './index';
 
 const en = {
   authShell: {
-    forBusiness: 'Marajukoo for business · Doha, Qatar',
+    forBusiness: 'Tazilla for business · Doha, Qatar',
     backToHome: 'Back to home',
   },
   siteFooter: {
@@ -51,7 +51,7 @@ const en = {
     title: 'Set a new password',
     heading: 'Back into your account, safely.',
     body: 'Choose a new password with at least eight characters. You will stay signed in on this device.',
-    footer: 'Marajukoo · Doha, Qatar',
+    footer: 'Tazilla · Doha, Qatar',
     eyebrow: 'Password reset',
     doneTitle: 'Password updated',
     newTitle: 'Choose a new password',
@@ -198,7 +198,7 @@ type ComponentsCopy = typeof en;
 
 const ar: ComponentsCopy = {
   authShell: {
-    forBusiness: 'Marajukoo للأعمال · الدوحة، قطر',
+    forBusiness: 'Tazilla للأعمال · الدوحة، قطر',
     backToHome: 'العودة إلى الرئيسية',
   },
   siteFooter: {
@@ -241,7 +241,7 @@ const ar: ComponentsCopy = {
     title: 'تعيين كلمة مرور جديدة',
     heading: 'العودة إلى حسابك بأمان.',
     body: 'اختر كلمة مرور جديدة من ثمانية أحرف على الأقل. ستبقى مسجّل الدخول على هذا الجهاز.',
-    footer: 'Marajukoo · الدوحة، قطر',
+    footer: 'Tazilla · الدوحة، قطر',
     eyebrow: 'إعادة تعيين كلمة المرور',
     doneTitle: 'تم تحديث كلمة المرور',
     newTitle: 'اختر كلمة مرور جديدة',
@@ -274,7 +274,7 @@ const ar: ComponentsCopy = {
     moneyNote: 'بطاقة هدية — يختار العميل مبلغاً بين الحد الأدنى والأقصى.',
     status: 'الحالة',
     statusDraft: 'مسودة — غير ظاهرة',
-    statusPublished: 'منشورة — متاحة على Marajukoo',
+    statusPublished: 'منشورة — متاحة على Tazilla',
     minAmount: 'الحد الأدنى للمبلغ (ر.ق)',
     maxAmount: 'الحد الأقصى للمبلغ (ر.ق)',
     presetAmounts: 'المبالغ الجاهزة (ر.ق)',

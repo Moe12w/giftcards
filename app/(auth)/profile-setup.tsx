@@ -79,7 +79,7 @@ export default function ProfileSetupScreen() {
               accessibilityState={{ selected: active }}
               style={[styles.avatarWrap, active && styles.avatarActive]}
             >
-              <Avatar name={fullName || email || 'Marajukoo'} size={54} tone={avatarTone} />
+              <Avatar name={fullName || email || 'Tazilla'} size={54} tone={avatarTone} />
             </Pressable>
           );
         })}

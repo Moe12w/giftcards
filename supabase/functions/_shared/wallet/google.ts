@@ -116,7 +116,7 @@ async function ensureClass(
     method: 'POST',
     body: JSON.stringify({
       id: classId,
-      issuerName: 'Marajukoo',
+      issuerName: 'Tazilla',
       reviewStatus: 'UNDER_REVIEW',
       hexBackgroundColor: '#0B4A44',
     }),

@@ -52,7 +52,7 @@ export default async function VendorReportsPage({
     return order?.status === 'paid';
   });
 
-  // The customer pays the gross, Marajukoo keeps the commission, the rest is the vendor's.
+  // The customer pays the gross, Tazilla keeps the commission, the rest is the vendor's.
   const { grossMinor: gross, commissionMinor: commission, shareMinor: share } = totals;
   const effectiveBps = gross > 0 ? Math.round((commission / gross) * 10000) : 0;
 

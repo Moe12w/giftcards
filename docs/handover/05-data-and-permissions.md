@@ -25,7 +25,7 @@ This is a plain-English map of the important tables and who can access them.
 | Table | What it holds |
 |---|---|
 | `vendors` | Gift-card businesses, status, commission, supplier fields |
-| `enterprise_partners` | Partners whose own codes are listed for sale (codes issued by the partner, not Marajukoo — not a reseller relationship), status, supplier fields |
+| `enterprise_partners` | Partners whose own codes are listed for sale (codes issued by the partner, not Tazilla — not a reseller relationship), status, supplier fields |
 | `vendor_locations` | Physical locations |
 | `vendor_applications` | Platform onboarding (separate from payment approval) |
 | `merchant_applications` | Payment processing application (vendor or partner) |

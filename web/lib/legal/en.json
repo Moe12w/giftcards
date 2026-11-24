@@ -2,7 +2,7 @@
   "updated": "16 November 2026",
   "company": {
     "legalName": "Nexgen Software Publishing Solution",
-    "brand": "Marajukoo",
+    "brand": "Tazilla",
     "cr": "238473",
     "address": "Doha, State of Qatar",
     "legalEmail": "legal@giftly.qa",
@@ -11,7 +11,7 @@
   },
   "ui": {
     "legalCentre": "Legal centre",
-    "legalCentreLede": "The terms and privacy notices that apply to each side of the Marajukoo marketplace.",
+    "legalCentreLede": "The terms and privacy notices that apply to each side of the Tazilla marketplace.",
     "terms": "Terms & Conditions",
     "privacy": "Privacy Policy",
     "lastUpdated": "Last updated",
@@ -29,7 +29,7 @@
   "audiences": {
     "client": {
       "label": "Customers",
-      "short": "People who buy, send, receive or hold a Marajukoo gift card.",
+      "short": "People who buy, send, receive or hold a Tazilla gift card.",
       "termsTitle": "Customer Terms & Conditions",
       "privacyTitle": "Customer Privacy Policy"
     },
@@ -56,14 +56,14 @@
     "terms": {
       "title": "Terms & Conditions",
       "intro": [
-        "These Terms & Conditions (the Terms) are a legal agreement between you and Nexgen Software Publishing Solution, a company registered in the State of Qatar under commercial registration number 238473 and operating the Marajukoo brand and platform (Nexgen, we, us or our).",
-        "They govern your access to and use of the Marajukoo website, mobile application, business dashboards, application programming interfaces and related services (together, the Platform). By creating an account, browsing, listing, buying, sending, importing, allocating or redeeming a gift card, or otherwise using the Platform, you agree to these Terms. If you do not agree, you must not use the Platform."
+        "These Terms & Conditions (the Terms) are a legal agreement between you and Nexgen Software Publishing Solution, a company registered in the State of Qatar under commercial registration number 238473 and operating the Tazilla brand and platform (Nexgen, we, us or our).",
+        "They govern your access to and use of the Tazilla website, mobile application, business dashboards, application programming interfaces and related services (together, the Platform). By creating an account, browsing, listing, buying, sending, importing, allocating or redeeming a gift card, or otherwise using the Platform, you agree to these Terms. If you do not agree, you must not use the Platform."
       ],
       "opening": [
         {
-          "h": "1. About Marajukoo and these Terms",
+          "h": "1. About Tazilla and these Terms",
           "p": [
-            "Marajukoo is a technology marketplace. It allows independent businesses to describe and list closed-loop gift cards, and allows customers, enterprise clients and approved bulk buyers to discover, purchase, send, store, allocate and redeem those gift cards in a single digital experience.",
+            "Tazilla is a technology marketplace. It allows independent businesses to describe and list closed-loop gift cards, and allows customers, enterprise clients and approved bulk buyers to discover, purchase, send, store, allocate and redeem those gift cards in a single digital experience.",
             "These Terms apply to everyone who uses the Platform. Some users also accept a role-specific schedule: the Vendor Schedule, the Enterprise Client Schedule or the Bulk Buyer Schedule. A role-specific schedule forms part of these Terms and prevails over the general sections to the extent of any conflict for that role. Customer-specific provisions are set out in the Customer Schedule.",
             "The Platform is operated from Qatar. We may offer parts of the Platform in English and Arabic. Both language versions are intended to have the same meaning. To the extent Qatari law requires consumer information in Arabic, the Arabic version prevails for that information. Otherwise, the English version prevails to the extent permitted by applicable law."
           ]
@@ -74,7 +74,7 @@
             "In these Terms, the following words have the meanings below unless the context requires otherwise."
           ],
           "b": [
-            "Platform: the Marajukoo website, mobile application, dashboards, APIs, checkout, delivery tools, wallet integrations and related services.",
+            "Platform: the Tazilla website, mobile application, dashboards, APIs, checkout, delivery tools, wallet integrations and related services.",
             "Customer: a person who buys, sends, receives or holds a gift card for personal or family use, and who is not acting for a trade, business or profession.",
             "Vendor: a business that lists gifts on the Platform and issues the gift card or code that is sold.",
             "Enterprise Client: an organisation that uses the enterprise portal to import its own codes, run a reward programme, or allocate gift cards to employees, customers or other recipients.",
@@ -95,7 +95,7 @@
             "Nexgen operates a technology marketplace. Nexgen is not the Issuer of any Vendor gift card, is not the merchant of record for the underlying goods or services, and is not a party to the contract between a Customer and a Vendor, or between an Enterprise Client or Bulk Buyer and an Issuer.",
             "Nexgen does not issue e-money, operate a payment account, acquire merchant transactions, hold customer funds, act as escrow, trustee or fiduciary, or settle funds between buyers and sellers. All payments are processed by a Payment Processor. Each Vendor, Enterprise Client or Bulk Buyer contracts directly with its Payment Processor and maintains its own merchant or business account with that processor. Nexgen never receives, holds, controls or settles the purchase price.",
             "Nexgen provides listing, discovery, checkout orchestration, delivery, wallet presentation, code storage, reporting and support tools. Nexgen does not control the Issuer's business, does not guarantee that an Issuer will remain solvent or willing to honour a Gift Card, and does not verify every statement an Issuer makes beyond the checks described in these Terms.",
-            "Any statement on the Platform that a gift is 'sold by Marajukoo' or similar is a marketing shorthand. It does not make Nexgen the seller, Issuer, merchant of record or payment provider. The identity of the Issuer is shown on the listing, order confirmation, gift card and redemption page."
+            "Any statement on the Platform that a gift is 'sold by Tazilla' or similar is a marketing shorthand. It does not make Nexgen the seller, Issuer, merchant of record or payment provider. The identity of the Issuer is shown on the listing, order confirmation, gift card and redemption page."
           ]
         },
         {
@@ -219,7 +219,7 @@
           "h": "17. Contact and notices",
           "p": [
             "Legal notices to Nexgen must be sent to legal@giftly.qa and, where required, by registered mail to our registered address in Doha, Qatar. Notices to you may be sent to the email address or phone number on your account, posted in the Platform, or delivered through the app. You are responsible for keeping your contact details current.",
-            "Our details: Nexgen Software Publishing Solution, commercial registration number 238473, Doha, State of Qatar. Brand: Marajukoo. Legal: legal@giftly.qa. Privacy: privacy@giftly.qa. Support: hello@giftly.qa."
+            "Our details: Nexgen Software Publishing Solution, commercial registration number 238473, Doha, State of Qatar. Brand: Tazilla. Legal: legal@giftly.qa. Privacy: privacy@giftly.qa. Support: hello@giftly.qa."
           ]
         }
       ],
@@ -228,7 +228,7 @@
     "privacy": {
       "title": "Privacy Policy",
       "intro": [
-        "This Privacy Policy explains how Nexgen Software Publishing Solution (Nexgen, we, us or our), commercial registration number 238473, collects, uses, shares, stores and protects personal data when you use the Marajukoo website, mobile application, dashboards, APIs and related services (the Platform).",
+        "This Privacy Policy explains how Nexgen Software Publishing Solution (Nexgen, we, us or our), commercial registration number 238473, collects, uses, shares, stores and protects personal data when you use the Tazilla website, mobile application, dashboards, APIs and related services (the Platform).",
         "We are committed to handling personal data transparently, fairly and securely, in line with Law No. 13 of 2016 on Protecting Personal Data Privacy (the Data Privacy Law) and other applicable Qatari law. This Policy should be read with our Terms & Conditions."
       ],
       "opening": [
@@ -395,7 +395,7 @@
         {
           "h": "18. Customer Schedule",
           "p": [
-            "This schedule applies if you use Marajukoo as a Customer. It adds to, and does not replace, the general Terms."
+            "This schedule applies if you use Tazilla as a Customer. It adds to, and does not replace, the general Terms."
           ]
         },
         {
@@ -422,7 +422,7 @@
         {
           "h": "18.4 Your account and communications",
           "p": [
-            "You are responsible for your account, your recipients and your communications. You must not use Marajukoo to send unlawful, harassing, discriminatory or misleading messages. We may suspend an account that sends spam or abuses recipients.",
+            "You are responsible for your account, your recipients and your communications. You must not use Tazilla to send unlawful, harassing, discriminatory or misleading messages. We may suspend an account that sends spam or abuses recipients.",
             "We send service messages about orders, delivery, security and legal changes. We send marketing only with consent or another lawful basis, and you can opt out at any time. Opting out of marketing does not stop service messages."
           ]
         }
@@ -468,7 +468,7 @@
           "h": "18.1 Independent issuer and merchant of record",
           "p": [
             "You are an independent business, not an employee, agent, partner, joint venturer or representative of Nexgen. You are solely responsible for your products, services, prices, staff, premises, licences, taxes and customer service. You have full authority to list and sell your gift cards and to bind your business to this schedule.",
-            "You are the Issuer and merchant of record for every gift card you list. You are solely responsible for honouring it, for the goods or services it represents, for its value, expiry, restrictions, redemption and refunds, and for all consumer, health, safety, tax and advertising obligations. Nexgen is not your agent and does not issue, underwrite, guarantee or redeem your gift cards. You must not describe Nexgen or Marajukoo as the issuer, seller, merchant of record or payment provider of your gift cards."
+            "You are the Issuer and merchant of record for every gift card you list. You are solely responsible for honouring it, for the goods or services it represents, for its value, expiry, restrictions, redemption and refunds, and for all consumer, health, safety, tax and advertising obligations. Nexgen is not your agent and does not issue, underwrite, guarantee or redeem your gift cards. You must not describe Nexgen or Tazilla as the issuer, seller, merchant of record or payment provider of your gift cards."
           ]
         },
         {

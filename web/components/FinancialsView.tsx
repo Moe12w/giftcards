@@ -198,7 +198,7 @@ export async function FinancialsView({
               </div>
             )}
             <p className="small muted" style={{ marginTop: 12 }}>
-              Settlement terms are configured in MyFatoorah. Marajukoo records provider statuses; it does not promise funds have reached your bank.
+              Settlement terms are configured in MyFatoorah. Tazilla records provider statuses; it does not promise funds have reached your bank.
             </p>
           </div>
         </section>

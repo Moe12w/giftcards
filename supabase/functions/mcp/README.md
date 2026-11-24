@@ -1,6 +1,6 @@
-# Marajukoo MCP server
+# Tazilla MCP server
 
-A separate Supabase Edge Function that exposes the Marajukoo gift-card catalogue to
+A separate Supabase Edge Function that exposes the Tazilla gift-card catalogue to
 MCP-compatible AI assistants over **Streamable HTTP**. It does not touch the
 Expo app or its startup.
 
