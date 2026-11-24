@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 /**
- * The Tazella lockup: `Ta | Zilla`, drawn as vector artwork in `public/brand`.
+ * The Tazella lockup: `Ta | Zella`, drawn as vector artwork in `public/brand`.
  * The light file uses ink for the cream/white surfaces the site is built on;
  * the dark file is white, for ink-coloured surfaces.
  */
@@ -21,7 +21,7 @@ export function Logo({
         className="logo-lockup"
         src={tone === 'dark' ? '/brand/tazella-lockup-dark.svg' : '/brand/tazella-lockup-light.svg'}
         alt=""
-        width={151}
+        width={168}
         height={34}
         decoding="async"
       />
