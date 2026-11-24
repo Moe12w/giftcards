@@ -49,7 +49,7 @@ Two settings in **Supabase Dashboard → Authentication → URL Configuration** 
 
 | Setting | Value | Why |
 |---|---|---|
-| Redirect URLs | `tazella://**`, `http://localhost:8081/**` | the password reset email sends the user back into the app |
+| Redirect URLs | `tazella://**`, `https://*.supabase.co/**`, `http://localhost:8081/**`, `http://localhost:3000/**` | the password reset email and OAuth send the user back into the app |
 | Auto-confirm email | **on** while testing | without an SMTP provider the built in mailer cannot deliver, so sign ups would fail |
 
 They can also be set through the Management API:
@@ -58,7 +58,7 @@ They can also be set through the Management API:
 curl -X PATCH "https://api.supabase.com/v1/projects/<ref>/config/auth" \
   -H "Authorization: Bearer <access token>" \
   -H "Content-Type: application/json" \
-  -d '{"uri_allow_list":"tazella://**,http://localhost:8081/**","mailer_autoconfirm":true}'
+  -d '{"uri_allow_list":"tazella://**,https://*.supabase.co/**,http://localhost:8081/**,http://localhost:3000/**","mailer_autoconfirm":true}'
 ```
 
 ### Sending real email
