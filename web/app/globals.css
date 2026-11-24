@@ -480,22 +480,14 @@ p {
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
-  font-weight: 900;
-  font-size: 1.35rem;
-  letter-spacing: -0.04em;
+  flex-shrink: 0;
 }
 
-.logo-mark {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border: 2px solid var(--ink);
-  border-radius: 13px;
-  background: var(--mint);
-  box-shadow: 0 3px 0 var(--ink);
-  transform: rotate(-4deg);
+/* The wordmark is artwork, so it scales as one piece at every breakpoint. */
+.logo-lockup {
+  display: block;
+  width: auto;
+  height: 34px;
 }
 
 .site-nav {

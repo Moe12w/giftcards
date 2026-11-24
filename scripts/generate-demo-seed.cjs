@@ -20,8 +20,9 @@ function q(value) {
 function img(seed, w = 800, h = 600) {
   return `https://picsum.photos/seed/${encodeURIComponent(seed)}/${w}/${h}`;
 }
-function logo(name, color) {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=256&background=${color}&color=fff&format=png`;
+// Every business in the demo set shares The Coffee House logo.
+function logo() {
+  return 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop';
 }
 
 const shops = [
