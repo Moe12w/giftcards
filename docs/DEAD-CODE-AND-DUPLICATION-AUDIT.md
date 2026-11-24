@@ -1,4 +1,4 @@
-# Dead Code & Duplication Audit — Giftly
+# Dead Code & Duplication Audit — Marajukoo
 
 **Date:** 20 November 2026
 **Scope:** full repository — Expo app (`app/`, `src/`), Next.js web app (`web/`), Supabase (`supabase/`), scripts, tests, CI and docs.

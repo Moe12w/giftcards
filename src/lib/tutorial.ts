@@ -26,11 +26,11 @@ export const CUSTOMER_TUTORIAL: CustomerTutorialStep[] = [
     icon: 'gift',
     tone: 'pink',
     title: {
-      en: 'Welcome to Giftly',
+      en: 'Welcome to Marajukoo',
       ar: 'مرحباً بك في جيفتلي',
     },
     body: {
-      en: 'Giftly is a marketplace for gift cards from local businesses. Buy a card, make it personal, and send it to someone — or keep it for yourself.',
+      en: 'Marajukoo is a marketplace for gift cards from local businesses. Buy a card, make it personal, and send it to someone — or keep it for yourself.',
       ar: 'جيفتلي سوق لبطاقات الهدايا من المتاجر المحلية. اشترِ بطاقة، وخصّصها، وأرسلها إلى من تحب — أو احتفظ بها لنفسك.',
     },
     tip: {
@@ -81,7 +81,7 @@ export const CUSTOMER_TUTORIAL: CustomerTutorialStep[] = [
       ar: 'أرسلها بالطريقة التي تناسبهم',
     },
     body: {
-      en: 'Send by email, WhatsApp or SMS, or copy the claim link. The recipient does not need the Giftly app to open it.',
+      en: 'Send by email, WhatsApp or SMS, or copy the claim link. The recipient does not need the Marajukoo app to open it.',
       ar: 'أرسلها بالبريد الإلكتروني أو واتساب أو رسالة نصية، أو انسخ رابط الاستلام. لا يحتاج المستلم إلى تطبيق جيفتلي لفتحه.',
     },
     tip: {

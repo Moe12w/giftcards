@@ -225,7 +225,7 @@ export default function CardDetailScreen() {
           {partnerCode ? (
             <>
               {/* Partner gifts carry the partner's own code, so their till
-                  scans this QR directly. It is not a Giftly redemption QR. */}
+                  scans this QR directly. It is not a Marajukoo redemption QR. */}
               <QRCode value={partnerCode} />
               <Text style={styles.qrHint}>
                 {t('cards.partnerQrHint', { partner: card?.partner_name ?? 'the partner' })}

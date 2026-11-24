@@ -92,8 +92,8 @@ function LegalScreen({
           title={bundle.ui.legalCentre}
           subtitle={
             locale === 'ar'
-              ? 'الشروط وسياسة الخصوصية التي تنطبق عليك كعميل في Giftly.'
-              : 'The terms and privacy policy that apply to you as a Giftly customer.'
+              ? 'الشروط وسياسة الخصوصية التي تنطبق عليك كعميل في Marajukoo.'
+              : 'The terms and privacy policy that apply to you as a Marajukoo customer.'
           }
           onBack={() => router.back()}
         />
@@ -101,8 +101,8 @@ function LegalScreen({
         <Card tone="teal">
           <Text style={styles.hubNote}>
             {locale === 'ar'
-              ? 'هذه هي الشروط وسياسة الخصوصية التي تنطبق على العملاء الذين يشترون بطاقات هدايا Giftly أو يرسلونها أو يستلمونها أو يحتفظون بها عبر التطبيق.'
-              : 'These are the terms and privacy policy that apply to customers who buy, send, receive or hold a gift card in the Giftly app.'}
+              ? 'هذه هي الشروط وسياسة الخصوصية التي تنطبق على العملاء الذين يشترون بطاقات هدايا Marajukoo أو يرسلونها أو يستلمونها أو يحتفظون بها عبر التطبيق.'
+              : 'These are the terms and privacy policy that apply to customers who buy, send, receive or hold a gift card in the Marajukoo app.'}
           </Text>
         </Card>
 

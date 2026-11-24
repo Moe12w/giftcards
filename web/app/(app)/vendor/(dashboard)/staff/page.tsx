@@ -126,7 +126,7 @@ export default async function VendorStaffPage({
             </form>
             <p className="small muted" style={{ marginTop: 10 }}>
               They can sign in immediately at /vendor/login with this email and password. Existing accounts cannot be
-              overwritten — ask Giftly support if the person already has one.
+              overwritten — ask Marajukoo support if the person already has one.
             </p>
           </div>
         </section>

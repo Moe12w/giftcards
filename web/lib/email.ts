@@ -14,7 +14,7 @@ import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { escapeHtml } from '@/lib/security';
 
-export const DEFAULT_EMAIL_FROM = 'Giftly <gifts@giftly.qa>';
+export const DEFAULT_EMAIL_FROM = 'Marajukoo <gifts@giftly.qa>';
 
 /** How long a saved configuration is reused before it is read again. */
 const CONFIG_TTL_MS = 30_000;
@@ -163,12 +163,12 @@ export async function sendSupportReplyEmail({
     : `New reply on your support ticket: ${ticketSubject}`;
 
   const text = isArabic
-    ? `${greeting}\n\nرد فريق دعم غيفتلي على تذكرتك "${ticketSubject}":\n\n${reply}\n\nافتح تطبيق غيفتلي ثم الملف الشخصي ← الدعم لمتابعة المحادثة.\n\n— غيفتلي`
-    : `${greeting}\n\nGiftly support replied to your ticket "${ticketSubject}":\n\n${reply}\n\nOpen the Giftly app and go to Profile → Support to continue the conversation.\n\n— Giftly`;
+    ? `${greeting}\n\nرد فريق دعم Marajukoo على تذكرتك "${ticketSubject}":\n\n${reply}\n\nافتح تطبيق Marajukoo ثم الملف الشخصي ← الدعم لمتابعة المحادثة.\n\n— Marajukoo`
+    : `${greeting}\n\nMarajukoo support replied to your ticket "${ticketSubject}":\n\n${reply}\n\nOpen the Marajukoo app and go to Profile → Support to continue the conversation.\n\n— Marajukoo`;
 
   const html = isArabic
-    ? `<p>${escapeHtml(greeting)}</p><p>رد فريق دعم غيفتلي على تذكرتك <strong>${escapeHtml(ticketSubject)}</strong>:</p><blockquote>${escapeHtml(reply).replace(/\n/g, '<br />')}</blockquote><p>افتح تطبيق غيفتلي ثم الملف الشخصي ← الدعم لمتابعة المحادثة.</p><p>— غيفتلي</p>`
-    : `<p>${escapeHtml(greeting)}</p><p>Giftly support replied to your ticket <strong>${escapeHtml(ticketSubject)}</strong>:</p><blockquote>${escapeHtml(reply).replace(/\n/g, '<br />')}</blockquote><p>Open the Giftly app and go to Profile → Support to continue the conversation.</p><p>— Giftly</p>`;
+    ? `<p>${escapeHtml(greeting)}</p><p>رد فريق دعم Marajukoo على تذكرتك <strong>${escapeHtml(ticketSubject)}</strong>:</p><blockquote>${escapeHtml(reply).replace(/\n/g, '<br />')}</blockquote><p>افتح تطبيق Marajukoo ثم الملف الشخصي ← الدعم لمتابعة المحادثة.</p><p>— Marajukoo</p>`
+    : `<p>${escapeHtml(greeting)}</p><p>Marajukoo support replied to your ticket <strong>${escapeHtml(ticketSubject)}</strong>:</p><blockquote>${escapeHtml(reply).replace(/\n/g, '<br />')}</blockquote><p>Open the Marajukoo app and go to Profile → Support to continue the conversation.</p><p>— Marajukoo</p>`;
 
   return sendEmail({ to, subject, html, text });
 }
@@ -245,10 +245,10 @@ export async function sendClaimLinkEmail({
     : `${senderName} sent you ${title}`;
   const subject = isArabic ? `لديك هدية من ${senderName}` : `You have a gift from ${senderName}`;
   const cta = isArabic ? 'استلم هديتك' : 'Claim your gift';
-  const appCta = isArabic ? 'افتحها في تطبيق غيفتلي' : 'Open it in the Giftly app';
+  const appCta = isArabic ? 'افتحها في تطبيق Marajukoo' : 'Open it in the Marajukoo app';
   const footnote = isArabic
-    ? 'الهدية محفوظة في تطبيق غيفتلي ويمكن استخدامها على أجزاء. الرابط صالح لمرة واحدة.'
-    : 'The gift card lives in the Giftly app and can be spent in parts. This link works once.';
+    ? 'الهدية محفوظة في تطبيق Marajukoo ويمكن استخدامها على أجزاء. الرابط صالح لمرة واحدة.'
+    : 'The gift card lives in the Marajukoo app and can be spent in parts. This link works once.';
 
   const text = [
     greeting,
@@ -258,14 +258,14 @@ export async function sendClaimLinkEmail({
     `${cta}: ${link}`,
     `${appCta}: ${appLink}`,
     footnote,
-    '— Giftly',
+    '— Marajukoo',
   ]
     .filter(Boolean)
     .join('\n\n');
 
   const html = `<!doctype html><html><body style="margin:0;padding:24px;background:#fff8ec;font-family:'Figtree','Segoe UI',Arial,sans-serif;color:#1c1c1c">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border:2px solid #1c1c1c;border-radius:20px;padding:28px">
-    <p style="margin:0 0 8px;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:#6e6e6e">Giftly</p>
+    <p style="margin:0 0 8px;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:#6e6e6e">Marajukoo</p>
     <p style="margin:0 0 6px;font-size:16px">${escapeHtml(greeting)}</p>
     <h1 style="margin:0 0 10px;font-size:26px;line-height:1.15">${escapeHtml(headline)}</h1>
     <p style="margin:0 0 4px;font-size:18px;font-weight:700">${escapeHtml(amountLabel)}</p>

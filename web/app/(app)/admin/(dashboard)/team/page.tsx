@@ -68,7 +68,7 @@ export default async function AdminTeamPage({
                 Create admin account
               </button>
               <p className="small muted" style={{ margin: 0 }}>
-                Existing accounts are never overwritten. Ask the person to contact Giftly if they already have one.
+                Existing accounts are never overwritten. Ask the person to contact Marajukoo if they already have one.
               </p>
             </form>
           </div>

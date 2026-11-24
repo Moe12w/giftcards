@@ -20,17 +20,17 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
     title: {
       default: isArabic
-        ? 'غيفتلي — بطاقات هدايا وتجارب ومكافآت مؤسسية في قطر'
-        : 'Giftly — Gift cards, experiences and corporate rewards in Qatar',
-      template: '%s · Giftly',
+        ? 'Marajukoo — بطاقات هدايا وتجارب ومكافآت مؤسسية في قطر'
+        : 'Marajukoo — Gift cards, experiences and corporate rewards in Qatar',
+      template: '%s · Marajukoo',
     },
     description: isArabic
-      ? 'غيفتلي هو سوق بطاقات الهدايا في قطر. أرسل بطاقة هدية، أو احجز تجربة، أو كافئ فريقاً بالكامل.'
-      : 'Giftly is Qatar’s gift card marketplace. Send a gift card, book an experience, or reward a whole team — all in one place.',
+      ? 'Marajukoo هو سوق بطاقات الهدايا في قطر. أرسل بطاقة هدية، أو احجز تجربة، أو كافئ فريقاً بالكامل.'
+      : 'Marajukoo is Qatar’s gift card marketplace. Send a gift card, book an experience, or reward a whole team — all in one place.',
     openGraph: {
       title: isArabic
-        ? 'غيفتلي — اصنع هدية يحبّونها فعلاً'
-        : 'Giftly — Give a gift they will actually use',
+        ? 'Marajukoo — اصنع هدية يحبّونها فعلاً'
+        : 'Marajukoo — Give a gift they will actually use',
       description: isArabic
         ? 'بطاقات هدايا وتجارب ومكافآت مؤسسية من أفضل الأنشطة المستقلة في قطر.'
         : 'Gift cards, experiences and corporate rewards from the best independent businesses in Qatar.',

@@ -39,12 +39,12 @@ const en = {
     artSentWhatsApp: 'Sent on WhatsApp',
     artScanCounter: 'Scan at the counter',
     artAddedWallet: 'Added to Wallet',
-    statBusinesses: 'Businesses on Giftly',
+    statBusinesses: 'Businesses on Marajukoo',
     statGifts: 'Gifts ready to send',
     statCategories: 'Categories to explore',
     statWays: 'Ways to give',
     eyebrowThreeWays: 'One app, three ways to give',
-    titleThreeWays: 'Whatever the moment, there is a Giftly for it.',
+    titleThreeWays: 'Whatever the moment, there is a Marajukoo for it.',
     bodyThreeWays:
       'A coffee on us, a proper spa afternoon, or a thank-you for the whole team. Every gift is stored digitally and can be spent in parts.',
     typeGiftCards: 'Gift cards',
@@ -71,13 +71,13 @@ const en = {
     emptyBusinessesBody: 'We are onboarding our first Doha partners right now. Check back soon.',
     enterprisePartner: 'Enterprise partner',
     qatar: 'Qatar',
-    localFavourite: 'A local favourite on Giftly.',
+    localFavourite: 'A local favourite on Marajukoo.',
     viewGifts: 'View gifts',
     eyebrowReady: 'Ready to send',
     titleReady: 'Gifts people are sending this week.',
     emptyGiftsTitle: 'No live gifts yet',
     emptyGiftsBody: 'Once our businesses publish their offers, they will appear right here.',
-    giftlyPartner: 'Giftly partner',
+    giftlyPartner: 'Marajukoo partner',
     eyebrowSimple: 'Simple by design',
     titleSimple: 'From “thinking of you” to sent, in under a minute.',
     step1Title: 'Choose a gift',
@@ -114,26 +114,26 @@ const en = {
       'Yes. Every monetary gift card keeps a running balance. If they spend QAR 10 from a QAR 100 card, QAR 90 remains for next time.',
     faq2Q: 'How does the recipient actually receive the gift?',
     faq2A:
-      'You can send it by email, SMS, a shareable link or WhatsApp. They open the link, add the card to their Giftly account and show the QR code at the vendor.',
+      'You can send it by email, SMS, a shareable link or WhatsApp. They open the link, add the card to their Marajukoo account and show the QR code at the vendor.',
     faq3Q: 'What is an experience gift?',
     faq3A:
       'Instead of a cash balance, experience gifts come as a package with a set number of sessions — for example three spa visits or a two-person kayak tour. The vendor sets the package and the price.',
     faq4Q: 'Do gift cards work in Apple and Google Wallet?',
     faq4A:
-      'Wallet passes are part of the Giftly app experience. Once you claim a gift, you can add it to your phone\'s wallet and show the QR code at the counter.',
+      'Wallet passes are part of the Marajukoo app experience. Once you claim a gift, you can add it to your phone\'s wallet and show the QR code at the counter.',
   },
   faq: {
     eyebrow: 'Good to know',
     title: 'Everything you might ask before your first gift.',
     lede:
-      'Sending, claiming, spending and settling — here is how Giftly works on both sides of the gift.',
+      'Sending, claiming, spending and settling — here is how Marajukoo works on both sides of the gift.',
     sections: [
       {
         title: 'For the person sending',
         items: [
           {
             q: 'How do I buy a gift?',
-            a: 'Open the Giftly app, choose a vendor, then pick a gift card amount or an experience package. Add a message and a design, choose how to send it, and pay. The gift is delivered as a link your recipient can claim.',
+            a: 'Open the Marajukoo app, choose a vendor, then pick a gift card amount or an experience package. Add a message and a design, choose how to send it, and pay. The gift is delivered as a link your recipient can claim.',
           },
           {
             q: 'Can I choose the amount on an experience?',
@@ -141,7 +141,7 @@ const en = {
           },
           {
             q: 'How do I send a gift on WhatsApp?',
-            a: 'Choose WhatsApp as the delivery method, or tap “Send on WhatsApp” on the success screen. Giftly opens your own WhatsApp with a ready-written message and the gift link. You press send, so it comes from you.',
+            a: 'Choose WhatsApp as the delivery method, or tap “Send on WhatsApp” on the success screen. Marajukoo opens your own WhatsApp with a ready-written message and the gift link. You press send, so it comes from you.',
           },
           {
             q: 'Can I schedule a gift for later?',
@@ -158,7 +158,7 @@ const en = {
         items: [
           {
             q: 'How do I claim my gift?',
-            a: 'Tap the link in the message you received. If you already have a Giftly account, sign in; if not, create one with the same email or phone number. The gift is added to My gifts automatically.',
+            a: 'Tap the link in the message you received. If you already have a Marajukoo account, sign in; if not, create one with the same email or phone number. The gift is added to My gifts automatically.',
           },
           {
             q: 'Can I spend only part of a gift card?',
@@ -182,7 +182,7 @@ const en = {
         title: 'For vendors',
         items: [
           {
-            q: 'How do I join Giftly?',
+            q: 'How do I join Marajukoo?',
             a: 'Apply from the vendor sign-up page. Tell us about your business, what you sell and where you are. Our team reviews every application before your offers go live.',
           },
           {
@@ -250,17 +250,17 @@ const en = {
     visitsByAppointment: 'Visits by appointment.',
     forVendorsTitle: 'For vendors',
     forVendorsBody:
-      'Already selling on Giftly? Sign in to your dashboard for order and redemption support.',
+      'Already selling on Marajukoo? Sign in to your dashboard for order and redemption support.',
     vendorFaq: 'Vendor FAQ',
     corporateQuoteBefore: 'Looking for a corporate quote? Use the',
     enterpriseEnquiryForm: 'enterprise enquiry form',
     corporateQuoteAfter: 'so it reaches the right team.',
   },
   corporate: {
-    eyebrow: 'Giftly for business',
+    eyebrow: 'Marajukoo for business',
     title: 'Buy gift cards in bulk for your team and customers.',
     lede:
-      'Register as a Business / Bulk Buyer to access exclusive corporate deals and volume pricing from vendors on Giftly. Get approved, browse bulk offers, place orders, and distribute digital gift cards from one place.',
+      'Register as a Business / Bulk Buyer to access exclusive corporate deals and volume pricing from vendors on Marajukoo. Get approved, browse bulk offers, place orders, and distribute digital gift cards from one place.',
     talkToTeam: 'Buy in bulk',
     partnerSignIn: 'Business sign in',
     trustInvoice: 'Invoices & receipts',
@@ -272,8 +272,8 @@ const en = {
     tileEachBody: 'Bulk prices visible only to approved buyers',
     tileRedeemed: 'Order & distribute',
     tileRedeemedBody: 'Track orders and export gift cards',
-    eyebrowWhy: 'Why Giftly',
-    titleWhy: 'Corporate bulk purchasing built into Giftly.',
+    eyebrowWhy: 'Why Marajukoo',
+    titleWhy: 'Corporate bulk purchasing built into Marajukoo.',
     cardLocalTitle: 'Exclusive vendor bulk offers',
     cardLocalBody:
       'Vendors publish bulk-only products with discounted unit prices and volume tiers. Regular customers never see bulk pricing.',
@@ -285,7 +285,7 @@ const en = {
       'Business accounts are reviewed and approved by admins. Bulk offers and prices are enforced by backend permissions, not just the UI.',
     cardSendTitle: 'Send every card automatically',
     cardSendBody:
-      'Upload the list of people as a CSV. Each person is matched to one gift card and gets their own link by email, ready to open in the Giftly app.',
+      'Upload the list of people as a CSV. Each person is matched to one gift card and gets their own link by email, ready to open in the Marajukoo app.',
     eyebrowHow: 'How it works',
     titleHow: 'From registration to delivery in four steps.',
     bodyHow:
@@ -293,7 +293,7 @@ const en = {
     check1: 'Register as a Business / Bulk Buyer with your company details',
     check2: 'Wait for admin approval to unlock restricted bulk deals and pricing',
     check3: 'Browse offers, choose quantity, apply tier pricing automatically and place a bulk order',
-    check4: 'Upload your recipient list as CSV and let Giftly email each person their own gift card link',
+    check4: 'Upload your recipient list as CSV and let Marajukoo email each person their own gift card link',
     timeline: [
       { title: 'Register', body: 'Create a business account with company and contact details.' },
       { title: 'Approval', body: 'Admin reviews and approves your bulk buyer access.' },
@@ -343,7 +343,7 @@ const en = {
     requestDemo: 'Register for bulk buying',
   },
   download: {
-    eyebrow: 'The Giftly app',
+    eyebrow: 'The Marajukoo app',
     title: 'Every gift, in one pocket.',
     lede:
       'Buy, send and keep gift cards and experiences from Qatar\'s best independent businesses. Balances update as you spend, and every card has a QR code ready for the counter.',
@@ -386,10 +386,10 @@ const en = {
     emailAddress: 'Email address',
     notifyMe: 'Notify me',
     browseFirstBefore: 'Prefer to browse first?',
-    seeVendors: 'See the vendors already on Giftly',
+    seeVendors: 'See the vendors already on Marajukoo',
     alreadyGiftTitle: 'Already have a gift?',
     alreadyGiftBody:
-      'If someone sent you a Giftly link, open it on this phone. You can claim the gift in the browser now; the app will pick it up when you install it.',
+      'If someone sent you a Marajukoo link, open it on this phone. You can claim the gift in the browser now; the app will pick it up when you install it.',
     howClaimingWorks: 'How claiming works',
     getHelp: 'Get help',
     walletNote:
@@ -400,32 +400,32 @@ const en = {
     eyebrow: 'The directory',
     title: 'Find a business worth leaving the house for.',
     ledeOne:
-      '{count} business on Giftly, reviewed and ready to welcome you. Every gift can be spent in parts.',
+      '{count} business on Marajukoo, reviewed and ready to welcome you. Every gift can be spent in parts.',
     ledeMany:
-      '{count} businesses on Giftly, reviewed and ready to welcome you. Every gift can be spent in parts.',
+      '{count} businesses on Marajukoo, reviewed and ready to welcome you. Every gift can be spent in parts.',
     searchPlaceholder: 'Search cafés, spas, adventures…',
     searchLabel: 'Search businesses',
     emptyTitle: 'Nothing matches that search',
     emptyBody:
-      'Try a different word, or clear the filters to see everyone on Giftly.',
+      'Try a different word, or clear the filters to see everyone on Marajukoo.',
     clearFilters: 'Clear filters',
     enterprisePartner: 'Enterprise partner',
     qatar: 'Qatar',
-    localFavourite: 'A local favourite on Giftly.',
+    localFavourite: 'A local favourite on Marajukoo.',
     giftCountOne: 'gift',
     giftCountMany: 'gifts',
     viewGifts: 'View gifts',
   },
   vendorDetail: {
     notFound: 'Business not found',
-    metaDescription: 'Gifts from {name} on Giftly.',
+    metaDescription: 'Gifts from {name} on Marajukoo.',
     allBusinesses: 'All businesses',
     enterprisePartner: 'Enterprise partner',
     verifiedBusiness: 'Verified business',
     qatar: 'Qatar',
-    localFavourite: 'A local favourite on Giftly.',
+    localFavourite: 'A local favourite on Marajukoo.',
     getTheAppToSend: 'Get the app to send',
-    sentAndStored: 'Gifts are sent and stored in the Giftly app.',
+    sentAndStored: 'Gifts are sent and stored in the Marajukoo app.',
     giftsFrom: 'Gifts from {name}',
     title: 'Pick something they will remember.',
     emptyTitle: 'Gifts are on the way',
@@ -440,7 +440,7 @@ const en = {
     seeVendorForHours: 'See vendor for hours',
     questionsTitle: 'Questions about this gift?',
     questionsBody:
-      'Reach the Giftly team and we will help with delivery, balances or bookings.',
+      'Reach the Marajukoo team and we will help with delivery, balances or bookings.',
     contactUs: 'Contact us',
   },
   privacy: {
@@ -458,7 +458,7 @@ const en = {
       'Vendors see the details needed to fulfil and redeem a gift, such as the recipient name, voucher code and redemption history. Enterprise partners see their own inventory and redemption reports. Our team sees what is needed to operate and support the platform. We do not sell personal data.',
     paymentsTitle: 'Payments',
     paymentsBody:
-      'Card payments are processed by our licensed payment provider. Giftly does not store full card numbers. Payment references and status are kept so we can reconcile orders and refunds.',
+      'Card payments are processed by our licensed payment provider. Marajukoo does not store full card numbers. Payment references and status are kept so we can reconcile orders and refunds.',
     storageTitle: 'Storage and security',
     storageBody:
       'Data is stored with our cloud database provider using encryption in transit and at rest. Access is limited by role-based policies. Enterprise codes are stored encrypted and shown only when allocated. No system is perfect; if we become aware of a breach that affects you, we will tell you.',
@@ -473,16 +473,16 @@ const en = {
     cookiesBody:
       'The website uses essential cookies to keep you signed in to a dashboard. We do not use advertising cookies. You can clear cookies in your browser, but you will need to sign in again.',
     contactTitle: 'Contact',
-    contactBodyBefore: 'Giftly, Doha, Qatar. Questions?',
+    contactBodyBefore: 'Marajukoo, Doha, Qatar. Questions?',
     contactLink: 'Contact us',
   },
   accountDeletion: {
     eyebrow: 'Your account',
-    title: 'Delete your Giftly account',
+    title: 'Delete your Marajukoo account',
     lede:
-      'You can delete your Giftly account, and the personal data attached to it, at any time. Do it yourself in the app, or ask us here if you cannot open the app.',
+      'You can delete your Marajukoo account, and the personal data attached to it, at any time. Do it yourself in the app, or ask us here if you cannot open the app.',
     inAppTitle: 'Delete it in the app',
-    inAppStep1: 'Open Giftly and sign in.',
+    inAppStep1: 'Open Marajukoo and sign in.',
     inAppStep2: 'Open Profile, then choose Delete account.',
     inAppStep3:
       'Confirm. The account is deleted immediately and you are signed out.',
@@ -520,9 +520,9 @@ const en = {
     eyebrow: 'Legal',
     title: 'Terms of service',
     lastUpdated: 'Last updated: 11 November 2026',
-    s1Title: '1. About Giftly',
+    s1Title: '1. About Marajukoo',
     s1Body:
-      'Giftly is a marketplace that connects customers with independent businesses in Qatar. We provide the platform for buying, sending and tracking gift cards and experience packages. The goods and services themselves are supplied by the vendor named on the gift.',
+      'Marajukoo is a marketplace that connects customers with independent businesses in Qatar. We provide the platform for buying, sending and tracking gift cards and experience packages. The goods and services themselves are supplied by the vendor named on the gift.',
     s2Title: '2. Accounts',
     s2Body:
       'You must provide accurate details and keep your sign-in credentials secure. You are responsible for activity under your account. Vendors and enterprise partners must have authority to act for the business they register.',
@@ -537,13 +537,13 @@ const en = {
       'Monetary gifts keep a balance and can be spent in parts until the balance reaches zero. Experience gifts have a set number of sessions. Vendors may require a booking. Expiry dates are shown before purchase and on the gift. Gifts cannot be exchanged for cash unless required by law.',
     s6Title: '6. Vendor obligations',
     s6Body:
-      'Vendors must honour valid gifts, keep their offers and opening details accurate, and redeem only through the Giftly tools. Vendors are responsible for the services they supply and for their own licences and insurance.',
+      'Vendors must honour valid gifts, keep their offers and opening details accurate, and redeem only through the Marajukoo tools. Vendors are responsible for the services they supply and for their own licences and insurance.',
     s7Title: '7. Refunds and disputes',
     s7Body:
       'Unclaimed gifts may be cancelled in line with the refund window shown at checkout. Once a gift has been claimed, refunds are at the vendor\'s discretion except where the law requires otherwise. Contact us if a gift cannot be used and we will help resolve it with the vendor.',
     s8Title: '8. Acceptable use',
     s8Body:
-      'Do not use Giftly for fraud, money laundering, resale of gift codes without permission, or any unlawful purpose. We may suspend accounts or void gifts where we reasonably suspect abuse.',
+      'Do not use Marajukoo for fraud, money laundering, resale of gift codes without permission, or any unlawful purpose. We may suspend accounts or void gifts where we reasonably suspect abuse.',
     s9Title: '9. Liability',
     s9Body:
       'We run the marketplace with reasonable care, but we do not control vendor premises or services. To the extent permitted by Qatari law, our liability is limited to the value of the affected order.',
@@ -589,12 +589,12 @@ const ar: SiteCopy = {
     artSentWhatsApp: 'أُرسلت عبر واتساب',
     artScanCounter: 'امسح الرمز عند الصندوق',
     artAddedWallet: 'أُضيفت إلى المحفظة',
-    statBusinesses: 'متاجر على Giftly',
+    statBusinesses: 'متاجر على Marajukoo',
     statGifts: 'هدايا جاهزة للإرسال',
     statCategories: 'فئات تستكشفها',
     statWays: 'طرق للإهداء',
     eyebrowThreeWays: 'تطبيق واحد، ثلاث طرق للإهداء',
-    titleThreeWays: 'لأي مناسبة، هناك هدية من Giftly.',
+    titleThreeWays: 'لأي مناسبة، هناك هدية من Marajukoo.',
     bodyThreeWays:
       'قهوة على حسابنا، أو أصيل كامل في السبا، أو رسالة شكر للفريق كله. كل هدية تُحفظ رقمياً ويمكن إنفاقها على دفعات.',
     typeGiftCards: 'بطاقات الهدايا',
@@ -621,13 +621,13 @@ const ar: SiteCopy = {
     emptyBusinessesBody: 'نعمل الآن على ضمّ أول شركائنا في الدوحة. عد قريباً.',
     enterprisePartner: 'شريك مؤسسي',
     qatar: 'قطر',
-    localFavourite: 'من المتاجر المفضّلة محلياً على Giftly.',
+    localFavourite: 'من المتاجر المفضّلة محلياً على Marajukoo.',
     viewGifts: 'عرض الهدايا',
     eyebrowReady: 'جاهزة للإرسال',
     titleReady: 'هدايا يتبادلها الناس هذا الأسبوع.',
     emptyGiftsTitle: 'لا توجد هدايا منشورة بعد',
     emptyGiftsBody: 'فور نشر متاجرنا لعروضها، ستظهر هنا مباشرة.',
-    giftlyPartner: 'شريك على Giftly',
+    giftlyPartner: 'شريك على Marajukoo',
     eyebrowSimple: 'بسيطة بالتصميم',
     titleSimple: 'من «فكّرت فيك» إلى الإرسال، في أقل من دقيقة.',
     step1Title: 'اختر هدية',
@@ -664,25 +664,25 @@ const ar: SiteCopy = {
       'نعم. كل بطاقة هدية نقدية تحتفظ برصيد متجدد. إذا أنفق 10 ريالات من بطاقة بقيمة 100 ريال، تبقى 90 ريالاً للمرّة القادمة.',
     faq2Q: 'كيف يستلم المستلم الهدية فعلياً؟',
     faq2A:
-      'يمكنك إرسالها عبر البريد الإلكتروني أو رسالة نصية أو رابط قابل للمشاركة أو واتساب. يفتح الرابط، ويضيف البطاقة إلى حسابه على Giftly، ويعرض رمز QR عند المتجر.',
+      'يمكنك إرسالها عبر البريد الإلكتروني أو رسالة نصية أو رابط قابل للمشاركة أو واتساب. يفتح الرابط، ويضيف البطاقة إلى حسابه على Marajukoo، ويعرض رمز QR عند المتجر.',
     faq3Q: 'ما هي هدية التجربة؟',
     faq3A:
       'بدلاً من رصيد نقدي، تأتي هدية التجربة على شكل باقة بعدد محدّد من الجلسات — مثلاً ثلاث زيارات إلى السبا أو رحلة كاياك لشخصين. المتجر يحدّد الباقة والسعر.',
     faq4Q: 'هل تعمل بطاقات الهدايا مع Apple وGoogle Wallet؟',
     faq4A:
-      'بطاقات المحفظة جزء من تجربة تطبيق Giftly. بعد استلام الهدية، يمكنك إضافتها إلى محفظة هاتفك وعرض رمز QR عند الصندوق.',
+      'بطاقات المحفظة جزء من تجربة تطبيق Marajukoo. بعد استلام الهدية، يمكنك إضافتها إلى محفظة هاتفك وعرض رمز QR عند الصندوق.',
   },
   faq: {
     eyebrow: 'معلومة مفيدة',
     title: 'كل ما قد تسأل عنه قبل أول هدية.',
-    lede: 'الإرسال والاستلام والإنفاق والتسوية — إليك كيف يعمل Giftly على جانبي الهدية.',
+    lede: 'الإرسال والاستلام والإنفاق والتسوية — إليك كيف يعمل Marajukoo على جانبي الهدية.',
     sections: [
       {
         title: 'للشخص الذي يهدي',
         items: [
           {
             q: 'كيف أشتري هدية؟',
-            a: 'افتح تطبيق Giftly، واختر متجراً، ثم اختر مبلغ بطاقة الهدايا أو باقة تجربة. أضف رسالة وتصميماً، وحدّد طريقة الإرسال، ثم ادفع. تُسلَّم الهدية كرابط يمكن للمستلم استلامه.',
+            a: 'افتح تطبيق Marajukoo، واختر متجراً، ثم اختر مبلغ بطاقة الهدايا أو باقة تجربة. أضف رسالة وتصميماً، وحدّد طريقة الإرسال، ثم ادفع. تُسلَّم الهدية كرابط يمكن للمستلم استلامه.',
           },
           {
             q: 'هل يمكنني اختيار المبلغ في التجربة؟',
@@ -690,7 +690,7 @@ const ar: SiteCopy = {
           },
           {
             q: 'كيف أرسل هدية عبر واتساب؟',
-            a: 'اختر واتساب كطريقة للتسليم، أو اضغط على «الإرسال عبر واتساب» في شاشة النجاح. يفتح Giftly واتساب الخاص بك برسالة جاهزة ورابط الهدية. أنت تضغط إرسال، فتأتي منك أنت.',
+            a: 'اختر واتساب كطريقة للتسليم، أو اضغط على «الإرسال عبر واتساب» في شاشة النجاح. يفتح Marajukoo واتساب الخاص بك برسالة جاهزة ورابط الهدية. أنت تضغط إرسال، فتأتي منك أنت.',
           },
           {
             q: 'هل يمكنني جدولة هدية لوقت لاحق؟',
@@ -707,7 +707,7 @@ const ar: SiteCopy = {
         items: [
           {
             q: 'كيف أستلم هديتي؟',
-            a: 'اضغط على الرابط الموجود في الرسالة التي وصلتتك. إذا كان لديك حساب على Giftly فسجّل الدخول، وإن لم يكن فأنشئ حساباً بالبريد الإلكتروني أو رقم الهاتف نفسه. تُضاف الهدية تلقائياً إلى «هداياي».',
+            a: 'اضغط على الرابط الموجود في الرسالة التي وصلتتك. إذا كان لديك حساب على Marajukoo فسجّل الدخول، وإن لم يكن فأنشئ حساباً بالبريد الإلكتروني أو رقم الهاتف نفسه. تُضاف الهدية تلقائياً إلى «هداياي».',
           },
           {
             q: 'هل يمكنني إنفاق جزء فقط من بطاقة الهدايا؟',
@@ -731,7 +731,7 @@ const ar: SiteCopy = {
         title: 'للمتاجر',
         items: [
           {
-            q: 'كيف أنضم إلى Giftly؟',
+            q: 'كيف أنضم إلى Marajukoo؟',
             a: 'قدّم طلبك من صفحة التسجيل للمتاجر. أخبرنا عن متجرك وما تبيعه وأين كنت. يراجع فريقنا كل طلب قبل نشر عروضك.',
           },
           {
@@ -797,17 +797,17 @@ const ar: SiteCopy = {
     visitsByAppointment: 'الزيارة بموعد مسبق.',
     forVendorsTitle: 'للمتاجر',
     forVendorsBody:
-      'هل تبيع بالفعل على Giftly؟ سجّل الدخول إلى لوحة التحكم للحصول على دعم الطلبات والاستبدال.',
+      'هل تبيع بالفعل على Marajukoo؟ سجّل الدخول إلى لوحة التحكم للحصول على دعم الطلبات والاستبدال.',
     vendorFaq: 'أسئلة المتاجر',
     corporateQuoteBefore: 'تبحث عن عرض سعر مؤسسي؟ استخدم',
     enterpriseEnquiryForm: 'نموذج الاستفسار المؤسسي',
     corporateQuoteAfter: 'حتى تصل إلى الفريق المختص.',
   },
   corporate: {
-    eyebrow: 'Giftly للأعمال',
+    eyebrow: 'Marajukoo للأعمال',
     title: 'اشترِ بطاقات الهدايا بالجملة لفريقك وعملائك.',
     lede:
-      'سجّل كمشتري أعمال/جملة للوصول إلى عروض الشركات الحصرية وأسعار الكميات من البائعين على Giftly. احصل على الموافقة، وتصفّح العروض، وأرسل الطلبات، ووزّع بطاقات الهدايا الرقمية من مكان واحد.',
+      'سجّل كمشتري أعمال/جملة للوصول إلى عروض الشركات الحصرية وأسعار الكميات من البائعين على Marajukoo. احصل على الموافقة، وتصفّح العروض، وأرسل الطلبات، ووزّع بطاقات الهدايا الرقمية من مكان واحد.',
     talkToTeam: 'اشترِ بالجملة',
     partnerSignIn: 'تسجيل دخول الأعمال',
     trustInvoice: 'فواتير وإيصالات',
@@ -819,8 +819,8 @@ const ar: SiteCopy = {
     tileEachBody: 'أسعار الجملة متاحة للمشترين المعتمدين فقط',
     tileRedeemed: 'اطلب ووزّع',
     tileRedeemedBody: 'تابع الطلبات وصدّر بطاقات الهدايا',
-    eyebrowWhy: 'لماذا Giftly',
-    titleWhy: 'شراء بطاقات الهدايا بالجملة مدمج في Giftly.',
+    eyebrowWhy: 'لماذا Marajukoo',
+    titleWhy: 'شراء بطاقات الهدايا بالجملة مدمج في Marajukoo.',
     cardLocalTitle: 'عروض جملة حصرية من البائعين',
     cardLocalBody:
       'ينشر البائعون منتجات مخصّصة للجملة بأسعار مخفّضة وشرائح كمية. لا تظهر أسعار الجملة للعملاء العاديين أبداً.',
@@ -832,7 +832,7 @@ const ar: SiteCopy = {
       'تتم مراجعة حسابات الأعمال واعتمادها من الإدارة. وتُطبَّق قيود الوصول إلى عروض وأسعار الجملة عبر صلاحيات الخادم، وليس الواجهة فقط.',
     cardSendTitle: 'أرسل كل بطاقة تلقائياً',
     cardSendBody:
-      'ارفع قائمة الأشخاص كملف CSV. يُطابَق كل شخص مع بطاقة هدية واحدة ويحصل على رابط خاص به عبر البريد، جاهزاً للفتح في تطبيق Giftly.',
+      'ارفع قائمة الأشخاص كملف CSV. يُطابَق كل شخص مع بطاقة هدية واحدة ويحصل على رابط خاص به عبر البريد، جاهزاً للفتح في تطبيق Marajukoo.',
     eyebrowHow: 'كيف تعمل',
     titleHow: 'من التسجيل إلى التوزيع في أربع خطوات.',
     bodyHow:
@@ -840,7 +840,7 @@ const ar: SiteCopy = {
     check1: 'سجّل كمشتري أعمال/جملة وأدخل بيانات شركتك',
     check2: 'انتظر موافقة الإدارة لفتح عروض وأسعار الجملة المقيدة',
     check3: 'تصفّح العروض، اختر الكمية، يُطبَّق تسعير الشرائح تلقائياً وأرسل طلب الجملة',
-    check4: 'ارفع قائمة المستلمين كملف CSV، ويرسل Giftly لكل شخص رابط بطاقته بالبريد',
+    check4: 'ارفع قائمة المستلمين كملف CSV، ويرسل Marajukoo لكل شخص رابط بطاقته بالبريد',
     timeline: [
       { title: 'التسجيل', body: 'أنشئ حساب أعمال مع بيانات الشركة وجهة الاتصال.' },
       { title: 'الموافقة', body: 'تراجع الإدارة طلبك وتعتمد وصول مشتري الجملة.' },
@@ -890,7 +890,7 @@ const ar: SiteCopy = {
     requestDemo: 'سجّل للشراء بالجملة',
   },
   download: {
-    eyebrow: 'تطبيق Giftly',
+    eyebrow: 'تطبيق Marajukoo',
     title: 'كل هدية في جيب واحد.',
     lede:
       'اشترِ وأرسل واحتفظ ببطاقات الهدايا والتجارب من أفضل المتاجر المستقلة في قطر. تتحدّث الأرصدة مع إنفاقك، وتحمل كل بطاقة رمز QR جاهزاً عند الصندوق.',
@@ -933,10 +933,10 @@ const ar: SiteCopy = {
     emailAddress: 'عنوان البريد الإلكتروني',
     notifyMe: 'أبلغوني',
     browseFirstBefore: 'تفضّل التصفّح أولاً؟',
-    seeVendors: 'اطّلع على المتاجر الموجودة بالفعل على Giftly',
+    seeVendors: 'اطّلع على المتاجر الموجودة بالفعل على Marajukoo',
     alreadyGiftTitle: 'لديك هدية بالفعل؟',
     alreadyGiftBody:
-      'إذا أرسل لك أحدهم رابط Giftly، فافتحه على هذا الهاتف. يمكنك استلام الهدية في المتصفح الآن، وسيتعرّف عليها التطبيق عند تثبيته.',
+      'إذا أرسل لك أحدهم رابط Marajukoo، فافتحه على هذا الهاتف. يمكنك استلام الهدية في المتصفح الآن، وسيتعرّف عليها التطبيق عند تثبيته.',
     howClaimingWorks: 'كيف تتم عملية الاستلام',
     getHelp: 'احصل على المساعدة',
     walletNote:
@@ -947,31 +947,31 @@ const ar: SiteCopy = {
     eyebrow: 'الدليل',
     title: 'اكتشف متجراً يستحق أن تخرج من البيت لأجله.',
     ledeOne:
-      '{count} متجر على Giftly، تمت مراجعته وجاهز لاستقبالك. كل هدية يمكن إنفاقها على دفعات.',
+      '{count} متجر على Marajukoo، تمت مراجعته وجاهز لاستقبالك. كل هدية يمكن إنفاقها على دفعات.',
     ledeMany:
-      '{count} متاجر على Giftly، تمت مراجعتها وجاهزة لاستقبالك. كل هدية يمكن إنفاقها على دفعات.',
+      '{count} متاجر على Marajukoo، تمت مراجعتها وجاهزة لاستقبالك. كل هدية يمكن إنفاقها على دفعات.',
     searchPlaceholder: 'ابحث عن مقاهي وسبا ومغامرات…',
     searchLabel: 'ابحث في المتاجر',
     emptyTitle: 'لا توجد نتائج مطابقة',
-    emptyBody: 'جرّب كلمة أخرى، أو امسح عوامل التصفية لعرض كل ما هو موجود على Giftly.',
+    emptyBody: 'جرّب كلمة أخرى، أو امسح عوامل التصفية لعرض كل ما هو موجود على Marajukoo.',
     clearFilters: 'مسح عوامل التصفية',
     enterprisePartner: 'شريك مؤسسي',
     qatar: 'قطر',
-    localFavourite: 'من المتاجر المفضّلة محلياً على Giftly.',
+    localFavourite: 'من المتاجر المفضّلة محلياً على Marajukoo.',
     giftCountOne: 'هدية',
     giftCountMany: 'هدايا',
     viewGifts: 'عرض الهدايا',
   },
   vendorDetail: {
     notFound: 'لم يتم العثور على المتجر',
-    metaDescription: 'هدايا من {name} على Giftly.',
+    metaDescription: 'هدايا من {name} على Marajukoo.',
     allBusinesses: 'كل المتاجر',
     enterprisePartner: 'شريك مؤسسي',
     verifiedBusiness: 'متجر موثّق',
     qatar: 'قطر',
-    localFavourite: 'من المتاجر المفضّلة محلياً على Giftly.',
+    localFavourite: 'من المتاجر المفضّلة محلياً على Marajukoo.',
     getTheAppToSend: 'حمّل التطبيق للإرسال',
-    sentAndStored: 'تُرسل الهدايا وتُحفظ في تطبيق Giftly.',
+    sentAndStored: 'تُرسل الهدايا وتُحفظ في تطبيق Marajukoo.',
     giftsFrom: 'هدايا من {name}',
     title: 'اختر شيئاً لا يُنسى.',
     emptyTitle: 'الهدايا في الطريق',
@@ -985,7 +985,7 @@ const ar: SiteCopy = {
     doha: 'الدوحة',
     seeVendorForHours: 'راجع المتجر لمعرفة أوقات العمل',
     questionsTitle: 'أسئلة حول هذه الهدية؟',
-    questionsBody: 'تواصل مع فريق Giftly وسنساعدك في التسليم والأرصدة والحجوزات.',
+    questionsBody: 'تواصل مع فريق Marajukoo وسنساعدك في التسليم والأرصدة والحجوزات.',
     contactUs: 'تواصل معنا',
   },
   privacy: {
@@ -1003,7 +1003,7 @@ const ar: SiteCopy = {
       'ترى المتاجر التفاصيل اللازمة لتنفيذ الهدية واستبدالها، مثل اسم المستلم ورمز القسيمة وسجل الاستبدال. وترى الشركاء المؤسسيون مخزونها وتقارير الاستبدال الخاصة بهم. ويري فريقنا ما يلزم لتشغيل المنصة ودعمها. ولا نبيع البيانات الشخصية.',
     paymentsTitle: 'المدفوعات',
     paymentsBody:
-      'تتم معالجة مدفوعات البطاقات عبر مزوّد خدمات الدفع المرخّص لنا. ولا يحتفظ Giftly بأرقام البطاقات الكاملة. ونحتفظ بمراجع الدفع وحالته، حتى نتمكّن من تصفية الطلبات والاستردادات.',
+      'تتم معالجة مدفوعات البطاقات عبر مزوّد خدمات الدفع المرخّص لنا. ولا يحتفظ Marajukoo بأرقام البطاقات الكاملة. ونحتفظ بمراجع الدفع وحالته، حتى نتمكّن من تصفية الطلبات والاستردادات.',
     storageTitle: 'التخزين والأمان',
     storageBody:
       'تُخزَّن البيانات لدى مزوّد قواعد البيانات السحابي لدينا مع التشفير أثناء النقل وفي حالة السكون. وتُقيَّد الوصول بسياسات قائمة على الأدوار. وتُخزَّن الرموز المؤسسية مشفّرة ولا تظهر إلا عند توزيعها. ولا يوجد نظام مثالي؛ وإذا تأكدنا من وقوع اختراق يمسّك فسنُبلغك.',
@@ -1018,16 +1018,16 @@ const ar: SiteCopy = {
     cookiesBody:
       'يستخدم الموقع ملفات تعريف ارتباط ضرورية لإبقائك مسجّل الدخول إلى لوحة التحكم. ولا نستخدم ملفات تعريف ارتباط إعلانية. يمكنك مسحها من متصفحك، لكنك ستحتاج إلى تسجيل الدخول من جديد.',
     contactTitle: 'تواصل معنا',
-    contactBodyBefore: 'Giftly، الدوحة، قطر. هل لديك أسئلة؟',
+    contactBodyBefore: 'Marajukoo، الدوحة، قطر. هل لديك أسئلة؟',
     contactLink: 'تواصل معنا',
   },
   accountDeletion: {
     eyebrow: 'حسابك',
-    title: 'حذف حسابك في Giftly',
+    title: 'حذف حسابك في Marajukoo',
     lede:
-      'يمكنك حذف حسابك في Giftly والبيانات الشخصية المرتبطة به في أي وقت. احذفه بنفسك من التطبيق، أو اطلبه من هنا إن لم تستطع فتح التطبيق.',
+      'يمكنك حذف حسابك في Marajukoo والبيانات الشخصية المرتبطة به في أي وقت. احذفه بنفسك من التطبيق، أو اطلبه من هنا إن لم تستطع فتح التطبيق.',
     inAppTitle: 'احذفه من التطبيق',
-    inAppStep1: 'افتح Giftly وسجّل الدخول.',
+    inAppStep1: 'افتح Marajukoo وسجّل الدخول.',
     inAppStep2: 'افتح الملف الشخصي ثم اختر حذف الحساب.',
     inAppStep3: 'أكّد الحذف. يُحذف الحساب فوراً ويتم تسجيل خروجك.',
     requestTitle: 'اطلب منّا حذفه',
@@ -1064,9 +1064,9 @@ const ar: SiteCopy = {
     eyebrow: 'قانوني',
     title: 'شروط الخدمة',
     lastUpdated: 'آخر تحديث: 11 نوفمبر 2026',
-    s1Title: '1. عن Giftly',
+    s1Title: '1. عن Marajukoo',
     s1Body:
-      'Giftly سوق يربط العملاء بالمتاجر المستقلة في قطر. ونوفّر المنصة لشراء بطاقات الهدايا وباقات التجارب وإرسالها ومتابعتها. أما السلع والخدمات نفسها فيوفّرها المتجر المذكور على الهدية.',
+      'Marajukoo سوق يربط العملاء بالمتاجر المستقلة في قطر. ونوفّر المنصة لشراء بطاقات الهدايا وباقات التجارب وإرسالها ومتابعتها. أما السلع والخدمات نفسها فيوفّرها المتجر المذكور على الهدية.',
     s2Title: '2. الحسابات',
     s2Body:
       'يجب أن تقدّم بيانات دقيقة وتحافظ على سرية بيانات تسجيل الدخول. وأنت مسؤول عن النشاط الذي يتم عبر حسابك. ويجب أن يكون للمتاجر والشركاء المؤسسيين صلاحية التصرّف نيابةً عن المتجر الذي يسجّلون فيه.',
@@ -1081,13 +1081,13 @@ const ar: SiteCopy = {
       'تحتفظ الهدايا النقدية برصيد ويمكن إنفاقها على دفعات حتى يصل الرصيد إلى الصفر. أما هدايا التجارب فلها عدد محدّد من الجلسات. وقد يطلب المتجر حجزاً. وتظهر تواريخ الانتهاء قبل الشراء وعلى الهدية. ولا يمكن استبدال الهدايا نقداً إلا إذا اقتضى القانون ذلك.',
     s6Title: '6. التزامات المتاجر',
     s6Body:
-      'يجب على المتاجر الوفاء بالهدايا السارية، والحفاظ على دقة عروضها ومعلومات ساعات عملها، والاستبدال عبر أدوات Giftly فقط. وتتحمّل المتاجر مسؤولية الخدمات التي تقدّمها وتراخيصها وتأمينها.',
+      'يجب على المتاجر الوفاء بالهدايا السارية، والحفاظ على دقة عروضها ومعلومات ساعات عملها، والاستبدال عبر أدوات Marajukoo فقط. وتتحمّل المتاجر مسؤولية الخدمات التي تقدّمها وتراخيصها وتأمينها.',
     s7Title: '7. الاستردادات والنزاعات',
     s7Body:
       'يمكن إلغاء الهدايا غير المستلمة وفقاً لنافذة الاسترداد المعروضة عند الدفع. وبعد استلام الهدية تكون الاستردادات وفق تقدير المتجر، إلا إذا نص القانون على خلاف ذلك. تواصل معنا إذا تعذّر استخدام هدية وسنساعدك في حلها مع المتجر.',
     s8Title: '8. الاستخدام المقبول',
     s8Body:
-      'لا تستخدم Giftly في الاحتيال أو غسل الأموال أو إعادة بيع رموز الهدايا دون إذن أو لأي غرض غير قانوني. وقد نعلّق الحسابات أو نلغي الهدايا عند الاشتباه المعقول في إساءة الاستخدام.',
+      'لا تستخدم Marajukoo في الاحتيال أو غسل الأموال أو إعادة بيع رموز الهدايا دون إذن أو لأي غرض غير قانوني. وقد نعلّق الحسابات أو نلغي الهدايا عند الاشتباه المعقول في إساءة الاستخدام.',
     s9Title: '9. المسؤولية',
     s9Body:
       'نشغّل السوق بعناية معقولة، لكننا لا نتحكّم في منشآت المتاجر أو خدماتهم. وإلى الحدّ الذي يسمح به القانون القطري، تقتصر مسؤوليتنا على قيمة الطلب المتأثر.',

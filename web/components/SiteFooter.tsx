@@ -80,7 +80,7 @@ export function SiteFooter() {
         </div>
         <div className="footer-bottom">
           <span>
-            © {new Date().getFullYear()} Giftly. {t.rights}
+            © {new Date().getFullYear()} Marajukoo. {t.rights}
           </span>
           <span>{t.madeFor}</span>
         </div>

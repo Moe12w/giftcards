@@ -1,4 +1,4 @@
-# Current Giftly flow map
+# Current Marajukoo flow map
 
 Last updated: 2026-11-18
 
@@ -24,7 +24,7 @@ Do not reimplement invoice creation in an entry point.
 
 `POST /v2/SendPayment` → MyFatoorah webhook → `payment-webhook` Edge Function
 → `POST /api/merchant-payment/confirm` → re-query provider →
-`myfatoorah_payment_confirmed` → `myfatoorah_fulfill_order` (Giftly cards) or
+`myfatoorah_payment_confirmed` → `myfatoorah_fulfill_order` (Marajukoo cards) or
 `bulk_fulfill_from_payment` (bulk codes / partner codes).
 
 The return URL (`/api/merchant-payment/callback`) also re-queries the provider but is never the authority by itself.

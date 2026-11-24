@@ -227,7 +227,7 @@ Then, in order:
 
 1. **Apple** — open the `apple` URL in Safari **on the iPhone** (not Chrome, and
    not by copying the URL into the app; Safari is what hands `.pkpass` to
-   Wallet). The sheet should say "Giftly — <vendor> gift card" → **Add**. The
+   Wallet). The sheet should say "Marajukoo — <vendor> gift card" → **Add**. The
    pass should show the vendor, balance and QR code.
 2. Open the pass, tap the ⓘ → it should refresh without an error, which proves
    the web service call works (the same URL serves the rebuilt pass).

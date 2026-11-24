@@ -1,4 +1,4 @@
-# Google Play readiness — Giftly
+# Google Play readiness — Marajukoo
 
 Sits next to [App Store notes for review](./notes-for-review.md). Sources are Google's own policy pages; the date-sensitive numbers (API level, 16 KB, closed testing) were checked in November 2026.
 
@@ -21,9 +21,9 @@ Every app must complete this form on **App content**, including apps on testing 
 
 **Recommended:** select **Other**, then use the free-text field:
 
-> Giftly is a marketplace for gift cards and experience vouchers from third-party businesses in Qatar. Giftly does not hold, transfer, lend or invest user funds, does not operate a wallet or stored-value account, and does not offer banking, credit, insurance, trading or money transfer. Payments for an order are collected by our licensed payment provider (MyFatoorah) at checkout and settled to the business that supplies the gift. Gift card value is redeemed only in person at the issuing business.
+> Marajukoo is a marketplace for gift cards and experience vouchers from third-party businesses in Qatar. Marajukoo does not hold, transfer, lend or invest user funds, does not operate a wallet or stored-value account, and does not offer banking, credit, insurance, trading or money transfer. Payments for an order are collected by our licensed payment provider (MyFatoorah) at checkout and settled to the business that supplies the gift. Gift card value is redeemed only in person at the issuing business.
 
-Why "Other" rather than "none": the app sells stored-value codes and can place a purchased card in Apple Wallet or Google Wallet. Declaring "none" while the review team can see gift-card balances and wallet buttons is exactly the kind of mismatch that produces a rejection, and the description keeps the extra review narrow. Do **not** select *Mobile payments and digital wallets* or *Rewards, points, frequent flier miles* — those describe products Giftly does not operate, and they pull in requirements (licensing, disclosures) that do not apply.
+Why "Other" rather than "none": the app sells stored-value codes and can place a purchased card in Apple Wallet or Google Wallet. Declaring "none" while the review team can see gift-card balances and wallet buttons is exactly the kind of mismatch that produces a rejection, and the description keeps the extra review narrow. Do **not** select *Mobile payments and digital wallets* or *Rewards, points, frequent flier miles* — those describe products Marajukoo does not operate, and they pull in requirements (licensing, disclosures) that do not apply.
 
 Policy context: [Financial Services](https://support.google.com/googleplay/android-developer/answer/9876821) covers “apps that expose users to deceptive or harmful financial products” — lending, banking, crypto, trading, insurance. A marketplace selling third-party retail gift cards is at the edge, not inside it; the declaration text above is what keeps it there.
 
@@ -46,10 +46,10 @@ Complete on **App content → Data safety**. It must match what the app and its 
 
 Notes to keep the answers honest:
 
-- **Payment info: not collected.** Card details are entered on MyFatoorah's hosted page in an in-app browser. Giftly stores a payment reference and status, which is purchase history, not payment info.
+- **Payment info: not collected.** Card details are entered on MyFatoorah's hosted page in an in-app browser. Marajukoo stores a payment reference and status, which is purchase history, not payment info.
 - **No location, contacts, calendar, photos, files, health, SMS, call logs, web browsing or installed apps.** There is no camera or media picker in the build.
 - **No advertising or device advertising ID.** No ads declaration ("app does not contain ads").
-- **Shared = No** for every row. Supabase (hosting/database), MyFatoorah (payments) and Expo's push service are service providers acting on Giftly's behalf, which the form treats as processing rather than sharing.
+- **Shared = No** for every row. Supabase (hosting/database), MyFatoorah (payments) and Expo's push service are service providers acting on Marajukoo's behalf, which the form treats as processing rather than sharing.
 - **Data is encrypted in transit** — yes (HTTPS/TLS to Supabase and MyFatoorah).
 - **Users can request data deletion** — yes; the form asks for the deletion request URL, use the same `/account-deletion` page.
 - **Committed to the Play Families policy** — no; the app is not directed at children.
@@ -64,9 +64,9 @@ Notes to keep the answers honest:
 - **News app:** no. **Government app:** no. **Health:** no.
 - **Permissions declaration:** none needed today — the manifest only carries `POST_NOTIFICATIONS`, which is not a restricted permission ([sensitive permissions](https://support.google.com/googleplay/android-developer/answer/16558241)).
 
-## 4. Rejection risks that apply to Giftly
+## 4. Rejection risks that apply to Marajukoo
 
-1. **Payments policy.** Play Billing is required for digital goods, not for physical goods and services ([Payments](https://support.google.com/googleplay/android-developer/answer/9858738)). Giftly's defence is that value is redeemable only in person: vendor cards are scanned at the counter, and partner cards (Sephora, H&M, Lulu) are shown to staff at the partner's store. Keep the store listing, screenshots and review notes saying “gift cards you redeem at the business” — never “balance”, “credit” or “digital wallet”, and never “type this code in the partner's app”. The in-app copy follows the same rule.
+1. **Payments policy.** Play Billing is required for digital goods, not for physical goods and services ([Payments](https://support.google.com/googleplay/android-developer/answer/9858738)). Marajukoo's defence is that value is redeemable only in person: vendor cards are scanned at the counter, and partner cards (Sephora, H&M, Lulu) are shown to staff at the partner's store. Keep the store listing, screenshots and review notes saying “gift cards you redeem at the business” — never “balance”, “credit” or “digital wallet”, and never “type this code in the partner's app”. The in-app copy follows the same rule.
 2. **Financial features declaration** wrong or missing — see §2. This is the most common Play-specific gap for gift-card apps.
 3. **Account deletion web link** missing or not public — fixed by the new page; enter the URL.
 4. **Data safety mismatch** — the table above is narrow because there are no analytics SDKs; if one is added later (Sentry, PostHog, Firebase), the form must change in the same release.

@@ -99,7 +99,7 @@ Deliberately excluded as primary targets:
 1. The H1 is **"AI gift card shopping in Qatar"**, not "Buy gift cards through
    AI". It matches the positioning phrase without claiming that an assistant
    completes a purchase.
-2. The title is **"AI Gift Card Shopping in Qatar | Giftly"**. The brand suffix
+2. The title is **"AI Gift Card Shopping in Qatar | Marajukoo"**. The brand suffix
    is enough; no "buy through AI" promise.
 3. Qatar and Doha appear in the lede, how-it-works, FAQ and related links, not
    stuffed into headings.
@@ -127,7 +127,7 @@ After launch, review in Google Search Console:
 - Queries containing `ai gift card`, `gift card qatar`, `gift card doha`,
   `e gift card` and Arabic equivalents.
 - Impressions and average position for the primary phrase.
-- CTR on the title, especially whether `| Giftly` helps or hurts.
+- CTR on the title, especially whether `| Marajukoo` helps or hurts.
 - Whether the page earns links from AI/MCP directories; those links matter more
   than on-page repetition for this niche.
 

@@ -43,7 +43,7 @@ export default async function BusinessOfferDetailPage({
   const face = Number(offer.face_value_minor);
   const base = Number(offer.base_unit_price_minor);
   const savingsPct = face > 0 ? Math.round(((face - base) / face) * 100) : 0;
-  const sellerName = offer.vendors?.name ?? (offer as any).enterprise_partners?.name ?? 'Giftly';
+  const sellerName = offer.vendors?.name ?? (offer as any).enterprise_partners?.name ?? 'Marajukoo';
 
   return (
     <div className="dash-content">

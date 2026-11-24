@@ -1,6 +1,6 @@
-# Giftly — Gift Card Marketplace
+# Marajukoo — Gift Card Marketplace
 
-Giftly is a Qatari gift-card marketplace with three apps in one repository:
+Marajukoo is a Qatari gift-card marketplace with three apps in one repository:
 
 - `app/` + `src/` — Expo / React Native **customer app**
 - `web/` — Next.js **website and dashboards** for vendors, enterprise partners,

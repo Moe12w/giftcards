@@ -132,7 +132,7 @@ const TYPES_STEP = (href: string): TutorialStep => ({
 
 export const VENDOR_SCRIPT: TutorialScript = {
   id: 'vendor',
-  title: 'How Giftly works for a vendor',
+  title: 'How Marajukoo works for a vendor',
   titleAr: 'كيف تعمل جيفتلي لصاحب المتجر',
   intro:
     'Seven minutes, and you will know the whole journey of a gift: how you publish it, how it is sold, how it reaches the person, and how you get paid for redeeming it.',
@@ -218,7 +218,7 @@ export const VENDOR_SCRIPT: TutorialScript = {
       title: 'The recipient claims it',
       titleAr: 'يطالب به المستلم',
       body:
-        'The recipient opens the message, signs in and claims the gift into their Giftly wallet. From then on the code is theirs, and the balance follows them.',
+        'The recipient opens the message, signs in and claims the gift into their Marajukoo wallet. From then on the code is theirs, and the balance follows them.',
       bodyAr:
         'يفتح المستلم الرسالة، يسجّل الدخول، ويطالب بالهدية في محفظته. بعدها يصبح الرمز ملكه والرصيد يتابعه أينما ذهب.',
       href: '/vendor/vouchers',
@@ -264,7 +264,7 @@ export const VENDOR_SCRIPT: TutorialScript = {
 
 export const ENTERPRISE_SCRIPT: TutorialScript = {
   id: 'enterprise',
-  title: 'How Giftly works for a partner',
+  title: 'How Marajukoo works for a partner',
   titleAr: 'كيف تعمل جيفتلي للشريك',
   intro:
     'You bring the codes you already generated. We put them in the app, sell them like any other gift, and keep track of what is still out there and what has been used.',
@@ -312,7 +312,7 @@ export const ENTERPRISE_SCRIPT: TutorialScript = {
       title: 'Define the reward and the price',
       titleAr: 'عرّف المكافأة والسعر',
       body:
-        'A product holds the face value of one of your codes and the price the customer pays. You set the price, Giftly takes its cut, and the rest is yours. Saving it publishes the gift in the app straight away.',
+        'A product holds the face value of one of your codes and the price the customer pays. You set the price, Marajukoo takes its cut, and the rest is yours. Saving it publishes the gift in the app straight away.',
       bodyAr:
         'يحدد المنتج قيمة الرمز الواحد والسعر الذي يدفعه العميل. أنت تحدد السعر، وتأخذ جيفتلي حصتها، والباقي لك. وبالحفظ يظهر المنتج في التطبيق مباشرة.',
       tip: 'The gift in the app always follows this price, so your two screens can never drift apart.',
@@ -373,7 +373,7 @@ export const ENTERPRISE_SCRIPT: TutorialScript = {
       title: 'The money',
       titleAr: 'المال',
       body:
-        'You set the price, Giftly takes a cut of every code that sells, and the rest is yours. The codes still sitting in your inventory are stock, not a debt: they turn into money when someone buys one.',
+        'You set the price, Marajukoo takes a cut of every code that sells, and the rest is yours. The codes still sitting in your inventory are stock, not a debt: they turn into money when someone buys one.',
       bodyAr:
         'أنت تحدد السعر، وتأخذ جيفتلي حصتها من كل رمز يُباع، والباقي لك. والأكواد المتبقية في مخزونك بضاعة لا دين: تتحول إلى مال عند بيع أحدها.',
       href: '/enterprise/reports',
@@ -383,7 +383,7 @@ export const ENTERPRISE_SCRIPT: TutorialScript = {
 
 export const ADMIN_SCRIPT: TutorialScript = {
   id: 'admin',
-  title: 'How Giftly works for the platform team',
+  title: 'How Marajukoo works for the platform team',
   titleAr: 'كيف تعمل جيفتلي لفريق المنصة',
   intro:
     'You keep the marketplace honest: who is allowed to sell, what is live, and what has been redeemed. This guide walks the whole life cycle and shows you where each decision lives.',

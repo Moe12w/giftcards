@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
       const invoice = await createInvoiceForOrder(admin, {
         orderId: order.id,
         reference: order.id,
-        customerName: basket.recipient_name || 'Giftly customer',
+        customerName: basket.recipient_name || 'Marajukoo customer',
         customerEmail: userData.user.email ?? undefined,
         language: body.language,
         callbackUrl: `${appUrl}/api/merchant-payment/callback?order=${order.id}${returnTo}`,

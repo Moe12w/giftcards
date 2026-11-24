@@ -16,21 +16,21 @@ Plain-English meanings of the words used in this codebase.
 | **Server action** | Server code called by a Next.js form |
 | **Minor units** | Money stored as integers: 100 fils = 1 QAR |
 | **Supplier** | A vendor or enterprise partner as a MyFatoorah sub-merchant |
-| **SupplierCode** | Permanent ID linking a Giftly business to MyFatoorah |
+| **SupplierCode** | Permanent ID linking a Marajukoo business to MyFatoorah |
 | **Supplier allocation** | Splitting an invoice amount to one or more suppliers |
 | **InvoiceShare** | Amount assigned to a supplier inside a MyFatoorah invoice |
 | **ProposedShare / ProposedDepositShare** | Provider commission fields we deliberately do not use |
-| **Provider-managed commission** | MyFatoorah's own configuration decides fees; Giftly does not deduct another commission |
+| **Provider-managed commission** | MyFatoorah's own configuration decides fees; Marajukoo does not deduct another commission |
 | **KYC** | Identity/business verification MyFatoorah performs on a supplier |
-| **Payment eligibility** | Giftly's own switch that allows a business to receive live payments |
+| **Payment eligibility** | Marajukoo's own switch that allows a business to receive live payments |
 | **Webhook** | Server-to-server notification from MyFatoorah |
 | **Idempotency** | Doing the same request twice has the same effect as doing it once |
 | **Ledger** | Immutable record of money in and out |
-| **Settlement** | Provider deposit to a supplier; recorded manually in Giftly |
+| **Settlement** | Provider deposit to a supplier; recorded manually in Marajukoo |
 | **Voucher** | An issued gift card instance |
-| **Enterprise partner** | A business that brings codes it issues itself (Sephora, H&M, Lulu Hypermarket); Giftly lists and sells them but does not resell them |
-| **Vendor** | A business whose gift cards Giftly issues and whose staff redeem them in the Giftly system |
-| **Enterprise code** | A code issued by an enterprise partner (not Giftly), stored encrypted and revealed to the buyer |
+| **Enterprise partner** | A business that brings codes it issues itself (Sephora, H&M, Lulu Hypermarket); Marajukoo lists and sells them but does not resell them |
+| **Vendor** | A business whose gift cards Marajukoo issues and whose staff redeem them in the Marajukoo system |
+| **Enterprise code** | A code issued by an enterprise partner (not Marajukoo), stored encrypted and revealed to the buyer |
 | **Shell vendor** | Hidden vendor row used so enterprise partners can advertise |
 | **Basket** | Client-side list of bulk offers before checkout |
 | **Placement** | An advertising area, such as homepage hero or a category carousel |
@@ -42,7 +42,7 @@ Plain-English meanings of the words used in this codebase.
 | **Impression / click / conversion** | Advertising tracking events |
 | **Promotional credit** | Admin-granted balance used to pay for advertising |
 | **Maintenance** | Scheduled job that expires, completes and activates campaigns |
-| **MCP** | Protocol that lets AI assistants call Giftly tools |
+| **MCP** | Protocol that lets AI assistants call Marajukoo tools |
 | **Tool** | One callable MCP function |
 | **Tenant isolation** | Ensuring one business cannot see another's data |
 | **Audit trail** | Permanent log of sensitive actions |

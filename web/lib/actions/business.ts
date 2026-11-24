@@ -169,14 +169,14 @@ function giftEmailHtml(params: {
 <html><body style="margin:0;background:#f6f4ef;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1c1c1c">
   <div style="max-width:560px;margin:0 auto;padding:32px 20px">
     <div style="background:#fff;border:2px solid #1c1c1c;border-radius:18px;padding:28px">
-      <p style="margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6b6b6b">Giftly · ${escapeHtml(params.company)}</p>
+      <p style="margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6b6b6b">Marajukoo · ${escapeHtml(params.company)}</p>
       <h1 style="margin:0 0 14px;font-size:22px">You received a gift card</h1>
       <p style="margin:0 0 18px;font-size:15px;line-height:1.5">${params.recipientName ? `Hi ${escapeHtml(params.recipientName)},` : 'Hello,'}<br />${escapeHtml(params.company)} sent you a ${escapeHtml(params.title)} worth ${escapeHtml(params.faceValue)}.</p>
       ${params.message ? `<p style="margin:0 0 18px;font-size:15px;line-height:1.5;padding:14px;border-left:3px solid #1c1c1c;background:#faf8f3">${escapeHtml(params.message)}</p>` : ''}
       <a href="${params.link}" style="display:inline-block;background:#1c1c1c;color:#fff;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:999px">Open your gift card</a>
       <p style="margin:18px 0 0;font-size:13px;color:#6b6b6b">Or open this link on your phone:<br /><span style="word-break:break-all">${params.link}</span></p>
     </div>
-    <p style="margin:16px 0 0;font-size:12px;color:#8a8a8a;text-align:center">Gift cards are stored in the Giftly app and can be spent in parts.</p>
+    <p style="margin:16px 0 0;font-size:12px;color:#8a8a8a;text-align:center">Gift cards are stored in the Marajukoo app and can be spent in parts.</p>
   </div>
 </body></html>`;
 }
@@ -240,7 +240,7 @@ export async function sendBulkGiftLinks(formData: FormData) {
   }
 
   const admin = createAdminClient();
-  const company = (order.business_accounts as any)?.company_name ?? 'Giftly';
+  const company = (order.business_accounts as any)?.company_name ?? 'Marajukoo';
   const title = (order.bulk_offers as any)?.title ?? (order.products as any)?.title ?? 'gift card';
   const faceValue = `QAR ${(Number(order.face_value_minor) / 100).toFixed(2)}`;
 

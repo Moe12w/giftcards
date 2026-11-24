@@ -52,7 +52,7 @@ export async function loadVoucherForPass(voucherId: string): Promise<VoucherForP
 
   const row = data as unknown as VoucherRow;
   const vendorName =
-    row.product?.partner?.name ?? row.vendor?.name ?? row.product?.title ?? 'Giftly';
+    row.product?.partner?.name ?? row.vendor?.name ?? row.product?.title ?? 'Marajukoo';
 
   return {
     buyerId: row.buyer_id,

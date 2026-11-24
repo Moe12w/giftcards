@@ -13,7 +13,7 @@
 - Press **Sync provider status** on the vendor/partner detail page.
 - Check `myfatoorah_supplier_code` exists.
 - Check provider status in MyFatoorah portal.
-- Check `payment_eligibility` is enabled in Giftly.
+- Check `payment_eligibility` is enabled in Marajukoo.
 - Rejection comments are shown on the admin page.
 
 ## Document submission failed

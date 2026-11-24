@@ -1,5 +1,5 @@
 // supabase/functions/mcp/tools.ts
-// The six Giftly MCP tools.
+// The six Marajukoo MCP tools.
 //
 // Reads are public. Writes and order lookups need a Supabase customer JWT,
 // which the caller sends as `Authorization: Bearer <access_token>`. The
@@ -158,7 +158,7 @@ export const TOOLS = [
     name: 'search_businesses',
     title: 'Search gift card businesses',
     description:
-      "Search Giftly's Qatar marketplace for approved local businesses that sell gift cards. Use this first when a customer names a business, a city, or a kind of gift (for example spa, coffee, salon or adventure). Returns business IDs, names, locations, ratings and a short list of available gift cards. Gift card prices are in QAR, stored in fils (1 QAR = 100 fils).",
+      "Search Marajukoo's Qatar marketplace for approved local businesses that sell gift cards. Use this first when a customer names a business, a city, or a kind of gift (for example spa, coffee, salon or adventure). Returns business IDs, names, locations, ratings and a short list of available gift cards. Gift card prices are in QAR, stored in fils (1 QAR = 100 fils).",
     inputSchema: {
       type: 'object',
       properties: {
@@ -194,7 +194,7 @@ export const TOOLS = [
     name: 'get_business_details',
     title: 'Get business details',
     description:
-      'Get full details for one approved Giftly business: description, location, contact links, rating, all available gift cards, terms, expiry rules and redemption instructions. Use a business_id from search_businesses, or a slug.',
+      'Get full details for one approved Marajukoo business: description, location, contact links, rating, all available gift cards, terms, expiry rules and redemption instructions. Use a business_id from search_businesses, or a slug.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -282,7 +282,7 @@ export const TOOLS = [
     name: 'create_gift_card_order',
     title: 'Prepare a gift card order',
     description:
-      'Prepare a pending Giftly order after the customer has confirmed the business, gift card, amount or package, quantity and recipient. This tool does NOT take payment, does NOT create a payment link and does NOT issue a gift card. Prices are calculated by the server from the live catalogue; never send or invent a price. Requires the customer to be signed in to Giftly and to send their access token as a Bearer token. Use a new idempotency_key for each intended order, and reuse the same key when retrying the same order.',
+      'Prepare a pending Marajukoo order after the customer has confirmed the business, gift card, amount or package, quantity and recipient. This tool does NOT take payment, does NOT create a payment link and does NOT issue a gift card. Prices are calculated by the server from the live catalogue; never send or invent a price. Requires the customer to be signed in to Marajukoo and to send their access token as a Bearer token. Use a new idempotency_key for each intended order, and reuse the same key when retrying the same order.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -370,7 +370,7 @@ export const TOOLS = [
     name: 'check_order_status',
     title: 'Check order status',
     description:
-      'Check the status of one of the signed-in customer\'s Giftly orders, using the order_ref or order_id returned by create_gift_card_order. Only orders that belong to the authenticated customer are returned. Requires the customer access token as a Bearer token.',
+      'Check the status of one of the signed-in customer\'s Marajukoo orders, using the order_ref or order_id returned by create_gift_card_order. Only orders that belong to the authenticated customer are returned. Requires the customer access token as a Bearer token.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -398,7 +398,7 @@ export const TOOLS = [
     name: 'create_payment_link',
     title: 'Create a secure payment link',
     description:
-      'Turn an existing pending Giftly order into a payable MyFatoorah link. Requires the customer access token as a Bearer token. Use the same idempotency_key when retrying the same order. Never invent an amount; the server uses the order total and the selling businesses\' supplier allocations. Default channel is link: share the returned payment_url with the customer in the chat. Set channel to email, sms or all only when the customer explicitly asks Giftly/MyFatoorah to send it.',
+      'Turn an existing pending Marajukoo order into a payable MyFatoorah link. Requires the customer access token as a Bearer token. Use the same idempotency_key when retrying the same order. Never invent an amount; the server uses the order total and the selling businesses\' supplier allocations. Default channel is link: share the returned payment_url with the customer in the chat. Set channel to email, sms or all only when the customer explicitly asks Marajukoo/MyFatoorah to send it.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -721,7 +721,7 @@ function nextStep(status: string): string {
     return 'Payment is not connected to MCP in this phase. Do not tell the customer the gift card has been purchased or issued.';
   }
   if (status === 'paid') {
-    return 'Payment is recorded. Check the Giftly app for the issued gift card.';
+    return 'Payment is recorded. Check the Marajukoo app for the issued gift card.';
   }
   return 'No further action is available through MCP.';
 }
@@ -793,7 +793,7 @@ async function findBusiness(admin: Admin, businessId: string): Promise<BusinessR
   if (!data) {
     throw new ToolError(
       'business_not_found',
-      'No approved Giftly business matches that business_id.',
+      'No approved Marajukoo business matches that business_id.',
     );
   }
   return data as BusinessRow;
@@ -953,7 +953,7 @@ async function getBusinessDetails(ctx: ToolContext, args: Record<string, unknown
   if (!businessData) {
     throw new ToolError(
       'business_not_found',
-      'No approved Giftly business matches that business_id or slug.',
+      'No approved Marajukoo business matches that business_id or slug.',
     );
   }
   const business = businessData as BusinessRow;
@@ -1108,7 +1108,7 @@ async function createGiftCardOrder(ctx: ToolContext, args: Record<string, unknow
   if (!ctx.userId) {
     throw new ToolError(
       'auth_required',
-      'Sign in to Giftly first. This tool needs the customer\'s Giftly access token as a Bearer token. No order can be prepared without it.',
+      'Sign in to Marajukoo first. This tool needs the customer\'s Marajukoo access token as a Bearer token. No order can be prepared without it.',
     );
   }
 
@@ -1401,7 +1401,7 @@ async function checkOrderStatus(ctx: ToolContext, args: Record<string, unknown>)
   if (!ctx.userId) {
     throw new ToolError(
       'auth_required',
-      'Sign in to Giftly first. This tool needs the customer\'s Giftly access token as a Bearer token.',
+      'Sign in to Marajukoo first. This tool needs the customer\'s Marajukoo access token as a Bearer token.',
     );
   }
 
@@ -1433,7 +1433,7 @@ async function checkOrderStatus(ctx: ToolContext, args: Record<string, unknown>)
   return {
     order: serializeOrder(data as OrderRow, false),
     security_note:
-      'Only orders belonging to the signed-in Giftly customer are returned.',
+      'Only orders belonging to the signed-in Marajukoo customer are returned.',
   };
 }
 
@@ -1522,7 +1522,7 @@ async function createPaymentLink(ctx: ToolContext, args: Record<string, unknown>
     invoice = await createInvoiceForOrder(ctx.admin, {
       orderId: order.id,
       reference: order.payment_reference || order.id,
-      customerName: order.recipient_name || 'Giftly customer',
+      customerName: order.recipient_name || 'Marajukoo customer',
       customerEmail,
       customerMobile: customerPhone ? customerPhone.replace(/[^\d+]/g, '') : null,
       notificationOption:

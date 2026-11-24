@@ -47,7 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: t.meta.ogTitle,
       description: t.meta.ogDescription,
       url: canonical,
-      siteName: 'Giftly',
+      siteName: 'Marajukoo',
       locale: locale === 'ar' ? 'ar_QA' : 'en_QA',
       type: 'website',
     },
@@ -80,7 +80,7 @@ export default async function AiGiftCardsPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      name: 'Giftly',
+      name: 'Marajukoo',
       url: SITE_URL,
       description: isArabic
         ? 'سوق بطاقات الهدايا والتجارب والمكافآت المؤسسية في قطر.'
@@ -107,7 +107,7 @@ export default async function AiGiftCardsPage() {
       inLanguage: isArabic ? 'ar-QA' : 'en-QA',
       isPartOf: {
         '@type': 'WebSite',
-        name: 'Giftly',
+        name: 'Marajukoo',
         url: SITE_URL,
       },
       about: {
@@ -121,7 +121,7 @@ export default async function AiGiftCardsPage() {
         areaServed: 'Qatar',
         provider: {
           '@type': 'Organization',
-          name: 'Giftly',
+          name: 'Marajukoo',
           url: SITE_URL,
         },
       },

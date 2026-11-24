@@ -59,7 +59,7 @@ export default async function EnterpriseRegisterPage({
         'One payment application for the whole organisation',
       ]}
     >
-      <span className="eyebrow lavender">Join Giftly</span>
+      <span className="eyebrow lavender">Join Marajukoo</span>
       <h1 style={{ marginTop: 14 }}>Create your organisation account</h1>
       <p style={{ marginTop: 10 }}>
         Start with the basics. You will add branches, team members and payment details from inside your

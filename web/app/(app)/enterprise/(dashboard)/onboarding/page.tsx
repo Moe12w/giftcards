@@ -30,7 +30,7 @@ export default async function EnterpriseOnboardingPage({
 
   const notice =
     params.welcome === '1'
-      ? 'Welcome to Giftly. Your organisation account is ready — finish this short setup whenever you like.'
+      ? 'Welcome to Marajukoo. Your organisation account is ready — finish this short setup whenever you like.'
       : params.saved === '1'
         ? 'Saved. You can leave at any time and continue from your dashboard.'
         : null;

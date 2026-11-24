@@ -200,7 +200,7 @@ export default async function AdminProductsPage({
                           ) : partner ? (
                             `${partner.name} · ${enterpriseProduct?.name ?? t.reward}`
                           ) : (
-                            'Giftly'
+                            'Marajukoo'
                           )}
                         </td>
                         <td>

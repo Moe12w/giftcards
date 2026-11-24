@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const alt =
-  'Giftly — AI gift card shopping in Qatar';
+  'Marajukoo — AI gift card shopping in Qatar';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -43,7 +43,7 @@ export default async function Image() {
             G
           </div>
           <div style={{ fontSize: 34, fontWeight: 800, color: '#1c1c1c' }}>
-            Giftly
+            Marajukoo
           </div>
           <div
             style={{
