@@ -87,6 +87,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
         { href: '/admin/expo-app/home', label: t.expoHome, icon: 'dashboard', hint: t.expoHomeHint },
         { href: '/admin/expo-app/featured', label: t.expoFeatured, icon: 'vendors', hint: t.expoFeaturedHint },
         { href: '/admin/expo-app/categories', label: t.expoCategories, icon: 'catalogue', hint: t.expoCategoriesHint },
+        { href: '/admin/expo-app/covers', label: t.expoCovers, icon: 'products', hint: t.expoCoversHint },
         { href: '/admin/expo-app/collections', label: t.expoCollections, icon: 'promotions', hint: t.expoCollectionsHint },
         { href: '/admin/expo-app/controls', label: t.expoControls, icon: 'controls', hint: t.expoControlsHint },
       ],

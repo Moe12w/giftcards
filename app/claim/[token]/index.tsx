@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
+import { ClaimCardArt } from '@/src/components/ClaimCardArt';
+import { GiftMediaView } from '@/src/components/GiftMediaView';
 import { IconTile } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
@@ -71,6 +73,8 @@ export default function ClaimLandingScreen() {
         <Text style={styles.subtitle}>{t('claim.subtitle', { vendor: gift?.vendor ?? '', amount: '' })}</Text>
       </View>
 
+      {gift ? <ClaimCardArt gift={gift} height={240} style={styles.cardArt} /> : null}
+
       <Card tone="teal">
         <View style={styles.vendorRow}>
           <IconTile icon="coffee" size={56} tone="gold" />
@@ -80,6 +84,13 @@ export default function ClaimLandingScreen() {
           </View>
           <Money minor={gift?.amountMinor ?? 0} style={styles.amount} />
         </View>
+        {gift?.media ? (
+          <GiftMediaView
+            media={gift.media}
+            height={180}
+            style={styles.attachment}
+          />
+        ) : null}
         <View style={styles.messageBox}>
           <Text style={styles.messageLabel}>{t('claim.messageLabel')}</Text>
           <Text style={styles.message}>{gift?.message}</Text>
@@ -101,6 +112,8 @@ export default function ClaimLandingScreen() {
 
 const styles = themedStyles(() => ({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.sm },
+  cardArt: { alignSelf: 'center', maxWidth: 260 },
+  attachment: { marginTop: spacing.sm },
   hero: { alignItems: 'center', gap: spacing.xs, marginTop: spacing.lg },
   blob: {
     position: 'absolute',

@@ -5,6 +5,7 @@ import {
   Pressable,
   Share,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import * as Linking from 'expo-linking';
@@ -39,6 +40,7 @@ import { ParticipantStack } from '@/src/components/ParticipantStack';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { useAuth } from '@/src/lib/auth';
+import { hasSupabaseConfig } from '@/src/lib/env';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { basketProgress, basketTotal, participantTotals, useBaskets } from '@/src/lib/baskets';
 import { formatMoney } from '@/src/lib/money';
@@ -63,7 +65,7 @@ export default function BasketDetailScreen() {
     sent?: string;
   }>();
   const { user } = useAuth();
-  const { getBasket, ready, reload } = useBaskets();
+  const { getBasket, ready, reload, addMessage } = useBaskets();
   const basket = params.id ? getBasket(params.id) : null;
 
   // Coming back from a paid contribution: refresh so the new cards are there
@@ -73,6 +75,8 @@ export default function BasketDetailScreen() {
   }, [reload]);
 
   const [selectedItem, setSelectedItem] = useState<BasketItem | null>(null);
+  const [messageText, setMessageText] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   const lang: 'en' | 'ar' = i18n.language === 'ar' ? 'ar' : 'en';
   const rtl = i18n.language === 'ar';
@@ -193,6 +197,52 @@ export default function BasketDetailScreen() {
           subtitle={t('basket.forRecipient', { name: basket.recipient_name })}
           onBack={goBack}
         />
+
+        {/* Greeting card: everyone can leave a message for the recipient */}
+        <Card tone="surface" style={styles.greetingCard}>
+          <View style={styles.greetingHeader}>
+            <Text style={styles.greetingTitle}>{t('basket.greetingTitle', { name: basket.recipient_name })}</Text>
+            <Text style={styles.greetingSubtitle}>{t('basket.greetingSubtitle')}</Text>
+          </View>
+          {basket.messages.length === 0 ? (
+            <Text style={styles.greetingEmpty}>{t('basket.greetingEmpty', { name: basket.recipient_name })}</Text>
+          ) : (
+            <View style={styles.greetingList}>
+              {basket.messages.map((msg) => (
+                <View key={msg.id} style={styles.greetingMessage}>
+                  <Text style={styles.greetingText}>{msg.text}</Text>
+                  <Text style={styles.greetingAuthor}>{t('basket.greetingSignedBy', { name: msg.author_name })}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+          {basket.status !== 'completed' && hasSupabaseConfig ? (
+            <View style={styles.greetingComposer}>
+              <TextInput
+                value={messageText}
+                onChangeText={setMessageText}
+                placeholder={t('basket.greetingPlaceholder')}
+                placeholderTextColor={colors.textMuted}
+                style={styles.greetingInput}
+                multiline
+              />
+              <Button
+                label={t('basket.greetingSend')}
+                disabled={!messageText.trim() || sendingMessage}
+                onPress={async () => {
+                  if (!messageText.trim()) return;
+                  setSendingMessage(true);
+                  try {
+                    await addMessage(basket.id, messageText);
+                    setMessageText('');
+                  } finally {
+                    setSendingMessage(false);
+                  }
+                }}
+              />
+            </View>
+          ) : null}
+        </Card>
 
         {/* Celebration / joined banner */}
         {basket.status !== 'open' ? (
@@ -590,6 +640,29 @@ const styles = themedStyles(() => ({
     fontSize: fontSizes.sm,
     color: colors.textMuted,
     lineHeight: 18,
+  },
+  greetingCard: { gap: spacing.sm },
+  greetingHeader: { gap: 2, alignItems: 'center' },
+  greetingTitle: { fontFamily: fonts.extrabold, fontSize: fontSizes.xl, color: colors.text, textAlign: 'center' },
+  greetingSubtitle: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted, textAlign: 'center' },
+  greetingEmpty: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted, textAlign: 'center', paddingVertical: spacing.sm },
+  greetingList: { gap: spacing.sm },
+  greetingMessage: { gap: 2, paddingVertical: spacing.xs, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
+  greetingText: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.text, lineHeight: 20 },
+  greetingAuthor: { fontFamily: fonts.semibold, fontSize: fontSizes.xs, color: colors.textMuted, textAlign: 'right' },
+  greetingComposer: { gap: spacing.sm, marginTop: spacing.xs },
+  greetingInput: {
+    minHeight: 60,
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    color: colors.text,
+    backgroundColor: colors.surface,
+    textAlignVertical: 'top',
   },
   heroCard: { gap: spacing.sm, alignItems: 'stretch' },
   heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { Gift, Smartphone } from 'lucide-react';
+import { Gift, Image as ImageIcon, Play, Smartphone, Video } from 'lucide-react';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { formatMoney } from '@/lib/money';
 import { getLocale } from '@/lib/i18n/server';
@@ -46,11 +46,38 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
   const amount = Number(gift.amount_minor ?? 0);
   const appUrl = `tazella://claim/${token}`;
 
+  // Uploaded covers are stored by id; built-in designs have no image row.
+  let coverImage: string | null = null;
+  if (!coverImage && gift.gift_cover_id) {
+    try {
+      const { data: cover } = await createAdminClient()
+        .from('gift_covers')
+        .select('image_url')
+        .eq('id', gift.gift_cover_id)
+        .maybeSingle();
+      coverImage = (cover?.image_url as string) ?? null;
+    } catch {
+      coverImage = null;
+    }
+  }
+  const media = gift.gift_media as
+    | { type: string; url: string; mimeType?: string | null }
+    | null;
+
   return (
     <main className="section">
       <div className="container" style={{ maxWidth: 640 }}>
         <div className="card" style={{ padding: 28, textAlign: 'center' }}>
-          <span className="icon-tile mint" style={{ marginInline: 'auto' }}><Gift size={26} /></span>
+          {coverImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={coverImage}
+              alt={gift.product_title ?? 'Gift card'}
+              style={{ width: '100%', maxWidth: 220, borderRadius: 14, margin: '0 auto' }}
+            />
+          ) : (
+            <span className="icon-tile mint" style={{ marginInline: 'auto' }}><Gift size={26} /></span>
+          )}
           <p className="eyebrow mint" style={{ marginTop: 16 }}>
             {gift.sender_name ? `${gift.sender_name} sent you a gift` : 'You received a gift card'}
           </p>
@@ -59,6 +86,23 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
             {gift.vendor_name ?? 'Tazella'}
             {amount > 0 ? <> · {formatMoney(amount, locale)}</> : null}
           </p>
+
+          {media?.url ? (
+            <div style={{ marginTop: 16 }}>
+              {media.type === 'video' ? (
+                <video src={media.url} controls style={{ width: '100%', borderRadius: 12 }} />
+              ) : media.type === 'audio' ? (
+                <audio src={media.url} controls style={{ width: '100%' }} />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={media.url} alt="Gift attachment" style={{ width: '100%', borderRadius: 12 }} />
+              )}
+              <p className="small muted" style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                {media.type === 'video' ? <Video size={14} /> : media.type === 'audio' ? <Play size={14} /> : <ImageIcon size={14} />}
+                {media.type === 'gif' ? 'Animated GIF' : media.type}
+              </p>
+            </div>
+          ) : null}
 
           {gift.gift_message ? (
             <p style={{ marginTop: 16, padding: 14, borderLeft: '3px solid var(--ink)', background: 'var(--surface-soft)', textAlign: 'start' }}>

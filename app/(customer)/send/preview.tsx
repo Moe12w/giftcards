@@ -8,7 +8,9 @@ import { Card } from '@/src/components/Card';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
 import { GiftCoverCard } from '@/src/components/GiftCoverCard';
+import { GiftMediaView } from '@/src/components/GiftMediaView';
 import { Screen } from '@/src/components/Screen';
+import { coverLabel, fetchGiftCovers, GIFT_COVERS, resolveCover, type GiftCover } from '@/src/lib/gift-covers';
 import { getOffer } from '@/src/lib/data';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { useGiftDraft } from '@/src/lib/gift-draft';
@@ -21,6 +23,7 @@ export default function SendPreviewScreen() {
   const { t, i18n } = useTranslation();
   const { draft } = useGiftDraft();
   const [offer, setOffer] = useState<Offer | null>(null);
+  const [covers, setCovers] = useState<GiftCover[]>(GIFT_COVERS);
   // No id means there is nothing to fetch: start settled rather than
   // flipping the flag from inside the effect.
   const [loading, setLoading] = useState(!draft.offerId);
@@ -35,6 +38,14 @@ export default function SendPreviewScreen() {
       active = false;
     };
   }, [draft.offerId]);
+
+  useEffect(() => {
+    let active = true;
+    fetchGiftCovers().then((items) => active && setCovers(items));
+    return () => {
+      active = false;
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -61,6 +72,9 @@ export default function SendPreviewScreen() {
   }
 
   const title = offerTitle(offer, i18n.language);
+  const selectedCover = resolveCover(draft.cover, covers);
+  const coverName = coverLabel(selectedCover, t);
+  const media = draft.media && draft.media.type !== 'sticker' ? draft.media : null;
 
   return (
     <Screen>
@@ -72,6 +86,8 @@ export default function SendPreviewScreen() {
 
       <GiftCoverCard
         coverId={draft.cover}
+        coverImageUrl={selectedCover.imageUrl}
+        coverName={coverName}
         stickerId={draft.media?.type === 'sticker' ? draft.media.stickerId : null}
         photoUri={draft.media?.type === 'photo' ? draft.media.uri : null}
         message={draft.message || undefined}
@@ -79,10 +95,12 @@ export default function SendPreviewScreen() {
         amountMinor={draft.amountMinor}
       />
 
+      {media ? <GiftMediaView media={media} height={160} /> : null}
+
       <Card style={styles.summary}>
         <Row label={t('send.recipientTitle')} value={draft.recipient?.name ?? '—'} />
         <Row label={t('send.deliveryTitle')} value={t(`send.delivery${capitalize(draft.deliveryMethod)}`)} />
-        <Row label={t('send.cover')} value={t(`send.coverNames.${draft.cover}`)} />
+        <Row label={t('send.cover')} value={coverName} />
         <Row label={t('send.theme')} value={t(`send.themes.${draft.theme}`)} />
         <Row label={t('send.wrapping')} value={t(`send.wrappings.${draft.wrapping}`)} />
       </Card>
@@ -90,7 +108,7 @@ export default function SendPreviewScreen() {
       <Button label={t('send.edit')} variant="secondary" onPress={() => router.back()} />
       <Button
         label={t('common.continue')}
-        onPress={() => router.push('/(customer)/send/confirm')}
+        onPress={() => router.push('/(customer)/checkout/payment')}
       />
     </Screen>
   );

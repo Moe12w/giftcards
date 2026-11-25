@@ -67,6 +67,20 @@
         {
           "photosPermission": "Tazella uses your photo library so you can add a picture to a gift card."
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Tazella uses your microphone so you can record a voice note for a gift.",
+          "enableBackgroundPlayback": false
+        }
+      ],
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": false,
+          "supportsPictureInPicture": false
+        }
       ]
     ],
     "experiments": {

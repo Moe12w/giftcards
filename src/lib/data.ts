@@ -93,6 +93,14 @@ export interface VoucherRow {
   delivery_status: string | null;
   scheduled_for: string | null;
   gift_message: string | null;
+  gift_cover_id: string | null;
+  gift_wrapping: string | null;
+  gift_media: {
+    type: 'photo' | 'gif' | 'video' | 'audio';
+    url: string;
+    mimeType?: string | null;
+    durationMs?: number | null;
+  } | null;
   expires_at: string | null;
   created_at: string;
   product?: VoucherProduct | VoucherProduct[] | null;
@@ -151,6 +159,9 @@ export function mapVoucher(row: VoucherRow): GiftCard {
     delivery_status: (row.delivery_status as GiftCard['delivery_status']) ?? undefined,
     scheduled_for: row.scheduled_for,
     message: row.gift_message,
+    gift_cover_id: row.gift_cover_id ?? null,
+    gift_wrapping: row.gift_wrapping ?? null,
+    gift_media: row.gift_media ?? null,
     fulfilment_type: row.fulfilment_type as GiftCard['fulfilment_type'],
     total_sessions: row.total_sessions ?? undefined,
     remaining_sessions: row.remaining_sessions ?? undefined,
@@ -209,7 +220,7 @@ export async function listMyVouchers(options?: PageOptions): Promise<GiftCard[]>
   const { data, error } = await getSupabase()
     .from('vouchers')
     .select(
-      'id, voucher_code, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, expires_at, created_at, product:products(title, icon, tone, image_url, terms_and_conditions, redemption_instructions, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
+      'id, voucher_code, product_id, vendor_id, buyer_id, claimed_by, recipient_name, recipient_email, fulfilment_type, status, initial_value_minor, remaining_value_minor, total_sessions, remaining_sessions, used_sessions, currency, delivery_status, scheduled_for, gift_message, gift_cover_id, gift_wrapping, gift_media, expires_at, created_at, product:products(title, icon, tone, image_url, terms_and_conditions, redemption_instructions, partner:enterprise_partners(name, logo_url)), vendor:vendors(name, logo_url)',
     )
     .order('created_at', { ascending: false })
     .range(page.from, page.to);

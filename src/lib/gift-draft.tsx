@@ -9,11 +9,16 @@ import type { Recipient } from './types';
 export type DeliveryMethod = 'email' | 'sms' | 'link' | 'whatsapp';
 
 /**
- * What the sender pinned onto the card: a photo from the phone, or one sticker
- * from the sheet. Null means the plain designed cover is sent.
+ * What the sender pinned onto the card: a picture, GIF, video or voice note
+ * from the phone, or one sticker from the sheet. `uri` is the local file while
+ * the draft is on the device; `url` is set once checkout uploads the file to
+ * storage. Null means the plain designed cover is sent.
  */
 export type GiftMedia =
-  | { type: 'photo'; uri: string }
+  | { type: 'photo'; uri: string; url?: string }
+  | { type: 'gif'; uri: string; url?: string }
+  | { type: 'video'; uri: string; url?: string; durationMs?: number }
+  | { type: 'audio'; uri: string; url?: string; durationMs?: number }
   | { type: 'sticker'; stickerId: string };
 
 export interface GiftDraft {

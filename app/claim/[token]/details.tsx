@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
+import { ClaimCardArt } from '@/src/components/ClaimCardArt';
+import { GiftMediaView } from '@/src/components/GiftMediaView';
 import { IconTile } from '@/src/components/IconTile';
 import { ListRow } from '@/src/components/ListRow';
 import { Money } from '@/src/components/Money';
@@ -45,6 +47,8 @@ export default function ClaimDetailsScreen() {
     <Screen>
       <Text style={styles.title}>{t('claimExtra.detailsTitle')}</Text>
 
+      {gift ? <ClaimCardArt gift={gift} height={200} style={styles.cardArt} /> : null}
+
       <Card tone="teal">
         <View style={styles.row}>
           <IconTile icon="coffee" size={60} tone="gold" />
@@ -64,6 +68,8 @@ export default function ClaimDetailsScreen() {
         <Text style={styles.messageLabel}>{t('claimExtra.message')}</Text>
         <Text style={styles.message}>{gift?.message}</Text>
       </Card>
+
+      {gift?.media ? <GiftMediaView media={gift.media} height={160} /> : null}
 
       <Card>
         <ListRow
@@ -98,6 +104,7 @@ const styles = themedStyles(() => ({
     color: colors.text,
     marginTop: spacing.xs,
   },
+  cardArt: { alignSelf: 'center', maxWidth: 220 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   copy: { flex: 1, gap: 1 },
   vendor: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.text },

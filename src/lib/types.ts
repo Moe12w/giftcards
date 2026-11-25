@@ -144,6 +144,15 @@ export interface GiftCard {
   delivery_status?: 'scheduled' | 'delivered' | 'opened';
   scheduled_for?: string | null;
   message?: string | null;
+  /** Card art chosen by the sender. */
+  gift_cover_id?: string | null;
+  gift_wrapping?: string | null;
+  gift_media?: {
+    type: 'photo' | 'gif' | 'video' | 'audio';
+    url: string;
+    mimeType?: string | null;
+    durationMs?: number | null;
+  } | null;
   /** Value cards spend money, experience cards spend sessions. */
   fulfilment_type?: FulfilmentType;
   /** Sessions included on issue (experience cards only). */
@@ -330,6 +339,15 @@ export interface BasketActivity {
   created_at: string;
 }
 
+/** A short message left on the basket's greeting card by a participant. */
+export interface BasketMessage {
+  id: string;
+  author_id: string;
+  author_name: string;
+  text: string;
+  created_at: string;
+}
+
 export interface GiftBasket {
   id: string;
   code: string;
@@ -344,6 +362,7 @@ export interface GiftBasket {
   items: BasketItem[];
   participants: BasketParticipant[];
   activity: BasketActivity[];
+  messages: BasketMessage[];
   created_at: string;
   completed_at?: string | null;
   note?: string;

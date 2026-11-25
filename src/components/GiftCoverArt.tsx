@@ -8,7 +8,7 @@ import { Text, View } from 'react-native';
 import Svg, { Circle, Defs, G, LinearGradient, Line, Path, Rect, Stop } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 
-import { giftCover, type GiftCover } from '../lib/gift-covers';
+import { giftCover, GIFT_COVERS, type GiftCover } from '../lib/gift-covers';
 import { giftSticker } from '../lib/gift-stickers';
 import { fonts, fontSizes, radii, themedStyles } from '../theme';
 import { Glyph } from './Glyph';
@@ -120,6 +120,10 @@ interface GiftCoverArtProps {
   coverId?: string | null;
   stickerId?: string | null;
   photoUri?: string | null;
+  /** URL of an uploaded cover image (admin catalogue or customer art). */
+  coverImageUrl?: string | null;
+  /** Label for an uploaded cover, printed on the photo pill. */
+  coverName?: string | null;
   /** The sender's note, shown on the white strip along the bottom. */
   message?: string;
   height?: number;
@@ -131,12 +135,18 @@ export function GiftCoverArt({
   coverId,
   stickerId,
   photoUri,
+  coverImageUrl,
+  coverName,
   message,
   height = 220,
   compact = false,
 }: GiftCoverArtProps) {
   const { t } = useTranslation();
-  const cover = giftCover(coverId);
+  // An explicit image always wins. Otherwise resolve against the loaded
+  // catalogue passed in `coverId`, falling back to the built-in designs.
+  const cover: GiftCover = coverImageUrl
+    ? { ...GIFT_COVERS[0], id: coverId ?? 'uploaded', nameKey: 'custom', imageUrl: coverImageUrl, name: coverName ?? undefined, layout: 'motifOnly' }
+    : giftCover(coverId);
   const words = useCoverWords(cover);
   const sticker = giftSticker(stickerId);
   const [artWidth, setArtWidth] = useState(0);
@@ -213,8 +223,12 @@ export function GiftCoverArt({
           </LinearGradient>
         </Defs>
         <Rect width={VIEW_WIDTH} height={VIEW_HEIGHT} fill={`url(#${gradientId})`} />
-        {decoration(cover)}
+        {cover.imageUrl ? null : decoration(cover)}
       </Svg>
+
+      {cover.imageUrl ? (
+        <Image source={cover.imageUrl} style={styles.photo} contentFit="cover" transition={150} />
+      ) : null}
 
       {photoUri ? <Image source={photoUri} style={styles.photo} contentFit="cover" transition={150} /> : null}
 
@@ -224,7 +238,7 @@ export function GiftCoverArt({
             style={[styles.label, compact && styles.labelCompact, { color: cover.ink === '#FFFFFF' ? '#1C1C1C' : cover.titleColor }]}
             numberOfLines={1}
           >
-            {t(`send.coverNames.${cover.nameKey}`)}
+            {cover.name ?? t(`send.coverNames.${cover.nameKey}`)}
           </Text>
         </View>
       ) : (
@@ -239,12 +253,16 @@ export function GiftCoverArt({
                 : styles.contentCenter,
           ]}
         >
-          {cover.layout === 'titleTop' ? title : null}
-          {cover.layout === 'titleBottom' ? motif : null}
-          {cover.layout === 'titleCenter' ? title : null}
-          {cover.layout === 'motifOnly' || cover.layout === 'titleCenter' ? motif : null}
-          {cover.layout === 'titleTop' ? motif : null}
-          {cover.layout === 'titleBottom' ? title : null}
+          {cover.imageUrl ? null : (
+            <>
+              {cover.layout === 'titleTop' ? title : null}
+              {cover.layout === 'titleBottom' ? motif : null}
+              {cover.layout === 'titleCenter' ? title : null}
+              {cover.layout === 'motifOnly' || cover.layout === 'titleCenter' ? motif : null}
+              {cover.layout === 'titleTop' ? motif : null}
+              {cover.layout === 'titleBottom' ? title : null}
+            </>
+          )}
         </View>
       )}
 

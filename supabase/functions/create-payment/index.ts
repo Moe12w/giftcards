@@ -16,6 +16,13 @@ import { adminClient, sha256Hex } from '../_shared/clients.ts';
 import { mfConfig } from '../_shared/myfatoorah.ts';
 import { createInvoiceForOrder, InvoiceError } from '../_shared/invoices.ts';
 
+interface GiftMediaInput {
+  type: 'photo' | 'gif' | 'video' | 'audio';
+  url: string;
+  mimeType?: string;
+  durationMs?: number | null;
+}
+
 interface Body {
   productId: string;
   variantId?: string | null;
@@ -24,10 +31,51 @@ interface Body {
   recipientEmail: string;
   recipientPhone?: string;
   message?: string;
+  /** Card cover id from the app's built-in designs or the gift_covers table. */
+  coverId?: string;
+  wrapping?: string;
+  /** One media item uploaded by the sender, already stored in gift-media. */
+  media?: GiftMediaInput | null;
   language?: 'en' | 'ar';
   idempotencyKey?: string;
   /** Deep link MyFatoorah returns to after payment (mobile app only). */
   returnUrl?: string;
+}
+
+/** Only sticker art is generated in-app; everything else is an uploaded URL. */
+const WRAPPINGS = new Set(['ribbon', 'box', 'envelope', 'none']);
+const MEDIA_TYPES = new Set(['photo', 'gif', 'video', 'audio']);
+const MEDIA_MIMES = new Set([
+  'image/png', 'image/jpeg', 'image/webp', 'image/gif',
+  'video/mp4', 'video/quicktime', 'video/webm',
+  'audio/mp4', 'audio/mpeg', 'audio/aac', 'audio/webm', 'audio/ogg', 'audio/x-m4a',
+]);
+
+/**
+ * The media URL must be a file in our own gift-media bucket. Accepting an
+ * arbitrary URL would let a caller point the recipient at any resource.
+ */
+function cleanGiftMedia(input: unknown): GiftMediaInput | null {
+  if (!input || typeof input !== 'object') return null;
+  const m = input as Record<string, unknown>;
+  if (typeof m.type !== 'string' || !MEDIA_TYPES.has(m.type)) return null;
+  if (typeof m.url !== 'string' || m.url.length > 2048) return null;
+  let path: string;
+  try {
+    path = decodeURIComponent(new URL(m.url).pathname);
+  } catch {
+    return null;
+  }
+  // Storage serves objects at /storage/v1/object/public/gift-media/<path>.
+  const prefix = '/storage/v1/object/public/gift-media/';
+  if (!path.startsWith(prefix) || path.length <= prefix.length) return null;
+  const mimeType = typeof m.mimeType === 'string' && MEDIA_MIMES.has(m.mimeType)
+    ? m.mimeType
+    : null;
+  const durationMs = typeof m.durationMs === 'number' && m.durationMs >= 0
+    ? Math.round(m.durationMs)
+    : null;
+  return { type: m.type as GiftMediaInput['type'], url: m.url, mimeType: mimeType ?? undefined, durationMs };
 }
 
 Deno.serve(async (req) => {
@@ -50,6 +98,14 @@ Deno.serve(async (req) => {
     if (!body.productId || !body.recipientName?.trim() || !body.recipientEmail?.trim()) {
       return json({ error: 'invalid_request' }, 400);
     }
+
+    const coverId = typeof body.coverId === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(body.coverId)
+      ? body.coverId
+      : null;
+    const wrapping = typeof body.wrapping === 'string' && WRAPPINGS.has(body.wrapping)
+      ? body.wrapping
+      : null;
+    const giftMedia = cleanGiftMedia(body.media);
 
     const admin = adminClient();
 
@@ -213,6 +269,9 @@ Deno.serve(async (req) => {
       recipient_email: body.recipientEmail.trim(),
       recipient_phone: body.recipientPhone?.trim() || null,
       gift_message: body.message?.trim() || null,
+      gift_cover_id: coverId,
+      gift_wrapping: wrapping,
+      gift_media: giftMedia,
     });
     if (itemError) {
       await admin.from('orders').delete().eq('id', order.id);

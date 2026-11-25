@@ -17,6 +17,7 @@ import { getOffer } from '@/src/lib/data';
 import { getSupabase } from '@/src/lib/supabase';
 import { env } from '@/src/lib/env';
 import { useGiftDraft } from '@/src/lib/gift-draft';
+import { uploadGiftMedia } from '@/src/lib/gift-media';
 import { formatMoney } from '@/src/lib/money';
 import { formatDate } from '@/src/lib/time';
 import type { Offer } from '@/src/lib/types';
@@ -33,7 +34,7 @@ function newIdempotencyKey(): string {
 export default function PaymentScreen() {
   useThemeRefresh();
   const { t, i18n } = useTranslation();
-  const { draft } = useGiftDraft();
+  const { draft, update } = useGiftDraft();
   const [offer, setOffer] = useState<Offer | null>(null);
   // Nothing to pay for without an offer, so start settled; the effect only
   // flips the flag when there is something to fetch.
@@ -69,6 +70,13 @@ export default function PaymentScreen() {
         return;
       }
 
+      // Card art is uploaded once and cached on the draft, so a retry after a
+      // failed payment does not upload the same file again.
+      const uploaded = draft.media ? await uploadGiftMedia(draft.media, user.id) : null;
+      if (draft.media && draft.media.type !== 'sticker' && uploaded && !('url' in draft.media && draft.media.url)) {
+        update({ media: { ...draft.media, url: uploaded.url } });
+      }
+
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: {
           productId: draft.offerId,
@@ -78,6 +86,9 @@ export default function PaymentScreen() {
           recipientEmail: draft.recipient?.email || user.email || '',
           recipientPhone: draft.recipient?.phone || undefined,
           message: draft.message || undefined,
+          coverId: draft.cover,
+          wrapping: draft.wrapping,
+          media: uploaded,
           language: lang,
           idempotencyKey: idempotencyKey.current,
           // MyFatoorah redirects here after payment so the in-app browser

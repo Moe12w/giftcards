@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,7 @@ import Svg, { G, Line } from 'react-native-svg';
 import { BackButton } from '@/src/components/BackButton';
 import { GiftCoverArt } from '@/src/components/GiftCoverArt';
 import { Screen } from '@/src/components/Screen';
-import { GIFT_COVERS } from '@/src/lib/gift-covers';
+import { coverLabel, fetchGiftCovers, GIFT_COVERS, type GiftCover } from '@/src/lib/gift-covers';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
@@ -48,6 +48,16 @@ export default function CoverScreen() {
   const { t } = useTranslation();
   const { draft, update } = useGiftDraft();
   const { width } = useWindowDimensions();
+  // Admin-uploaded covers are loaded from the catalogue; the built-in printed
+  // designs are always available, even offline or before the first fetch.
+  const [covers, setCovers] = useState<GiftCover[]>(GIFT_COVERS);
+  useEffect(() => {
+    let active = true;
+    fetchGiftCovers().then((items) => active && setCovers(items));
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Three tall covers per row, like a print catalogue. Capped so the tiles
   // stay postcard-sized on tablets and centred rows do not stretch.
@@ -76,7 +86,7 @@ export default function CoverScreen() {
       </View>
 
       <View style={styles.grid}>
-        {GIFT_COVERS.map((cover) => {
+        {covers.map((cover) => {
           const active = draft.cover === cover.id;
           return (
             <Pressable
@@ -84,7 +94,7 @@ export default function CoverScreen() {
               onPress={() => update({ cover: cover.id })}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
-              accessibilityLabel={t(`send.coverNames.${cover.nameKey}`)}
+              accessibilityLabel={coverLabel(cover, t)}
               style={({ pressed }) => pressed && styles.pressed}
             >
               <View

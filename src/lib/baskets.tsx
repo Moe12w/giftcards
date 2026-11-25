@@ -21,6 +21,7 @@ import { resolveTone } from './tone';
 import type {
   BasketActivity,
   BasketItem,
+  BasketMessage,
   BasketParticipant,
   GiftBasket,
   OccasionId,
@@ -52,6 +53,7 @@ interface BasketContextValue {
   addItem: (basketId: string, input: BasketItemInput) => Promise<BasketItem | null>;
   removeItem: (basketId: string, itemId: string) => Promise<void>;
   joinBasket: (code: string) => Promise<GiftBasket | null>;
+  addMessage: (basketId: string, text: string) => Promise<void>;
   markReady: (basketId: string) => Promise<void>;
   markCompleted: (basketId: string) => Promise<void>;
   sendBasket: (
@@ -81,6 +83,7 @@ interface BasketRow {
   items?: BasketItemRow[] | null;
   participants?: ParticipantRow[] | null;
   activity?: ActivityRow[] | null;
+  messages?: BasketMessageRow[] | null;
 }
 
 interface BasketItemRow {
@@ -113,6 +116,15 @@ interface ActivityRow {
   actor_name: string;
   item_title: string | null;
   amount_minor: number | null;
+  created_at: string;
+}
+
+interface BasketMessageRow {
+  id: string;
+  basket_id: string;
+  author_id: string;
+  author_name: string;
+  text: string;
   created_at: string;
 }
 
@@ -163,6 +175,15 @@ function mapBasket(row: BasketRow): GiftBasket {
         created_at: entry.created_at,
       }),
     ),
+    messages: (row.messages ?? []).map(
+      (entry): BasketMessage => ({
+        id: entry.id,
+        author_id: entry.author_id,
+        author_name: entry.author_name,
+        text: entry.text,
+        created_at: entry.created_at,
+      }),
+    ),
     created_at: row.created_at,
     completed_at: row.completed_at ?? undefined,
     note: row.note ?? undefined,
@@ -177,7 +198,8 @@ const BASKET_SELECT = `
     logo_url, banner_url, added_by, added_by_name, added_at
   ),
   participants:gift_basket_participants(user_id, name, is_owner, tone, joined_at),
-  activity:gift_basket_activity(id, kind, actor_name, item_title, amount_minor, created_at)
+  activity:gift_basket_activity(id, kind, actor_name, item_title, amount_minor, created_at),
+  messages:gift_basket_messages(id, basket_id, author_id, author_name, text, created_at)
 `;
 
 export function basketTotal(basket: GiftBasket): number {
@@ -454,6 +476,24 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     [baskets, displayName, fetchBasket, load, user],
   );
 
+  const addMessage = useCallback(
+    async (basketId: string, text: string) => {
+      if (!hasSupabaseConfig || !user) return;
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      const authorName = displayName();
+      const { error } = await getSupabase().from('gift_basket_messages').insert({
+        basket_id: basketId,
+        author_id: user.id,
+        author_name: authorName,
+        text: trimmed,
+      });
+      if (error) return;
+      await load();
+    },
+    [displayName, load, user],
+  );
+
   const markReady = useCallback(
     async (basketId: string) => {
       if (!hasSupabaseConfig) return;
@@ -518,6 +558,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       addItem,
       removeItem,
       joinBasket,
+      addMessage,
       markReady,
       markCompleted,
       sendBasket,
@@ -534,6 +575,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       addItem,
       removeItem,
       joinBasket,
+      addMessage,
       markReady,
       markCompleted,
       sendBasket,

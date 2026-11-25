@@ -17,6 +17,17 @@ export interface ClaimGift {
   remainingSessions: number | null;
   sender: string;
   message: string | null;
+  /** Chosen cover, resolved to an image when it came from the catalogue. */
+  coverId: string | null;
+  coverImageUrl: string | null;
+  coverName: string | null;
+  wrapping: string | null;
+  media: {
+    type: 'photo' | 'gif' | 'video' | 'audio';
+    url: string;
+    mimeType?: string | null;
+    durationMs?: number | null;
+  } | null;
   expiresAt: string | null;
   status: string;
   fulfilmentType: string;
@@ -54,12 +65,51 @@ export async function fetchClaimGift(token: string): Promise<ClaimGift | null> {
         remaining_sessions: number | null;
         sender_name: string | null;
         gift_message: string | null;
+        gift_cover_id: string | null;
+        gift_wrapping: string | null;
+        gift_media: {
+          type: string;
+          url: string;
+          mimeType?: string | null;
+          durationMs?: number | null;
+        } | null;
         expires_at: string | null;
         status: string;
         fulfilment_type: string;
       }
     | null;
   if (!row) return null;
+
+  // Uploaded covers are stored by id; resolve the image for the card art. A
+  // built-in design has no row and falls back to its code-defined artwork.
+  let coverImageUrl: string | null = null;
+  let coverName: string | null = null;
+  if (row.gift_cover_id) {
+    try {
+      const { data: cover } = await getSupabase()
+        .from('gift_covers')
+        .select('name, name_ar, image_url')
+        .eq('id', row.gift_cover_id)
+        .maybeSingle();
+      if (cover) {
+        coverImageUrl = (cover.image_url as string) ?? null;
+        coverName = (cover.name as string) ?? null;
+      }
+    } catch {
+      // A missing catalogue row just means the built-in artwork is used.
+    }
+  }
+
+  const rawMedia = row.gift_media;
+  const media =
+    rawMedia && ['photo', 'gif', 'video', 'audio'].includes(rawMedia.type) && rawMedia.url
+      ? {
+          type: rawMedia.type as 'photo' | 'gif' | 'video' | 'audio',
+          url: rawMedia.url,
+          mimeType: rawMedia.mimeType ?? null,
+          durationMs: rawMedia.durationMs ?? null,
+        }
+      : null;
 
   return {
     voucherId: row.voucher_id,
@@ -71,6 +121,11 @@ export async function fetchClaimGift(token: string): Promise<ClaimGift | null> {
     remainingSessions: row.remaining_sessions,
     sender: row.sender_name ?? '',
     message: row.gift_message,
+    coverId: row.gift_cover_id,
+    coverImageUrl,
+    coverName,
+    wrapping: row.gift_wrapping,
+    media,
     expiresAt: row.expires_at,
     status: row.status,
     fulfilmentType: row.fulfilment_type,

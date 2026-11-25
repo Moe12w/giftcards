@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
+import { ClaimCardArt } from '@/src/components/ClaimCardArt';
+import { GiftMediaView } from '@/src/components/GiftMediaView';
 import { IconTile } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
@@ -45,11 +47,14 @@ export default function ClaimRevealScreen() {
         <Text style={styles.heroTitle}>{t('claimExtra.revealTitle')}</Text>
       </View>
 
+      {gift ? <ClaimCardArt gift={gift} height={240} style={styles.cardArt} /> : null}
+
       <Card tone="lavender" style={styles.card}>
         <IconTile icon="coffee" size={68} tone="gold" />
         <Text style={styles.vendor}>{gift?.vendor}</Text>
         <Money minor={gift?.amountMinor ?? 0} style={styles.amount} />
         <Text style={styles.from}>{t('claimExtra.from', { name: gift?.sender ?? '' })}</Text>
+        {gift?.media ? <GiftMediaView media={gift.media} height={160} style={styles.attachment} /> : null}
         <View style={styles.messageBox}>
           <Text style={styles.messageLabel}>{t('claimExtra.message')}</Text>
           <Text style={styles.message}>{gift?.message}</Text>
@@ -78,6 +83,8 @@ const styles = themedStyles(() => ({
   sparkleB: { position: 'absolute', top: 14, right: '24%', fontSize: 14, color: colors.ink },
   sparkleC: { position: 'absolute', top: -10, right: '38%', fontSize: 12, color: colors.ink },
   card: { alignItems: 'center', gap: spacing.xs, marginTop: spacing.sm },
+  cardArt: { alignSelf: 'center', maxWidth: 260 },
+  attachment: { alignSelf: 'stretch', marginTop: spacing.sm },
   vendor: { fontFamily: fonts.bold, fontSize: fontSizes.lg, color: colors.text },
   amount: { fontSize: fontSizes.hero, color: colors.text },
   from: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted },

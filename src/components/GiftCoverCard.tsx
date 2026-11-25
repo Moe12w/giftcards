@@ -11,6 +11,8 @@ import { Money } from './Money';
 
 interface GiftCoverCardProps {
   coverId?: string | null;
+  coverImageUrl?: string | null;
+  coverName?: string | null;
   stickerId?: string | null;
   photoUri?: string | null;
   message?: string;
@@ -22,6 +24,8 @@ interface GiftCoverCardProps {
 
 export function GiftCoverCard({
   coverId,
+  coverImageUrl,
+  coverName,
   stickerId,
   photoUri,
   message,
@@ -35,6 +39,8 @@ export function GiftCoverCard({
       <View style={styles.surface}>
         <GiftCoverArt
           coverId={coverId}
+          coverImageUrl={coverImageUrl}
+          coverName={coverName}
           stickerId={stickerId}
           photoUri={photoUri}
           message={message}

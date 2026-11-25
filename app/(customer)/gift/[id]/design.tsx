@@ -272,7 +272,10 @@ export default function GiftComposeScreen() {
       message: message.trim(),
       deliveryDate,
     });
-    router.push('/(customer)/checkout/payment');
+    // Continue into the card design steps (cover, decorate, preview) before
+    // checkout. The old flow jumped straight to payment, which meant the
+    // designed covers were never reachable from "Create a gift".
+    router.push('/(customer)/send/cover');
   }
 
   const previewTone = offerTone(offer);

@@ -16,6 +16,10 @@ export interface GiftCover {
   id: string;
   /** i18n key under `send.coverNames` for the gallery label. */
   nameKey: string;
+  /** Direct label for an uploaded cover, used when nameKey is `custom`. */
+  name?: string;
+  /** An admin-uploaded image replaces the drawn artwork when present. */
+  imageUrl?: string;
   /** Printed words back the cover's illustration; kept in i18n under `send.coverWords`. */
   glyph: string;
   /** Top of the plate gradient. */
@@ -153,7 +157,68 @@ export const GIFT_COVERS: GiftCover[] = [
 
 export const DEFAULT_COVER_ID = GIFT_COVERS[0].id;
 
+/** A row from the admin-managed `gift_covers` table. */
+export interface GiftCoverRow {
+  id: string;
+  name: string;
+  name_ar: string | null;
+  image_url: string;
+}
+
+/**
+ * Turns uploaded covers into the same shape as the printed designs so the
+ * chooser and the card renderer do not need two code paths. Uploaded covers
+ * print no words, so they use the empty `motifOnly` layout.
+ */
+export function uploadedCovers(rows: GiftCoverRow[]): GiftCover[] {
+  return rows
+    .filter((row) => row.image_url && row.id)
+    .map((row) => ({
+      id: row.id,
+      nameKey: 'custom',
+      name: row.name,
+      imageUrl: row.image_url,
+      glyph: 'gift',
+      background: '#F6B4CE',
+      backgroundTo: '#E96E9E',
+      ink: '#FFFFFF',
+      decoration: 'none',
+      decorationColor: '#FFFFFF',
+      layout: 'motifOnly',
+      titleStyle: 'block',
+      titleColor: '#FFFFFF',
+    }));
+}
+
+/** Resolves a stored cover id against a catalogue, falling back safely. */
+export function resolveCover(id: string | null | undefined, covers: GiftCover[]): GiftCover {
+  return covers.find((cover) => cover.id === id) ?? covers[0] ?? GIFT_COVERS[0];
+}
+
 /** Resolves a stored cover id, falling back to the first design. */
 export function giftCover(id?: string | null): GiftCover {
   return GIFT_COVERS.find((cover) => cover.id === id) ?? GIFT_COVERS[0];
+}
+
+/** Loads the admin-managed covers. Network failures fall back to no uploads. */
+export async function fetchGiftCovers(): Promise<GiftCover[]> {
+  try {
+    const { getSupabase, hasSupabaseConfig } = await import('./supabase');
+    if (!hasSupabaseConfig) return [...GIFT_COVERS];
+    const { data, error } = await getSupabase()
+      .from('gift_covers')
+      .select('id, name, name_ar, image_url')
+      .eq('active', true)
+      .order('sort_order', { ascending: true });
+    if (error) return [...GIFT_COVERS];
+    return [...GIFT_COVERS, ...uploadedCovers((data ?? []) as GiftCoverRow[])];
+  } catch {
+    return [...GIFT_COVERS];
+  }
+}
+
+/** The label shown for a cover, honouring an uploaded name and the locale. */
+export function coverLabel(cover: GiftCover, t: (key: string) => string): string {
+  if (cover.name) return cover.name;
+  return t(`send.coverNames.${cover.nameKey}`);
 }

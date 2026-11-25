@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { AudioModule, RecordingPresets, setAudioModeAsync, useAudioRecorder, useAudioRecorderState } from 'expo-audio';
 import { useTranslation } from 'react-i18next';
 
 import { BackButton } from '@/src/components/BackButton';
 import { GiftCoverArt } from '@/src/components/GiftCoverArt';
+import { GiftMediaView } from '@/src/components/GiftMediaView';
 import { Glyph } from '@/src/components/Glyph';
 import { Screen } from '@/src/components/Screen';
+import { fetchGiftCovers, resolveCover, coverLabel, GIFT_COVERS, type GiftCover } from '@/src/lib/gift-covers';
 import { GIFT_STICKERS } from '@/src/lib/gift-stickers';
 import { useGiftDraft } from '@/src/lib/gift-draft';
 import { useThemeRefresh } from '@/src/lib/theme';
@@ -25,14 +28,29 @@ export default function DecorateScreen() {
   const { width, height } = useWindowDimensions();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [covers, setCovers] = useState<GiftCover[]>(GIFT_COVERS);
+  const [recording, setRecording] = useState(false);
+  const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, directory: 'document' });
+  const recorderState = useAudioRecorderState(recorder);
 
+  useEffect(() => {
+    let active = true;
+    fetchGiftCovers().then((items) => active && setCovers(items));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const selectedCover = resolveCover(draft.cover, covers);
   const photoUri = draft.media?.type === 'photo' ? draft.media.uri : null;
   const stickerId = draft.media?.type === 'sticker' ? draft.media.stickerId : null;
+  const media = draft.media && draft.media.type !== 'sticker' ? draft.media : null;
 
-  const cardHeight = Math.min(width * 1.28, height * 0.56);
+  const cardHeight = Math.min(width * 1.28, height * 0.4);
   const cardWidth = Math.round(cardHeight * 0.7);
 
-  async function pickPhoto() {
+  /** Opens the library for one kind of media and stores the picked file. */
+  async function pick(kind: 'photo' | 'gif' | 'video') {
     setError(null);
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -41,19 +59,56 @@ export default function DecorateScreen() {
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
+        mediaTypes: kind === 'video' ? ['videos'] : ['images'],
+        // GIFs must keep their animation: no editing and full quality on Android.
+        allowsEditing: kind === 'photo',
+        quality: kind === 'gif' ? 1 : 0.8,
+        videoMaxDuration: 60,
       });
-      const uri = result.canceled ? null : (result.assets?.[0]?.uri ?? null);
-      if (uri) {
-        update({ media: { type: 'photo', uri } });
-        setSheetOpen(false);
+      const asset = result.canceled ? null : result.assets?.[0] ?? null;
+      if (!asset) return;
+      if (kind === 'video') {
+        update({ media: { type: 'video', uri: asset.uri, durationMs: asset.duration ?? undefined } });
+      } else {
+        update({ media: { type: kind, uri: asset.uri } });
       }
-    } catch (photoError) {
-      console.error('[send] photo picker failed', photoError);
+      setSheetOpen(false);
+    } catch (pickError) {
+      console.error('[send] media picker failed', pickError);
       setError(t('send.photoFailed'));
+    }
+  }
+
+  async function toggleRecording() {
+    setError(null);
+    try {
+      if (recording) {
+        await recorder.stop();
+        setRecording(false);
+        if (recorder.uri) {
+          update({
+            media: {
+              type: 'audio',
+              uri: recorder.uri,
+              durationMs: Math.round((recorderState.durationMillis ?? 0)),
+            },
+          });
+        }
+        return;
+      }
+      const permission = await AudioModule.requestRecordingPermissionsAsync();
+      if (!permission.granted) {
+        setError(t('send.voicePermission'));
+        return;
+      }
+      await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: true });
+      await recorder.prepareToRecordAsync();
+      recorder.record();
+      setRecording(true);
+    } catch (recordError) {
+      console.error('[send] voice recording failed', recordError);
+      setRecording(false);
+      setError(t('send.voiceFailed'));
     }
   }
 
@@ -87,22 +142,62 @@ export default function DecorateScreen() {
         <View style={[styles.card, { width: cardWidth, height: cardHeight }]}>
           <GiftCoverArt
             coverId={draft.cover}
+            coverImageUrl={selectedCover.imageUrl}
+            coverName={coverLabel(selectedCover, t)}
             stickerId={stickerId}
             photoUri={photoUri}
             message={draft.message || undefined}
             height={cardHeight}
           />
         </View>
+        {media ? (
+          <GiftMediaView
+            media={media}
+            height={120}
+            style={styles.attachment}
+          />
+        ) : null}
+        {recording ? (
+          <Text style={styles.recording}>{t('send.recording')}</Text>
+        ) : null}
       </View>
 
       <View style={styles.tools}>
         <Pressable
-          onPress={pickPhoto}
+          onPress={() => pick('photo')}
           accessibilityRole="button"
           accessibilityLabel={t('send.addPhoto')}
           style={({ pressed }) => [styles.tool, pressed && styles.pressed]}
         >
           <Glyph name="camera" size={24} color={colors.text} />
+        </Pressable>
+        <Pressable
+          onPress={() => pick('gif')}
+          accessibilityRole="button"
+          accessibilityLabel={t('send.addGif')}
+          style={({ pressed }) => [styles.tool, pressed && styles.pressed]}
+        >
+          <Glyph name="image" size={24} color={colors.text} />
+        </Pressable>
+        <Pressable
+          onPress={() => pick('video')}
+          accessibilityRole="button"
+          accessibilityLabel={t('send.addVideo')}
+          style={({ pressed }) => [styles.tool, pressed && styles.pressed]}
+        >
+          <Glyph name="video" size={24} color={colors.text} />
+        </Pressable>
+        <Pressable
+          onPress={toggleRecording}
+          accessibilityRole="button"
+          accessibilityLabel={recording ? t('send.stopRecording') : t('send.addVoiceNote')}
+          style={({ pressed }) => [
+            styles.tool,
+            recording ? styles.toolActive : null,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Glyph name="mic" size={24} color={colors.text} />
         </Pressable>
         <Pressable
           onPress={() => setSheetOpen((open) => !open)}
@@ -117,7 +212,7 @@ export default function DecorateScreen() {
         >
           <Glyph name="star" size={24} color={colors.text} />
         </Pressable>
-        {photoUri || stickerId ? (
+        {draft.media ? (
           <Pressable
             onPress={() => update({ media: null })}
             accessibilityRole="button"
@@ -195,7 +290,13 @@ const styles = themedStyles(() => ({
     borderColor: colors.border,
   },
   finishLabel: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.textOnInk },
-  stage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  stage: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  attachment: { width: '100%', maxWidth: 320 },
+  recording: {
+    fontFamily: fonts.semibold,
+    fontSize: fontSizes.sm,
+    color: colors.onCover,
+  },
   card: {
     borderRadius: radii.lg,
     borderWidth: 2,
