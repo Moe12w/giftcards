@@ -61,7 +61,13 @@
       "expo-status-bar",
       "expo-apple-authentication",
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Tazella uses your photo library so you can add a picture to a gift card."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

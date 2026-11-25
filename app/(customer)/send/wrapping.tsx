@@ -25,8 +25,8 @@ export default function WrappingScreen() {
       <FlowHeader
         title={t('send.wrappingTitle')}
         subtitle={t('send.wrappingSubtitle')}
-        step={3}
-        total={4}
+        step={4}
+        total={5}
         onBack={() => router.back()}
       />
 

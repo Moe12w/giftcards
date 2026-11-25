@@ -12,6 +12,8 @@ interface ScreenProps {
   edges?: ('top' | 'bottom' | 'left' | 'right')[];
   /** Adds room for the floating tab bar. */
   tabbed?: boolean;
+  /** Full-bleed screens paint their own backdrop, so the pastel blobs are off. */
+  hideBlobs?: boolean;
 }
 
 export function Screen({
@@ -21,6 +23,7 @@ export function Screen({
   contentStyle,
   edges = ['top'],
   tabbed = false,
+  hideBlobs = false,
 }: ScreenProps) {
   const body = scroll ? (
     <ScrollView
@@ -36,11 +39,13 @@ export function Screen({
 
   return (
     <SafeAreaView edges={edges} style={[styles.safe, style]}>
-      <View pointerEvents="none" style={styles.blobs}>
-        <View style={styles.blobRing} />
-        <View style={styles.blobLilac} />
-        <View style={styles.blobMint} />
-      </View>
+      {hideBlobs ? null : (
+        <View pointerEvents="none" style={styles.blobs}>
+          <View style={styles.blobRing} />
+          <View style={styles.blobLilac} />
+          <View style={styles.blobMint} />
+        </View>
+      )}
       {body}
     </SafeAreaView>
   );

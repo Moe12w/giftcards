@@ -85,6 +85,14 @@ const light = {
 
   // Wallet QR background must stay white in light and dark mode
   qrBackground: '#FFFFFF',
+
+  // Full-bleed gift-card screens: the cover chooser and the card editor.
+  coverBackdrop: '#8F87E9',
+  coverBackdropPattern: 'rgba(255, 255, 255, 0.24)',
+  coverEditor: '#6C8A55',
+  coverEditorPattern: 'rgba(255, 255, 255, 0.18)',
+  // Ink drawn on those backdrops, which stay dark in both themes.
+  onCover: '#FFFFFF',
 } as const;
 
 export type Palette = { readonly [K in keyof typeof light]: string };
@@ -150,6 +158,12 @@ export const darkColors: Palette = {
   info: '#6FA8FF',
 
   qrBackground: '#FFFFFF',
+
+  coverBackdrop: '#3B3563',
+  coverBackdropPattern: 'rgba(255, 255, 255, 0.16)',
+  coverEditor: '#2E3D27',
+  coverEditorPattern: 'rgba(255, 255, 255, 0.14)',
+  onCover: '#FFFFFF',
 };
 
 const lightEdges = {

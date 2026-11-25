@@ -3,9 +3,18 @@
 // closing a screen does not lose the customer's progress.
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DEFAULT_COVER_ID } from './gift-covers';
 import type { Recipient } from './types';
 
 export type DeliveryMethod = 'email' | 'sms' | 'link' | 'whatsapp';
+
+/**
+ * What the sender pinned onto the card: a photo from the phone, or one sticker
+ * from the sheet. Null means the plain designed cover is sent.
+ */
+export type GiftMedia =
+  | { type: 'photo'; uri: string }
+  | { type: 'sticker'; stickerId: string };
 
 export interface GiftDraft {
   offerId: string | null;
@@ -17,6 +26,9 @@ export interface GiftDraft {
   deliveryMethod: DeliveryMethod;
   deliveryDate: string | null;
   message: string;
+  /** Card cover id from `src/lib/gift-covers.ts`. */
+  cover: string;
+  media: GiftMedia | null;
   theme: string;
   wrapping: string;
   /** Basket code when joining an existing gift basket. */
@@ -34,6 +46,8 @@ export const EMPTY_DRAFT: GiftDraft = {
   deliveryMethod: 'email',
   deliveryDate: null,
   message: '',
+  cover: DEFAULT_COVER_ID,
+  media: null,
   theme: 'confetti',
   wrapping: 'ribbon',
   basketCode: null,

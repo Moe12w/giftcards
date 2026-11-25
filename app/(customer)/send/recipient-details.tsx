@@ -39,7 +39,7 @@ export default function RecipientDetailsScreen() {
       <FlowHeader
         title={t('send.recipientDetailsTitle')}
         step={0}
-        total={4}
+        total={5}
         onBack={() => router.back()}
       />
 

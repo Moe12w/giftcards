@@ -7,12 +7,12 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
-import { GiftCardVisual } from '@/src/components/GiftCardVisual';
+import { GiftCoverCard } from '@/src/components/GiftCoverCard';
 import { Screen } from '@/src/components/Screen';
 import { getOffer } from '@/src/lib/data';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { useGiftDraft } from '@/src/lib/gift-draft';
-import { offerBusinessLogo, offerIcon, offerTitle, offerTone } from '@/src/lib/catalog';
+import { offerTitle } from '@/src/lib/catalog';
 import type { Offer } from '@/src/lib/types';
 import { colors, fonts, fontSizes, spacing, themedStyles } from '@/src/theme';
 
@@ -70,23 +70,19 @@ export default function SendPreviewScreen() {
         onBack={() => router.back()}
       />
 
-      <GiftCardVisual
-        title={title}
-        icon={offerIcon(offer)}
-        logoUrl={offerBusinessLogo(offer)}
-        tone={offerTone(offer)}
-        amountMinor={draft.amountMinor}
+      <GiftCoverCard
+        coverId={draft.cover}
+        stickerId={draft.media?.type === 'sticker' ? draft.media.stickerId : null}
+        photoUri={draft.media?.type === 'photo' ? draft.media.uri : null}
         message={draft.message || undefined}
-        meta={
-          draft.recipient
-            ? `${t('send.recipientTitle')}: ${draft.recipient.name}`
-            : undefined
-        }
+        title={title}
+        amountMinor={draft.amountMinor}
       />
 
       <Card style={styles.summary}>
         <Row label={t('send.recipientTitle')} value={draft.recipient?.name ?? '—'} />
         <Row label={t('send.deliveryTitle')} value={t(`send.delivery${capitalize(draft.deliveryMethod)}`)} />
+        <Row label={t('send.cover')} value={t(`send.coverNames.${draft.cover}`)} />
         <Row label={t('send.theme')} value={t(`send.themes.${draft.theme}`)} />
         <Row label={t('send.wrapping')} value={t(`send.wrappings.${draft.wrapping}`)} />
       </Card>

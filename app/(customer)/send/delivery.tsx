@@ -51,7 +51,7 @@ export default function DeliveryScreen() {
         title={t('send.deliveryTitle')}
         subtitle={t('send.deliverySubtitle')}
         step={1}
-        total={4}
+        total={5}
         onBack={() => router.back()}
       />
 

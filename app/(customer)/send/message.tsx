@@ -27,7 +27,7 @@ export default function MessageScreen() {
 
   function next() {
     update({ message: message.trim() });
-    router.push('/(customer)/send/wrapping');
+    router.push('/(customer)/send/cover');
   }
 
   return (
@@ -36,7 +36,7 @@ export default function MessageScreen() {
         title={t('send.messageTitle')}
         subtitle={t('send.messageSubtitle')}
         step={2}
-        total={4}
+        total={5}
         onBack={() => router.back()}
       />
 

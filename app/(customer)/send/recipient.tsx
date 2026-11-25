@@ -33,7 +33,7 @@ export default function SendRecipientScreen() {
         title={t('send.recipientTitle')}
         subtitle={t('send.recipientSubtitle')}
         step={0}
-        total={4}
+        total={5}
         onBack={() => router.back()}
       />
 
