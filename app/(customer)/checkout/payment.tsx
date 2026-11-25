@@ -17,7 +17,7 @@ import { getOffer } from '@/src/lib/data';
 import { getSupabase } from '@/src/lib/supabase';
 import { env } from '@/src/lib/env';
 import { useGiftDraft } from '@/src/lib/gift-draft';
-import { uploadGiftMedia } from '@/src/lib/gift-media';
+import { uploadCardBackMedia, uploadGiftMedia } from '@/src/lib/gift-media';
 import { formatMoney } from '@/src/lib/money';
 import { formatDate } from '@/src/lib/time';
 import type { Offer } from '@/src/lib/types';
@@ -72,6 +72,17 @@ export default function PaymentScreen() {
 
       // Card art is uploaded once and cached on the draft, so a retry after a
       // failed payment does not upload the same file again.
+      // Card-back media is a collection; the legacy single media is kept for
+      // the older send flow. Both upload once and cache their URLs.
+      const uploadedItems = await uploadCardBackMedia(draft.cardBackItems ?? [], user.id);
+      if (draft.cardBackItems?.length) {
+        update({
+          cardBackItems: draft.cardBackItems.map((item, index) => ({
+            ...item,
+            url: uploadedItems[index]?.url ?? item.url,
+          })),
+        });
+      }
       const uploaded = draft.media ? await uploadGiftMedia(draft.media, user.id) : null;
       if (draft.media && draft.media.type !== 'sticker' && uploaded && !('url' in draft.media && draft.media.url)) {
         update({ media: { ...draft.media, url: uploaded.url } });
@@ -88,7 +99,7 @@ export default function PaymentScreen() {
           message: draft.message || undefined,
           coverId: draft.cover,
           wrapping: draft.wrapping,
-          media: uploaded,
+          media: uploadedItems.length ? uploadedItems : uploaded,
           language: lang,
           idempotencyKey: idempotencyKey.current,
           // MyFatoorah redirects here after payment so the in-app browser

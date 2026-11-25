@@ -15,6 +15,7 @@ import React, {
 
 import { useAuth } from './auth';
 import { offerBusinessBanner, offerBusinessLogo, offerBusinessName } from './catalog';
+import { MOCK_BASKETS } from './mock-data';
 import { getSupabase } from './supabase';
 import { hasSupabaseConfig } from './env';
 import { resolveTone } from './tone';
@@ -226,7 +227,9 @@ function makeCode(): string {
 
 export function BasketProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [baskets, setBaskets] = useState<GiftBasket[]>([]);
+  const [baskets, setBaskets] = useState<GiftBasket[]>(() =>
+    hasSupabaseConfig ? [] : MOCK_BASKETS.map((basket) => ({ ...basket, messages: [...(basket.messages ?? [])] })),
+  );
   const [ready, setReady] = useState(!hasSupabaseConfig);
 
   const displayName = useCallback(
@@ -307,9 +310,63 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
   const createBasket = useCallback(
     async (input: CreateBasketInput): Promise<GiftBasket | null> => {
-      if (!hasSupabaseConfig || !user) return null;
+      if (!user) return null;
       const ownerId = user.id;
       const ownerName = displayName();
+
+      if (!hasSupabaseConfig) {
+        // Demo mode: build the basket locally so the flow is testable
+        // without a backend or a payment.
+        const code = `GIFT-${makeCode()}`;
+        const newBasket: GiftBasket = {
+          id: `demo-basket-${Date.now()}`,
+          code,
+          name: input.name.trim() || input.recipientName.trim() || 'Group gift',
+          recipient_name: input.recipientName.trim(),
+          occasion: input.occasion,
+          creator_id: ownerId,
+          creator_name: ownerName,
+          target_minor: input.targetMinor ?? 0,
+          status: 'open',
+          items: (input.items ?? []).map((item, index) => ({
+            id: `demo-item-${Date.now()}-${index}`,
+            offer_id: item.offer.id,
+            vendor_id: item.offer.vendor_id,
+            vendor_name: offerBusinessName(item.offer, item.offer.title ?? 'Gift card'),
+            title: item.offer.title,
+            amount_minor: item.amountMinor,
+            icon: item.offer.icon ?? 'gift',
+            tone: resolveTone(item.offer.tone),
+            logo_url: offerBusinessLogo(item.offer) ?? null,
+            banner_url: offerBusinessBanner(item.offer) ?? null,
+            added_by_id: ownerId,
+            added_by_name: ownerName,
+            added_at: new Date().toISOString(),
+          })),
+          participants: [
+            {
+              id: ownerId,
+              name: ownerName,
+              is_owner: true,
+              joined_at: new Date().toISOString(),
+              tone: 'teal',
+            },
+          ],
+          activity: [
+            {
+              id: `demo-activity-${Date.now()}`,
+              kind: 'created',
+              actor_name: ownerName,
+              created_at: new Date().toISOString(),
+            },
+          ],
+          messages: [],
+          created_at: new Date().toISOString(),
+          note: input.note ?? undefined,
+        };
+        setBaskets((current) => [newBasket, ...current]);
+        return newBasket;
+      }
 
       let code = makeCode();
       for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -372,8 +429,48 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback(
     async (basketId: string, input: BasketItemInput): Promise<BasketItem | null> => {
-      if (!hasSupabaseConfig || !user) return null;
+      if (!user) return null;
       const ownerName = displayName();
+
+      if (!hasSupabaseConfig) {
+        const newItem: BasketItem = {
+          id: `demo-item-${Date.now()}`,
+          offer_id: input.offer.id,
+          vendor_id: input.offer.vendor_id,
+          vendor_name: offerBusinessName(input.offer, input.offer.title ?? 'Gift card'),
+          title: input.offer.title,
+          amount_minor: input.amountMinor,
+          icon: input.offer.icon ?? 'gift',
+          tone: resolveTone(input.offer.tone),
+          logo_url: offerBusinessLogo(input.offer) ?? null,
+          banner_url: offerBusinessBanner(input.offer) ?? null,
+          added_by_id: user.id,
+          added_by_name: ownerName,
+          added_at: new Date().toISOString(),
+        };
+        setBaskets((current) =>
+          current.map((basket) =>
+            basket.id === basketId
+              ? {
+                  ...basket,
+                  items: [...basket.items, newItem],
+                  activity: [
+                    {
+                      id: `demo-activity-${Date.now()}`,
+                      kind: 'item_added',
+                      actor_name: ownerName,
+                      item_title: input.offer.title,
+                      amount_minor: input.amountMinor,
+                      created_at: new Date().toISOString(),
+                    },
+                    ...basket.activity,
+                  ],
+                }
+              : basket,
+          ),
+        );
+        return newItem;
+      }
 
       const { data, error } = await getSupabase()
         .from('gift_basket_items')
@@ -426,7 +523,16 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
   const removeItem = useCallback(
     async (basketId: string, itemId: string) => {
-      if (!hasSupabaseConfig) return;
+      if (!hasSupabaseConfig) {
+        setBaskets((current) =>
+          current.map((basket) =>
+            basket.id === basketId
+              ? { ...basket, items: basket.items.filter((item) => item.id !== itemId) }
+              : basket,
+          ),
+        );
+        return;
+      }
       const { error } = await getSupabase()
         .from('gift_basket_items')
         .delete()
@@ -440,11 +546,13 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
   const joinBasket = useCallback(
     async (code: string): Promise<GiftBasket | null> => {
-      if (!hasSupabaseConfig || !user) return null;
+      if (!user) return null;
       const existing = baskets.find(
         (basket) => basket.code.toUpperCase() === code.trim().toUpperCase(),
       );
       if (existing) return existing;
+
+      if (!hasSupabaseConfig) return null;
 
       const { data, error } = await getSupabase().rpc('get_basket_by_code', {
         p_code: code.trim().toUpperCase(),
@@ -478,10 +586,34 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
   const addMessage = useCallback(
     async (basketId: string, text: string) => {
-      if (!hasSupabaseConfig || !user) return;
+      if (!user) return;
       const trimmed = text.trim();
       if (!trimmed) return;
       const authorName = displayName();
+
+      if (!hasSupabaseConfig) {
+        setBaskets((current) =>
+          current.map((basket) =>
+            basket.id === basketId
+              ? {
+                  ...basket,
+                  messages: [
+                    ...basket.messages,
+                    {
+                      id: `demo-msg-${Date.now()}`,
+                      author_id: user.id,
+                      author_name: authorName,
+                      text: trimmed,
+                      created_at: new Date().toISOString(),
+                    },
+                  ],
+                }
+              : basket,
+          ),
+        );
+        return;
+      }
+
       const { error } = await getSupabase().from('gift_basket_messages').insert({
         basket_id: basketId,
         author_id: user.id,
@@ -496,7 +628,14 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
   const markReady = useCallback(
     async (basketId: string) => {
-      if (!hasSupabaseConfig) return;
+      if (!hasSupabaseConfig) {
+        setBaskets((current) =>
+          current.map((basket) =>
+            basket.id === basketId ? { ...basket, status: 'ready' } : basket,
+          ),
+        );
+        return;
+      }
       const { error } = await getSupabase().from('gift_baskets').update({ status: 'ready' }).eq('id', basketId);
       if (error) throw error;
       await load();
@@ -506,7 +645,16 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
   const markCompleted = useCallback(
     async (basketId: string) => {
-      if (!hasSupabaseConfig) return;
+      if (!hasSupabaseConfig) {
+        setBaskets((current) =>
+          current.map((basket) =>
+            basket.id === basketId
+              ? { ...basket, status: 'completed', completed_at: new Date().toISOString() }
+              : basket,
+          ),
+        );
+        return;
+      }
       const { error } = await getSupabase()
         .from('gift_baskets')
         .update({ status: 'completed', completed_at: new Date().toISOString() })
@@ -519,7 +667,22 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
   const sendBasket = useCallback(
     async (basketId: string, details: { recipientName?: string; message?: string }) => {
-      if (!hasSupabaseConfig) return;
+      if (!hasSupabaseConfig) {
+        setBaskets((current) =>
+          current.map((basket) =>
+            basket.id === basketId
+              ? {
+                  ...basket,
+                  status: 'completed',
+                  completed_at: new Date().toISOString(),
+                  recipient_name: details.recipientName?.trim() || basket.recipient_name,
+                  note: details.message?.trim() || basket.note,
+                }
+              : basket,
+          ),
+        );
+        return;
+      }
       const { error } = await getSupabase()
         .from('gift_baskets')
         .update({

@@ -69,7 +69,9 @@ export default function ClaimDetailsScreen() {
         <Text style={styles.message}>{gift?.message}</Text>
       </Card>
 
-      {gift?.media ? <GiftMediaView media={gift.media} height={160} /> : null}
+      {gift?.media.map((item, index) => (
+        <GiftMediaView key={`${item.url}-${index}`} media={item} height={160} />
+      ))}
 
       <Card>
         <ListRow

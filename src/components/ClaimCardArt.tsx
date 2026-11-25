@@ -21,7 +21,7 @@ export function ClaimCardArt({ gift, height = 220, style }: ClaimCardArtProps) {
         coverId={gift?.coverId ?? undefined}
         coverImageUrl={gift?.coverImageUrl}
         coverName={gift?.coverName ?? undefined}
-        photoUri={gift?.media?.type === 'photo' ? gift.media.url : undefined}
+        photoUri={gift?.media.find((item) => item.type === 'photo')?.url}
         message={gift?.message ?? undefined}
         height={height}
       />

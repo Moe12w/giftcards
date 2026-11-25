@@ -14,7 +14,7 @@ import { Money } from '@/src/components/Money';
 import { PaymentMethods } from '@/src/components/PaymentMethods';
 import { Screen } from '@/src/components/Screen';
 import { useBaskets } from '@/src/lib/baskets';
-import { env } from '@/src/lib/env';
+import { env, hasSupabaseConfig } from '@/src/lib/env';
 import { getSupabase } from '@/src/lib/supabase';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { offerBusinessName, offerImage, offerTitle, offerTone } from '@/src/lib/catalog';
@@ -57,7 +57,7 @@ export default function ContributeScreen() {
     target?: string;
     items?: string;
   }>();
-  const { ready, getBasket, createBasket } = useBaskets();
+  const { ready, getBasket, createBasket, addItem } = useBaskets();
 
   const pending = useMemo(() => parsePending(params.items), [params.items]);
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -99,6 +99,27 @@ export default function ContributeScreen() {
     setPayError(null);
     idempotencyKey.current ??= `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     try {
+      // Demo mode: no payment backend, so create the basket locally with its
+      // cards and jump straight to the basket page.
+      if (!hasSupabaseConfig) {
+        let target = basket;
+        if (!target) {
+          target = await createBasket({
+            name: params.name ?? t('basket.defaultName'),
+            recipientName: params.recipient ?? t('basket.yourRecipient'),
+            occasion: (params.occasion as OccasionId | undefined) ?? 'birthday',
+            targetMinor: Number(params.target ?? 0) || 0,
+            items: [],
+          });
+          if (!target) throw new Error('basket_create_failed');
+        }
+        for (const { offer, amountMinor } of items) {
+          await addItem(target.id, { offer, amountMinor });
+        }
+        router.push(`/(customer)/basket/${target.id}?paid=1`);
+        return;
+      }
+
       // The basket exists before the invoice so the paid lines have a home.
       // Its cards are only written by the webhook once the payment succeeds.
       let target = basket;

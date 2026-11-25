@@ -6,7 +6,7 @@
 import { File } from 'expo-file-system';
 
 import { getSupabase, hasSupabaseConfig } from './supabase';
-import type { GiftMedia } from './gift-draft';
+import type { CardBackMedia, GiftMedia } from './gift-draft';
 
 export const GIFT_MEDIA_BUCKET = 'gift-media';
 
@@ -31,6 +31,31 @@ export interface UploadedMedia {
   url: string;
   mimeType?: string;
   durationMs?: number | null;
+}
+
+/** Uploads each item on the card back, preserving order. */
+export async function uploadCardBackMedia(
+  items: CardBackMedia[],
+  userId: string,
+): Promise<UploadedMedia[]> {
+  const uploaded: UploadedMedia[] = [];
+  for (const item of items) {
+    if (item.url) {
+      uploaded.push({
+        type: item.type,
+        url: item.url,
+        ...(item.type === 'video' || item.type === 'audio' ? { durationMs: item.durationMs ?? null } : {}),
+      });
+      continue;
+    }
+    if (!item.uri) continue;
+    const media: GiftMedia = item.type === 'photo' || item.type === 'gif' || item.type === 'video' || item.type === 'audio'
+      ? { type: item.type, uri: item.uri, durationMs: item.durationMs }
+      : { type: 'sticker', stickerId: '' };
+    const result = await uploadGiftMedia(media, userId);
+    if (result) uploaded.push(result);
+  }
+  return uploaded;
 }
 
 /** True when a media type needs to be uploaded before checkout. */

@@ -518,6 +518,17 @@
     "minAmount": "Minimum {{amount}}",
     "maxAmount": "Maximum {{amount}}"
   },
+  "cardBack": {
+    "title": "Make it yours",
+    "heading": "A note from you",
+    "messageLabel": "Write on the back",
+    "messagePlaceholder": "Write something lovely…",
+    "close": "Minimise card",
+    "changeCover": "Change cover",
+    "writeOnBack": "Write on the back",
+    "showFront": "See the front",
+    "video": "Video attached"
+  },
   "checkout": {
     "summaryTitle": "Order summary",
     "summarySubtitle": "Review your gift before paying",

@@ -216,7 +216,7 @@ export default function BasketDetailScreen() {
               ))}
             </View>
           )}
-          {basket.status !== 'completed' && hasSupabaseConfig ? (
+          {basket.status !== 'completed' ? (
             <View style={styles.greetingComposer}>
               <TextInput
                 value={messageText}

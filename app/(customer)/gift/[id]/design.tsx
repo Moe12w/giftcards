@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
+import { CardStudio } from '@/src/components/CardStudio';
+import type { CardBackItem } from '@/src/components/CardBack';
 import { Chip } from '@/src/components/Chip';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
@@ -25,15 +27,7 @@ import { useRecipients } from '@/src/lib/recipients';
 import type { Offer, ProductVariant } from '@/src/lib/types';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 
-const DESIGNS = [
-  { id: 'classic', background: colors.surface, edge: colors.ink, text: colors.ink, icon: 'gift' },
-  { id: 'confetti', background: colors.pinkTint, edge: colors.pink, text: colors.ink, icon: 'congratulations' },
-  { id: 'minimal', background: colors.tealTint, edge: colors.teal, text: colors.ink, icon: 'wellness' },
-  { id: 'midnight', background: colors.plum, edge: colors.ink, text: colors.surface, icon: 'moon' },
-] as const;
-
 const DELIVERY_METHODS: DeliveryMethod[] = ['email', 'sms', 'whatsapp', 'link'];
-const SUGGESTIONS = ['birthday', 'thankYou', 'congrats', 'justBecause'] as const;
 
 /**
  * Draft recipient ids are minted when a recipient is chosen. Built outside the
@@ -51,6 +45,9 @@ export default function GiftComposeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { draft, update, ready } = useGiftDraft();
   const [offer, setOffer] = useState<Offer | null>(null);
+  const [cardItems, setCardItems] = useState<CardBackItem[]>(
+    (draft.cardBackItems ?? []) as CardBackItem[],
+  );
   // No id means there is nothing to fetch: start settled rather than
   // flipping the flag from inside the effect.
   const [loading, setLoading] = useState(!id);
@@ -271,11 +268,13 @@ export default function GiftComposeScreen() {
       },
       message: message.trim(),
       deliveryDate,
+      cardBackItems: cardItems.map((item) => ({
+        ...item,
+        uri: item.uri,
+        url: (item as { url?: string }).url,
+      })),
     });
-    // Continue into the card design steps (cover, decorate, preview) before
-    // checkout. The old flow jumped straight to payment, which meant the
-    // designed covers were never reachable from "Create a gift".
-    router.push('/(customer)/send/cover');
+    router.push('/(customer)/checkout/payment');
   }
 
   const previewTone = offerTone(offer);
@@ -303,6 +302,17 @@ export default function GiftComposeScreen() {
         }
         message={message || undefined}
         meta={recipientName.trim() ? `${t('send.recipientTitle')}: ${recipientName.trim()}` : undefined}
+      />
+
+      {/* The card itself: tap the miniature card to choose a cover, then flip
+          it to write or record on the beige back. All in one screen. */}
+      <CardStudio
+        coverId={draft.cover}
+        onCoverChange={(cover) => update({ cover })}
+        message={message}
+        onMessageChange={setMessageEdit}
+        items={cardItems}
+        onItemsChange={setCardItems}
       />
 
       {/* Price: vendor packages for experiences, presets/custom for money cards */}
@@ -385,43 +395,6 @@ export default function GiftComposeScreen() {
           />
         </Card>
       )}
-
-      {/* Design */}
-      <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('gift.chooseDesign')}</Text>
-        <View style={styles.designRow}>
-          {DESIGNS.map((design) => {
-            const active = draft.design === design.id;
-            return (
-              <Pressable
-                key={design.id}
-                onPress={() => update({ design: design.id })}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-                accessibilityLabel={t(`gift.designs.${design.id}`)}
-                style={({ pressed }) => [styles.designItem, pressed && styles.pressed]}
-              >
-                <View
-                  style={[
-                    styles.designSwatch,
-                    {
-                      backgroundColor: design.background,
-                      borderColor: colors.border,
-                      borderBottomColor: design.edge,
-                    },
-                    active && styles.designSwatchActive,
-                  ]}
-                >
-                  <Glyph name={design.icon} size={26} color={design.text} />
-                </View>
-                <Text style={[styles.designLabel, active && styles.designLabelActive]}>
-                  {t(`gift.designs.${design.id}`)}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </Card>
 
       {/* Recipient */}
       <Card style={styles.section}>
@@ -531,29 +504,6 @@ export default function GiftComposeScreen() {
             error={errors.date}
           />
         ) : null}
-      </Card>
-
-      {/* Message */}
-      <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('send.messageTitle')}</Text>
-        <TextField
-          value={message}
-          onChangeText={setMessageEdit}
-          placeholder={t('send.messagePlaceholder')}
-          multiline
-          numberOfLines={4}
-          style={styles.messageInput}
-        />
-        <View style={styles.chipRow}>
-          {SUGGESTIONS.map((key) => (
-            <Chip
-              key={key}
-              label={t(`send.suggestionShort.${key}`)}
-              active={false}
-              onPress={() => setMessageEdit(t(`send.suggestions.${key}`))}
-            />
-          ))}
-        </View>
       </Card>
 
       <Button

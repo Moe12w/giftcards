@@ -60,9 +60,11 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
       coverImage = null;
     }
   }
-  const media = gift.gift_media as
+  const rawMedia = gift.gift_media as
     | { type: string; url: string; mimeType?: string | null }
+    | Array<{ type: string; url: string; mimeType?: string | null }>
     | null;
+  const mediaList = Array.isArray(rawMedia) ? rawMedia : rawMedia ? [rawMedia] : [];
 
   return (
     <main className="section">
@@ -87,8 +89,8 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
             {amount > 0 ? <> · {formatMoney(amount, locale)}</> : null}
           </p>
 
-          {media?.url ? (
-            <div style={{ marginTop: 16 }}>
+          {mediaList.filter((item) => item?.url).map((media, index) => (
+            <div key={`${media.url}-${index}`} style={{ marginTop: 16 }}>
               {media.type === 'video' ? (
                 <video src={media.url} controls style={{ width: '100%', borderRadius: 12 }} />
               ) : media.type === 'audio' ? (
@@ -102,7 +104,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
                 {media.type === 'gif' ? 'Animated GIF' : media.type}
               </p>
             </div>
-          ) : null}
+          ))}
 
           {gift.gift_message ? (
             <p style={{ marginTop: 16, padding: 14, borderLeft: '3px solid var(--ink)', background: 'var(--surface-soft)', textAlign: 'start' }}>

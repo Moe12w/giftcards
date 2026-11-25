@@ -84,13 +84,14 @@ export default function ClaimLandingScreen() {
           </View>
           <Money minor={gift?.amountMinor ?? 0} style={styles.amount} />
         </View>
-        {gift?.media ? (
+        {gift?.media.map((item, index) => (
           <GiftMediaView
-            media={gift.media}
+            key={`${item.url}-${index}`}
+            media={item}
             height={180}
             style={styles.attachment}
           />
-        ) : null}
+        ))}
         <View style={styles.messageBox}>
           <Text style={styles.messageLabel}>{t('claim.messageLabel')}</Text>
           <Text style={styles.message}>{gift?.message}</Text>

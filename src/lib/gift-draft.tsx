@@ -8,6 +8,17 @@ import type { Recipient } from './types';
 
 export type DeliveryMethod = 'email' | 'sms' | 'link' | 'whatsapp';
 
+/** One item pinned to the back of a gift card. */
+export interface CardBackMedia {
+  id: string;
+  type: 'photo' | 'gif' | 'video' | 'audio';
+  /** Local file URI on device, remote URL once uploaded. */
+  uri?: string;
+  url?: string;
+  durationMs?: number;
+  mimeType?: string;
+}
+
 /**
  * What the sender pinned onto the card: a picture, GIF, video or voice note
  * from the phone, or one sticker from the sheet. `uri` is the local file while
@@ -34,6 +45,8 @@ export interface GiftDraft {
   /** Card cover id from `src/lib/gift-covers.ts`. */
   cover: string;
   media: GiftMedia | null;
+  /** Collection of items on the back of the card (message is separate). */
+  cardBackItems: CardBackMedia[];
   theme: string;
   wrapping: string;
   /** Basket code when joining an existing gift basket. */
@@ -53,6 +66,7 @@ export const EMPTY_DRAFT: GiftDraft = {
   message: '',
   cover: DEFAULT_COVER_ID,
   media: null,
+  cardBackItems: [],
   theme: 'confetti',
   wrapping: 'ribbon',
   basketCode: null,

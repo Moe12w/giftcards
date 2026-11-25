@@ -34,8 +34,8 @@ interface Body {
   /** Card cover id from the app's built-in designs or the gift_covers table. */
   coverId?: string;
   wrapping?: string;
-  /** One media item uploaded by the sender, already stored in gift-media. */
-  media?: GiftMediaInput | null;
+  /** Media items uploaded by the sender, already stored in gift-media. */
+  media?: GiftMediaInput[] | GiftMediaInput | null;
   language?: 'en' | 'ar';
   idempotencyKey?: string;
   /** Deep link MyFatoorah returns to after payment (mobile app only). */
@@ -105,7 +105,10 @@ Deno.serve(async (req) => {
     const wrapping = typeof body.wrapping === 'string' && WRAPPINGS.has(body.wrapping)
       ? body.wrapping
       : null;
-    const giftMedia = cleanGiftMedia(body.media);
+    // Accept a list (card back) or a single item (legacy send flow).
+    const giftMedia = Array.isArray(body.media)
+      ? body.media.map((item) => cleanGiftMedia(item)).filter((item): item is GiftMediaInput => Boolean(item))
+      : cleanGiftMedia(body.media);
 
     const admin = adminClient();
 

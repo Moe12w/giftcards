@@ -116,6 +116,14 @@ export interface Offer {
   session_count?: number;
 }
 
+/** A media item stored on a voucher after checkout. */
+export interface StoredMedia {
+  type: 'photo' | 'gif' | 'video' | 'audio';
+  url: string;
+  mimeType?: string | null;
+  durationMs?: number | null;
+}
+
 export interface GiftCard {
   id: string;
   offer_id: string;
@@ -147,12 +155,7 @@ export interface GiftCard {
   /** Card art chosen by the sender. */
   gift_cover_id?: string | null;
   gift_wrapping?: string | null;
-  gift_media?: {
-    type: 'photo' | 'gif' | 'video' | 'audio';
-    url: string;
-    mimeType?: string | null;
-    durationMs?: number | null;
-  } | null;
+  gift_media?: StoredMedia | StoredMedia[] | null;
   /** Value cards spend money, experience cards spend sessions. */
   fulfilment_type?: FulfilmentType;
   /** Sessions included on issue (experience cards only). */

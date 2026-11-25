@@ -54,7 +54,9 @@ export default function ClaimRevealScreen() {
         <Text style={styles.vendor}>{gift?.vendor}</Text>
         <Money minor={gift?.amountMinor ?? 0} style={styles.amount} />
         <Text style={styles.from}>{t('claimExtra.from', { name: gift?.sender ?? '' })}</Text>
-        {gift?.media ? <GiftMediaView media={gift.media} height={160} style={styles.attachment} /> : null}
+        {gift?.media.map((item, index) => (
+          <GiftMediaView key={`${item.url}-${index}`} media={item} height={160} style={styles.attachment} />
+        ))}
         <View style={styles.messageBox}>
           <Text style={styles.messageLabel}>{t('claimExtra.message')}</Text>
           <Text style={styles.message}>{gift?.message}</Text>

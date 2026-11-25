@@ -518,6 +518,17 @@
     "minAmount": "الحد الأدنى {{amount}}",
     "maxAmount": "الحد الأقصى {{amount}}"
   },
+  "cardBack": {
+    "title": "اجعلها خاصة بك",
+    "heading": "رسالة منك",
+    "messageLabel": "اكتب على الظهر",
+    "messagePlaceholder": "اكتب شيئاً جميلاً…",
+    "close": "تصغير البطاقة",
+    "changeCover": "تغيير الغلاف",
+    "writeOnBack": "اكتب على الظهر",
+    "showFront": "عرض الواجهة",
+    "video": "فيديو مرفق"
+  },
   "checkout": {
     "summaryTitle": "ملخص الطلب",
     "summarySubtitle": "راجع هديتك قبل الدفع",

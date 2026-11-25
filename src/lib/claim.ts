@@ -27,7 +27,7 @@ export interface ClaimGift {
     url: string;
     mimeType?: string | null;
     durationMs?: number | null;
-  } | null;
+  }[];
   expiresAt: string | null;
   status: string;
   fulfilmentType: string;
@@ -67,12 +67,10 @@ export async function fetchClaimGift(token: string): Promise<ClaimGift | null> {
         gift_message: string | null;
         gift_cover_id: string | null;
         gift_wrapping: string | null;
-        gift_media: {
-          type: string;
-          url: string;
-          mimeType?: string | null;
-          durationMs?: number | null;
-        } | null;
+        gift_media:
+          | { type: string; url: string; mimeType?: string | null; durationMs?: number | null }
+          | { type: string; url: string; mimeType?: string | null; durationMs?: number | null }[]
+          | null;
         expires_at: string | null;
         status: string;
         fulfilment_type: string;
@@ -101,15 +99,17 @@ export async function fetchClaimGift(token: string): Promise<ClaimGift | null> {
   }
 
   const rawMedia = row.gift_media;
-  const media =
-    rawMedia && ['photo', 'gif', 'video', 'audio'].includes(rawMedia.type) && rawMedia.url
-      ? {
-          type: rawMedia.type as 'photo' | 'gif' | 'video' | 'audio',
-          url: rawMedia.url,
-          mimeType: rawMedia.mimeType ?? null,
-          durationMs: rawMedia.durationMs ?? null,
-        }
-      : null;
+  const list = Array.isArray(rawMedia) ? rawMedia : rawMedia ? [rawMedia] : [];
+  const media = list
+    .filter((item): item is { type: string; url: string; mimeType?: string | null; durationMs?: number | null } =>
+      Boolean(item && ['photo', 'gif', 'video', 'audio'].includes(item.type) && item.url),
+    )
+    .map((item) => ({
+      type: item.type as 'photo' | 'gif' | 'video' | 'audio',
+      url: item.url,
+      mimeType: item.mimeType ?? null,
+      durationMs: item.durationMs ?? null,
+    }));
 
   return {
     voucherId: row.voucher_id,

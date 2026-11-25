@@ -95,12 +95,7 @@ export interface VoucherRow {
   gift_message: string | null;
   gift_cover_id: string | null;
   gift_wrapping: string | null;
-  gift_media: {
-    type: 'photo' | 'gif' | 'video' | 'audio';
-    url: string;
-    mimeType?: string | null;
-    durationMs?: number | null;
-  } | null;
+  gift_media: import('./types').StoredMedia | import('./types').StoredMedia[] | null;
   expires_at: string | null;
   created_at: string;
   product?: VoucherProduct | VoucherProduct[] | null;
