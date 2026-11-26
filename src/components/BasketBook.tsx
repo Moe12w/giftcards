@@ -542,16 +542,6 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
                 {basket.name}
               </Text>
               <View style={[styles.leftRule, rtl && styles.ruleRtl]} />
-              <Text
-                style={[
-                  styles.leftFrom,
-                  { fontSize: between(12, 14, roomy), lineHeight: between(15, 17, roomy) },
-                  rtl && styles.textRtl,
-                ]}
-                numberOfLines={2}
-              >
-                {t('basket.book.fromCreator', { name: basket.creator_name })}
-              </Text>
             </View>
 
             <View style={styles.gutter}>
@@ -829,6 +819,7 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
                 ) : (
                   <Pressable
                     onPress={() => setComposerOpen(true)}
+                    hitSlop={12}
                     accessibilityRole="button"
                     accessibilityLabel={t('basket.book.write')}
                     style={({ pressed }) => [
@@ -838,7 +829,7 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
                       pressed && styles.pressed,
                     ]}
                   >
-                    <Pencil size={20} color={PAPER.page} />
+                    <Pencil size={24} color={PAPER.page} />
                   </Pressable>
                 )
               ) : (
@@ -1460,8 +1451,8 @@ const styles = themedStyles(() => ({
   composerFoot: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   composeCta: {
     position: 'absolute',
-    width: 46,
-    height: 46,
+    width: 56,
+    height: 56,
     borderRadius: radii.pill,
     backgroundColor: PAPER.ink,
     alignItems: 'center',
