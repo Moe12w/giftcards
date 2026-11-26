@@ -363,6 +363,7 @@ export interface GiftBasket {
   code: string;
   name: string;
   recipient_name: string;
+  recipient_id?: string | null;
   occasion: OccasionId;
   /** The cover design the creator chose for the book. */
   cover_id?: string | null;

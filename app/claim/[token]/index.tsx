@@ -10,7 +10,7 @@ import { GiftMediaView } from '@/src/components/GiftMediaView';
 import { IconTile } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { Screen } from '@/src/components/Screen';
-import { fetchClaimGift, type ClaimGift } from '@/src/lib/claim';
+import { fetchClaimBasket, fetchClaimGift, type ClaimBasket, type ClaimGift } from '@/src/lib/claim';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatDate } from '@/src/lib/time';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
@@ -21,6 +21,8 @@ export default function ClaimLandingScreen() {
   const { t, i18n } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
   const [gift, setGift] = useState<ClaimGift | null>(null);
+  const [basket, setBasket] = useState<ClaimBasket | null>(null);
+  const [isBasket, setIsBasket] = useState(false);
   // No id means there is nothing to fetch: start settled rather than
   // flipping the flag from inside the effect.
   const [loading, setLoading] = useState(!token);
@@ -29,7 +31,23 @@ export default function ClaimLandingScreen() {
     let active = true;
     if (!token) return;
     fetchClaimGift(token)
-      .then((row) => active && setGift(row))
+      .then((row) => {
+        if (!active) return;
+        if (row) {
+          setGift(row);
+        } else {
+          // Not a gift card — try basket.
+          fetchClaimBasket(token)
+            .then((b) => {
+              if (!active) return;
+              if (b) {
+                setBasket(b);
+                setIsBasket(true);
+              }
+            })
+            .catch(() => {});
+        }
+      })
       .catch(() => active && setGift(null))
       .finally(() => active && setLoading(false));
     return () => {
@@ -50,7 +68,7 @@ export default function ClaimLandingScreen() {
     );
   }
 
-  if (!loading && !gift) {
+  if (!loading && !gift && !basket) {
     return (
       <Screen>
         <View style={styles.center}>
@@ -58,6 +76,45 @@ export default function ClaimLandingScreen() {
           <Text style={styles.title}>{t('claim.invalidTitle')}</Text>
           <Text style={styles.subtitle}>{t('claim.invalidBody')}</Text>
         </View>
+      </Screen>
+    );
+  }
+
+  if (isBasket && basket) {
+    return (
+      <Screen>
+        <View style={styles.hero}>
+          <View style={styles.blob} />
+          <View style={styles.heroCircle}>
+            <Glyph name="book" size={44} />
+          </View>
+          <Text style={styles.title}>{t('basket.claimTitle', { defaultValue: 'A gift book for you' })}</Text>
+          <Text style={styles.subtitle}>{t('basket.claimSubtitle', { defaultValue: 'From {{name}}', name: basket.creatorName })}</Text>
+        </View>
+
+        <Card tone="teal">
+          <View style={styles.vendorRow}>
+            <IconTile icon="book" size={56} tone="gold" />
+            <View style={styles.vendorCopy}>
+              <Text style={styles.vendor}>{basket.name}</Text>
+              <Text style={styles.from}>{t('basket.forRecipient', { name: basket.recipientName })}</Text>
+            </View>
+          </View>
+          {basket.note ? (
+            <View style={styles.messageBox}>
+              <Text style={styles.messageLabel}>{t('claim.messageLabel')}</Text>
+              <Text style={styles.message}>{basket.note}</Text>
+            </View>
+          ) : null}
+          <Text style={styles.expires}>
+            {basket.itemCount} {basket.itemCount === 1 ? 'gift card' : 'gift cards'} · {basket.totalMinor > 0 ? `QAR ${(basket.totalMinor / 100).toFixed(0)}` : ''}
+          </Text>
+        </Card>
+
+        <Button
+          label={t('claimExtra.openCta')}
+          onPress={() => router.push(`/claim/${token}/add`)}
+        />
       </Screen>
     );
   }
@@ -105,7 +162,7 @@ export default function ClaimLandingScreen() {
 
       <Button
         label={t('claimExtra.openCta')}
-        onPress={() => router.push(`/claim/${token}/open`)}
+        onPress={() => router.push(isBasket ? `/claim/${token}/open-basket` : `/claim/${token}/open-envelope`)}
       />
     </Screen>
   );

@@ -66,19 +66,20 @@ function Blobs() {
   );
 }
 
-/** A neat, purpose-built illustration: a note peeking out of an envelope. */
+/** A neat, purpose-built illustration: a layered gift card with a heart seal. */
 function StudioArt() {
   return (
     <View style={styles.art} pointerEvents="none">
-      <View style={styles.artNote}>
-        <View style={styles.artNoteLine} />
-        <View style={[styles.artNoteLine, styles.artNoteLineShort]} />
-        <View style={styles.artHeart}><Glyph name="pen" size={13} color={colors.textOnPastel} /></View>
+      <View style={styles.artCardBack} />
+      <View style={styles.artCardFront}>
+        <View style={styles.artCardLine} />
+        <View style={[styles.artCardLine, styles.artCardLineShort]} />
+        <View style={styles.artCardSeal}>
+          <Glyph name="heart" size={16} color={colors.textOnPastel} />
+        </View>
       </View>
-      <View style={styles.artEnvelope}>
-        <View style={styles.artFlap} />
-        <View style={styles.artSeal}><Glyph name="star" size={13} color={colors.textOnPastel} /></View>
-      </View>
+      <View style={styles.artSparkle1}><Glyph name="star" size={12} color={colors.gold} /></View>
+      <View style={styles.artSparkle2}><Glyph name="star" size={10} color={colors.pink} /></View>
     </View>
   );
 }
@@ -415,37 +416,32 @@ const styles = themedStyles(() => ({
   subtitle: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.text, opacity: 0.72, lineHeight: 19 },
   art: {
     height: 132, marginTop: spacing.sm, marginBottom: spacing.xs,
-    alignItems: 'center', justifyContent: 'flex-end',
-  },
-  artNote: {
-    width: 92, height: 84, borderWidth: 2, borderColor: colors.border,
-    borderBottomWidth: 0, borderTopLeftRadius: radii.sm, borderTopRightRadius: radii.sm,
-    backgroundColor: colors.surface, paddingHorizontal: spacing.sm, paddingTop: spacing.md,
-    transform: [{ rotate: '-5deg' }], zIndex: 1,
-  },
-  artNoteLine: { height: 3, borderRadius: 2, backgroundColor: colors.borderSoft, marginBottom: 8 },
-  artNoteLineShort: { width: '62%' },
-  artHeart: {
-    position: 'absolute', right: spacing.sm, top: spacing.sm,
-    width: 22, height: 22, borderRadius: radii.pill,
-    backgroundColor: colors.pink, borderWidth: 1.5, borderColor: colors.border,
     alignItems: 'center', justifyContent: 'center',
   },
-  artEnvelope: {
-    width: 138, height: 76, marginTop: -8, borderRadius: radii.sm,
+  artCardBack: {
+    position: 'absolute', width: 120, height: 80, borderRadius: radii.md,
     borderWidth: 2, borderColor: colors.border, backgroundColor: colors.lavender,
-    overflow: 'hidden', alignItems: 'center', justifyContent: 'flex-end',
+    transform: [{ rotate: '6deg' }], top: 20,
   },
-  artFlap: {
-    position: 'absolute', top: -1, left: -1, right: -1, height: 46,
-    borderBottomWidth: 2, borderBottomColor: colors.border,
-    backgroundColor: colors.lavenderCard,
-    transform: [{ rotate: '0deg' }],
+  artCardFront: {
+    width: 120, height: 80, borderRadius: radii.md, borderWidth: 2, borderColor: colors.border,
+    backgroundColor: colors.surface, paddingHorizontal: spacing.md, paddingTop: spacing.md,
+    justifyContent: 'flex-start', gap: 6, zIndex: 1,
+    shadowColor: colors.border, shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
   },
-  artSeal: {
-    width: 28, height: 28, borderRadius: radii.pill, marginBottom: spacing.sm,
-    backgroundColor: colors.gold, borderWidth: 2, borderColor: colors.border,
-    alignItems: 'center', justifyContent: 'center', zIndex: 2,
+  artCardLine: { height: 4, borderRadius: 2, backgroundColor: colors.borderSoft, width: '80%' },
+  artCardLineShort: { width: '55%' },
+  artCardSeal: {
+    position: 'absolute', right: spacing.sm, bottom: spacing.sm,
+    width: 30, height: 30, borderRadius: radii.pill,
+    backgroundColor: colors.pink, borderWidth: 2, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  artSparkle1: {
+    position: 'absolute', top: 18, left: 40,
+  },
+  artSparkle2: {
+    position: 'absolute', top: 30, right: 38,
   },
   action: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,

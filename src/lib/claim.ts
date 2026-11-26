@@ -142,3 +142,76 @@ export async function claimGift(token: string): Promise<string | null> {
   if (error) throw new Error(error.message || 'Could not claim this gift.');
   return (data as string | null) ?? null;
 }
+
+/**
+ * Claims a sent basket for the signed-in recipient.
+ * Throws on failure so callers never navigate to a false success screen.
+ */
+export async function claimBasket(token: string): Promise<string | null> {
+  if (!hasSupabaseConfig) throw new Error('Claiming is unavailable in demo mode.');
+  const { data, error } = await getSupabase().rpc('claim_basket', { p_token: token });
+  if (error) throw new Error(error.message || 'Could not claim this basket.');
+  return (data as string | null) ?? null;
+}
+
+export interface ClaimBasket {
+  basketId: string;
+  name: string;
+  recipientName: string;
+  occasion: string;
+  coverId: string | null;
+  creatorName: string;
+  note: string | null;
+  itemCount: number;
+  totalMinor: number;
+  status: string;
+}
+
+/** Reads the basket behind a claim token, without claiming it. */
+export async function fetchClaimBasket(token: string): Promise<ClaimBasket | null> {
+  if (!hasSupabaseConfig) return null;
+
+  let data: unknown = null;
+  try {
+    const response = await fetch(`${env.supabaseUrl}/functions/v1/basket-claim-preview`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json().catch(() => null)) as { basket?: unknown } | null;
+    data = payload?.basket ?? null;
+  } catch {
+    return null;
+  }
+  if (!data) return null;
+
+  const row = (Array.isArray(data) ? data[0] : data) as
+    | {
+        basket_id: string;
+        name: string;
+        recipient_name: string;
+        occasion: string;
+        cover_id: string | null;
+        creator_name: string;
+        note: string | null;
+        item_count: number;
+        total_minor: number;
+        status: string;
+      }
+    | null;
+  if (!row) return null;
+
+  return {
+    basketId: row.basket_id,
+    name: row.name,
+    recipientName: row.recipient_name,
+    occasion: row.occasion,
+    coverId: row.cover_id,
+    creatorName: row.creator_name,
+    note: row.note,
+    itemCount: row.item_count,
+    totalMinor: Number(row.total_minor ?? 0),
+    status: row.status,
+  };
+}

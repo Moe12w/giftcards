@@ -70,6 +70,8 @@ interface BasketContextValue {
   ready: boolean;
   activeBasket: GiftBasket | null;
   completedBaskets: GiftBasket[];
+  /** Baskets the signed-in user has claimed as a recipient. */
+  claimedBaskets: GiftBasket[];
   getBasket: (id: string) => GiftBasket | null;
   getBasketByCode: (code: string) => GiftBasket | null;
   createBasket: (input: CreateBasketInput) => Promise<GiftBasket | null>;
@@ -86,6 +88,8 @@ interface BasketContextValue {
     basketId: string,
     details: { recipientName?: string; message?: string },
   ) => Promise<void>;
+  /** Claims a sent basket for the signed-in recipient. Returns the basket id. */
+  claimBasket: (token: string) => Promise<string | null>;
   /** Re-reads the baskets from the database. */
   reload: () => Promise<void>;
 }
@@ -98,6 +102,7 @@ interface BasketRow {
   code: string;
   name: string;
   recipient_name: string;
+  recipient_id: string | null;
   occasion: string;
   cover_id: string | null;
   creator_id: string;
@@ -163,6 +168,7 @@ function mapBasket(row: BasketRow): GiftBasket {
     code: row.code,
     name: row.name,
     recipient_name: row.recipient_name,
+    recipient_id: row.recipient_id,
     occasion: row.occasion as OccasionId,
     cover_id: row.cover_id,
     creator_id: row.creator_id,
@@ -223,7 +229,7 @@ function mapBasket(row: BasketRow): GiftBasket {
 }
 
 const BASKET_SELECT = `
-  id, code, name, recipient_name, occasion, cover_id, creator_id, creator_name, target_minor,
+  id, code, name, recipient_name, recipient_id, occasion, cover_id, creator_id, creator_name, target_minor,
   status, note, created_at, completed_at,
   items:gift_basket_items(
     id, offer_id, vendor_id, vendor_name, title, amount_minor, emoji, tone,
@@ -803,10 +809,25 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
         })
         .eq('id', basketId);
       if (error) throw error;
+      // Mint a claim token so the recipient can claim the basket (and the
+      // gift cards inside it) via a claim link, mirroring the gift-card flow.
+      try {
+        await getSupabase().rpc('mint_basket_claim_token', { p_basket_id: basketId });
+      } catch {
+        // Token minting is best-effort; the basket is still sent.
+      }
       await load();
     },
     [load],
   );
+
+  const claimBasket = useCallback(async (token: string): Promise<string | null> => {
+    if (!hasSupabaseConfig) return null;
+    const { data, error } = await getSupabase().rpc('claim_basket', { p_token: token });
+    if (error) throw new Error(error.message || 'Could not claim this basket.');
+    if (data) await load();
+    return (data as string | null) ?? null;
+  }, [load]);
 
   const activeBasket = useMemo(() => {
     const open = baskets.find((basket) => basket.status === 'open');
@@ -819,12 +840,18 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     [baskets],
   );
 
+  const claimedBaskets = useMemo(
+    () => baskets.filter((basket) => basket.recipient_id != null),
+    [baskets],
+  );
+
   const value = useMemo<BasketContextValue>(
     () => ({
       baskets,
       ready,
       activeBasket,
       completedBaskets,
+      claimedBaskets,
       getBasket,
       getBasketByCode,
       createBasket,
@@ -836,6 +863,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       markReady,
       markCompleted,
       sendBasket,
+      claimBasket,
       reload: load,
     }),
     [
@@ -843,6 +871,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       ready,
       activeBasket,
       completedBaskets,
+      claimedBaskets,
       getBasket,
       getBasketByCode,
       createBasket,
@@ -854,6 +883,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       markReady,
       markCompleted,
       sendBasket,
+      claimBasket,
       load,
     ],
   );

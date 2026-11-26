@@ -10,7 +10,7 @@ import { Screen } from '@/src/components/Screen';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/theme';
 import { Glyph } from '@/src/components/Glyph';
 import { useAuth } from '@/src/lib/auth';
-import { claimGift } from '@/src/lib/claim';
+import { claimBasket, claimGift, fetchClaimBasket } from '@/src/lib/claim';
 
 export default function ClaimAddScreen() {
   useThemeRefresh();
@@ -25,17 +25,41 @@ export default function ClaimAddScreen() {
   useEffect(() => {
     if (authLoading || !user || !token) return;
     let active = true;
-    claimGift(token)
-      .then(() => {
+
+    // Detect whether this token is for a gift card or a basket, then claim
+    // accordingly. A basket token routes to the basket claim screen.
+    fetchClaimBasket(token)
+      .then((basket) => {
         if (!active) return;
-        // Keep this screen's progress state up until details mounts; a flash
-        // of the signed-out card here would look like the claim failed.
-        router.replace(`/claim/${token}/details`);
+        if (basket) {
+          // Basket token — claim it and go to gifts.
+          claimBasket(token)
+            .then(() => {
+              if (!active) return;
+              router.replace('/(customer)/(tabs)/gifts');
+            })
+            .catch(() => {
+              if (!active) return;
+              setFailed(true);
+            });
+          return;
+        }
+        // Not a basket — try claiming as a gift card.
+        claimGift(token)
+          .then(() => {
+            if (!active) return;
+            router.replace(`/claim/${token}/details`);
+          })
+          .catch(() => {
+            if (!active) return;
+            setFailed(true);
+          });
       })
       .catch(() => {
         if (!active) return;
         setFailed(true);
       });
+
     return () => {
       active = false;
     };

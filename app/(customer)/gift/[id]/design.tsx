@@ -496,7 +496,7 @@ export default function GiftComposeScreen() {
                 <View style={[styles.optionIcon, active && styles.optionIconActive]}>
                   <Glyph name={DELIVERY_ICONS[method]} size={20} color={active ? colors.textOnInk : colors.text} />
                 </View>
-                <Text style={[styles.optionLabel, active && styles.optionLabelActive]} numberOfLines={1}>
+                <Text style={[styles.optionLabel, active && styles.optionLabelActive]}>
                   {label}
                 </Text>
               </Pressable>
@@ -667,16 +667,17 @@ const styles = themedStyles(() => ({
   optionGrid: { flexDirection: 'row', gap: spacing.sm },
   option: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: spacing.sm,
-    minHeight: 56,
+    justifyContent: 'center',
+    gap: spacing.xs,
+    minHeight: 72,
     borderRadius: radii.md,
     borderWidth: 2,
     borderColor: colors.border,
     backgroundColor: colors.surface,
-    paddingHorizontal: spacing.sm,
-    paddingBottom: 2,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.sm,
   },
   optionActive: { backgroundColor: colors.tealTint, borderColor: colors.tealDark, paddingBottom: 0 },
   optionIcon: {
@@ -690,7 +691,7 @@ const styles = themedStyles(() => ({
     justifyContent: 'center',
   },
   optionIconActive: { backgroundColor: colors.tealDark, borderColor: colors.tealDark },
-  optionLabel: { flex: 1, fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.text },
+  optionLabel: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.text, textAlign: 'center' },
   optionLabelActive: { color: colors.text },
   deliveryHint: {
     fontFamily: fonts.regular,

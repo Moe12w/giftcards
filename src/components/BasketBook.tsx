@@ -16,7 +16,6 @@ import {
   PanResponder,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -36,9 +35,12 @@ import {
 } from 'expo-audio';
 import { BlurView } from 'expo-blur';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BookOpen,
   Camera,
+  ChevronLeft,
+  ChevronRight,
   Image as ImageIcon,
   Mic,
   Pause,
@@ -202,25 +204,34 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
   const rtl = i18n.language === 'ar';
   const lang: 'en' | 'ar' = rtl ? 'ar' : 'en';
 
+  const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const bookWidth = Math.min(windowWidth - spacing.gutter * 2, BOOK_MAX_WIDTH);
+  // Keep the book within the screen, but give it most of the available height
+  // so notes fit without scrolling.
+  const padTop = insets.top + 44;
+  const padBottom = insets.bottom + READER_BOTTOM_INSET;
+  const freeHeight = Math.max(0, windowHeight - padTop - padBottom);
+  const bookHeightCap = Math.min(freeHeight, Math.round(bookWidth * 1.55));
   // 0 on a 320pt phone, 1 on a 430pt one. Everything inside the spread is sized
   // from it, so the pink page never eats the writing page on a small screen.
   const roomy = Math.max(
     0,
     Math.min(1, (bookWidth - BOOK_WIDTH_TIGHT) / (BOOK_WIDTH_ROOMY - BOOK_WIDTH_TIGHT)),
   );
-  const leftPageWidth = between(88, 118, roomy);
-  const pagePadding = between(8, 10, roomy);
+  const leftPageWidth = between(70, 92, roomy);
+  const pagePadding = between(6, 8, roomy);
   // The writing page is split into two staggered columns of notes.
-  const gutter = 10;
+  const gutter = 12;
   const cardGap = between(8, 10, roomy);
-  const pageWidth = bookWidth - leftPageWidth - gutter;
+  const pageWidth = bookWidth - leftPageWidth - gutter - 4; // 4 = the book's border
   const contentWidth = pageWidth - pagePadding * 2;
   const cardWidth = Math.max(72, Math.floor((contentWidth - cardGap) / 2));
-  const [bookHeight, setBookHeight] = useState(Math.round(windowHeight * 0.72));
   const [opening] = useState(() => new Animated.Value(0));
-  const [keyboardRoom] = useState(() => new Animated.Value(0));
+  // The book slides up over the keyboard with a transform (native driver), so
+  // the layout never reflows while the keys animate - that reflow is what felt
+  // laggy when the book grew back down.
+  const [liftAnim] = useState(() => new Animated.Value(0));
   const [writing, setWriting] = useState('');
   const [pending, setPending] = useState<PendingFile | null>(null);
   const [sending, setSending] = useState(false);
@@ -229,15 +240,17 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
   // A note being dragged stops the page scrolling underneath it.
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({});
+  const [pageIndex, setPageIndex] = useState(0);
   const [recording, setRecording] = useState(false);
   const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, directory: 'document' });
   const recorderState = useAudioRecorderState(recorder);
 
   // Opening: the cover swings on its spine while the book rises and grows.
+  // Slow enough that the swing reads as a real book opening.
   useEffect(() => {
     Animated.timing(opening, {
       toValue: 1,
-      duration: 640,
+      duration: 920,
       easing: Easing.bezier(0.22, 0.61, 0.36, 1),
       useNativeDriver: true,
     }).start();
@@ -284,6 +297,11 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
     [layoutKey, basket.messages, cardWidth, cardGap],
   );
 
+  // Stable across renders so a note's drag responder is not rebuilt mid-gesture.
+  const setNoteDragging = useCallback((id: string, next: boolean) => {
+    setDraggingId(next ? id : null);
+  }, []);
+
   // Closing puts the keyboard away first, so the book never springs back down
   // underneath a keyboard that is still on screen.
   const dismiss = useCallback(() => {
@@ -298,24 +316,42 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
     });
   }, [opening, onClose]);
 
-  // The book follows the keyboard by giving up room at its bottom edge, over the
-  // keyboard's own duration, so the composer comes to rest just above the keys
-  // and stays there instead of hopping up and crashing back down. It only ever
-  // shrinks: sliding the whole reader up pushed its header - and the close
-  // button in it - off the top of the screen. Android resizes the window for us.
+  // The book follows the keyboard by giving up room at its bottom edge so the
+  // composer comes to rest just above the keys. The room is driven by the
+  // keyboard's reported *height* (a plain number) and clamped, so a malformed
+  // or stale event can never stretch the book past the bottom of the screen.
+  const [keyboardInset, setKeyboardInset] = useState(0);
   useEffect(() => {
-    if (Platform.OS !== 'ios') return undefined;
-    const subscription = Keyboard.addListener('keyboardWillChangeFrame', (event) => {
-      const overlap = Math.max(0, windowHeight - event.endCoordinates.screenY);
-      Animated.timing(keyboardRoom, {
-        toValue: Math.min(overlap, Math.round(windowHeight * 0.62)),
-        duration: Math.max(120, event.duration ?? 250),
-        easing: Easing.bezier(0.17, 0.59, 0.4, 0.77),
-        useNativeDriver: false,
-      }).start();
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, (event) => {
+      const height = event?.endCoordinates?.height;
+      if (typeof height === 'number' && Number.isFinite(height)) {
+        setKeyboardInset(Math.min(Math.round(height), Math.round(windowHeight * 0.6)));
+      }
     });
-    return () => subscription.remove();
-  }, [keyboardRoom, windowHeight]);
+    const hide = Keyboard.addListener(hideEvent, () => setKeyboardInset(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [windowHeight]);
+
+  // Lift the whole book upward over the keyboard. The top is allowed to leave
+  // the screen, so the composer always lands above the keys.
+  const liftAmount = Math.max(0, keyboardInset - 120);
+
+  // Slide (never reflow) the book up over the keyboard. The native driver keeps
+  // this smooth while the keyboard itself is animating, so the book does not
+  // visibly lag on the way back down.
+  useEffect(() => {
+    Animated.timing(liftAnim, {
+      toValue: -liftAmount,
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [liftAmount, liftAnim]);
 
   // Android's hardware back closes the book, with its animation, instead of
   // leaving the basket page behind it.
@@ -408,6 +444,7 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
       setPending(null);
       Keyboard.dismiss();
       setComposerOpen(false);
+      setPageIndex(Math.max(0, Math.ceil((pages.length + 1) / NOTES_PER_PAGE) - 1));
     } catch (sendError) {
       console.error('[basket-book] could not add the page', sendError);
       setError(t('basket.book.sendFailed'));
@@ -418,6 +455,13 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
 
   const canSend = Boolean(writing.trim() || pending) && !sending;
   const pages = basket.messages;
+  const NOTES_PER_PAGE = 12;
+  const pageCount = Math.max(1, Math.ceil(pages.length / NOTES_PER_PAGE));
+  const safePageIndex = Math.min(pageIndex, pageCount - 1);
+  const visiblePages = pages.slice(
+    safePageIndex * NOTES_PER_PAGE,
+    safePageIndex * NOTES_PER_PAGE + NOTES_PER_PAGE,
+  );
 
   // The cover is hinged on the book's leading edge: the left one, or the right
   // one when the app is in Arabic.
@@ -429,6 +473,7 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
     transform: [
       { scale: opening.interpolate({ inputRange: [0, 1], outputRange: [0.68, 1], extrapolate: 'clamp' as const }) },
       { translateY: opening.interpolate({ inputRange: [0, 1], outputRange: [90, 0], extrapolate: 'clamp' as const }) },
+      { translateY: liftAnim },
     ],
   };
   const coverStyle = {
@@ -460,14 +505,16 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
       </Animated.View>
 
       <Animated.View
-        style={[styles.readerArea, { paddingBottom: Animated.add(keyboardRoom, READER_BOTTOM_INSET) }]}
+        style={[styles.readerArea, { paddingTop: padTop, paddingBottom: padBottom }]}
         pointerEvents="box-none"
       >
         <Animated.View
-          style={[styles.book, { maxWidth: BOOK_MAX_WIDTH }, bookStyle]}
-          onLayout={(event) => setBookHeight(event.nativeEvent.layout.height)}
+          style={[styles.bookShell, { maxWidth: BOOK_MAX_WIDTH, maxHeight: bookHeightCap }, bookStyle]}
           accessibilityViewIsModal
         >
+          <View pointerEvents="none" style={styles.pageStackOuter} />
+          <View pointerEvents="none" style={styles.pageStackInner} />
+          <View style={styles.book}>
           <View style={[styles.spread, rtl && styles.spreadRtl]}>
             {/* The inside of the front cover: the recipient, the wish and who
                 the book is from, all in handwriting. */}
@@ -477,7 +524,7 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
               <Text
                 style={[
                   styles.leftTo,
-                  { fontSize: between(17, 20, roomy), lineHeight: between(20, 23, roomy) },
+                  { fontSize: between(13, 15, roomy), lineHeight: between(16, 18, roomy) },
                   rtl && styles.textRtl,
                 ]}
                 numberOfLines={2}
@@ -487,7 +534,7 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
               <Text
                 style={[
                   styles.leftWish,
-                  { fontSize: between(24, 30, roomy), lineHeight: between(27, 33, roomy) },
+                  { fontSize: between(18, 22, roomy), lineHeight: between(21, 25, roomy) },
                   rtl && styles.textRtl,
                 ]}
                 numberOfLines={5}
@@ -498,7 +545,7 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
               <Text
                 style={[
                   styles.leftFrom,
-                  { fontSize: between(15, 17, roomy), lineHeight: between(19, 21, roomy) },
+                  { fontSize: between(12, 14, roomy), lineHeight: between(15, 17, roomy) },
                   rtl && styles.textRtl,
                 ]}
                 numberOfLines={2}
@@ -507,80 +554,135 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
               </Text>
             </View>
 
-            <View style={styles.gutter} />
+            <View style={styles.gutter}>
+              <View pointerEvents="none" style={styles.gutterStitch} />
+            </View>
 
             {/* The writing page: everyone's notes, then the composer. */}
             <View style={styles.rightPage}>
-              <ScrollView
-                style={styles.pages}
-                contentContainerStyle={{
-                  paddingHorizontal: pagePadding,
-                  paddingTop: 46,
-                  paddingBottom: 82,
-                }}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                scrollEnabled={!draggingId}
-              >
-                {pages.length > 0 ? (
-                  <Text style={[styles.pageHint, rtl && styles.textRtl]}>
-                    {t('basket.book.moveHint')}
-                  </Text>
-                ) : null}
+              {pages.length > 0 ? (
+                <Text
+                  style={[
+                    styles.pageHint,
+                    { paddingHorizontal: pagePadding, paddingTop: 46 },
+                    rtl && styles.textRtl,
+                  ]}
+                >
+                  {t('basket.book.moveHint')}
+                </Text>
+              ) : null}
 
+              <View
+                style={[
+                  styles.pages,
+                  {
+                    paddingHorizontal: pagePadding,
+                    paddingTop: pages.length > 0 ? 10 : 46,
+                    paddingBottom: 16,
+                  },
+                ]}
+              >
                 {pages.length === 0 ? (
                   <View style={styles.emptyPage}>
                     <BookOpen size={24} color={PAPER.muted} />
                     <Text style={styles.emptyText}>{t('basket.book.empty')}</Text>
                   </View>
                 ) : (
-                  // Two staggered columns of notes, stuck onto the page by hand
-                  // instead of listed one under another.
-                  <View style={[styles.collage, { gap: cardGap }, rtl && styles.collageRtl]}>
-                    {[0, 1].map((column) => (
-                      <View
-                        key={column}
-                        style={[
-                          styles.column,
-                          { width: cardWidth, gap: cardGap },
-                          column === 1 && { marginTop: Math.round(cardWidth * 0.22) },
-                        ]}
-                      >
-                        {pages
-                          .map((page, index) => ({ page, index }))
-                          .filter(({ index }) => index % 2 === column)
-                          .map(({ page, index }) => (
-                            <ScrapNote
-                              key={page.id}
-                              page={page}
-                              index={index}
-                              lang={lang}
-                              roomy={roomy}
-                              width={cardWidth}
-                              gap={cardGap}
-                              column={column}
-                              contentWidth={cardWidth * 2 + cardGap}
-                              offset={clampNoteOffset(
+                  <>
+                    <View style={[styles.collage, { gap: cardGap }, rtl && styles.collageRtl]}>
+                      {[0, 1].map((column) => (
+                        <View
+                          key={column}
+                          style={[
+                            styles.column,
+                            { width: cardWidth, gap: cardGap },
+                            column === 1 && { marginTop: Math.round(cardWidth * 0.22) },
+                          ]}
+                        >
+                          {visiblePages
+                            .map((page, localIndex) => ({
+                              page,
+                              index: safePageIndex * NOTES_PER_PAGE + localIndex,
+                            }))
+                            .filter(({ index }) => index % 2 === column)
+                            .map(({ page, index }) => {
+                              const clamped = clampNoteOffset(
                                 offsets[page.id] ?? NO_OFFSET,
                                 column,
                                 cardWidth,
                                 cardGap,
                                 cardWidth * 2 + cardGap,
-                              )}
-                              onMoved={moveNote}
-                              dragging={draggingId === page.id}
-                              onDraggingChange={(next) =>
-                                setDraggingId(next ? page.id : null)
-                              }
-                              canDelete={page.author_id === user?.id}
-                              onDelete={() => void removeBookEntry(basket.id, page.id)}
-                            />
-                          ))}
-                      </View>
-                    ))}
-                  </View>
+                              );
+                              return (
+                                <ScrapNote
+                                  key={page.id}
+                                  page={page}
+                                  index={index}
+                                  lang={lang}
+                                  roomy={roomy}
+                                  width={cardWidth}
+                                  gap={cardGap}
+                                  column={column}
+                                  contentWidth={cardWidth * 2 + cardGap}
+                                  offsetX={clamped.x}
+                                  offsetY={clamped.y}
+                                  onMoved={moveNote}
+                                  dragging={draggingId === page.id}
+                                  onDraggingChange={setNoteDragging}
+                                  canDelete={page.author_id === user?.id}
+                                  onDelete={() => void removeBookEntry(basket.id, page.id)}
+                                />
+                              );
+                            })}
+                        </View>
+                      ))}
+                    </View>
+
+                  </>
                 )}
-              </ScrollView>
+              </View>
+
+              {pageCount > 1 ? (
+                <View style={[styles.pageNav, rtl && styles.rowRtl]}>
+                  <Pressable
+                    onPress={() => setPageIndex((current) => Math.max(0, current - 1))}
+                    disabled={safePageIndex === 0}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('basket.book.previousPage')}
+                    style={({ pressed }) => [
+                      styles.pageNavBtn,
+                      safePageIndex === 0 && styles.pageNavBtnDisabled,
+                      pressed && safePageIndex !== 0 && styles.pressed,
+                    ]}
+                  >
+                    {rtl ? (
+                      <ChevronRight size={16} color={PAPER.ink} />
+                    ) : (
+                      <ChevronLeft size={16} color={PAPER.ink} />
+                    )}
+                  </Pressable>
+                  <Text style={styles.pageNavText}>
+                    {safePageIndex + 1} / {pageCount}
+                  </Text>
+                  <Pressable
+                    onPress={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
+                    disabled={safePageIndex >= pageCount - 1}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('basket.book.nextPage')}
+                    style={({ pressed }) => [
+                      styles.pageNavBtn,
+                      safePageIndex >= pageCount - 1 && styles.pageNavBtnDisabled,
+                      pressed && safePageIndex < pageCount - 1 && styles.pressed,
+                    ]}
+                  >
+                    {rtl ? (
+                      <ChevronLeft size={16} color={PAPER.ink} />
+                    ) : (
+                      <ChevronRight size={16} color={PAPER.ink} />
+                    )}
+                  </Pressable>
+                </View>
+              ) : null}
 
               {basket.status !== 'completed' ? (
                 composerOpen ? (
@@ -749,13 +851,15 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
             </View>
           </View>
 
+          {/* A printed edge inside the cover, so the spread reads as pages bound
+              into a book rather than a flat panel. */}
+          <View pointerEvents="none" style={styles.bookInner} />
+
           {/* The cover itself, hinged on the spine. Once it swings past the page
               plane its back faces away and it simply leaves the screen. */}
           <Animated.View style={[styles.flap, coverStyle]} pointerEvents="none">
-            <GiftCoverArt coverId={basket.cover_id ?? undefined} height={bookHeight} />
+            <GiftCoverArt coverId={basket.cover_id ?? undefined} height={bookHeightCap} />
             <View style={[styles.flapSpine, rtl ? styles.spineRight : styles.spineLeft]} />
-            <View style={[styles.tape, styles.flapTapeTop]} />
-            <View style={[styles.tape, styles.flapTapeBottom]} />
           </Animated.View>
 
           <Pressable
@@ -771,6 +875,11 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
           >
             <X size={18} color={PAPER.ink} />
           </Pressable>
+          </View>
+
+          {/* The same tape as the closed cover, now wrapping the open book. */}
+          <View pointerEvents="none" style={[styles.tape, styles.bookTapeTop]} />
+          <View pointerEvents="none" style={[styles.tape, styles.bookTapeBottom]} />
         </Animated.View>
       </Animated.View>
     </View>
@@ -791,7 +900,8 @@ function ScrapNote({
   gap,
   column,
   contentWidth,
-  offset,
+  offsetX,
+  offsetY,
   onMoved,
   dragging,
   onDraggingChange,
@@ -806,10 +916,11 @@ function ScrapNote({
   gap: number;
   column: number;
   contentWidth: number;
-  offset: { x: number; y: number };
+  offsetX: number;
+  offsetY: number;
   onMoved: (id: string, next: { x: number; y: number }) => void;
   dragging: boolean;
-  onDraggingChange: (next: boolean) => void;
+  onDraggingChange: (id: string, next: boolean) => void;
   canDelete: boolean;
   onDelete: () => void;
 }) {
@@ -818,45 +929,48 @@ function ScrapNote({
   const pad = between(9, 11, roomy);
   const tint = PAPER.notes[index % PAPER.notes.length];
   const avatarTint = PAPER.avatars[index % PAPER.avatars.length];
-  const [pos] = useState(() => new Animated.ValueXY(offset));
+  const [pos] = useState(() => new Animated.ValueXY({ x: offsetX, y: offsetY }));
 
   // Saved positions arrive after the first render.
   useEffect(() => {
-    pos.setValue(offset);
-  }, [offset, pos]);
+    pos.setValue({ x: offsetX, y: offsetY });
+  }, [offsetX, offsetY, pos]);
 
+  // Built from the numbers a drag uses (not a fresh `offset` object), so it is
+  // not recreated between touch start and release - a mid-gesture rebuild was
+  // what made the note snap back instead of following the finger.
   const pan = useMemo(() => {
-    // The card may travel across the page, but not off it.
     const base = column * (width + gap);
     const place = (dx: number, dy: number) => ({
-      x: Math.max(-base + 2, Math.min(contentWidth - width - base - 2, offset.x + dx)),
-      y: Math.max(-70, Math.min(520, offset.y + dy)),
+      x: Math.max(-base + 2, Math.min(contentWidth - width - base - 2, offsetX + dx)),
+      y: Math.max(-70, Math.min(520, offsetY + dy)),
     });
     return PanResponder.create({
-      // Only the name bar picks up the card, so the page still scrolls when
-      // you touch the note itself.
+      // The whole note is its handle; the page still scrolls when you touch the
+      // paper around it.
       onStartShouldSetPanResponder: () => true,
       onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: () => onDraggingChange(true),
+      onPanResponderGrant: () => onDraggingChange(page.id, true),
       onPanResponderMove: (_event, gesture) => {
         pos.setValue(place(gesture.dx, gesture.dy));
       },
       onPanResponderRelease: (_event, gesture) => {
-        onDraggingChange(false);
+        onDraggingChange(page.id, false);
         onMoved(page.id, place(gesture.dx, gesture.dy));
       },
       onPanResponderTerminate: (_event, gesture) => {
-        onDraggingChange(false);
+        onDraggingChange(page.id, false);
         onMoved(page.id, place(gesture.dx, gesture.dy));
       },
     });
-  }, [column, width, gap, contentWidth, offset, page.id, onMoved, onDraggingChange, pos]);
+  }, [column, width, gap, contentWidth, offsetX, offsetY, page.id, onMoved, onDraggingChange, pos]);
 
   const isText = page.kind === 'text';
   const mediaHeight = Math.round(width * 0.86);
 
   return (
     <Animated.View
+      {...pan.panHandlers}
       style={[
         styles.card,
         {
@@ -873,7 +987,7 @@ function ScrapNote({
         dragging && styles.cardLifted,
       ]}
     >
-      <View {...pan.panHandlers} style={[styles.cardHead, rtl && styles.rowRtl]}>
+      <View style={[styles.cardHead, rtl && styles.rowRtl]}>
         <View style={[styles.cardAvatar, { backgroundColor: avatarTint }]}>
           <Text style={styles.cardAvatarText}>{initials(page.author_name)}</Text>
         </View>
@@ -1052,8 +1166,8 @@ const styles = themedStyles(() => ({
   },
   tapeTop: { top: -6, right: 24, transform: [{ rotate: '8deg' }] },
   tapeBottom: { bottom: -7, left: 26, transform: [{ rotate: '-6deg' }] },
-  flapTapeTop: { top: 8, right: 24, transform: [{ rotate: '8deg' }] },
-  flapTapeBottom: { bottom: 8, left: 26, transform: [{ rotate: '-6deg' }] },
+  bookTapeTop: { top: -8, right: 30, transform: [{ rotate: '8deg' }] },
+  bookTapeBottom: { bottom: -9, left: 32, transform: [{ rotate: '-6deg' }] },
   coverHint: {
     fontFamily: fonts.handwritingBold,
     fontSize: 22,
@@ -1083,22 +1197,61 @@ const styles = themedStyles(() => ({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingTop: 62,
-    paddingBottom: READER_BOTTOM_INSET,
+    justifyContent: 'center',
     paddingHorizontal: spacing.gutter,
+  },
+  // The shell carries the shadow (a book with `overflow: hidden` clips its own)
+  // and the page stack behind it makes the spread read as bound paper.
+  bookShell: {
+    flex: 1,
+    width: '100%',
+    alignSelf: 'center',
+    shadowColor: PAPER.shadow,
+    shadowOpacity: 1,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 10,
+  },
+  pageStackOuter: {
+    position: 'absolute',
+    top: 6,
+    left: 7,
+    right: -5,
+    bottom: -6,
+    borderRadius: 14,
+    backgroundColor: '#EFE4D2',
+    borderWidth: 1.5,
+    borderColor: 'rgba(43, 38, 34, 0.18)',
+  },
+  pageStackInner: {
+    position: 'absolute',
+    top: 3,
+    left: 4,
+    right: -2,
+    bottom: -3,
+    borderRadius: 13,
+    backgroundColor: '#FAF3E6',
+    borderWidth: 1.5,
+    borderColor: 'rgba(43, 38, 34, 0.22)',
   },
   book: {
     flex: 1,
     width: '100%',
-    alignSelf: 'center',
-    borderRadius: 10,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(43, 38, 34, 0.34)',
     backgroundColor: PAPER.page,
     overflow: 'hidden',
-    shadowColor: PAPER.shadow,
-    shadowOpacity: 1,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 14 },
-    elevation: 10,
+  },
+  bookInner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(43, 38, 34, 0.10)',
   },
   spread: { flex: 1, flexDirection: 'row' },
   spreadRtl: { flexDirection: 'row-reverse' },
@@ -1129,11 +1282,19 @@ const styles = themedStyles(() => ({
     color: PAPER.ink,
   },
   gutter: {
-    width: 10,
-    backgroundColor: PAPER.page,
+    width: 12,
+    backgroundColor: '#F4EADB',
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: PAPER.rule,
+    borderColor: 'rgba(43, 38, 34, 0.16)',
+    alignItems: 'center',
+  },
+  gutterStitch: {
+    position: 'absolute',
+    top: 6,
+    bottom: 6,
+    width: 1,
+    backgroundColor: 'rgba(43, 38, 34, 0.12)',
   },
   rightPage: { flex: 1, backgroundColor: PAPER.page },
   pages: { flex: 1 },
@@ -1142,7 +1303,33 @@ const styles = themedStyles(() => ({
     fontSize: 15,
     lineHeight: 19,
     color: PAPER.muted,
-    marginBottom: 10,
+  },
+  pageNav: {
+    position: 'absolute',
+    bottom: 8,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingTop: 4,
+    zIndex: 5,
+  },
+  pageNavBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(43, 38, 34, 0.06)',
+  },
+  pageNavBtnDisabled: { opacity: 0.35 },
+  pageNavText: {
+    fontFamily: fonts.handwritingBold,
+    fontSize: 16,
+    lineHeight: 20,
+    color: PAPER.muted,
   },
   collage: { flexDirection: 'row', alignItems: 'flex-start' },
   collageRtl: { flexDirection: 'row-reverse' },
@@ -1241,6 +1428,7 @@ const styles = themedStyles(() => ({
   /* The writing pad, opened from the pencil on the page */
   composerCard: {
     position: 'absolute',
+    zIndex: 10,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: PAPER.rule,
