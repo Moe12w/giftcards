@@ -6,12 +6,14 @@
 // a colourful cover with tape on it, handwriting, and an inside spread of paper
 // notes. Pressing the cover swings it open on its spine and grows the book to
 // full screen while the page behind it shrinks and blurs.
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Animated,
   BackHandler,
   Easing,
   Keyboard,
+  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -27,12 +29,26 @@ import {
   AudioModule,
   RecordingPresets,
   setAudioModeAsync,
+  useAudioPlayer,
+  useAudioPlayerStatus,
   useAudioRecorder,
   useAudioRecorderState,
 } from 'expo-audio';
 import { BlurView } from 'expo-blur';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Camera, Image as ImageIcon, Mic, Send, Trash2, Video, X } from 'lucide-react-native';
+import {
+  BookOpen,
+  Camera,
+  Image as ImageIcon,
+  Mic,
+  Pause,
+  Pencil,
+  Play,
+  Send,
+  Trash2,
+  Video,
+  X,
+} from 'lucide-react-native';
 
 import { useAuth } from '../lib/auth';
 import { useBaskets } from '../lib/baskets';
@@ -62,7 +78,9 @@ const PAPER = {
   tape: 'rgba(236, 222, 182, 0.92)',
   rule: 'rgba(43, 38, 34, 0.12)',
   shadow: 'rgba(43, 38, 34, 0.22)',
-  notes: ['#FFF6DF', '#FBE3E6', '#EFE8FB', '#E3F4F0'],
+  notes: ['#FFF6DF', '#FBE3E6', '#EFE8FB', '#E3F4F0', '#FDEFE4'],
+  avatars: ['#F1DFB0', '#F4C7D1', '#D8CBF4', '#C6E8DE', '#F6D6C2'],
+  accent: '#E0658C',
 } as const;
 
 /** A file the participant picked, before it is uploaded. */
@@ -102,6 +120,28 @@ function between(compact: number, roomy: number, ratio: number): number {
 /** The room a 320pt phone leaves, and how much more a 430pt one leaves. */
 const BOOK_WIDTH_TIGHT = 288;
 const BOOK_WIDTH_ROOMY = 398;
+
+/** Where a note sits on the page before anyone has dragged it. */
+const NO_OFFSET = { x: 0, y: 0 };
+
+/**
+ * Keeps a note on the page: its saved position is clamped to the same bounds the
+ * drag uses, so a note saved on another screen size (or stale data) can never
+ * reopen hanging off the page.
+ */
+function clampNoteOffset(
+  value: { x: number; y: number },
+  column: number,
+  width: number,
+  gap: number,
+  contentWidth: number,
+): { x: number; y: number } {
+  const base = column * (width + gap);
+  return {
+    x: Math.max(-base + 2, Math.min(contentWidth - width - base - 2, value?.x ?? 0)),
+    y: Math.max(-70, Math.min(520, value?.y ?? 0)),
+  };
+}
 
 /**
  * The closed book: the basket's cover design, with paper edges peeking out from
@@ -172,6 +212,12 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
   );
   const leftPageWidth = between(88, 118, roomy);
   const pagePadding = between(8, 10, roomy);
+  // The writing page is split into two staggered columns of notes.
+  const gutter = 10;
+  const cardGap = between(8, 10, roomy);
+  const pageWidth = bookWidth - leftPageWidth - gutter;
+  const contentWidth = pageWidth - pagePadding * 2;
+  const cardWidth = Math.max(72, Math.floor((contentWidth - cardGap) / 2));
   const [bookHeight, setBookHeight] = useState(Math.round(windowHeight * 0.72));
   const [opening] = useState(() => new Animated.Value(0));
   const [keyboardRoom] = useState(() => new Animated.Value(0));
@@ -179,6 +225,10 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
   const [pending, setPending] = useState<PendingFile | null>(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
+  // A note being dragged stops the page scrolling underneath it.
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({});
   const [recording, setRecording] = useState(false);
   const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, directory: 'document' });
   const recorderState = useAudioRecorderState(recorder);
@@ -192,6 +242,47 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
       useNativeDriver: true,
     }).start();
   }, [opening]);
+
+  // Where everyone put the notes is remembered on this phone, so the page still
+  // looks the way it was arranged the next time the book is opened.
+  const layoutKey = `basket-book-layout:${basket.id}`;
+  useEffect(() => {
+    let alive = true;
+    AsyncStorage.getItem(layoutKey)
+      .then((raw) => {
+        if (!alive || !raw) return;
+        const saved = JSON.parse(raw) as Record<string, { x: number; y: number }>;
+        if (!saved || typeof saved !== 'object') return;
+        const clamped: Record<string, { x: number; y: number }> = {};
+        for (const [id, val] of Object.entries(saved)) {
+          if (!val || typeof val.x !== 'number' || typeof val.y !== 'number') continue;
+          const idx = basket.messages.findIndex((p) => p.id === id);
+          const column = idx >= 0 ? idx % 2 : 0;
+          clamped[id] = clampNoteOffset(val, column, cardWidth, cardGap, cardWidth * 2 + cardGap);
+        }
+        if (!alive) return;
+        setOffsets(clamped);
+        AsyncStorage.setItem(layoutKey, JSON.stringify(clamped)).catch(() => undefined);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [layoutKey, basket.messages, cardWidth, cardGap]);
+
+  const moveNote = useCallback(
+    (id: string, next: { x: number; y: number }) => {
+      setOffsets((current) => {
+        const idx = basket.messages.findIndex((p) => p.id === id);
+        const column = idx >= 0 ? idx % 2 : 0;
+        const clamped = clampNoteOffset(next, column, cardWidth, cardGap, cardWidth * 2 + cardGap);
+        const merged = { ...current, [id]: clamped };
+        AsyncStorage.setItem(layoutKey, JSON.stringify(merged)).catch(() => undefined);
+        return merged;
+      });
+    },
+    [layoutKey, basket.messages, cardWidth, cardGap],
+  );
 
   // Closing puts the keyboard away first, so the book never springs back down
   // underneath a keyboard that is still on screen.
@@ -315,6 +406,8 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
       }
       setWriting('');
       setPending(null);
+      Keyboard.dismiss();
+      setComposerOpen(false);
     } catch (sendError) {
       console.error('[basket-book] could not add the page', sendError);
       setError(t('basket.book.sendFailed'));
@@ -420,81 +513,146 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
             <View style={styles.rightPage}>
               <ScrollView
                 style={styles.pages}
-                contentContainerStyle={[
-                  styles.pagesContent,
-                  {
-                    paddingHorizontal: pagePadding,
-                    paddingTop: pagePadding,
-                    paddingBottom: pagePadding + 4,
-                  },
-                ]}
+                contentContainerStyle={{
+                  paddingHorizontal: pagePadding,
+                  paddingTop: 46,
+                  paddingBottom: 82,
+                }}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
+                scrollEnabled={!draggingId}
               >
+                {pages.length > 0 ? (
+                  <Text style={[styles.pageHint, rtl && styles.textRtl]}>
+                    {t('basket.book.moveHint')}
+                  </Text>
+                ) : null}
+
                 {pages.length === 0 ? (
                   <View style={styles.emptyPage}>
                     <BookOpen size={24} color={PAPER.muted} />
                     <Text style={styles.emptyText}>{t('basket.book.empty')}</Text>
                   </View>
                 ) : (
-                  pages.map((page, index) => (
-                    <BookNote
-                      key={page.id}
-                      page={page}
-                      index={index}
-                      lang={lang}
-                      roomy={roomy}
-                      canDelete={page.author_id === user?.id}
-                      onDelete={() => void removeBookEntry(basket.id, page.id)}
-                    />
-                  ))
+                  // Two staggered columns of notes, stuck onto the page by hand
+                  // instead of listed one under another.
+                  <View style={[styles.collage, { gap: cardGap }, rtl && styles.collageRtl]}>
+                    {[0, 1].map((column) => (
+                      <View
+                        key={column}
+                        style={[
+                          styles.column,
+                          { width: cardWidth, gap: cardGap },
+                          column === 1 && { marginTop: Math.round(cardWidth * 0.22) },
+                        ]}
+                      >
+                        {pages
+                          .map((page, index) => ({ page, index }))
+                          .filter(({ index }) => index % 2 === column)
+                          .map(({ page, index }) => (
+                            <ScrapNote
+                              key={page.id}
+                              page={page}
+                              index={index}
+                              lang={lang}
+                              roomy={roomy}
+                              width={cardWidth}
+                              gap={cardGap}
+                              column={column}
+                              contentWidth={cardWidth * 2 + cardGap}
+                              offset={clampNoteOffset(
+                                offsets[page.id] ?? NO_OFFSET,
+                                column,
+                                cardWidth,
+                                cardGap,
+                                cardWidth * 2 + cardGap,
+                              )}
+                              onMoved={moveNote}
+                              dragging={draggingId === page.id}
+                              onDraggingChange={(next) =>
+                                setDraggingId(next ? page.id : null)
+                              }
+                              canDelete={page.author_id === user?.id}
+                              onDelete={() => void removeBookEntry(basket.id, page.id)}
+                            />
+                          ))}
+                      </View>
+                    ))}
+                  </View>
                 )}
               </ScrollView>
 
               {basket.status !== 'completed' ? (
-                <View style={[styles.composer, { paddingHorizontal: pagePadding }]}>
-                  {pending ? (
-                    <View style={[styles.attachment, rtl && styles.rowRtl]}>
-                      {pending.type === 'audio' ? (
-                        <VoiceWaveform durationSeconds={(pending.durationMs ?? 0) / 1000 || 4} width={110} height={24} />
-                      ) : pending.type === 'video' ? (
-                        <Video size={20} color={PAPER.ink} />
-                      ) : (
-                        <Image source={pending.uri} style={styles.attachmentThumb} contentFit="cover" />
-                      )}
-                      <Text style={styles.attachmentLabel}>{t(kindLabelKey(pending.type))}</Text>
+                composerOpen ? (
+                  <View
+                    style={[
+                      styles.composerCard,
+                      { left: pagePadding, right: pagePadding, bottom: pagePadding },
+                    ]}
+                  >
+                    <View style={[styles.composerHead, rtl && styles.rowRtl]}>
+                      <Text style={styles.composerTitle}>{t('basket.book.newNote')}</Text>
                       <Pressable
-                        onPress={() => setPending(null)}
+                        onPress={() => {
+                          Keyboard.dismiss();
+                          setComposerOpen(false);
+                        }}
+                        hitSlop={8}
                         accessibilityRole="button"
-                        accessibilityLabel={t('basket.book.remove')}
-                        style={styles.attachmentRemove}
+                        accessibilityLabel={t('basket.book.close')}
+                        style={styles.composerClose}
                       >
-                        <X size={14} color={PAPER.ink} />
+                        <X size={14} color={PAPER.muted} />
                       </Pressable>
                     </View>
-                  ) : null}
 
-                  {recording ? (
-                    <View style={[styles.recordingRow, rtl && styles.rowRtl]}>
-                      <VoiceWaveform
-                        liveLevel={0.5}
-                        durationSeconds={Math.max(1, (recorderState.durationMillis ?? 0) / 1000)}
-                        width={130}
-                        height={22}
-                      />
-                      <Text style={[styles.recordingLabel, rtl && styles.textRtl]}>
-                        {t('basket.book.recording')}
+                    {pending ? (
+                      <View style={[styles.attachment, rtl && styles.rowRtl]}>
+                        {pending.type === 'audio' ? (
+                          <VoiceWaveform
+                            durationSeconds={(pending.durationMs ?? 0) / 1000 || 4}
+                            width={110}
+                            height={24}
+                            barColor={PAPER.accent}
+                          />
+                        ) : pending.type === 'video' ? (
+                          <Video size={20} color={PAPER.ink} />
+                        ) : (
+                          <Image source={pending.uri} style={styles.attachmentThumb} contentFit="cover" />
+                        )}
+                        <Text style={styles.attachmentLabel}>{t(kindLabelKey(pending.type))}</Text>
+                        <Pressable
+                          onPress={() => setPending(null)}
+                          accessibilityRole="button"
+                          accessibilityLabel={t('basket.book.remove')}
+                          style={styles.attachmentRemove}
+                        >
+                          <X size={14} color={PAPER.ink} />
+                        </Pressable>
+                      </View>
+                    ) : null}
+
+                    {recording ? (
+                      <View style={[styles.recordingRow, rtl && styles.rowRtl]}>
+                        <VoiceWaveform
+                          liveLevel={0.5}
+                          durationSeconds={Math.max(1, (recorderState.durationMillis ?? 0) / 1000)}
+                          width={120}
+                          height={22}
+                          barColor={PAPER.accent}
+                        />
+                        <Text style={[styles.recordingLabel, rtl && styles.textRtl]}>
+                          {t('basket.book.recording')}
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    {error ? (
+                      <Text style={styles.error} accessibilityRole="alert">
+                        {error}
                       </Text>
-                    </View>
-                  ) : null}
+                    ) : null}
 
-                  {error ? (
-                    <Text style={styles.error} accessibilityRole="alert">
-                      {error}
-                    </Text>
-                  ) : null}
-
-                  <View style={[styles.inputRow, rtl && styles.rowRtl]}>
                     <TextInput
                       value={writing}
                       onChangeText={setWriting}
@@ -502,65 +660,85 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
                       placeholderTextColor={PAPER.muted}
                       style={[
                         styles.input,
-                        { fontSize: between(19, 21, roomy), lineHeight: between(23, 25, roomy) },
+                        { fontSize: between(18, 20, roomy), lineHeight: between(22, 24, roomy) },
                         rtl && styles.inputRtl,
                       ]}
                       multiline
+                      autoFocus
                     />
-                    <Pressable
-                      onPress={() => void submit()}
-                      disabled={!canSend}
-                      accessibilityRole="button"
-                      accessibilityLabel={t('basket.book.send')}
-                      style={({ pressed }) => [
-                        styles.send,
-                        !canSend && styles.sendDisabled,
-                        pressed && canSend && styles.pressed,
-                      ]}
-                    >
-                      <Send size={18} color={PAPER.page} />
-                    </Pressable>
-                  </View>
 
-                  <View style={[styles.tools, rtl && styles.rowRtl]}>
-                    <Pressable
-                      onPress={() => void pick('photo')}
-                      accessibilityRole="button"
-                      accessibilityLabel={t('basket.book.addPhoto')}
-                      style={({ pressed }) => [styles.tool, pressed && styles.pressed]}
-                    >
-                      <Camera size={19} color={PAPER.ink} />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => void pick('gif')}
-                      accessibilityRole="button"
-                      accessibilityLabel={t('basket.book.addGif')}
-                      style={({ pressed }) => [styles.tool, pressed && styles.pressed]}
-                    >
-                      <ImageIcon size={19} color={PAPER.ink} />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => void pick('video')}
-                      accessibilityRole="button"
-                      accessibilityLabel={t('basket.book.addVideo')}
-                      style={({ pressed }) => [styles.tool, pressed && styles.pressed]}
-                    >
-                      <Video size={19} color={PAPER.ink} />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => void toggleRecording()}
-                      accessibilityRole="button"
-                      accessibilityLabel={recording ? t('basket.book.stopRecording') : t('basket.book.addVoice')}
-                      style={({ pressed }) => [
-                        styles.tool,
-                        recording && styles.toolActive,
-                        pressed && styles.pressed,
-                      ]}
-                    >
-                      <Mic size={19} color={recording ? PAPER.page : PAPER.ink} />
-                    </Pressable>
+                    <View style={[styles.composerFoot, rtl && styles.rowRtl]}>
+                      <View style={[styles.tools, rtl && styles.rowRtl]}>
+                        <Pressable
+                          onPress={() => void pick('photo')}
+                          accessibilityRole="button"
+                          accessibilityLabel={t('basket.book.addPhoto')}
+                          style={({ pressed }) => [styles.tool, pressed && styles.pressed]}
+                        >
+                          <Camera size={18} color={PAPER.ink} />
+                        </Pressable>
+                        <Pressable
+                          onPress={() => void pick('gif')}
+                          accessibilityRole="button"
+                          accessibilityLabel={t('basket.book.addGif')}
+                          style={({ pressed }) => [styles.tool, pressed && styles.pressed]}
+                        >
+                          <ImageIcon size={18} color={PAPER.ink} />
+                        </Pressable>
+                        <Pressable
+                          onPress={() => void pick('video')}
+                          accessibilityRole="button"
+                          accessibilityLabel={t('basket.book.addVideo')}
+                          style={({ pressed }) => [styles.tool, pressed && styles.pressed]}
+                        >
+                          <Video size={18} color={PAPER.ink} />
+                        </Pressable>
+                        <Pressable
+                          onPress={() => void toggleRecording()}
+                          accessibilityRole="button"
+                          accessibilityLabel={
+                            recording ? t('basket.book.stopRecording') : t('basket.book.addVoice')
+                          }
+                          style={({ pressed }) => [
+                            styles.tool,
+                            recording && styles.toolActive,
+                            pressed && styles.pressed,
+                          ]}
+                        >
+                          <Mic size={18} color={recording ? PAPER.page : PAPER.ink} />
+                        </Pressable>
+                      </View>
+
+                      <Pressable
+                        onPress={() => void submit()}
+                        disabled={!canSend}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('basket.book.send')}
+                        style={({ pressed }) => [
+                          styles.send,
+                          !canSend && styles.sendDisabled,
+                          pressed && canSend && styles.pressed,
+                        ]}
+                      >
+                        <Send size={17} color={PAPER.page} />
+                      </Pressable>
+                    </View>
                   </View>
-                </View>
+                ) : (
+                  <Pressable
+                    onPress={() => setComposerOpen(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('basket.book.write')}
+                    style={({ pressed }) => [
+                      styles.composeCta,
+                      { bottom: pagePadding + 4 },
+                      rtl ? styles.composeCtaRtl : styles.composeCtaLtr,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Pencil size={20} color={PAPER.page} />
+                  </Pressable>
+                )
               ) : (
                 <View style={styles.closedNote}>
                   <Text style={[styles.closedNoteText, rtl && styles.textRtl]}>
@@ -599,12 +777,24 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
   );
 }
 
-/** One page of the book: handwriting, or the photo / GIF / video / voice note. */
-function BookNote({
+/**
+ * One piece stuck onto the scrapbook page: a note, a photo, a GIF, a video or a
+ * voice note. Its name bar is also its handle, so a card can be dragged
+ * anywhere on the page the way you would move a note on a real scrapbook.
+ */
+function ScrapNote({
   page,
   index,
   lang,
   roomy,
+  width,
+  gap,
+  column,
+  contentWidth,
+  offset,
+  onMoved,
+  dragging,
+  onDraggingChange,
   canDelete,
   onDelete,
 }: {
@@ -612,77 +802,169 @@ function BookNote({
   index: number;
   lang: 'en' | 'ar';
   roomy: number;
+  width: number;
+  gap: number;
+  column: number;
+  contentWidth: number;
+  offset: { x: number; y: number };
+  onMoved: (id: string, next: { x: number; y: number }) => void;
+  dragging: boolean;
+  onDraggingChange: (next: boolean) => void;
   canDelete: boolean;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
   const rtl = lang === 'ar';
-  const isMedia = page.kind !== 'text';
-  const pad = between(8, 10, roomy);
+  const pad = between(9, 11, roomy);
+  const tint = PAPER.notes[index % PAPER.notes.length];
+  const avatarTint = PAPER.avatars[index % PAPER.avatars.length];
+  const [pos] = useState(() => new Animated.ValueXY(offset));
+
+  // Saved positions arrive after the first render.
+  useEffect(() => {
+    pos.setValue(offset);
+  }, [offset, pos]);
+
+  const pan = useMemo(() => {
+    // The card may travel across the page, but not off it.
+    const base = column * (width + gap);
+    const place = (dx: number, dy: number) => ({
+      x: Math.max(-base + 2, Math.min(contentWidth - width - base - 2, offset.x + dx)),
+      y: Math.max(-70, Math.min(520, offset.y + dy)),
+    });
+    return PanResponder.create({
+      // Only the name bar picks up the card, so the page still scrolls when
+      // you touch the note itself.
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: () => onDraggingChange(true),
+      onPanResponderMove: (_event, gesture) => {
+        pos.setValue(place(gesture.dx, gesture.dy));
+      },
+      onPanResponderRelease: (_event, gesture) => {
+        onDraggingChange(false);
+        onMoved(page.id, place(gesture.dx, gesture.dy));
+      },
+      onPanResponderTerminate: (_event, gesture) => {
+        onDraggingChange(false);
+        onMoved(page.id, place(gesture.dx, gesture.dy));
+      },
+    });
+  }, [column, width, gap, contentWidth, offset, page.id, onMoved, onDraggingChange, pos]);
+
+  const isText = page.kind === 'text';
+  const mediaHeight = Math.round(width * 0.86);
+
   return (
-    <View
+    <Animated.View
       style={[
-        styles.note,
-        { backgroundColor: PAPER.notes[index % PAPER.notes.length] },
-        index % 2 === 0 ? styles.noteTiltLeft : styles.noteTiltRight,
-        { padding: pad, gap: between(6, 8, roomy) },
+        styles.card,
+        {
+          width,
+          backgroundColor: isText ? tint : PAPER.page,
+          zIndex: dragging ? 6 : 1,
+          transform: [
+            { translateX: pos.x },
+            { translateY: pos.y },
+            { rotate: index % 2 === 0 ? '-0.9deg' : '0.8deg' },
+            { scale: dragging ? 1.04 : 1 },
+          ],
+        },
+        dragging && styles.cardLifted,
       ]}
     >
-      {isMedia && page.media ? (
-        page.kind === 'photo' || page.kind === 'gif' ? (
+      <View {...pan.panHandlers} style={[styles.cardHead, rtl && styles.rowRtl]}>
+        <View style={[styles.cardAvatar, { backgroundColor: avatarTint }]}>
+          <Text style={styles.cardAvatarText}>{initials(page.author_name)}</Text>
+        </View>
+        <Text style={[styles.cardName, rtl && styles.textRtl]} numberOfLines={1}>
+          {page.author_name}
+        </Text>
+        {width > 96 ? <Text style={styles.cardTime}>{timeAgo(page.created_at, lang)}</Text> : null}
+        {canDelete ? (
+          <Pressable
+            onPress={onDelete}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel={t('basket.book.delete')}
+            style={({ pressed }) => [styles.cardDelete, pressed && styles.pressed]}
+          >
+            <Trash2 size={12} color={PAPER.muted} />
+          </Pressable>
+        ) : null}
+      </View>
+
+      {(page.kind === 'photo' || page.kind === 'gif') && page.media ? (
+        <View style={{ height: mediaHeight }}>
           <Image
             source={page.media.url}
-            style={[
-              styles.noteImage,
-              { height: between(130, 160, roomy), marginHorizontal: -pad, marginTop: -pad },
-            ]}
+            style={StyleSheet.absoluteFill}
             contentFit="cover"
             transition={180}
           />
-        ) : (
-          // Media runs to the note's edges, like a photo stuck on the page, so a
-          // voice note's play button still fits on a 320pt phone.
-          <GiftMediaView
-            media={{
-              type: page.kind as 'video' | 'audio',
-              url: page.media.url,
-              durationMs: page.media.durationMs,
-            }}
-            height={between(130, 170, roomy)}
-            style={{ marginHorizontal: -pad, marginTop: -pad }}
-          />
-        )
+          {page.kind === 'gif' ? (
+            <View style={styles.cardBadge}>
+              <Text style={styles.cardBadgeText}>GIF</Text>
+            </View>
+          ) : null}
+        </View>
+      ) : page.kind === 'video' && page.media ? (
+        <GiftMediaView media={{ type: 'video', url: page.media.url }} height={mediaHeight} />
+      ) : page.kind === 'audio' && page.media ? (
+        <View style={{ paddingHorizontal: pad, paddingBottom: pad }}>
+          <ScrapVoice url={page.media.url} waveWidth={Math.max(36, width - pad * 2 - 40)} />
+        </View>
       ) : (
         <Text
           style={[
-            styles.noteText,
-            { fontSize: between(19, 22, roomy), lineHeight: between(23, 26, roomy) },
+            styles.cardText,
+            {
+              fontSize: between(17, 20, roomy),
+              lineHeight: between(21, 24, roomy),
+              paddingHorizontal: pad,
+              paddingTop: 2,
+              paddingBottom: pad,
+            },
             rtl && styles.textRtl,
           ]}
         >
           {page.text}
         </Text>
       )}
+    </Animated.View>
+  );
+}
 
-      <View style={[styles.noteFoot, rtl && styles.noteFootRtl]}>
-        <View style={styles.noteAvatar}>
-          <Text style={styles.noteAvatarText}>{initials(page.author_name)}</Text>
-        </View>
-        <Text style={[styles.noteAuthor, rtl && styles.textRtl]} numberOfLines={1}>
-          {page.author_name}
-        </Text>
-        <Text style={styles.noteTime}>{timeAgo(page.created_at, lang)}</Text>
-        {canDelete ? (
-          <Pressable
-            onPress={onDelete}
-            accessibilityRole="button"
-            accessibilityLabel={t('basket.book.delete')}
-            style={({ pressed }) => [styles.noteDelete, pressed && styles.pressed]}
-          >
-            <Trash2 size={13} color={PAPER.muted} />
-          </Pressable>
-        ) : null}
-      </View>
+/** A voice note as it sits on the page: a pink play button and a paper wave. */
+function ScrapVoice({ url, waveWidth }: { url: string; waveWidth: number }) {
+  const { t } = useTranslation();
+  const player = useAudioPlayer(url);
+  const status = useAudioPlayerStatus(player);
+
+  useEffect(() => {
+    setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: false }).catch(() => undefined);
+  }, []);
+
+  return (
+    <View style={styles.voiceRow}>
+      <Pressable
+        onPress={() => (status.playing ? player.pause() : player.play())}
+        accessibilityRole="button"
+        accessibilityLabel={status.playing ? t('send.pauseVoiceNote') : t('send.playVoiceNote')}
+        style={({ pressed }) => [styles.voicePlay, pressed && styles.pressed]}
+      >
+        {status.playing ? (
+          <Pause size={15} color="#FFFFFF" />
+        ) : (
+          <Play size={15} color="#FFFFFF" />
+        )}
+      </Pressable>
+      <VoiceWaveform
+        durationSeconds={status.duration || 4}
+        width={waveWidth}
+        height={24}
+        barColor={PAPER.accent}
+      />
     </View>
   );
 }
@@ -855,7 +1137,16 @@ const styles = themedStyles(() => ({
   },
   rightPage: { flex: 1, backgroundColor: PAPER.page },
   pages: { flex: 1 },
-  pagesContent: { gap: 10 },
+  pageHint: {
+    fontFamily: fonts.handwriting,
+    fontSize: 15,
+    lineHeight: 19,
+    color: PAPER.muted,
+    marginBottom: 10,
+  },
+  collage: { flexDirection: 'row', alignItems: 'flex-start' },
+  collageRtl: { flexDirection: 'row-reverse' },
+  column: { flexDirection: 'column' },
   emptyPage: { alignItems: 'center', gap: 6, paddingVertical: 28, paddingHorizontal: 8 },
   emptyText: {
     fontFamily: fonts.handwriting,
@@ -864,34 +1155,58 @@ const styles = themedStyles(() => ({
     color: PAPER.muted,
     textAlign: 'center',
   },
-  note: { borderRadius: 14, overflow: 'hidden' },
-  noteTiltLeft: { transform: [{ rotate: '-0.7deg' }] },
-  noteTiltRight: { transform: [{ rotate: '0.7deg' }] },
-  noteText: {
-    fontFamily: fonts.handwriting,
-    color: PAPER.ink,
-  },
-  noteImage: { alignSelf: 'stretch', borderRadius: 10 },
-  noteFoot: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  noteFootRtl: { flexDirection: 'row-reverse' },
   rowRtl: { flexDirection: 'row-reverse' },
-  noteAvatar: {
-    width: 22,
-    height: 22,
+  /* A note stuck on the page */
+  card: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(43, 38, 34, 0.05)',
+  },
+  cardLifted: {
+    shadowColor: PAPER.shadow,
+    shadowOpacity: 0.32,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+  },
+  cardHead: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 7, paddingTop: 6, paddingBottom: 5 },
+  cardAvatar: {
+    width: 20,
+    height: 20,
     borderRadius: radii.pill,
-    backgroundColor: PAPER.page,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  noteAvatarText: { fontFamily: fonts.bold, fontSize: 10, color: PAPER.ink },
-  noteAuthor: { flex: 1, fontFamily: fonts.semibold, fontSize: fontSizes.xs, color: PAPER.ink },
-  noteTime: { fontFamily: fonts.regular, fontSize: fontSizes.xs, color: PAPER.muted },
-  noteDelete: {
-    width: 24,
-    height: 24,
+  cardAvatarText: { fontFamily: fonts.bold, fontSize: 9, color: PAPER.ink },
+  cardName: { flex: 1, fontFamily: fonts.semibold, fontSize: 11, color: PAPER.ink },
+  cardTime: { fontFamily: fonts.regular, fontSize: 9, color: PAPER.muted },
+  cardDelete: {
+    width: 18,
+    height: 18,
     borderRadius: radii.pill,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  cardText: { fontFamily: fonts.handwriting, color: PAPER.ink },
+  cardBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    backgroundColor: 'rgba(43, 38, 34, 0.82)',
+  },
+  cardBadgeText: { fontFamily: fonts.bold, fontSize: 8, color: '#FFFFFF', letterSpacing: 0.4 },
+  voiceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 2 },
+  voicePlay: {
+    width: 30,
+    height: 30,
+    borderRadius: radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: PAPER.accent,
   },
   flap: {
     position: 'absolute',
@@ -923,15 +1238,54 @@ const styles = themedStyles(() => ({
   },
   closeLtr: { right: 10 },
   closeRtl: { left: 10 },
-  composer: {
-    borderTopWidth: 1,
-    borderStyle: 'dashed',
+  /* The writing pad, opened from the pencil on the page */
+  composerCard: {
+    position: 'absolute',
+    borderRadius: 16,
+    borderWidth: 1,
     borderColor: PAPER.rule,
-    paddingTop: 8,
-    paddingBottom: 10,
-    gap: 6,
-    backgroundColor: PAPER.page,
+    backgroundColor: '#FFFDF8',
+    padding: 10,
+    gap: 8,
+    shadowColor: PAPER.shadow,
+    shadowOpacity: 0.9,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
+  composerHead: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  composerTitle: {
+    flex: 1,
+    fontFamily: fonts.handwritingBold,
+    fontSize: 18,
+    lineHeight: 21,
+    color: PAPER.ink,
+  },
+  composerClose: {
+    width: 22,
+    height: 22,
+    borderRadius: radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: PAPER.rule,
+  },
+  composerFoot: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  composeCta: {
+    position: 'absolute',
+    width: 46,
+    height: 46,
+    borderRadius: radii.pill,
+    backgroundColor: PAPER.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: PAPER.shadow,
+    shadowOpacity: 0.9,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  composeCtaLtr: { right: 0 },
+  composeCtaRtl: { left: 0 },
   attachment: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -958,9 +1312,7 @@ const styles = themedStyles(() => ({
     color: PAPER.muted,
   },
   error: { fontFamily: fonts.semibold, fontSize: fontSizes.xs, color: '#C6363C' },
-  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
   input: {
-    flex: 1,
     minHeight: 42,
     maxHeight: 96,
     borderRadius: 12,
@@ -981,7 +1333,7 @@ const styles = themedStyles(() => ({
     justifyContent: 'center',
   },
   sendDisabled: { opacity: 0.35 },
-  tools: { flexDirection: 'row', gap: 6 },
+  tools: { flex: 1, flexDirection: 'row', gap: 6 },
   tool: {
     flex: 1,
     height: 36,
