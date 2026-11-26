@@ -275,7 +275,7 @@ export function CardStudio({
 
             {/* CHOOSER — nine portrait envelopes. */}
             {phase === 'chooser' ? (
-              <Animated.View style={[StyleSheet.absoluteFill, chooserStyle]}>
+              <Animated.View style={[styles.phase, chooserStyle]}>
                 <View style={styles.topBar}>
                   <Pressable onPress={close} accessibilityRole="button" style={styles.square}>
                     <Glyph name="arrowLeft" size={20} color={colors.ink} />
@@ -306,7 +306,7 @@ export function CardStudio({
 
             {/* MAKER — envelope is the first carousel page; it moves right on open. */}
             {phase === 'maker' ? (
-              <Animated.View style={[StyleSheet.absoluteFill, makerStyle]}>
+              <Animated.View style={[styles.phase, makerStyle]}>
                 <View style={styles.topBar}>
                   <Pressable onPress={close} accessibilityRole="button" style={styles.square}>
                     <Glyph name="x" size={20} color={colors.ink} />
@@ -454,6 +454,7 @@ const styles = themedStyles(() => ({
 
   safe: { flex: 1, backgroundColor: colors.background },
   overlay: { flex: 1, backgroundColor: colors.background },
+  phase: { flex: 1 },
   flex: { flex: 1 },
   blobLilac: { position: 'absolute', top: -96, right: -84, width: 250, height: 250, borderRadius: 125, backgroundColor: colors.blobA },
   blobMint: { position: 'absolute', bottom: -40, left: -104, width: 230, height: 230, borderRadius: 115, backgroundColor: colors.blobB },
