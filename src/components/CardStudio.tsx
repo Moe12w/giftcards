@@ -17,7 +17,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -100,6 +100,12 @@ export function CardStudio({
 }: CardStudioProps) {
   const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
+  // Read the insets from the app-level provider rather than measuring inside
+  // the modal: measuring there can briefly report 0 and leave the top bar
+  // stuck under the notch. Always keep a small minimum so the bar is tappable.
+  const insets = useSafeAreaInsets();
+  const safeTop = Math.max(insets.top, 20);
+  const safeBottom = Math.max(insets.bottom, 0);
   const [phase, setPhase] = useState<Phase>('hidden');
   const [sheet, setSheet] = useState<Sheet>('none');
   const [quickNote, setQuickNote] = useState(false);
@@ -269,7 +275,7 @@ export function CardStudio({
         animationType="none"
         onRequestClose={close}
       >
-        <SafeAreaView style={styles.safe}>
+        <View style={[styles.safe, { paddingTop: safeTop, paddingBottom: safeBottom }]}>
           <View style={styles.overlay}>
             <Blobs />
 
@@ -373,7 +379,7 @@ export function CardStudio({
               </Animated.View>
             ) : null}
           </View>
-        </SafeAreaView>
+        </View>
       </Modal>
 
       <GifSheet
