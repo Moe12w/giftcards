@@ -734,7 +734,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
         } as GiftMedia;
         const uploaded = await uploadGiftMedia(file, user.id);
         if (!uploaded) return false;
-        media = uploaded;
+        media = uploaded as StoredMedia;
       }
 
       const { error } = await getSupabase().from('gift_basket_messages').insert({

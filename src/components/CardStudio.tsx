@@ -205,7 +205,11 @@ export function CardStudio({
 
   const selected = resolveCover(coverId, covers);
   const selectedName = coverLabel(selected, t);
-
+  const hasPersonalized = Boolean(
+    (message ?? '').trim() ||
+    (items && items.length > 0) ||
+    (mainAttachments && mainAttachments.length > 0),
+  );
   const chooserStyle = useAnimatedStyle(() => ({ opacity: 1 - focus.value }));
   const makerStyle = useAnimatedStyle(() => ({ opacity: focus.value }));
 
@@ -226,12 +230,22 @@ export function CardStudio({
           <Pressable
             onPress={open}
             accessibilityRole="button"
-            accessibilityLabel={t('send.chooseCover')}
+            accessibilityLabel={hasPersonalized ? t('common.edit') : t('send.chooseCover')}
             style={({ pressed }) => [styles.action, pressed && styles.pressed]}
           >
-            <Glyph name="palette" size={18} color={colors.textOnPastel} />
-            <Text style={styles.actionLabel}>{t('send.chooseCover')}</Text>
+            <Glyph name={hasPersonalized ? 'pen' : 'palette'} size={18} color={colors.textOnPastel} />
+            <Text style={styles.actionLabel}>{hasPersonalized ? t('common.edit') : t('send.chooseCover')}</Text>
           </Pressable>
+
+          {hasPersonalized ? (
+            <View style={styles.savedRow}>
+              <Glyph name="check" size={14} color={colors.success} />
+              <Text style={styles.savedText}>
+                {selectedName}
+                {items && items.length ? ` · ${items.length} card${items.length === 1 ? '' : 's'}` : ''}
+              </Text>
+            </View>
+          ) : null}
 
           <Pressable onPress={() => setQuickNote((value) => !value)} accessibilityRole="button">
             <Text style={styles.link}>{t('cardBack.quickNote')}</Text>
@@ -251,8 +265,7 @@ export function CardStudio({
 
       <Modal
         visible={phase !== 'hidden'}
-        transparent
-        presentationStyle="overFullScreen"
+        presentationStyle="fullScreen"
         animationType="none"
         onRequestClose={close}
       >
@@ -435,6 +448,8 @@ const styles = themedStyles(() => ({
   },
   actionLabel: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.textOnPastel },
   link: { alignSelf: 'center', fontFamily: fonts.semibold, fontSize: fontSizes.sm, color: colors.text, textDecorationLine: 'underline', paddingVertical: spacing.xs },
+  savedRow: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center' },
+  savedText: { fontFamily: fonts.semibold, fontSize: fontSizes.sm, color: colors.textMuted },
   pressed: { opacity: 0.85 },
 
   safe: { flex: 1, backgroundColor: colors.background },
