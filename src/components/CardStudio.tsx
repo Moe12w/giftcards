@@ -119,6 +119,16 @@ export function CardStudio({
   }, []);
 
   function open() {
+    // Drop leftover blank note papers so the builder starts with just
+    // envelope / note / skeleton instead of a pile of empty notecards.
+    onItemsChange(items.filter((item) => {
+      if (item.type === 'note') {
+        const hasText = Boolean((item.text ?? '').trim());
+        const hasAttachments = Boolean(item.attachments && item.attachments.length);
+        if (!hasText && !hasAttachments) return false;
+      }
+      return true;
+    }));
     setPhase('chooser');
     setSheet('none');
     focus.value = 0;
