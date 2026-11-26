@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -8,10 +8,18 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Chip } from '@/src/components/Chip';
 import { FlowHeader } from '@/src/components/FlowHeader';
+import { GiftCoverArt } from '@/src/components/GiftCoverArt';
 import { Glyph } from '@/src/components/Glyph';
 import { Screen } from '@/src/components/Screen';
 import { TextField } from '@/src/components/TextField';
 import { OCCASIONS } from '@/src/lib/catalog';
+import {
+  DEFAULT_COVER_ID,
+  GIFT_COVERS,
+  coverLabel,
+  fetchGiftCovers,
+  type GiftCover,
+} from '@/src/lib/gift-covers';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { formatMoney } from '@/src/lib/money';
 import type { OccasionId } from '@/src/lib/types';
@@ -28,6 +36,20 @@ export default function CreateBasketScreen() {
   const [occasion, setOccasion] = useState<OccasionId>('birthday');
   const [goal, setGoal] = useState(50000);
   const [error, setError] = useState<string | null>(null);
+  // The book cover the creator picks. Uploaded covers arrive with the printed
+  // designs so the chooser is one gallery.
+  const [coverId, setCoverId] = useState(DEFAULT_COVER_ID);
+  const [covers, setCovers] = useState<GiftCover[]>(GIFT_COVERS);
+
+  useEffect(() => {
+    let active = true;
+    fetchGiftCovers().then((items) => {
+      if (active && items.length > 0) setCovers(items);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
   const canContinue = name.trim().length > 0 && recipient.trim().length > 0;
@@ -45,7 +67,9 @@ export default function CreateBasketScreen() {
     router.push(
       `/(customer)/basket/pick?name=${encodeURIComponent(name.trim())}&recipient=${encodeURIComponent(
         recipient.trim(),
-      )}&occasion=${occasion}&target=${goal}${params.preset ? `&preset=${params.preset}` : ''}`,
+      )}&occasion=${occasion}&target=${goal}&cover=${encodeURIComponent(coverId)}${
+        params.preset ? `&preset=${params.preset}` : ''
+      }`,
     );
   }
 
@@ -114,6 +138,42 @@ export default function CreateBasketScreen() {
             );
           })}
         </View>
+      </Card>
+
+      <Card style={styles.form}>
+        <Text style={styles.sectionLabel}>{t('basket.book.coverLabel')}</Text>
+        <Text style={styles.sectionHint}>{t('basket.book.coverHint')}</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.coverRow}
+        >
+          {covers.map((cover) => {
+            const active = cover.id === coverId;
+            return (
+              <Pressable
+                key={cover.id}
+                onPress={() => setCoverId(cover.id)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={coverLabel(cover, t)}
+                style={({ pressed }) => [
+                  styles.coverTile,
+                  active && styles.coverTileActive,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <GiftCoverArt
+                  coverId={cover.id}
+                  coverImageUrl={cover.imageUrl}
+                  coverName={coverLabel(cover, t)}
+                  height={126}
+                  compact
+                />
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </Card>
 
       <Card style={styles.form}>
@@ -199,6 +259,15 @@ const styles = themedStyles(() => ({
   occasionText: { fontFamily: fonts.semibold, fontSize: fontSizes.xs, color: colors.ink },
   occasionTextActive: { color: colors.textOnAccent },
   goalRow: { gap: spacing.sm, paddingRight: spacing.md },
+  coverRow: { gap: spacing.sm, paddingRight: spacing.md, paddingVertical: 2 },
+  coverTile: {
+    width: 100,
+    borderRadius: radii.md,
+    borderWidth: 3,
+    borderColor: 'transparent',
+    overflow: 'hidden',
+  },
+  coverTileActive: { borderColor: colors.tealDark },
   preview: {},
   previewRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   previewText: {

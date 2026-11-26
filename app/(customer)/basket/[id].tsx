@@ -1,13 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  Share,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Animated, Modal, Pressable, Share, Text, View } from 'react-native';
 import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -29,18 +21,17 @@ import {
 } from 'lucide-react-native';
 
 import { Badge, type BadgeTone } from '@/src/components/Badge';
+import { BasketBookCover, BasketBookReader } from '@/src/components/BasketBook';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
-import { GiftBox3D } from '@/src/components/GiftBox3D';
 import { IconTile, type IconTileTone } from '@/src/components/IconTile';
 import { Money } from '@/src/components/Money';
 import { ParticipantStack } from '@/src/components/ParticipantStack';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
 import { useAuth } from '@/src/lib/auth';
-import { hasSupabaseConfig } from '@/src/lib/env';
 import { useThemeRefresh } from '@/src/lib/theme';
 import { basketProgress, basketTotal, participantTotals, useBaskets } from '@/src/lib/baskets';
 import { formatMoney } from '@/src/lib/money';
@@ -65,7 +56,7 @@ export default function BasketDetailScreen() {
     sent?: string;
   }>();
   const { user } = useAuth();
-  const { getBasket, ready, reload, addMessage } = useBaskets();
+  const { getBasket, ready, reload } = useBaskets();
   const basket = params.id ? getBasket(params.id) : null;
 
   // Coming back from a paid contribution: refresh so the new cards are there
@@ -75,8 +66,27 @@ export default function BasketDetailScreen() {
   }, [reload]);
 
   const [selectedItem, setSelectedItem] = useState<BasketItem | null>(null);
-  const [messageText, setMessageText] = useState('');
-  const [sendingMessage, setSendingMessage] = useState(false);
+
+  // The book is drawn over this screen, so the page behind it can shrink and
+  // blur while the book grows.
+  const [bookOpen, setBookOpen] = useState(false);
+  const [pageZoom] = useState(() => new Animated.Value(1));
+  const pageStyle = {
+    transform: [{ scale: pageZoom }],
+    opacity: pageZoom.interpolate({ inputRange: [0.96, 1], outputRange: [0.9, 1] }),
+  };
+
+  // The page behind the book shrinks while the book is open. Both handlers move
+  // the zoom and the overlay together, so they start on the same frame.
+  function openBook() {
+    Animated.timing(pageZoom, { toValue: 0.96, duration: 320, useNativeDriver: true }).start();
+    setBookOpen(true);
+  }
+
+  function closeBook() {
+    Animated.timing(pageZoom, { toValue: 1, duration: 320, useNativeDriver: true }).start();
+    setBookOpen(false);
+  }
 
   const lang: 'en' | 'ar' = i18n.language === 'ar' ? 'ar' : 'en';
   const rtl = i18n.language === 'ar';
@@ -191,58 +201,13 @@ export default function BasketDetailScreen() {
 
   return (
     <View style={styles.root}>
-      <Screen>
+      <Animated.View style={[styles.root, pageStyle]}>
+        <Screen>
         <FlowHeader
           title={basket.name}
           subtitle={t('basket.forRecipient', { name: basket.recipient_name })}
           onBack={goBack}
         />
-
-        {/* Greeting card: everyone can leave a message for the recipient */}
-        <Card tone="surface" style={styles.greetingCard}>
-          <View style={styles.greetingHeader}>
-            <Text style={styles.greetingTitle}>{t('basket.greetingTitle', { name: basket.recipient_name })}</Text>
-            <Text style={styles.greetingSubtitle}>{t('basket.greetingSubtitle')}</Text>
-          </View>
-          {basket.messages.length === 0 ? (
-            <Text style={styles.greetingEmpty}>{t('basket.greetingEmpty', { name: basket.recipient_name })}</Text>
-          ) : (
-            <View style={styles.greetingList}>
-              {basket.messages.map((msg) => (
-                <View key={msg.id} style={styles.greetingMessage}>
-                  <Text style={styles.greetingText}>{msg.text}</Text>
-                  <Text style={styles.greetingAuthor}>{t('basket.greetingSignedBy', { name: msg.author_name })}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-          {basket.status !== 'completed' ? (
-            <View style={styles.greetingComposer}>
-              <TextInput
-                value={messageText}
-                onChangeText={setMessageText}
-                placeholder={t('basket.greetingPlaceholder')}
-                placeholderTextColor={colors.textMuted}
-                style={styles.greetingInput}
-                multiline
-              />
-              <Button
-                label={t('basket.greetingSend')}
-                disabled={!messageText.trim() || sendingMessage}
-                onPress={async () => {
-                  if (!messageText.trim()) return;
-                  setSendingMessage(true);
-                  try {
-                    await addMessage(basket.id, messageText);
-                    setMessageText('');
-                  } finally {
-                    setSendingMessage(false);
-                  }
-                }}
-              />
-            </View>
-          ) : null}
-        </Card>
 
         {/* Celebration / joined banner */}
         {basket.status !== 'open' ? (
@@ -275,14 +240,15 @@ export default function BasketDetailScreen() {
           </Card>
         ) : null}
 
-        {/* Interactive gift box */}
+        {/* The shared book: everyone writes or adds photos, GIFs, video and
+            voice notes on it. Pressing the cover opens it full screen. */}
         <Card tone="surface" style={styles.heroCard}>
           <View style={styles.heroTopRow}>
             <Badge label={t(`basket.status.${basket.status}`)} tone={STATUS_TONE[basket.status]} />
             <Badge label={t(`catalog.occasions.${basket.occasion}`)} tone="primary" />
           </View>
 
-          <GiftBox3D basket={basket} size={270} showMeta={false} />
+          <BasketBookCover basket={basket} onOpen={openBook} />
 
           <View style={styles.heroStats}>
             <View style={styles.heroStat}>
@@ -496,7 +462,12 @@ export default function BasketDetailScreen() {
           <Users size={18} color={colors.ink} />
           <Text style={styles.tipText}>{t('basket.detailTip')}</Text>
         </Card>
-      </Screen>
+        </Screen>
+      </Animated.View>
+
+      {bookOpen ? (
+        <BasketBookReader basket={basket} onClose={closeBook} />
+      ) : null}
 
       {notice ? (
         <View style={styles.toast} pointerEvents="none">
@@ -640,29 +611,6 @@ const styles = themedStyles(() => ({
     fontSize: fontSizes.sm,
     color: colors.textMuted,
     lineHeight: 18,
-  },
-  greetingCard: { gap: spacing.sm },
-  greetingHeader: { gap: 2, alignItems: 'center' },
-  greetingTitle: { fontFamily: fonts.extrabold, fontSize: fontSizes.xl, color: colors.text, textAlign: 'center' },
-  greetingSubtitle: { fontFamily: fonts.medium, fontSize: fontSizes.xs, color: colors.textMuted, textAlign: 'center' },
-  greetingEmpty: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.textMuted, textAlign: 'center', paddingVertical: spacing.sm },
-  greetingList: { gap: spacing.sm },
-  greetingMessage: { gap: 2, paddingVertical: spacing.xs, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
-  greetingText: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.text, lineHeight: 20 },
-  greetingAuthor: { fontFamily: fonts.semibold, fontSize: fontSizes.xs, color: colors.textMuted, textAlign: 'right' },
-  greetingComposer: { gap: spacing.sm, marginTop: spacing.xs },
-  greetingInput: {
-    minHeight: 60,
-    borderWidth: 2,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    fontFamily: fonts.regular,
-    fontSize: fontSizes.sm,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    textAlignVertical: 'top',
   },
   heroCard: { gap: spacing.sm, alignItems: 'stretch' },
   heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },

@@ -15,18 +15,22 @@ import React, {
 
 import { useAuth } from './auth';
 import { offerBusinessBanner, offerBusinessLogo, offerBusinessName } from './catalog';
+import { uploadGiftMedia } from './gift-media';
 import { MOCK_BASKETS } from './mock-data';
 import { getSupabase } from './supabase';
 import { hasSupabaseConfig } from './env';
 import { resolveTone } from './tone';
+import type { GiftMedia } from './gift-draft';
 import type {
   BasketActivity,
+  BasketEntryKind,
   BasketItem,
   BasketMessage,
   BasketParticipant,
   GiftBasket,
   OccasionId,
   Offer,
+  StoredMedia,
 } from './types';
 
 export interface BasketItemInput {
@@ -38,9 +42,27 @@ export interface CreateBasketInput {
   name: string;
   recipientName: string;
   occasion: OccasionId;
+  /** The cover design picked in the create flow. */
+  coverId?: string;
   targetMinor?: number;
   items: BasketItemInput[];
   note?: string;
+}
+
+/** A file the participant attached to a page, before it is uploaded. */
+export interface BookFile {
+  uri: string;
+  type: Exclude<BasketEntryKind, 'text'>;
+  durationMs?: number;
+}
+
+/** One page being added to the book. */
+export interface BookEntryInput {
+  /** The writing, when this page is a note. */
+  text?: string;
+  kind: BasketEntryKind;
+  /** The picked file, when this page is media. */
+  file?: BookFile;
 }
 
 interface BasketContextValue {
@@ -55,6 +77,10 @@ interface BasketContextValue {
   removeItem: (basketId: string, itemId: string) => Promise<void>;
   joinBasket: (code: string) => Promise<GiftBasket | null>;
   addMessage: (basketId: string, text: string) => Promise<void>;
+  /** Adds one page to the book, uploading its file first when it has one. */
+  addBookEntry: (basketId: string, entry: BookEntryInput) => Promise<boolean>;
+  /** Removes a page the signed-in participant wrote or added. */
+  removeBookEntry: (basketId: string, entryId: string) => Promise<void>;
   markReady: (basketId: string) => Promise<void>;
   markCompleted: (basketId: string) => Promise<void>;
   sendBasket: (
@@ -74,6 +100,7 @@ interface BasketRow {
   name: string;
   recipient_name: string;
   occasion: string;
+  cover_id: string | null;
   creator_id: string;
   creator_name: string;
   target_minor: number;
@@ -125,7 +152,9 @@ interface BasketMessageRow {
   basket_id: string;
   author_id: string;
   author_name: string;
-  text: string;
+  kind: string | null;
+  text: string | null;
+  media: unknown;
   created_at: string;
 }
 
@@ -136,6 +165,7 @@ function mapBasket(row: BasketRow): GiftBasket {
     name: row.name,
     recipient_name: row.recipient_name,
     occasion: row.occasion as OccasionId,
+    cover_id: row.cover_id,
     creator_id: row.creator_id,
     creator_name: row.creator_name,
     target_minor: row.target_minor,
@@ -181,7 +211,9 @@ function mapBasket(row: BasketRow): GiftBasket {
         id: entry.id,
         author_id: entry.author_id,
         author_name: entry.author_name,
-        text: entry.text,
+        kind: (entry.kind as BasketEntryKind | null) ?? 'text',
+        text: entry.text ?? '',
+        media: (entry.media as StoredMedia | null) ?? null,
         created_at: entry.created_at,
       }),
     ),
@@ -192,7 +224,7 @@ function mapBasket(row: BasketRow): GiftBasket {
 }
 
 const BASKET_SELECT = `
-  id, code, name, recipient_name, occasion, creator_id, creator_name, target_minor,
+  id, code, name, recipient_name, occasion, cover_id, creator_id, creator_name, target_minor,
   status, note, created_at, completed_at,
   items:gift_basket_items(
     id, offer_id, vendor_id, vendor_name, title, amount_minor, emoji, tone,
@@ -200,7 +232,7 @@ const BASKET_SELECT = `
   ),
   participants:gift_basket_participants(user_id, name, is_owner, tone, joined_at),
   activity:gift_basket_activity(id, kind, actor_name, item_title, amount_minor, created_at),
-  messages:gift_basket_messages(id, basket_id, author_id, author_name, text, created_at)
+  messages:gift_basket_messages(id, basket_id, author_id, author_name, kind, text, media, created_at)
 `;
 
 export function basketTotal(basket: GiftBasket): number {
@@ -287,6 +319,33 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // A new page, a new card or a new participant lands for everyone over
+  // Realtime; the read below is what actually updates the store.
+  useEffect(() => {
+    if (!hasSupabaseConfig) return undefined;
+    const supabase = getSupabase();
+    const channel = supabase
+      .channel('basket-collaboration')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gift_basket_messages' },
+        () => {
+          void load();
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gift_basket_items' },
+        () => {
+          void load();
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [load]);
+
   const getBasket = useCallback(
     (id: string) => baskets.find((basket) => basket.id === id) ?? null,
     [baskets],
@@ -324,6 +383,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           name: input.name.trim() || input.recipientName.trim() || 'Group gift',
           recipient_name: input.recipientName.trim(),
           occasion: input.occasion,
+          cover_id: input.coverId ?? null,
           creator_id: ownerId,
           creator_name: ownerName,
           target_minor: input.targetMinor ?? 0,
@@ -386,6 +446,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           name: input.name.trim() || input.recipientName.trim() || 'Group gift',
           recipient_name: input.recipientName.trim(),
           occasion: input.occasion,
+          cover_id: input.coverId ?? null,
           creator_id: ownerId,
           creator_name: ownerName,
           target_minor: input.targetMinor ?? 0,
@@ -603,7 +664,9 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
                       id: `demo-msg-${Date.now()}`,
                       author_id: user.id,
                       author_name: authorName,
+                      kind: 'text',
                       text: trimmed,
+                      media: null,
                       created_at: new Date().toISOString(),
                     },
                   ],
@@ -624,6 +687,92 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       await load();
     },
     [displayName, load, user],
+  );
+
+  const addBookEntry = useCallback(
+    async (basketId: string, entry: BookEntryInput): Promise<boolean> => {
+      if (!user) return false;
+      const writing = (entry.text ?? '').trim();
+      if (entry.kind === 'text' && !writing) return false;
+      if (entry.kind !== 'text' && !entry.file) return false;
+      const authorName = displayName();
+
+      if (!hasSupabaseConfig) {
+        // Demo mode: the local file uri is shown as-is; nothing is uploaded.
+        const page: BasketMessage = {
+          id: `demo-book-${Date.now()}`,
+          author_id: user.id,
+          author_name: authorName,
+          kind: entry.kind,
+          text: entry.kind === 'text' ? writing : '',
+          media:
+            entry.kind === 'text'
+              ? null
+              : {
+                  type: entry.kind,
+                  url: entry.file?.uri ?? '',
+                  durationMs: entry.file?.durationMs ?? null,
+                },
+          created_at: new Date().toISOString(),
+        };
+        setBaskets((current) =>
+          current.map((basket) =>
+            basket.id === basketId
+              ? { ...basket, messages: [...basket.messages, page] }
+              : basket,
+          ),
+        );
+        return true;
+      }
+
+      let media: StoredMedia | null = null;
+      if (entry.file) {
+        const file = {
+          type: entry.file.type,
+          uri: entry.file.uri,
+          durationMs: entry.file.durationMs,
+        } as GiftMedia;
+        const uploaded = await uploadGiftMedia(file, user.id);
+        if (!uploaded) return false;
+        media = uploaded;
+      }
+
+      const { error } = await getSupabase().from('gift_basket_messages').insert({
+        basket_id: basketId,
+        author_id: user.id,
+        author_name: authorName,
+        kind: entry.kind,
+        text: entry.kind === 'text' ? writing : null,
+        media,
+      });
+      if (error) return false;
+      await load();
+      return true;
+    },
+    [displayName, load, user],
+  );
+
+  const removeBookEntry = useCallback(
+    async (basketId: string, entryId: string) => {
+      if (!hasSupabaseConfig) {
+        setBaskets((current) =>
+          current.map((basket) =>
+            basket.id === basketId
+              ? { ...basket, messages: basket.messages.filter((page) => page.id !== entryId) }
+              : basket,
+          ),
+        );
+        return;
+      }
+      const { error } = await getSupabase()
+        .from('gift_basket_messages')
+        .delete()
+        .eq('basket_id', basketId)
+        .eq('id', entryId);
+      if (error) throw error;
+      await load();
+    },
+    [load],
   );
 
   const markReady = useCallback(
@@ -722,6 +871,8 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       removeItem,
       joinBasket,
       addMessage,
+      addBookEntry,
+      removeBookEntry,
       markReady,
       markCompleted,
       sendBasket,
@@ -739,6 +890,8 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       removeItem,
       joinBasket,
       addMessage,
+      addBookEntry,
+      removeBookEntry,
       markReady,
       markCompleted,
       sendBasket,

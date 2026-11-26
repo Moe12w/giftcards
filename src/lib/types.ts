@@ -342,12 +342,19 @@ export interface BasketActivity {
   created_at: string;
 }
 
-/** A short message left on the basket's greeting card by a participant. */
+/** What a page in the basket book holds. */
+export type BasketEntryKind = 'text' | 'photo' | 'gif' | 'video' | 'audio';
+
+/** One page of the basket book, written or added by a participant. */
 export interface BasketMessage {
   id: string;
   author_id: string;
   author_name: string;
+  kind: BasketEntryKind;
+  /** The writing on a `text` page; empty on a media page. */
   text: string;
+  /** The uploaded photo, GIF, video or voice note on a media page. */
+  media?: StoredMedia | null;
   created_at: string;
 }
 
@@ -357,6 +364,8 @@ export interface GiftBasket {
   name: string;
   recipient_name: string;
   occasion: OccasionId;
+  /** The cover design the creator chose for the book. */
+  cover_id?: string | null;
   creator_id: string;
   creator_name: string;
   /** Optional group goal in minor units. 0 means no goal. */

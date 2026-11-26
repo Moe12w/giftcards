@@ -36,6 +36,7 @@ export default function PickGiftsScreen() {
     target?: string;
     basketId?: string;
     preset?: string;
+    cover?: string;
   }>();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [categories, setCategories] = useState<AppCategory[]>(() => peekAppCategories());
@@ -141,6 +142,7 @@ export default function PickGiftsScreen() {
         recipient: params.recipient ?? t('basket.yourRecipient'),
         occasion: (params.occasion as OccasionId | undefined) ?? 'birthday',
         target: params.target ?? '0',
+        cover: params.cover ?? '',
         items: encodedItems,
       },
     });
