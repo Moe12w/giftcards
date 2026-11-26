@@ -76,7 +76,6 @@ interface BasketContextValue {
   addItem: (basketId: string, input: BasketItemInput) => Promise<BasketItem | null>;
   removeItem: (basketId: string, itemId: string) => Promise<void>;
   joinBasket: (code: string) => Promise<GiftBasket | null>;
-  addMessage: (basketId: string, text: string) => Promise<void>;
   /** Adds one page to the book, uploading its file first when it has one. */
   addBookEntry: (basketId: string, entry: BookEntryInput) => Promise<boolean>;
   /** Removes a page the signed-in participant wrote or added. */
@@ -645,50 +644,6 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     [baskets, displayName, fetchBasket, load, user],
   );
 
-  const addMessage = useCallback(
-    async (basketId: string, text: string) => {
-      if (!user) return;
-      const trimmed = text.trim();
-      if (!trimmed) return;
-      const authorName = displayName();
-
-      if (!hasSupabaseConfig) {
-        setBaskets((current) =>
-          current.map((basket) =>
-            basket.id === basketId
-              ? {
-                  ...basket,
-                  messages: [
-                    ...basket.messages,
-                    {
-                      id: `demo-msg-${Date.now()}`,
-                      author_id: user.id,
-                      author_name: authorName,
-                      kind: 'text',
-                      text: trimmed,
-                      media: null,
-                      created_at: new Date().toISOString(),
-                    },
-                  ],
-                }
-              : basket,
-          ),
-        );
-        return;
-      }
-
-      const { error } = await getSupabase().from('gift_basket_messages').insert({
-        basket_id: basketId,
-        author_id: user.id,
-        author_name: authorName,
-        text: trimmed,
-      });
-      if (error) return;
-      await load();
-    },
-    [displayName, load, user],
-  );
-
   const addBookEntry = useCallback(
     async (basketId: string, entry: BookEntryInput): Promise<boolean> => {
       if (!user) return false;
@@ -733,8 +688,14 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           durationMs: entry.file.durationMs,
         } as GiftMedia;
         const uploaded = await uploadGiftMedia(file, user.id);
-        if (!uploaded) return false;
-        media = uploaded;
+        // A book page holds one file, never a note, so only plain media is kept.
+        if (!uploaded || uploaded.type === 'note' || !uploaded.url) return false;
+        media = {
+          type: uploaded.type,
+          url: uploaded.url,
+          mimeType: uploaded.mimeType ?? null,
+          durationMs: uploaded.durationMs ?? null,
+        };
       }
 
       const { error } = await getSupabase().from('gift_basket_messages').insert({
@@ -870,7 +831,6 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       addItem,
       removeItem,
       joinBasket,
-      addMessage,
       addBookEntry,
       removeBookEntry,
       markReady,
@@ -889,7 +849,6 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       addItem,
       removeItem,
       joinBasket,
-      addMessage,
       addBookEntry,
       removeBookEntry,
       markReady,

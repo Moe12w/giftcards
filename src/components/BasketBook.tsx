@@ -5,10 +5,12 @@
 // voice note, exactly like the back of a gift card. The closed book is a small
 // cover sitting in the basket page; pressing it grows it into a full-screen
 // reader while the page behind it shrinks and blurs.
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Animated,
-  KeyboardAvoidingView,
+  BackHandler,
+  Easing,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -40,6 +42,9 @@ import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme
 import { GiftCoverArt } from './GiftCoverArt';
 import { GiftMediaView } from './GiftMediaView';
 import { VoiceWaveform } from './VoiceWaveform';
+
+/** The gap the reader keeps between its composer and the bottom of the screen. */
+const READER_BOTTOM_INSET = 22;
 
 /** A file the participant picked, before it is uploaded. */
 interface PendingFile {
@@ -127,7 +132,9 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
   const { addBookEntry, removeBookEntry } = useBaskets();
   const lang: 'en' | 'ar' = i18n.language === 'ar' ? 'ar' : 'en';
 
+  const { height: windowHeight } = useWindowDimensions();
   const [grow] = useState(() => new Animated.Value(0));
+  const [keyboardRoom] = useState(() => new Animated.Value(0));
   const [writing, setWriting] = useState('');
   const [pending, setPending] = useState<PendingFile | null>(null);
   const [sending, setSending] = useState(false);
@@ -148,7 +155,10 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
     }).start();
   }, [grow]);
 
-  function dismiss() {
+  // Closing puts the keyboard away first, so the book never springs back down
+  // underneath a keyboard that is still on screen.
+  const dismiss = useCallback(() => {
+    Keyboard.dismiss();
     Animated.timing(grow, {
       toValue: 0,
       duration: 220,
@@ -156,7 +166,37 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
     }).start(({ finished }) => {
       if (finished) onClose();
     });
-  }
+  }, [grow, onClose]);
+
+  // The book follows the keyboard by giving up room at its bottom edge, over the
+  // keyboard's own duration, so the composer comes to rest just above the keys
+  // and stays there instead of hopping up and crashing back down. It only ever
+  // shrinks: sliding the whole reader up pushed its header - and the close
+  // button in it - off the top of the screen. Android resizes the window for us.
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return undefined;
+    const subscription = Keyboard.addListener('keyboardWillChangeFrame', (event) => {
+      const overlap = Math.max(0, windowHeight - event.endCoordinates.screenY);
+      Animated.timing(keyboardRoom, {
+        toValue: Math.min(overlap, Math.round(windowHeight * 0.62)),
+        duration: Math.max(120, event.duration ?? 250),
+        easing: Easing.bezier(0.17, 0.59, 0.4, 0.77),
+        useNativeDriver: false,
+      }).start();
+    });
+    return () => subscription.remove();
+  }, [keyboardRoom, windowHeight]);
+
+  // Android's hardware back closes the book, with its animation, instead of
+  // leaving the basket page behind it.
+  useEffect(() => {
+    if (Platform.OS !== 'android') return undefined;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      dismiss();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [dismiss]);
 
   const backdropStyle = { opacity: grow };
   const bookStyle = {
@@ -270,9 +310,8 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
         />
       </Animated.View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.readerArea}
+      <Animated.View
+        style={[styles.readerArea, { paddingBottom: Animated.add(keyboardRoom, READER_BOTTOM_INSET) }]}
         pointerEvents="box-none"
       >
         <Animated.View style={[styles.reader, bookStyle]} accessibilityViewIsModal>
@@ -290,6 +329,7 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
             </View>
             <Pressable
               onPress={dismiss}
+              hitSlop={10}
               accessibilityRole="button"
               accessibilityLabel={t('basket.book.close')}
               style={({ pressed }) => [styles.readerClose, pressed && styles.pressed]}
@@ -432,7 +472,7 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
             </View>
           )}
         </Animated.View>
-      </KeyboardAvoidingView>
+      </Animated.View>
     </View>
   );
 }
@@ -563,7 +603,7 @@ const styles = themedStyles(() => ({
     right: 0,
     bottom: 0,
     paddingTop: 62,
-    paddingBottom: 22,
+    paddingBottom: READER_BOTTOM_INSET,
     paddingHorizontal: spacing.gutter,
   },
   reader: {

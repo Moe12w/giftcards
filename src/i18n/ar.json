@@ -1063,13 +1063,6 @@
     "live": "مباشر",
     "featuredLabel": "السلة النشطة",
     "forRecipient": "لـ {{name}}",
-    "greetingTitle": "إلى {{name}}",
-    "greetingSubtitle": "بطاقة من الجميع",
-    "greetingEmpty": "كن أول من يكتب رسالة لـ {{name}}.",
-    "greetingPlaceholder": "اكتب رسالة…",
-    "greetingSend": "إضافة رسالة",
-    "greetingAdded": "تمت إضافة الرسالة",
-    "greetingSignedBy": "— {{name}}",
     "book": {
       "open": "افتح الكتاب",
       "close": "أغلق الكتاب",

@@ -1062,13 +1062,6 @@
     "live": "Live",
     "featuredLabel": "Active basket",
     "forRecipient": "For {{name}}",
-    "greetingTitle": "To {{name}}",
-    "greetingSubtitle": "A card from everyone",
-    "greetingEmpty": "Be the first to write a message for {{name}}.",
-    "greetingPlaceholder": "Write a message…",
-    "greetingSend": "Add message",
-    "greetingAdded": "Message added",
-    "greetingSignedBy": "— {{name}}",
     "book": {
       "open": "Open the book",
       "close": "Close the book",
