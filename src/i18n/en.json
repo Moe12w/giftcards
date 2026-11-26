@@ -426,7 +426,7 @@
       "giftBox": ["Just for", "you"]
     },
     "cover": "Cover",
-    "chooseCover": "Choose a cover",
+    "chooseCover": "Choose an envelope",
     "next": "Next",
     "preview": "Preview",
     "finish": "Finish",
@@ -520,13 +520,22 @@
   },
   "cardBack": {
     "title": "Make it yours",
-    "heading": "A note from you",
+    "heading": "Make it personal",
+    "subtitle": "Choose a cover and customize a note with photos, videos & GIFs.",
+    "quickNote": "Write a quick note instead",
+    "placeholder": "Happy birthday!",
+    "searchGifs": "Search for GIFs",
+    "noGifs": "No GIFs found. Pick from your photos.",
+    "language": "English",
     "messageLabel": "Write on the back",
     "messagePlaceholder": "Write something lovely…",
     "close": "Minimise card",
     "changeCover": "Change cover",
     "writeOnBack": "Write on the back",
     "showFront": "See the front",
+    "cardsInside": "Cards inside",
+    "messageCard": "A note for you",
+    "addNote": "Note +",
     "video": "Video attached"
   },
   "checkout": {

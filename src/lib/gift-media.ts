@@ -27,33 +27,52 @@ const MIME: Record<string, string> = {
 };
 
 export interface UploadedMedia {
-  type: 'photo' | 'gif' | 'video' | 'audio';
-  url: string;
+  type: 'note' | 'photo' | 'gif' | 'video' | 'audio';
+  url?: string;
   mimeType?: string;
   durationMs?: number | null;
+  text?: string;
+  attachments?: UploadedMedia[];
 }
 
-/** Uploads each item on the card back, preserving order. */
+async function uploadMediaItem(
+  item: { type: 'photo' | 'gif' | 'video' | 'audio'; uri?: string; url?: string; durationMs?: number },
+  userId: string,
+): Promise<UploadedMedia | null> {
+  if (item.url) {
+    return {
+      type: item.type,
+      url: item.url,
+      ...(item.type === 'video' || item.type === 'audio' ? { durationMs: item.durationMs ?? null } : {}),
+    };
+  }
+  if (!item.uri) return null;
+  const media: GiftMedia = { type: item.type, uri: item.uri, durationMs: item.durationMs } as GiftMedia;
+  return uploadGiftMedia(media, userId);
+}
+
+/** Uploads each item on the card back, preserving order and note attachments. */
 export async function uploadCardBackMedia(
   items: CardBackMedia[],
   userId: string,
 ): Promise<UploadedMedia[]> {
   const uploaded: UploadedMedia[] = [];
   for (const item of items) {
-    if (item.url) {
+    if (item.type === 'note') {
+      const attachments: UploadedMedia[] = [];
+      for (const att of item.attachments ?? []) {
+        const up = await uploadMediaItem(att, userId);
+        if (up) attachments.push(up);
+      }
       uploaded.push({
-        type: item.type,
-        url: item.url,
-        ...(item.type === 'video' || item.type === 'audio' ? { durationMs: item.durationMs ?? null } : {}),
+        type: 'note',
+        text: item.text,
+        ...(attachments.length ? { attachments } : {}),
       });
       continue;
     }
-    if (!item.uri) continue;
-    const media: GiftMedia = item.type === 'photo' || item.type === 'gif' || item.type === 'video' || item.type === 'audio'
-      ? { type: item.type, uri: item.uri, durationMs: item.durationMs }
-      : { type: 'sticker', stickerId: '' };
-    const result = await uploadGiftMedia(media, userId);
-    if (result) uploaded.push(result);
+    const up = await uploadMediaItem(item as { type: 'photo' | 'gif' | 'video' | 'audio'; uri?: string; url?: string; durationMs?: number }, userId);
+    if (up) uploaded.push(up);
   }
   return uploaded;
 }

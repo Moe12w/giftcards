@@ -307,6 +307,8 @@ export const fonts = {
   bold: 'Figtree_700Bold',
   extrabold: 'Figtree_800ExtraBold',
   black: 'Figtree_900Black',
+  handwriting: 'Caveat_500Medium',
+  handwritingBold: 'Caveat_700Bold',
 } as const;
 
 export const shadows = {

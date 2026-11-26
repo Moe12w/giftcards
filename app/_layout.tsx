@@ -11,6 +11,7 @@ import {
   Figtree_800ExtraBold,
   Figtree_900Black,
 } from '@expo-google-fonts/figtree';
+import { Caveat_500Medium, Caveat_700Bold } from '@expo-google-fonts/caveat';
 
 import { AuthProvider, useAuth } from '@/src/lib/auth';
 import { hydrateCache } from '@/src/lib/cache';
@@ -34,6 +35,8 @@ export default function RootLayout() {
     Figtree_700Bold,
     Figtree_800ExtraBold,
     Figtree_900Black,
+    Caveat_500Medium,
+    Caveat_700Bold,
   });
   const [i18nReady, setI18nReady] = useState(false);
 

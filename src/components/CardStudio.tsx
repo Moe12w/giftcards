@@ -1,49 +1,87 @@
 // src/components/CardStudio.tsx
-// The card designer overlay. A small cover tile on the Create a gift page
-// expands upward into a full-screen takeover (X to minimise). It shows all
-// covers; choosing one grows the card, flips it to the beige back and turns it
-// into a carousel where the sender writes / records / attaches media.
-//
-// This is an in-screen overlay, not a route, so the animation never breaks.
-// The same overlay is reusable by other card flows.
+// The card builder, in the app's own visual language. On the Create a gift
+// page it is a normal app card ("Make it personal"). Tapping Choose an
+// envelope opens the chooser; picking one slides that envelope to the right and
+// reveals the paper carousel behind it (note paper + one card per attachment),
+// with a dashed skeleton slot waiting for the next paper.
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, StyleProp, Text, View, ViewStyle, useWindowDimensions } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
-  Extrapolation,
-  interpolate,
+  Easing,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { BlurView } from 'expo-blur';
 import { useTranslation } from 'react-i18next';
 
 import { coverLabel, fetchGiftCovers, GIFT_COVERS, resolveCover, type GiftCover } from '../lib/gift-covers';
-import type { CardBackItem } from './CardBack';
-import { CardBack } from './CardBack';
-import { GiftCoverArt } from './GiftCoverArt';
-import { Glyph } from './Glyph';
 import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
+import { CardBack, type CardBackAttachment, type CardBackItem } from './CardBack';
+import { CoverCard } from './CoverCard';
+import { GifSheet } from './GifSheet';
+import { Glyph } from './Glyph';
+import { TextField } from './TextField';
+import { VoiceNoteSheet } from './VoiceNoteSheet';
+import * as ImagePicker from 'expo-image-picker';
 
 interface CardStudioProps {
-  /** Currently chosen cover id, kept in the gift draft. */
   coverId: string;
-  /** Called when the sender picks a cover. */
   onCoverChange: (coverId: string) => void;
-  /** Message written on the back. */
   message: string;
   onMessageChange: (value: string) => void;
-  /** Media items attached to the back (photos, GIFs, video, voice). */
   items: CardBackItem[];
   onItemsChange: (items: CardBackItem[]) => void;
-  /** Called when the sender finishes the card. */
+  mainAttachments?: CardBackAttachment[];
+  onMainAttachmentsChange?: (attachments: CardBackAttachment[]) => void;
   onDone?: () => void;
-  /** Optional trigger rendered inline; defaults to a small cover tile. */
-  triggerStyle?: StyleProp<ViewStyle>;
+  title?: string;
+  logoUrl?: string | null;
+  meta?: string;
+  subtitle?: string;
 }
 
-type Phase = 'closed' | 'grid' | 'card';
+type Phase = 'hidden' | 'chooser' | 'maker';
+type Sheet = 'none' | 'gif' | 'voice';
+
+/** The app's standard pastel blobs, reused inside the takeover. */
+function Blobs() {
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View style={styles.blobLilac} />
+      <View style={styles.blobMint} />
+      <View style={styles.blobRing} />
+    </View>
+  );
+}
+
+/** A neat, purpose-built illustration: a note peeking out of an envelope. */
+function StudioArt() {
+  return (
+    <View style={styles.art} pointerEvents="none">
+      <View style={styles.artNote}>
+        <View style={styles.artNoteLine} />
+        <View style={[styles.artNoteLine, styles.artNoteLineShort]} />
+        <View style={styles.artHeart}><Glyph name="pen" size={13} color={colors.textOnPastel} /></View>
+      </View>
+      <View style={styles.artEnvelope}>
+        <View style={styles.artFlap} />
+        <View style={styles.artSeal}><Glyph name="star" size={13} color={colors.textOnPastel} /></View>
+      </View>
+    </View>
+  );
+}
 
 export function CardStudio({
   coverId,
@@ -52,197 +90,371 @@ export function CardStudio({
   onMessageChange,
   items,
   onItemsChange,
+  mainAttachments = [],
+  onMainAttachmentsChange,
   onDone,
-  triggerStyle,
+  title,
+  logoUrl,
+  meta,
+  subtitle,
 }: CardStudioProps) {
   const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
-  const [phase, setPhase] = useState<Phase>('closed');
+  const [phase, setPhase] = useState<Phase>('hidden');
+  const [sheet, setSheet] = useState<Sheet>('none');
+  const [quickNote, setQuickNote] = useState(false);
   const [covers, setCovers] = useState<GiftCover[]>(GIFT_COVERS);
-  const [flipped, setFlipped] = useState(false);
-  const open = useSharedValue(0);
+  const [activeItem, setActiveItem] = useState<CardBackItem | null>(null);
+  const active = useRef(true);
+
+  // 0 = chooser visible, 1 = maker visible.
   const focus = useSharedValue(0);
-  const flip = useSharedValue(0);
-  const mounted = useRef(true);
 
   useEffect(() => {
-    mounted.current = true;
-    fetchGiftCovers().then((items) => mounted.current && setCovers(items));
+    active.current = true;
+    fetchGiftCovers().then((list) => active.current && setCovers(list));
     return () => {
-      mounted.current = false;
+      active.current = false;
     };
   }, []);
 
-  function show() {
-    setPhase('grid');
-    setFlipped(false);
-    open.value = withSpring(1, { damping: 22, stiffness: 220 });
-    focus.value = withTiming(0, { duration: 260 });
-    flip.value = withTiming(0, { duration: 260 });
+  function open() {
+    setPhase('chooser');
+    setSheet('none');
+    focus.value = 0;
   }
 
-  function minimise() {
-    open.value = withTiming(0, { duration: 240 }, (finished) => {
-      if (finished) setPhase('closed');
-    });
+  function close() {
+    setSheet('none');
+    setPhase('hidden');
   }
 
-  function chooseCover(id: string) {
+  function choose(id: string) {
     onCoverChange(id);
-    setPhase('card');
-    focus.value = withSpring(1, { damping: 20, stiffness: 200 });
+    focus.value = withTiming(1, { duration: 380, easing: Easing.out(Easing.cubic) });
+    setPhase('maker');
   }
 
-  function flipCard() {
-    const next = !flipped;
-    setFlipped(next);
-    flip.value = withTiming(next ? 1 : 0, { duration: 380 });
+  function chooseAgain() {
+    focus.value = withTiming(0, { duration: 340, easing: Easing.out(Easing.cubic) });
+    setPhase('chooser');
   }
 
-  function done() {
-    onDone?.();
-    minimise();
+  function addAttachmentToNote(noteId: string, attachment: CardBackAttachment) {
+    if (noteId === '__main__') {
+      onMainAttachmentsChange?.([...mainAttachments, attachment]);
+      return;
+    }
+    onItemsChange(items.map((item) => item.id === noteId ? { ...item, attachments: [...(item.attachments ?? []), attachment] } : item));
+  }
+
+  function noteTargets(): { id: string; label: string }[] {
+    const targets = [{ id: '__main__', label: t('cardBack.messageCard') }];
+    items.forEach((item, index) => {
+      if (item.type === 'note') targets.push({ id: item.id, label: `${t('cardBack.messageCard')} ${index + 2}` });
+    });
+    return targets;
+  }
+
+  function addMedia(kind: 'photo' | 'gif' | 'video' | 'audio', uri: string, durationMs?: number) {
+    const attachment: CardBackAttachment = { id: `${Date.now()}`, type: kind, uri, durationMs };
+    if (activeItem?.type === 'note') {
+      addAttachmentToNote(activeItem.id, attachment);
+      return;
+    }
+    if (kind === 'audio') {
+      const targets = noteTargets();
+      if (targets.length === 1) {
+        addAttachmentToNote('__main__', attachment);
+        return;
+      }
+      Alert.alert(t('send.addVoiceNote'), undefined, [
+        ...targets.slice(0, 3).map((target) => ({ text: target.label, onPress: () => addAttachmentToNote(target.id, attachment) })),
+        { text: t('cardBack.addNote'), onPress: () => onItemsChange([...items, { id: `${Date.now()}-n`, type: 'note', text: '', attachments: [attachment] }]) },
+        { text: t('common.cancel'), style: 'cancel' as const },
+      ]);
+      return;
+    }
+    onItemsChange([...items, { id: `${Date.now()}`, type: kind, uri, ...(kind === 'video' ? { durationMs } : {}) }]);
+  }
+
+  async function pick(kind: 'photo' | 'video') {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: kind === 'video' ? ['videos'] : ['images'],
+      allowsEditing: false,
+      quality: 0.8,
+      videoMaxDuration: 60,
+    });
+    if (result.canceled) return;
+    const asset = result.assets?.[0];
+    if (!asset) return;
+    addMedia(kind, asset.uri, kind === 'video' ? asset.duration ?? undefined : undefined);
   }
 
   const selected = resolveCover(coverId, covers);
+  const selectedName = coverLabel(selected, t);
 
-  // The overlay slides up from the tile and fades in.
-  const overlayStyle = useAnimatedStyle(() => ({
-    opacity: open.value,
-    transform: [{ translateY: interpolate(open.value, [0, 1], [height * 0.25, 0], Extrapolation.CLAMP) }],
-  }));
-  // The grid fades out and the card fades/scales in as focus grows.
-  const gridStyle = useAnimatedStyle(() => ({
-    opacity: 1 - focus.value,
-    transform: [{ scale: interpolate(focus.value, [0, 1], [1, 0.92], Extrapolation.CLAMP) }],
-  }));
-  const cardStyle = useAnimatedStyle(() => ({
-    opacity: focus.value,
-    transform: [{ scale: interpolate(focus.value, [0, 1], [0.7, 1], Extrapolation.CLAMP) }],
-  }));
-  const frontStyle = useAnimatedStyle(() => ({
-    opacity: 1 - flip.value,
-    transform: [{ rotateY: `${interpolate(flip.value, [0, 1], [0, 180], Extrapolation.CLAMP)}deg` }],
-  }));
-  const backStyle = useAnimatedStyle(() => ({
-    opacity: flip.value,
-    transform: [{ rotateY: `${interpolate(flip.value, [0, 1], [-180, 0], Extrapolation.CLAMP)}deg` }],
-  }));
+  const chooserStyle = useAnimatedStyle(() => ({ opacity: 1 - focus.value }));
+  const makerStyle = useAnimatedStyle(() => ({ opacity: focus.value }));
 
-  const tileWidth = Math.min(150, Math.max(96, Math.round(width * 0.34)));
-  const tileHeight = Math.round(tileWidth * 1.5);
-  const gridTileWidth = Math.min(150, Math.floor((width - spacing.gutter * 2 - spacing.sm * 2) / 3));
-  const gridTileHeight = Math.round(gridTileWidth * 1.4);
-  const cardWidth = Math.min(width - spacing.gutter * 2, 300);
-  const cardHeight = Math.min(height * 0.72, cardWidth * 1.6);
+  const gridTileWidth = Math.floor((width - spacing.gutter * 2 - spacing.sm) / 2);
+  const gridTileHeight = Math.round(gridTileWidth * 1.5);
+  const cardHeight = Math.min(height * 0.55, Math.round(width * 0.65 * 1.58));
 
   return (
     <>
-      {/* Inline trigger: a small version of the chosen card, blurred, with a
-          clear Choose cover button in the middle. */}
-      <Pressable onPress={show} accessibilityRole="button" accessibilityLabel={t('send.chooseCover')} style={[styles.trigger, triggerStyle]}>
-        <View style={[styles.triggerCard, { width: tileWidth, height: tileHeight }]}>
-          <GiftCoverArt coverId={selected.id} coverImageUrl={selected.imageUrl} coverName={coverLabel(selected, t)} height={tileHeight} compact />
-          <BlurView intensity={18} tint="light" style={styles.triggerBlur} />
-          <View style={styles.triggerButton}>
-            <Glyph name="palette" size={18} color={colors.textOnInk} />
-            <Text style={styles.triggerLabel}>{t('send.chooseCover')}</Text>
-          </View>
-        </View>
-      </Pressable>
+      {/* Trigger — a normal app card, identical in style to the page's cards. */}
+      <View style={styles.section}>
+        <View style={styles.sectionInner}>
+          <Text style={styles.heading}>{t('cardBack.heading')}</Text>
+          <Text style={styles.subtitle}>{t('cardBack.subtitle')}</Text>
 
-      <Modal visible={phase !== 'closed'} transparent statusBarTranslucent animationType="none" onRequestClose={minimise}>
-        <Animated.View style={[styles.overlay, overlayStyle]}>
-          <View style={styles.topBar}>
-            <Text style={styles.overlayTitle}>
-              {phase === 'grid' ? t('send.chooseCover') : t('cardBack.title')}
-            </Text>
-            <Pressable onPress={minimise} accessibilityRole="button" accessibilityLabel={t('cardBack.close')} style={styles.close}>
-              <Glyph name="x" size={22} color={colors.text} />
-            </Pressable>
-          </View>
+          <StudioArt />
 
-          {/* Grid phase: all covers, best-fit in three columns. */}
-          <Animated.View style={[styles.gridWrap, gridStyle]} pointerEvents={phase === 'grid' ? 'auto' : 'none'}>
-            <View style={styles.grid}>
-              {covers.map((cover) => {
-                const active = cover.id === coverId;
-                return (
-                  <Pressable
-                    key={cover.id}
-                    onPress={() => chooseCover(cover.id)}
-                    accessibilityRole="button"
-                    accessibilityLabel={coverLabel(cover, t)}
-                    style={({ pressed }) => [styles.gridTile, active && styles.gridTileActive, pressed && styles.pressed]}
-                  >
-                    <GiftCoverArt coverId={cover.id} coverImageUrl={cover.imageUrl} coverName={coverLabel(cover, t)} height={gridTileHeight - 6} compact />
-                  </Pressable>
-                );
-              })}
-            </View>
-          </Animated.View>
+          <Pressable
+            onPress={open}
+            accessibilityRole="button"
+            accessibilityLabel={t('send.chooseCover')}
+            style={({ pressed }) => [styles.action, pressed && styles.pressed]}
+          >
+            <Glyph name="palette" size={18} color={colors.textOnPastel} />
+            <Text style={styles.actionLabel}>{t('send.chooseCover')}</Text>
+          </Pressable>
 
-          {/* Card phase: front flips to the beige back, which is the carousel
-              of writing, voice, GIFs, photos and video. */}
-          {phase === 'card' ? (
-            <Animated.View style={[styles.cardWrap, cardStyle]}>
-              <View style={[styles.card, { width: cardWidth, height: cardHeight }]}>
-                <Animated.View style={[styles.cardFace, frontStyle]}>
-                  <GiftCoverArt coverId={selected.id} coverImageUrl={selected.imageUrl} coverName={coverLabel(selected, t)} height={cardHeight} />
-                  <Pressable onPress={() => chooseCover(selected.id)} accessibilityRole="button" accessibilityLabel={t('send.chooseCover')} style={styles.changeCover}>
-                    <Glyph name="palette" size={16} color={colors.textOnInk} />
-                    <Text style={styles.changeCoverLabel}>{t('cardBack.changeCover')}</Text>
-                  </Pressable>
-                </Animated.View>
-                <Animated.View style={[styles.cardFace, styles.cardBackFace, backStyle]}>
-                  <CardBack message={message} onMessageChange={onMessageChange} items={items} onItemsChange={onItemsChange} />
-                </Animated.View>
-              </View>
-              <View style={styles.cardActions}>
-                <Pressable onPress={flipCard} accessibilityRole="button" accessibilityLabel={flipped ? t('cardBack.showFront') : t('cardBack.writeOnBack')} style={({ pressed }) => [styles.action, pressed && styles.pressed]}>
-                  <Glyph name={flipped ? 'eye' : 'pen'} size={18} color={colors.text} />
-                  <Text style={styles.actionLabel}>{flipped ? t('cardBack.showFront') : t('cardBack.writeOnBack')}</Text>
-                </Pressable>
-                <Pressable onPress={done} accessibilityRole="button" accessibilityLabel={t('common.done')} style={({ pressed }) => [styles.action, styles.actionPrimary, pressed && styles.pressed]}>
-                  <Glyph name="check" size={18} color={colors.textOnInk} />
-                  <Text style={[styles.actionLabel, styles.actionPrimaryLabel]}>{t('common.done')}</Text>
-                </Pressable>
-              </View>
-            </Animated.View>
+          <Pressable onPress={() => setQuickNote((value) => !value)} accessibilityRole="button">
+            <Text style={styles.link}>{t('cardBack.quickNote')}</Text>
+          </Pressable>
+
+          {quickNote ? (
+            <TextField
+              value={message}
+              onChangeText={onMessageChange}
+              placeholder={t('cardBack.messagePlaceholder')}
+              multiline
+              numberOfLines={3}
+            />
           ) : null}
-        </Animated.View>
+        </View>
+      </View>
+
+      <Modal
+        visible={phase !== 'hidden'}
+        transparent
+        presentationStyle="overFullScreen"
+        animationType="none"
+        onRequestClose={close}
+      >
+        <SafeAreaView style={styles.safe}>
+          <View style={styles.overlay}>
+            <Blobs />
+
+            {/* CHOOSER — nine portrait envelopes. */}
+            {phase === 'chooser' ? (
+              <Animated.View style={[StyleSheet.absoluteFill, chooserStyle]}>
+                <View style={styles.topBar}>
+                  <Pressable onPress={close} accessibilityRole="button" style={styles.square}>
+                    <Glyph name="arrowLeft" size={20} color={colors.ink} />
+                  </Pressable>
+                  <Text style={styles.topTitle}>{t('send.chooseCover')}</Text>
+                  <Pressable onPress={() => choose(selected.id)} accessibilityRole="button" style={styles.next}>
+                    <Text style={styles.nextLabel}>{t('send.next')}</Text>
+                  </Pressable>
+                </View>
+
+                <ScrollView contentContainerStyle={styles.chooserContent} showsVerticalScrollIndicator={false}>
+                  <View style={styles.grid}>
+                    {covers.map((cover) => (
+                      <Pressable
+                        key={cover.id}
+                        onPress={() => choose(cover.id)}
+                        accessibilityRole="button"
+                        accessibilityLabel={coverLabel(cover, t)}
+                        style={({ pressed }) => [styles.gridTile, { width: gridTileWidth, height: gridTileHeight }, pressed && styles.pressed]}
+                      >
+                        <CoverCard cover={cover} name={coverLabel(cover, t)} height={gridTileHeight} compact />
+                      </Pressable>
+                    ))}
+                  </View>
+                </ScrollView>
+              </Animated.View>
+            ) : null}
+
+            {/* MAKER — envelope is the first carousel page; it moves right on open. */}
+            {phase === 'maker' ? (
+              <Animated.View style={[StyleSheet.absoluteFill, makerStyle]}>
+                <View style={styles.topBar}>
+                  <Pressable onPress={close} accessibilityRole="button" style={styles.square}>
+                    <Glyph name="x" size={20} color={colors.ink} />
+                  </Pressable>
+                  <Text style={styles.topTitle}>{t('cardBack.title')}</Text>
+                  <Pressable onPress={chooseAgain} accessibilityRole="button" style={styles.square}>
+                    <Glyph name="palette" size={18} color={colors.ink} />
+                  </Pressable>
+                </View>
+
+                <KeyboardAvoidingView
+                  style={styles.flex}
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                >
+                  <View style={styles.stage}>
+                    <CardBack
+                      message={message}
+                      onMessageChange={onMessageChange}
+                      items={items}
+                      onItemsChange={onItemsChange}
+                      pageWidth={width}
+                      cardHeight={cardHeight}
+                      onActiveItemChange={setActiveItem}
+                      mainAttachments={mainAttachments}
+                      onMainAttachmentsChange={onMainAttachmentsChange}
+                      onAddPhoto={() => pick('photo')}
+                      onAddGif={() => setSheet('gif')}
+                      onAddVideo={() => pick('video')}
+                      onAddVoice={() => setSheet('voice')}
+                      onAddNote={() => onItemsChange([...items, { id: `${Date.now()}`, type: 'note', text: '' }])}
+                      leadingPage={
+                        <View style={{ width: '100%', height: cardHeight, borderRadius: radii.lg, borderWidth: 2, borderColor: colors.border, overflow: 'hidden', backgroundColor: colors.surface }}>
+                          <CoverCard
+                            cover={selected}
+                            name={selectedName}
+                            height={cardHeight}
+                            framed={false}
+                            title={title}
+                            subtitle={subtitle}
+                            logoUrl={logoUrl}
+                            meta={meta}
+                          />
+                        </View>
+                      }
+                    />
+                  </View>
+                </KeyboardAvoidingView>
+
+                {/* Actions. */}
+                <View style={styles.bottomBar}>
+                  <Pressable onPress={chooseAgain} accessibilityRole="button" style={styles.secondary}>
+                    <Glyph name="arrowLeft" size={17} color={colors.text} />
+                    <Text style={styles.secondaryLabel}>{t('cardBack.changeCover')}</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => { onDone?.(); close(); }}
+                    accessibilityRole="button"
+                    style={styles.primary}
+                  >
+                    <Glyph name="check" size={18} color={colors.textOnPastel} />
+                    <Text style={styles.primaryLabel}>{t('send.finish')}</Text>
+                  </Pressable>
+                </View>
+              </Animated.View>
+            ) : null}
+          </View>
+        </SafeAreaView>
       </Modal>
+
+      <GifSheet
+        visible={sheet === 'gif'}
+        onClose={() => setSheet('none')}
+        onPick={(uri) => {
+          addMedia('gif', uri);
+          setSheet('none');
+        }}
+      />
+      <VoiceNoteSheet
+        visible={sheet === 'voice'}
+        onClose={() => setSheet('none')}
+        onSave={(uri, durationMs) => {
+          addMedia('audio', uri, durationMs);
+          setSheet('none');
+        }}
+      />
     </>
   );
 }
 
 const styles = themedStyles(() => ({
-  trigger: { alignSelf: 'center' },
-  triggerCard: { position: 'relative', borderRadius: radii.lg, borderWidth: 3, borderColor: colors.border, overflow: 'hidden' },
-  triggerBlur: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', overflow: 'hidden', borderRadius: radii.md },
-  triggerButton: {
-    position: 'absolute', alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 6,
-    borderRadius: radii.pill, backgroundColor: colors.danger, paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+  section: {
+    borderRadius: radii.offer, borderWidth: 2, borderColor: colors.border,
+    backgroundColor: colors.ink, paddingBottom: 5,
   },
-  triggerLabel: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.textOnInk },
-  overlay: { flex: 1, backgroundColor: colors.background, paddingTop: spacing.xl, paddingHorizontal: spacing.gutter },
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
-  overlayTitle: { flex: 1, fontFamily: fonts.bold, fontSize: fontSizes.lg, color: colors.text },
-  close: { width: 44, height: 44, borderRadius: radii.pill, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  gridWrap: { flex: 1 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.sm },
-  gridTile: { borderRadius: radii.md, borderWidth: 3, borderColor: 'transparent', overflow: 'hidden' },
-  gridTileActive: { borderColor: colors.danger },
-  cardWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
-  card: { position: 'relative', borderRadius: radii.lg, borderWidth: 3, borderColor: colors.border, overflow: 'hidden', backgroundColor: colors.surface },
-  cardFace: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backfaceVisibility: 'hidden' },
-  cardBackFace: { backgroundColor: '#E8DCC3' },
-  changeCover: { position: 'absolute', bottom: spacing.sm, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: radii.pill, backgroundColor: colors.danger, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  changeCoverLabel: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.textOnInk },
-  cardActions: { flexDirection: 'row', gap: spacing.sm },
-  action: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: radii.md, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  actionPrimary: { backgroundColor: colors.danger, borderColor: colors.border },
-  actionLabel: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.text },
-  actionPrimaryLabel: { color: colors.textOnInk },
+  sectionInner: {
+    borderRadius: radii.offer - 2, backgroundColor: colors.surface,
+    padding: spacing.md + 2, gap: spacing.sm, overflow: 'hidden',
+  },
+  heading: { fontFamily: fonts.extrabold, fontSize: fontSizes.xl, color: colors.text },
+  subtitle: { fontFamily: fonts.regular, fontSize: fontSizes.sm, color: colors.text, opacity: 0.72, lineHeight: 19 },
+  art: {
+    height: 132, marginTop: spacing.sm, marginBottom: spacing.xs,
+    alignItems: 'center', justifyContent: 'flex-end',
+  },
+  artNote: {
+    width: 92, height: 84, borderWidth: 2, borderColor: colors.border,
+    borderBottomWidth: 0, borderTopLeftRadius: radii.sm, borderTopRightRadius: radii.sm,
+    backgroundColor: colors.surface, paddingHorizontal: spacing.sm, paddingTop: spacing.md,
+    transform: [{ rotate: '-5deg' }], zIndex: 1,
+  },
+  artNoteLine: { height: 3, borderRadius: 2, backgroundColor: colors.borderSoft, marginBottom: 8 },
+  artNoteLineShort: { width: '62%' },
+  artHeart: {
+    position: 'absolute', right: spacing.sm, top: spacing.sm,
+    width: 22, height: 22, borderRadius: radii.pill,
+    backgroundColor: colors.pink, borderWidth: 1.5, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  artEnvelope: {
+    width: 138, height: 76, marginTop: -8, borderRadius: radii.sm,
+    borderWidth: 2, borderColor: colors.border, backgroundColor: colors.lavender,
+    overflow: 'hidden', alignItems: 'center', justifyContent: 'flex-end',
+  },
+  artFlap: {
+    position: 'absolute', top: -1, left: -1, right: -1, height: 46,
+    borderBottomWidth: 2, borderBottomColor: colors.border,
+    backgroundColor: colors.lavenderCard,
+    transform: [{ rotate: '0deg' }],
+  },
+  artSeal: {
+    width: 28, height: 28, borderRadius: radii.pill, marginBottom: spacing.sm,
+    backgroundColor: colors.gold, borderWidth: 2, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center', zIndex: 2,
+  },
+  action: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+    minHeight: 50, borderRadius: radii.md, borderWidth: 2, borderColor: colors.border,
+    backgroundColor: colors.lavender, paddingHorizontal: spacing.md,
+  },
+  actionLabel: { fontFamily: fonts.bold, fontSize: fontSizes.md, color: colors.textOnPastel },
+  link: { alignSelf: 'center', fontFamily: fonts.semibold, fontSize: fontSizes.sm, color: colors.text, textDecorationLine: 'underline', paddingVertical: spacing.xs },
   pressed: { opacity: 0.85 },
+
+  safe: { flex: 1, backgroundColor: colors.background },
+  overlay: { flex: 1, backgroundColor: colors.background },
+  flex: { flex: 1 },
+  blobLilac: { position: 'absolute', top: -96, right: -84, width: 250, height: 250, borderRadius: 125, backgroundColor: colors.blobA },
+  blobMint: { position: 'absolute', bottom: -40, left: -104, width: 230, height: 230, borderRadius: 115, backgroundColor: colors.blobB },
+  blobRing: { position: 'absolute', top: 150, right: -48, width: 132, height: 132, borderRadius: 66, borderWidth: 2, borderColor: colors.blobRing },
+
+  topBar: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.gutter, paddingVertical: spacing.sm },
+  square: { width: 44, height: 44, borderRadius: radii.md, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  topTitle: { flex: 1, textAlign: 'center', fontFamily: fonts.extrabold, fontSize: fontSizes.sm, letterSpacing: 1.4, color: colors.text, textTransform: 'uppercase' },
+  next: { borderRadius: radii.md, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.lavender, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  nextLabel: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.textOnPastel },
+  chooserContent: { paddingHorizontal: spacing.gutter, paddingBottom: spacing.xl },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.sm },
+  gridTile: { borderRadius: radii.md, overflow: 'hidden' },
+
+  stage: { flex: 1, paddingBottom: 46 },
+  stageKeyboard: { paddingBottom: 0, justifyContent: 'flex-start', paddingTop: spacing.xs },
+
+  bottomBar: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.gutter, paddingBottom: spacing.md },
+  secondary: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    minHeight: 48, borderRadius: radii.md, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surface,
+  },
+  secondaryLabel: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.text },
+  primary: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    minHeight: 48, borderRadius: radii.md, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.lavender,
+  },
+  primaryLabel: { fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.textOnPastel },
 }));

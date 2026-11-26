@@ -75,11 +75,23 @@ export default function PaymentScreen() {
       // Card-back media is a collection; the legacy single media is kept for
       // the older send flow. Both upload once and cache their URLs.
       const uploadedItems = await uploadCardBackMedia(draft.cardBackItems ?? [], user.id);
+      const uploadedMain: any[] = [];
+      for (const att of draft.mainAttachments ?? []) {
+        if (att.url) { uploadedMain.push({ type: att.type, url: att.url, durationMs: att.durationMs ?? null }); continue; }
+        if (!att.uri) continue;
+        const up = await uploadGiftMedia({ type: att.type, uri: att.uri, durationMs: att.durationMs } as any, user.id);
+        if (up) uploadedMain.push(up);
+      }
+      if (uploadedMain.length) {
+        uploadedItems.unshift({ type: 'note', text: draft.message, attachments: uploadedMain } as any);
+      }
       if (draft.cardBackItems?.length) {
+        // uploadedItems may have a synthetic main note prepended; map by original offset.
+        const offset = uploadedMain.length ? 1 : 0;
         update({
           cardBackItems: draft.cardBackItems.map((item, index) => ({
             ...item,
-            url: uploadedItems[index]?.url ?? item.url,
+            url: uploadedItems[index + offset]?.url ?? item.url,
           })),
         });
       }

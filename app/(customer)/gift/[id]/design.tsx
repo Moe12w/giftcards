@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { CardStudio } from '@/src/components/CardStudio';
-import type { CardBackItem } from '@/src/components/CardBack';
+import type { CardBackAttachment, CardBackItem } from '@/src/components/CardBack';
 import { Chip } from '@/src/components/Chip';
 import { EmptyState } from '@/src/components/EmptyState';
 import { FlowHeader } from '@/src/components/FlowHeader';
@@ -29,6 +29,13 @@ import { colors, fonts, fontSizes, radii, spacing, themedStyles } from '@/src/th
 
 const DELIVERY_METHODS: DeliveryMethod[] = ['email', 'sms', 'whatsapp', 'link'];
 
+const DELIVERY_ICONS: Record<DeliveryMethod, string> = {
+  email: 'mail',
+  sms: 'message',
+  whatsapp: 'smartphone',
+  link: 'link',
+};
+
 /**
  * Draft recipient ids are minted when a recipient is chosen. Built outside the
  * component so rendering never reads the clock.
@@ -47,6 +54,9 @@ export default function GiftComposeScreen() {
   const [offer, setOffer] = useState<Offer | null>(null);
   const [cardItems, setCardItems] = useState<CardBackItem[]>(
     (draft.cardBackItems ?? []) as CardBackItem[],
+  );
+  const [mainAttachments, setMainAttachments] = useState<CardBackAttachment[]>(
+    (draft.mainAttachments ?? []) as CardBackAttachment[],
   );
   // No id means there is nothing to fetch: start settled rather than
   // flipping the flag from inside the effect.
@@ -266,13 +276,19 @@ export default function GiftComposeScreen() {
         email: recipientEmail.trim(),
         phone: recipientPhone.trim() || undefined,
       },
-      message: message.trim(),
+      // Every note paper's writing becomes part of the gift message a
+      // recipient reads; media papers upload separately at checkout.
+      message: [
+        message.trim(),
+        ...cardItems.filter((item) => item.type === 'note').map((item) => (item.text ?? '').trim()),
+      ].filter(Boolean).join('\n\n'),
       deliveryDate,
       cardBackItems: cardItems.map((item) => ({
         ...item,
         uri: item.uri,
         url: (item as { url?: string }).url,
       })),
+      mainAttachments: mainAttachments.map((att) => ({ ...att })),
     });
     router.push('/(customer)/checkout/payment');
   }
@@ -302,17 +318,6 @@ export default function GiftComposeScreen() {
         }
         message={message || undefined}
         meta={recipientName.trim() ? `${t('send.recipientTitle')}: ${recipientName.trim()}` : undefined}
-      />
-
-      {/* The card itself: tap the miniature card to choose a cover, then flip
-          it to write or record on the beige back. All in one screen. */}
-      <CardStudio
-        coverId={draft.cover}
-        onCoverChange={(cover) => update({ cover })}
-        message={message}
-        onMessageChange={setMessageEdit}
-        items={cardItems}
-        onItemsChange={setCardItems}
       />
 
       {/* Price: vendor packages for experiences, presets/custom for money cards */}
@@ -456,41 +461,72 @@ export default function GiftComposeScreen() {
       {/* Delivery */}
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>{t('send.deliveryTitle')}</Text>
-        <View style={styles.chipRow}>
-          {DELIVERY_METHODS.map((method) => (
-            <Chip
-              key={method}
-              label={
-                method === 'email'
-                  ? t('send.deliveryEmail')
-                  : method === 'sms'
-                    ? t('send.deliverySms')
-                    : method === 'whatsapp'
-                      ? t('send.deliveryWhatsapp')
-                      : t('send.deliveryLink')
-              }
-              active={draft.deliveryMethod === method}
-              onPress={() => update({ deliveryMethod: method })}
-            />
-          ))}
+        <View style={styles.optionGrid}>
+          {DELIVERY_METHODS.map((method) => {
+            const active = draft.deliveryMethod === method;
+            const label =
+              method === 'email'
+                ? t('send.deliveryEmail')
+                : method === 'sms'
+                  ? t('send.deliverySms')
+                  : method === 'whatsapp'
+                    ? t('send.deliveryWhatsapp')
+                    : t('send.deliveryLink');
+            return (
+              <Pressable
+                key={method}
+                onPress={() => update({ deliveryMethod: method })}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                style={({ pressed }) => [
+                  styles.option,
+                  active && styles.optionActive,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <View style={[styles.optionIcon, active && styles.optionIconActive]}>
+                  <Glyph name={DELIVERY_ICONS[method]} size={20} color={active ? colors.textOnInk : colors.text} />
+                </View>
+                <Text style={[styles.optionLabel, active && styles.optionLabelActive]} numberOfLines={1}>
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
         {draft.deliveryMethod === 'whatsapp' ? (
           <Text style={styles.deliveryHint}>{t('send.deliveryWhatsappBody')}</Text>
         ) : null}
-        <View style={styles.chipRow}>
-          <Chip
-            label={t('send.deliveryNow')}
-            active={mode === 'now'}
+        <View style={styles.optionGrid}>
+          <Pressable
             onPress={() => {
               setModeEdit('now');
               setErrors((prev) => ({ ...prev, date: '' }));
             }}
-          />
-          <Chip
-            label={t('send.deliverySchedule')}
-            active={mode === 'schedule'}
+            accessibilityRole="button"
+            accessibilityState={{ selected: mode === 'now' }}
+            style={({ pressed }) => [styles.option, mode === 'now' && styles.optionActive, pressed && styles.pressed]}
+          >
+            <View style={[styles.optionIcon, mode === 'now' && styles.optionIconActive]}>
+              <Glyph name="send" size={20} color={mode === 'now' ? colors.textOnInk : colors.text} />
+            </View>
+            <Text style={[styles.optionLabel, mode === 'now' && styles.optionLabelActive]} numberOfLines={1}>
+              {t('send.deliveryNow')}
+            </Text>
+          </Pressable>
+          <Pressable
             onPress={() => setModeEdit('schedule')}
-          />
+            accessibilityRole="button"
+            accessibilityState={{ selected: mode === 'schedule' }}
+            style={({ pressed }) => [styles.option, mode === 'schedule' && styles.optionActive, pressed && styles.pressed]}
+          >
+            <View style={[styles.optionIcon, mode === 'schedule' && styles.optionIconActive]}>
+              <Glyph name="calendar" size={20} color={mode === 'schedule' ? colors.textOnInk : colors.text} />
+            </View>
+            <Text style={[styles.optionLabel, mode === 'schedule' && styles.optionLabelActive]} numberOfLines={1}>
+              {t('send.deliverySchedule')}
+            </Text>
+          </Pressable>
         </View>
         {mode === 'schedule' ? (
           <TextField
@@ -505,6 +541,22 @@ export default function GiftComposeScreen() {
           />
         ) : null}
       </Card>
+
+      {/* The card is the last step before paying: choose a cover, then flip it
+          to write or record on the beige back. */}
+      <CardStudio
+        coverId={draft.cover}
+        onCoverChange={(cover) => update({ cover })}
+        message={message}
+        onMessageChange={setMessageEdit}
+        items={cardItems}
+        onItemsChange={setCardItems}
+        mainAttachments={mainAttachments}
+        onMainAttachmentsChange={setMainAttachments}
+        title={offerTitle(offer, i18n.language)}
+        logoUrl={offerBusinessLogo(offer)}
+        meta={recipientName.trim() ? `${t('send.recipientTitle')}: ${recipientName.trim()}` : undefined}
+      />
 
       <Button
         label={t('gift.continueToPayment')}
@@ -603,6 +655,34 @@ const styles = themedStyles(() => ({
   designLabelActive: { color: colors.text },
   recipientRow: { gap: spacing.xs, paddingRight: spacing.md },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  optionGrid: { flexDirection: 'row', gap: spacing.sm },
+  option: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    minHeight: 56,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.sm,
+    paddingBottom: 2,
+  },
+  optionActive: { backgroundColor: colors.tealTint, borderColor: colors.tealDark, paddingBottom: 0 },
+  optionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.sm,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  optionIconActive: { backgroundColor: colors.tealDark, borderColor: colors.tealDark },
+  optionLabel: { flex: 1, fontFamily: fonts.bold, fontSize: fontSizes.sm, color: colors.text },
+  optionLabelActive: { color: colors.text },
   deliveryHint: {
     fontFamily: fonts.regular,
     fontSize: fontSizes.xs,

@@ -8,15 +8,28 @@ import type { Recipient } from './types';
 
 export type DeliveryMethod = 'email' | 'sms' | 'link' | 'whatsapp';
 
-/** One item pinned to the back of a gift card. */
-export interface CardBackMedia {
+export interface CardBackAttachment {
   id: string;
   type: 'photo' | 'gif' | 'video' | 'audio';
-  /** Local file URI on device, remote URL once uploaded. */
   uri?: string;
   url?: string;
   durationMs?: number;
   mimeType?: string;
+}
+
+/** One item pinned to the back of a gift card. */
+export interface CardBackMedia {
+  id: string;
+  type: 'note' | 'photo' | 'gif' | 'video' | 'audio';
+  /** Local file URI on device, remote URL once uploaded. Not used for notes. */
+  uri?: string;
+  /** Writing on a note paper. */
+  text?: string;
+  url?: string;
+  durationMs?: number;
+  mimeType?: string;
+  /** Media attached to a note paper. */
+  attachments?: CardBackAttachment[];
 }
 
 /**
@@ -47,6 +60,8 @@ export interface GiftDraft {
   media: GiftMedia | null;
   /** Collection of items on the back of the card (message is separate). */
   cardBackItems: CardBackMedia[];
+  /** Media attached to the main message note. */
+  mainAttachments: CardBackAttachment[];
   theme: string;
   wrapping: string;
   /** Basket code when joining an existing gift basket. */
@@ -67,6 +82,7 @@ export const EMPTY_DRAFT: GiftDraft = {
   cover: DEFAULT_COVER_ID,
   media: null,
   cardBackItems: [],
+  mainAttachments: [],
   theme: 'confetti',
   wrapping: 'ribbon',
   basketCode: null,
