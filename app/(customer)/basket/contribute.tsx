@@ -55,6 +55,7 @@ export default function ContributeScreen() {
     recipient?: string;
     occasion?: string;
     target?: string;
+    cover?: string;
     items?: string;
   }>();
   const { ready, getBasket, createBasket, addItem } = useBaskets();
@@ -108,6 +109,7 @@ export default function ContributeScreen() {
             name: params.name ?? t('basket.defaultName'),
             recipientName: params.recipient ?? t('basket.yourRecipient'),
             occasion: (params.occasion as OccasionId | undefined) ?? 'birthday',
+            coverId: params.cover || undefined,
             targetMinor: Number(params.target ?? 0) || 0,
             items: [],
           });
@@ -128,6 +130,7 @@ export default function ContributeScreen() {
           name: params.name ?? t('basket.defaultName'),
           recipientName: params.recipient ?? t('basket.yourRecipient'),
           occasion: (params.occasion as OccasionId | undefined) ?? 'birthday',
+          coverId: params.cover || undefined,
           targetMinor: Number(params.target ?? 0) || 0,
           items: [],
         });
