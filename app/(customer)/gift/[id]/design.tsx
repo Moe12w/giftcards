@@ -53,7 +53,16 @@ export default function GiftComposeScreen() {
   const { draft, update, ready } = useGiftDraft();
   const [offer, setOffer] = useState<Offer | null>(null);
   const [cardItems, setCardItems] = useState<CardBackItem[]>(
-    (draft.cardBackItems ?? []) as CardBackItem[],
+    ((draft.cardBackItems ?? []) as CardBackItem[]).filter((item) => {
+      // Drop leftover blank note papers so the builder starts with just
+      // envelope / note / skeleton instead of a pile of empty notecards.
+      if (item.type === 'note') {
+        const hasText = Boolean((item.text ?? '').trim());
+        const hasAttachments = Boolean(item.attachments && item.attachments.length);
+        if (!hasText && !hasAttachments) return false;
+      }
+      return true;
+    }),
   );
   const [mainAttachments, setMainAttachments] = useState<CardBackAttachment[]>(
     (draft.mainAttachments ?? []) as CardBackAttachment[],
