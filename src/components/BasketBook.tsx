@@ -91,13 +91,27 @@ function initials(name: string): string {
 }
 
 /**
+ * Sizes that grow with the book, from the narrowest phone layout (320pt wide)
+ * to the widest (430pt). The book itself is `bookWidth` points wide, so the
+ * paper page and the handwriting on it scale together instead of clipping.
+ */
+function between(compact: number, roomy: number, ratio: number): number {
+  return Math.round(compact + (roomy - compact) * ratio);
+}
+
+/** The room a 320pt phone leaves, and how much more a 430pt one leaves. */
+const BOOK_WIDTH_TIGHT = 288;
+const BOOK_WIDTH_ROOMY = 398;
+
+/**
  * The closed book: the basket's cover design, with paper edges peeking out from
  * under it, tape holding it together and the recipient's name in handwriting.
  * Pressing it swings the cover open.
  */
 export function BasketBookCover({ basket, onOpen }: { basket: GiftBasket; onOpen: () => void }) {
   useThemeRefresh();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const rtl = i18n.language === 'ar';
   const { width } = useWindowDimensions();
   const coverWidth = Math.min(Math.max(210, width - spacing.gutter * 2 - 56), 290);
   const coverHeight = Math.round(coverWidth * 1.24);
@@ -115,12 +129,12 @@ export function BasketBookCover({ basket, onOpen }: { basket: GiftBasket; onOpen
         <View style={styles.coverFront}>
           <View style={styles.coverClip}>
             <GiftCoverArt coverId={basket.cover_id ?? undefined} height={coverHeight} />
-            <View style={styles.coverSpine} />
+            <View style={[styles.coverSpine, rtl ? styles.spineRight : styles.spineLeft]} />
           </View>
           <View style={[styles.tape, styles.tapeTop]} />
           <View style={[styles.tape, styles.tapeBottom]} />
-          <View style={styles.coverLabel}>
-            <Text style={styles.coverLabelText} numberOfLines={1}>
+          <View style={[styles.coverLabel, rtl ? styles.coverLabelRtl : styles.coverLabelLtr]}>
+            <Text style={[styles.coverLabelText, rtl && styles.textRtl]} numberOfLines={1}>
               {t('basket.book.forRecipient', { name: basket.recipient_name })}
             </Text>
           </View>
@@ -150,6 +164,14 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const bookWidth = Math.min(windowWidth - spacing.gutter * 2, BOOK_MAX_WIDTH);
+  // 0 on a 320pt phone, 1 on a 430pt one. Everything inside the spread is sized
+  // from it, so the pink page never eats the writing page on a small screen.
+  const roomy = Math.max(
+    0,
+    Math.min(1, (bookWidth - BOOK_WIDTH_TIGHT) / (BOOK_WIDTH_ROOMY - BOOK_WIDTH_TIGHT)),
+  );
+  const leftPageWidth = between(88, 118, roomy);
+  const pagePadding = between(8, 10, roomy);
   const [bookHeight, setBookHeight] = useState(Math.round(windowHeight * 0.72));
   const [opening] = useState(() => new Animated.Value(0));
   const [keyboardRoom] = useState(() => new Animated.Value(0));
@@ -356,15 +378,38 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
           <View style={[styles.spread, rtl && styles.spreadRtl]}>
             {/* The inside of the front cover: the recipient, the wish and who
                 the book is from, all in handwriting. */}
-            <View style={styles.leftPage}>
-              <Text style={styles.leftTo} numberOfLines={2}>
+            <View
+              style={[styles.leftPage, { width: leftPageWidth, paddingHorizontal: pagePadding }]}
+            >
+              <Text
+                style={[
+                  styles.leftTo,
+                  { fontSize: between(17, 20, roomy), lineHeight: between(20, 23, roomy) },
+                  rtl && styles.textRtl,
+                ]}
+                numberOfLines={2}
+              >
                 {t('basket.book.forRecipient', { name: basket.recipient_name })}
               </Text>
-              <Text style={styles.leftWish} numberOfLines={4}>
+              <Text
+                style={[
+                  styles.leftWish,
+                  { fontSize: between(24, 30, roomy), lineHeight: between(27, 33, roomy) },
+                  rtl && styles.textRtl,
+                ]}
+                numberOfLines={5}
+              >
                 {basket.name}
               </Text>
-              <View style={styles.leftRule} />
-              <Text style={styles.leftFrom} numberOfLines={2}>
+              <View style={[styles.leftRule, rtl && styles.ruleRtl]} />
+              <Text
+                style={[
+                  styles.leftFrom,
+                  { fontSize: between(15, 17, roomy), lineHeight: between(19, 21, roomy) },
+                  rtl && styles.textRtl,
+                ]}
+                numberOfLines={2}
+              >
                 {t('basket.book.fromCreator', { name: basket.creator_name })}
               </Text>
             </View>
@@ -375,7 +420,14 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
             <View style={styles.rightPage}>
               <ScrollView
                 style={styles.pages}
-                contentContainerStyle={styles.pagesContent}
+                contentContainerStyle={[
+                  styles.pagesContent,
+                  {
+                    paddingHorizontal: pagePadding,
+                    paddingTop: pagePadding,
+                    paddingBottom: pagePadding + 4,
+                  },
+                ]}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
               >
@@ -391,6 +443,7 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
                       page={page}
                       index={index}
                       lang={lang}
+                      roomy={roomy}
                       canDelete={page.author_id === user?.id}
                       onDelete={() => void removeBookEntry(basket.id, page.id)}
                     />
@@ -399,9 +452,9 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
               </ScrollView>
 
               {basket.status !== 'completed' ? (
-                <View style={styles.composer}>
+                <View style={[styles.composer, { paddingHorizontal: pagePadding }]}>
                   {pending ? (
-                    <View style={styles.attachment}>
+                    <View style={[styles.attachment, rtl && styles.rowRtl]}>
                       {pending.type === 'audio' ? (
                         <VoiceWaveform durationSeconds={(pending.durationMs ?? 0) / 1000 || 4} width={110} height={24} />
                       ) : pending.type === 'video' ? (
@@ -422,14 +475,16 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
                   ) : null}
 
                   {recording ? (
-                    <View style={styles.recordingRow}>
+                    <View style={[styles.recordingRow, rtl && styles.rowRtl]}>
                       <VoiceWaveform
                         liveLevel={0.5}
                         durationSeconds={Math.max(1, (recorderState.durationMillis ?? 0) / 1000)}
                         width={130}
                         height={22}
                       />
-                      <Text style={styles.recordingLabel}>{t('basket.book.recording')}</Text>
+                      <Text style={[styles.recordingLabel, rtl && styles.textRtl]}>
+                        {t('basket.book.recording')}
+                      </Text>
                     </View>
                   ) : null}
 
@@ -439,13 +494,17 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
                     </Text>
                   ) : null}
 
-                  <View style={styles.inputRow}>
+                  <View style={[styles.inputRow, rtl && styles.rowRtl]}>
                     <TextInput
                       value={writing}
                       onChangeText={setWriting}
                       placeholder={t('basket.book.placeholder', { name: basket.recipient_name })}
                       placeholderTextColor={PAPER.muted}
-                      style={styles.input}
+                      style={[
+                        styles.input,
+                        { fontSize: between(19, 21, roomy), lineHeight: between(23, 25, roomy) },
+                        rtl && styles.inputRtl,
+                      ]}
                       multiline
                     />
                     <Pressable
@@ -463,7 +522,7 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
                     </Pressable>
                   </View>
 
-                  <View style={styles.tools}>
+                  <View style={[styles.tools, rtl && styles.rowRtl]}>
                     <Pressable
                       onPress={() => void pick('photo')}
                       accessibilityRole="button"
@@ -504,7 +563,9 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
                 </View>
               ) : (
                 <View style={styles.closedNote}>
-                  <Text style={styles.closedNoteText}>{t('basket.book.readOnly')}</Text>
+                  <Text style={[styles.closedNoteText, rtl && styles.textRtl]}>
+                    {t('basket.book.readOnly')}
+                  </Text>
                 </View>
               )}
             </View>
@@ -514,7 +575,7 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
               plane its back faces away and it simply leaves the screen. */}
           <Animated.View style={[styles.flap, coverStyle]} pointerEvents="none">
             <GiftCoverArt coverId={basket.cover_id ?? undefined} height={bookHeight} />
-            <View style={styles.flapSpine} />
+            <View style={[styles.flapSpine, rtl ? styles.spineRight : styles.spineLeft]} />
             <View style={[styles.tape, styles.flapTapeTop]} />
             <View style={[styles.tape, styles.flapTapeBottom]} />
           </Animated.View>
@@ -524,7 +585,11 @@ export function BasketBookReader({ basket, onClose }: { basket: GiftBasket; onCl
             hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel={t('basket.book.close')}
-            style={({ pressed }) => [styles.close, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.close,
+              rtl ? styles.closeRtl : styles.closeLtr,
+              pressed && styles.pressed,
+            ]}
           >
             <X size={18} color={PAPER.ink} />
           </Pressable>
@@ -539,47 +604,71 @@ function BookNote({
   page,
   index,
   lang,
+  roomy,
   canDelete,
   onDelete,
 }: {
   page: BasketMessage;
   index: number;
   lang: 'en' | 'ar';
+  roomy: number;
   canDelete: boolean;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
+  const rtl = lang === 'ar';
   const isMedia = page.kind !== 'text';
+  const pad = between(8, 10, roomy);
   return (
     <View
       style={[
         styles.note,
         { backgroundColor: PAPER.notes[index % PAPER.notes.length] },
         index % 2 === 0 ? styles.noteTiltLeft : styles.noteTiltRight,
+        { padding: pad, gap: between(6, 8, roomy) },
       ]}
     >
       {isMedia && page.media ? (
         page.kind === 'photo' || page.kind === 'gif' ? (
-          <Image source={page.media.url} style={styles.noteImage} contentFit="cover" transition={180} />
+          <Image
+            source={page.media.url}
+            style={[
+              styles.noteImage,
+              { height: between(130, 160, roomy), marginHorizontal: -pad, marginTop: -pad },
+            ]}
+            contentFit="cover"
+            transition={180}
+          />
         ) : (
+          // Media runs to the note's edges, like a photo stuck on the page, so a
+          // voice note's play button still fits on a 320pt phone.
           <GiftMediaView
             media={{
               type: page.kind as 'video' | 'audio',
               url: page.media.url,
               durationMs: page.media.durationMs,
             }}
-            height={170}
+            height={between(130, 170, roomy)}
+            style={{ marginHorizontal: -pad, marginTop: -pad }}
           />
         )
       ) : (
-        <Text style={styles.noteText}>{page.text}</Text>
+        <Text
+          style={[
+            styles.noteText,
+            { fontSize: between(19, 22, roomy), lineHeight: between(23, 26, roomy) },
+            rtl && styles.textRtl,
+          ]}
+        >
+          {page.text}
+        </Text>
       )}
 
-      <View style={styles.noteFoot}>
+      <View style={[styles.noteFoot, rtl && styles.noteFootRtl]}>
         <View style={styles.noteAvatar}>
           <Text style={styles.noteAvatarText}>{initials(page.author_name)}</Text>
         </View>
-        <Text style={styles.noteAuthor} numberOfLines={1}>
+        <Text style={[styles.noteAuthor, rtl && styles.textRtl]} numberOfLines={1}>
           {page.author_name}
         </Text>
         <Text style={styles.noteTime}>{timeAgo(page.created_at, lang)}</Text>
@@ -645,13 +734,19 @@ const styles = themedStyles(() => ({
     position: 'absolute',
     top: 0,
     bottom: 0,
-    left: 0,
     width: 12,
     backgroundColor: 'rgba(43, 38, 34, 0.16)',
   },
+  // The spine, tape and label follow the binding: left edge in English, right
+  // edge in Arabic.
+  spineLeft: { left: 0 },
+  spineRight: { right: 0 },
+  coverLabelLtr: { left: 14 },
+  coverLabelRtl: { right: 14 },
+  textRtl: { textAlign: 'right', writingDirection: 'rtl' },
+  ruleRtl: { alignSelf: 'flex-end' },
   coverLabel: {
     position: 'absolute',
-    left: 14,
     bottom: 14,
     maxWidth: '82%',
     backgroundColor: PAPER.tape,
@@ -725,24 +820,19 @@ const styles = themedStyles(() => ({
   },
   spread: { flex: 1, flexDirection: 'row' },
   spreadRtl: { flexDirection: 'row-reverse' },
+  // The width and side padding are set from the book's own width.
   leftPage: {
-    width: 116,
     backgroundColor: PAPER.left,
-    paddingHorizontal: 12,
     paddingTop: 18,
     paddingBottom: 14,
     gap: 6,
   },
   leftTo: {
     fontFamily: fonts.handwriting,
-    fontSize: 20,
-    lineHeight: 23,
     color: PAPER.ink,
   },
   leftWish: {
     fontFamily: fonts.handwritingBold,
-    fontSize: 30,
-    lineHeight: 33,
     color: PAPER.ink,
   },
   leftRule: {
@@ -754,13 +844,10 @@ const styles = themedStyles(() => ({
   },
   leftFrom: {
     fontFamily: fonts.handwriting,
-    fontSize: 17,
-    lineHeight: 21,
     color: PAPER.ink,
-    opacity: 0.85,
   },
   gutter: {
-    width: 14,
+    width: 10,
     backgroundColor: PAPER.page,
     borderLeftWidth: 1,
     borderRightWidth: 1,
@@ -768,7 +855,7 @@ const styles = themedStyles(() => ({
   },
   rightPage: { flex: 1, backgroundColor: PAPER.page },
   pages: { flex: 1 },
-  pagesContent: { padding: 10, gap: 10, paddingBottom: 14 },
+  pagesContent: { gap: 10 },
   emptyPage: { alignItems: 'center', gap: 6, paddingVertical: 28, paddingHorizontal: 8 },
   emptyText: {
     fontFamily: fonts.handwriting,
@@ -777,17 +864,17 @@ const styles = themedStyles(() => ({
     color: PAPER.muted,
     textAlign: 'center',
   },
-  note: { borderRadius: 14, padding: 10, gap: 8 },
+  note: { borderRadius: 14, overflow: 'hidden' },
   noteTiltLeft: { transform: [{ rotate: '-0.7deg' }] },
   noteTiltRight: { transform: [{ rotate: '0.7deg' }] },
   noteText: {
     fontFamily: fonts.handwriting,
-    fontSize: 22,
-    lineHeight: 26,
     color: PAPER.ink,
   },
-  noteImage: { width: '100%', height: 160, borderRadius: 10 },
+  noteImage: { alignSelf: 'stretch', borderRadius: 10 },
   noteFoot: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  noteFootRtl: { flexDirection: 'row-reverse' },
+  rowRtl: { flexDirection: 'row-reverse' },
   noteAvatar: {
     width: 22,
     height: 22,
@@ -821,13 +908,11 @@ const styles = themedStyles(() => ({
     top: 0,
     bottom: 0,
     width: 14,
-    left: 0,
     backgroundColor: 'rgba(43, 38, 34, 0.16)',
   },
   close: {
     position: 'absolute',
     top: 10,
-    right: 10,
     width: 36,
     height: 36,
     borderRadius: radii.pill,
@@ -836,11 +921,12 @@ const styles = themedStyles(() => ({
     justifyContent: 'center',
     zIndex: 3,
   },
+  closeLtr: { right: 10 },
+  closeRtl: { left: 10 },
   composer: {
     borderTopWidth: 1,
     borderStyle: 'dashed',
     borderColor: PAPER.rule,
-    paddingHorizontal: 10,
     paddingTop: 8,
     paddingBottom: 10,
     gap: 6,
@@ -882,11 +968,10 @@ const styles = themedStyles(() => ({
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontFamily: fonts.handwriting,
-    fontSize: 21,
-    lineHeight: 25,
     color: PAPER.ink,
     textAlignVertical: 'top',
   },
+  inputRtl: { textAlign: 'right', writingDirection: 'rtl' },
   send: {
     width: 42,
     height: 42,
