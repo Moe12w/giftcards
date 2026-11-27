@@ -41,6 +41,7 @@ export interface IntegrationContext {
   platformStatus: string;
   capabilities: Record<string, unknown>;
   credentialId: string;
+  credentialMappingId: string | null;
   environment: IntegrationEnvironment;
   signingSecret: string | null;
   idempotencyKey: string | null;
@@ -59,6 +60,7 @@ interface AuthenticatedCredential {
   environment: IntegrationEnvironment;
   signing_secret: string | null;
   capabilities: Record<string, unknown> | null;
+  mapping_id: string | null;
 }
 
 interface OperationClaim {
@@ -398,6 +400,7 @@ export async function runIntegration(
       platformStatus: credential.platform_status,
       capabilities: credential.capabilities ?? {},
       credentialId: credential.credential_id,
+      credentialMappingId: credential.mapping_id ?? null,
       environment: credential.environment,
       signingSecret: credential.signing_secret,
       idempotencyKey: request.headers.get('x-idempotency-key')?.trim() || null,
@@ -510,6 +513,17 @@ export async function resolveMapping(
   if (!mapping) throw new IntegrationError('MAPPING_NOT_FOUND');
   if (mapping.status !== 'active') throw new IntegrationError('MAPPING_NOT_ACTIVE');
   if (!mapping.vendor_id) throw new IntegrationError('MAPPING_NOT_ACTIVE');
+
+  // A vendor-bound credential must resolve to exactly the mapping it was
+  // issued for. It cannot point at another vendor's external id.
+  if (
+    context.credentialMappingId &&
+    mapping.mapping_id !== context.credentialMappingId
+  ) {
+    throw new IntegrationError('FORBIDDEN_SCOPE', {
+      detail: 'credential is bound to a different mapping',
+    });
+  }
 
   return mapping;
 }

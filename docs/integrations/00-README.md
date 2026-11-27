@@ -35,7 +35,10 @@ On the live database, `mock` remains the generic internal API test platform. A
 separate `wordpress` platform row was added for the WooCommerce plugin, with its
 own sandbox credential and verified mapping. Capabilities are marked supported
 but **not yet verified** for checkout/payment lifecycle until a real WordPress
-run is completed.
+run is completed. WordPress credentials are **vendor-bound** (`mapping_id` on
+the credential row): a site's key can only resolve its own verified mapping, so
+it cannot point at another vendor's external ID. Platform-level credentials for
+Snoonu/Talabat/Keeta remain unbound and resolve from the signed request.
 
 The gateway endpoints are documented in `02-integration-architecture.md` §5.
 Every platform capability remains declared `supported: false, verified: false`
