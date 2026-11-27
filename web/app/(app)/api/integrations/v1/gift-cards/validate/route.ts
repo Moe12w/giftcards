@@ -1,5 +1,6 @@
 import {
   optionalString,
+  rateLimitCard,
   requireString,
   resolveMapping,
   rpcRow,
@@ -51,6 +52,8 @@ export async function POST(request: Request) {
       });
       const cardCode = requireString(context.body, 'card_code', { maxLength: 200 });
       const currency = optionalString(context.body, 'currency', { maxLength: 8 });
+
+      await rateLimitCard(context, cardCode);
 
       const mapping = await resolveMapping(context, externalVendorId, externalBranchId);
 

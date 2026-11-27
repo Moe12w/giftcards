@@ -940,8 +940,9 @@ packages/checkout-sdk/
 
 Do not add a second redundant package. The same package serves web and React
 Native consumers; the React component is optional. The 0.x package is shipped
-as typed ESM source; compiled CJS/ESM `dist` is added when the API contract is
-frozen at 1.0.
+as typed ESM source; `npm run build` emits ESM plus declarations into `dist/`
+for a private-registry release. Compiled CJS output is added when the API
+contract is frozen at 1.0.
 
 ### 7.2 Trust boundary
 

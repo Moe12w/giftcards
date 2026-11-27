@@ -95,8 +95,12 @@ export function jsonResponse(
   status: number,
   body: StoredResponse | Record<string, unknown>,
   requestId: string,
+  headers?: Record<string, string>,
 ): NextResponse {
-  return NextResponse.json({ request_id: requestId, ...body }, { status });
+  return NextResponse.json(
+    { request_id: requestId, ...body },
+    { status, headers },
+  );
 }
 
 export function errorResponse(error: IntegrationError, requestId: string): NextResponse {
@@ -111,6 +115,7 @@ export function errorResponse(error: IntegrationError, requestId: string): NextR
       },
     },
     requestId,
+    error.status === 429 ? { 'Retry-After': '60' } : undefined,
   );
 }
 
@@ -531,4 +536,20 @@ export async function resolveMapping(
 export function rpcRow<T>(data: unknown): T | null {
   const rows = (Array.isArray(data) ? data : data ? [data] : []) as T[];
   return rows[0] ?? null;
+}
+
+/** Throttles card-code lookups without ever logging the code itself. */
+export async function rateLimitCard(context: IntegrationContext, cardCode: string): Promise<void> {
+  const hash = createHash('sha256').update(cardCode.trim().toUpperCase()).digest('hex');
+  const { error } = await context.admin.rpc('integration_rate_limit', {
+    p_key: `integration:card:${hash}`,
+    p_max: 10,
+    p_window_seconds: 600,
+  });
+  if (error) {
+    if (error.message.toLowerCase().includes('too_many_requests')) {
+      throw new IntegrationError('RATE_LIMITED');
+    }
+    console.warn('integration card rate limit unavailable:', error.message);
+  }
 }

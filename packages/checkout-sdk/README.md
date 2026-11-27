@@ -106,4 +106,5 @@ match `docs/integrations/02-integration-architecture.md` §5.5.
 ```bash
 npm test          # from the repository root (vitest includes this package)
 npm run typecheck # from this directory
+npm run build     # emits dist/ with ESM + declarations
 ```

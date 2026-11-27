@@ -48,6 +48,41 @@ export async function issueVendorCredential(
   return { status: 'success', apiKey, signingSecret };
 }
 
+export async function resolveReconciliationCase(formData: FormData): Promise<void> {
+  const caseId = String(formData.get('case_id') ?? '').trim();
+  const resolution = String(formData.get('resolution') ?? '').trim();
+  if (!caseId || !resolution) return;
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('integration_admin_resolve_case', {
+    p_case_id: caseId,
+    p_resolution: resolution,
+    p_evidence: {},
+  });
+  if (error) {
+    console.error('Could not resolve reconciliation case:', error.message);
+    return;
+  }
+  revalidatePath('/admin/integrations');
+}
+
+export async function setPlatformStatus(formData: FormData): Promise<void> {
+  const code = String(formData.get('platform_code') ?? '').trim();
+  const status = String(formData.get('status') ?? '').trim();
+  if (!code || !status) return;
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('integration_admin_set_platform_status', {
+    p_platform_code: code,
+    p_status: status,
+  });
+  if (error) {
+    console.error('Could not change platform status:', error.message);
+    return;
+  }
+  revalidatePath('/admin/integrations');
+}
+
 export async function revokeVendorCredential(formData: FormData): Promise<void> {
   const credentialId = String(formData.get('credential_id') ?? '').trim();
   if (!credentialId) return;

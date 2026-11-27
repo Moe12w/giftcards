@@ -1,5 +1,9 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/auth';
+import {
+  resolveReconciliationCase,
+  setPlatformStatus,
+} from '@/lib/actions/integration';
 import { PageHead } from '@/components/ui';
 import { VendorIntegrationPanel } from '@/components/integrations/VendorIntegrationPanel';
 import { integrationsCopy } from '@/lib/i18n/integrations';
@@ -80,6 +84,7 @@ export default async function AdminIntegrationsPage() {
                   <th>Name</th>
                   <th>Status</th>
                   <th>Updated</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -89,6 +94,18 @@ export default async function AdminIntegrationsPage() {
                     <td>{platform.name}</td>
                     <td>{platform.status}</td>
                     <td>{platform.updated_at?.slice(0, 10) ?? '—'}</td>
+                    <td>
+                      <form action={setPlatformStatus} className="inline-form">
+                        <input type="hidden" name="platform_code" value={platform.code} />
+                        <select name="status" defaultValue={platform.status}>
+                          <option value="draft">draft</option>
+                          <option value="active">active</option>
+                          <option value="suspended">suspended</option>
+                          <option value="retired">retired</option>
+                        </select>
+                        <button className="btn sm" type="submit">Set</button>
+                      </form>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -144,6 +161,7 @@ export default async function AdminIntegrationsPage() {
                     <th>Order</th>
                     <th>Reason</th>
                     <th>Created</th>
+                    <th>Resolve</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -152,6 +170,18 @@ export default async function AdminIntegrationsPage() {
                       <td>{item.external_order_id ?? '—'}</td>
                       <td>{item.reason}</td>
                       <td>{item.created_at?.slice(0, 10) ?? '—'}</td>
+                      <td>
+                        <form action={resolveReconciliationCase} className="inline-form">
+                          <input type="hidden" name="case_id" value={item.id} />
+                          <select name="resolution" defaultValue="resolved_released">
+                            <option value="resolved_captured">captured</option>
+                            <option value="resolved_released">released</option>
+                            <option value="resolved_refunded">refunded</option>
+                            <option value="ignored">ignored</option>
+                          </select>
+                          <button className="btn sm" type="submit">Resolve</button>
+                        </form>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
