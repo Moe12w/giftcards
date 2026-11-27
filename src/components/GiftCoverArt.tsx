@@ -8,7 +8,12 @@ import { Text, View } from 'react-native';
 import Svg, { Circle, Defs, G, LinearGradient, Line, Path, Rect, Stop } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 
-import { giftCover, GIFT_COVERS, type GiftCover } from '../lib/gift-covers';
+import {
+  giftCover,
+  GIFT_COVERS,
+  type CoverIllustration,
+  type GiftCover,
+} from '../lib/gift-covers';
 import { giftSticker } from '../lib/gift-stickers';
 import { fonts, fontSizes, radii, themedStyles } from '../theme';
 import { Glyph } from './Glyph';
@@ -18,6 +23,14 @@ const VIEW_HEIGHT = 260;
 /** Checker squares are 20 units so the band closes exactly at the card edge. */
 const CHECKER = 20;
 
+/** Watercolour panels generated for the printed covers, bundled with the app. */
+const ILLUSTRATION_SOURCES: Record<CoverIllustration, number> = {
+  birthday: require('../../assets/covers/birthday.jpg'),
+  bath: require('../../assets/covers/bath.jpg'),
+  flowers: require('../../assets/covers/flowers.jpg'),
+  fireworks: require('../../assets/covers/fireworks.jpg'),
+};
+
 /** Reads the cover's printed words from i18n, tolerating an empty design. */
 function useCoverWords(cover: GiftCover): string[] {
   const { t } = useTranslation();
@@ -25,8 +38,27 @@ function useCoverWords(cover: GiftCover): string[] {
   return Array.isArray(words) ? (words as string[]) : [];
 }
 
-/** Decorative layer painted behind the words and the motif. */
+/** Scattered shape colours, falling back to the cover's single decoration ink. */
+function paletteOf(cover: GiftCover): string[] {
+  return cover.palette && cover.palette.length > 0 ? cover.palette : [cover.decorationColor];
+}
+
+/** A five-point star, painted the same way as the other scattered shapes. */
+function starPath(cx: number, cy: number, radius: number): string {
+  const points: string[] = [];
+  for (let index = 0; index < 10; index += 1) {
+    const pointRadius = index % 2 === 0 ? radius : radius * 0.44;
+    const angle = (index / 10) * Math.PI * 2 - Math.PI / 2;
+    points.push(
+      `${cx + Math.cos(angle) * pointRadius},${cy + Math.sin(angle) * pointRadius}`,
+    );
+  }
+  return `M${points.join(' L')} Z`;
+}
+
+/** Decorative layer painted behind the words and the illustration. */
 function decoration(cover: GiftCover) {
+  const palette = paletteOf(cover);
   switch (cover.decoration) {
     case 'blobs':
       return (
@@ -60,22 +92,113 @@ function decoration(cover: GiftCover) {
     }
     case 'confetti': {
       const pieces: React.ReactNode[] = [];
-      for (let index = 0; index < 22; index += 1) {
-        const x = 12 + ((index * 53) % 180);
-        const y = 16 + ((index * 71) % 220);
-        const rotation = (index * 47) % 180;
+      for (let index = 0; index < 30; index += 1) {
+        const x = 8 + ((index * 37) % 184);
+        const y = 10 + ((index * 61) % 240);
+        const rotation = (index * 43) % 180;
+        const tall = index % 3 !== 0;
         pieces.push(
           <G key={index} transform={`translate(${x} ${y}) rotate(${rotation})`}>
             <Rect
-              x={-4}
-              y={-2}
-              width={index % 3 === 0 ? 4 : 8}
-              height={index % 3 === 0 ? 8 : 4}
-              rx={1.5}
-              fill={cover.decorationColor}
-              opacity={0.55}
+              x={-2.5}
+              y={tall ? -5 : -2.5}
+              width={5}
+              height={tall ? 10 : 5}
+              rx={2.5}
+              fill={palette[index % palette.length]}
+              opacity={0.9}
             />
           </G>,
+        );
+      }
+      // A few painted stars and dots between the confetti strips.
+      for (let index = 0; index < 5; index += 1) {
+        pieces.push(
+          <Path
+            key={`star-${index}`}
+            d={starPath(22 + ((index * 47) % 160), 30 + ((index * 53) % 200), 6)}
+            fill={palette[(index + 2) % palette.length]}
+            opacity={0.85}
+          />,
+        );
+      }
+      return <G>{pieces}</G>;
+    }
+    case 'squiggles': {
+      const waves = [
+        { x: 8, y: 40 },
+        { x: 118, y: 26 },
+        { x: 20, y: 116 },
+        { x: 126, y: 152 },
+        { x: 4, y: 212 },
+        { x: 130, y: 236 },
+      ];
+      return (
+        <G>
+          {waves.map((wave, index) => (
+            <Path
+              key={`wave-${index}`}
+              d={`M${wave.x},${wave.y} q10,-14 20,0 t20,0`}
+              fill="none"
+              stroke={palette[index % palette.length]}
+              strokeWidth={5}
+              strokeLinecap="round"
+              opacity={0.9}
+            />
+          ))}
+          {[0, 1, 2, 3, 4].map((index) => (
+            <Path
+              key={`star-${index}`}
+              d={starPath(30 + ((index * 41) % 150), 54 + ((index * 57) % 190), 7)}
+              fill={palette[(index + 1) % palette.length]}
+              opacity={0.9}
+            />
+          ))}
+          {[0, 1, 2, 3].map((index) => (
+            <Circle
+              key={`dot-${index}`}
+              cx={16 + ((index * 59) % 170)}
+              cy={72 + ((index * 43) % 160)}
+              r={3.4}
+              fill={palette[(index + 2) % palette.length]}
+              opacity={0.9}
+            />
+          ))}
+        </G>
+      );
+    }
+    case 'dots': {
+      const pieces: React.ReactNode[] = [];
+      for (let index = 0; index < 14; index += 1) {
+        const x = 10 + ((index * 43) % 180);
+        const y = 14 + ((index * 67) % 230);
+        const size = 3 + (index % 3) * 2.2;
+        const color = palette[index % palette.length];
+        pieces.push(
+          index % 4 === 0 ? (
+            <Circle
+              key={`ring-${index}`}
+              cx={x}
+              cy={y}
+              r={size + 3}
+              fill="none"
+              stroke={color}
+              strokeWidth={2.4}
+              opacity={0.8}
+            />
+          ) : (
+            <Circle key={`dot-${index}`} cx={x} cy={y} r={size} fill={color} opacity={0.85} />
+          ),
+        );
+      }
+      for (let index = 0; index < 5; index += 1) {
+        pieces.push(
+          <Path
+            key={`star-${index}`}
+            d={starPath(26 + ((index * 51) % 156), 34 + ((index * 71) % 200), 6)}
+            fill={palette[(index + 2) % palette.length]}
+            opacity={0.85}
+          />,
         );
       }
       return <G>{pieces}</G>;
@@ -166,6 +289,7 @@ export function GiftCoverArt({
     artWidth > 0 && longestWord > 0
       ? Math.min(1, (artWidth - padding * 2) / (longestWord * wordSize * 0.62))
       : 1;
+  const titleColors = cover.titleColors?.length ? cover.titleColors : [cover.titleColor];
 
   const title =
     words.length > 0 ? (
@@ -174,13 +298,19 @@ export function GiftCoverArt({
           <Text
             key={`${word}-${index}`}
             style={{
-              color: cover.titleColor,
+              color: titleColors[index % titleColors.length],
               fontFamily: block ? fonts.black : fonts.semibold,
               fontStyle: block ? 'normal' : 'italic',
               fontSize: wordSize * fit,
               lineHeight: (block ? 25 : 31) * scale * fit,
               letterSpacing: block ? 0.4 : 0.2,
               textTransform: block ? 'uppercase' : 'none',
+              // Each word sits at a slightly different angle, as though the
+              // lettering were pasted onto the card by hand.
+              transform: [{ rotate: `${index % 2 === 0 ? -2 : 1.6}deg` }],
+              textShadowColor: block ? 'rgba(28, 28, 28, 0.35)' : 'transparent',
+              textShadowOffset: { width: 0, height: 2 },
+              textShadowRadius: 1,
             }}
           >
             {word}
@@ -189,7 +319,26 @@ export function GiftCoverArt({
       </View>
     ) : null;
 
-  const motif = (
+  const illustrationSize = compact ? height * 0.4 : Math.min(122, height * 0.5);
+  const motif = cover.illustration ? (
+    <View
+      style={[
+        styles.illustration,
+        {
+          width: illustrationSize,
+          height: illustrationSize,
+          transform: [{ rotate: cover.id.length % 2 === 0 ? '2.5deg' : '-2.5deg' }],
+        },
+      ]}
+    >
+      <Image
+        source={ILLUSTRATION_SOURCES[cover.illustration]}
+        style={styles.illustrationImage}
+        contentFit="cover"
+        transition={150}
+      />
+    </View>
+  ) : (
     <View
       style={[
         styles.motif,
@@ -317,13 +466,13 @@ const styles = themedStyles(() => ({
   content: {
     flex: 1,
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   contentCompact: { padding: 8, gap: 4 },
   contentRoom: { padding: 16 },
   contentCenter: { justifyContent: 'center' },
-  // Top-aligned designs stack the words and motif from the top, so neither
-  // sits on the printed band along the bottom edge.
+  // Top-aligned designs stack the words and illustration from the top, so
+  // neither sits on the printed band along the bottom edge.
   contentTop: { justifyContent: 'flex-start' },
   contentBottom: { justifyContent: 'space-between' },
   words: { alignItems: 'center' },
@@ -333,6 +482,15 @@ const styles = themedStyles(() => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // The painted panel reads as a white card pasted onto the printed cover.
+  illustration: {
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: '#1C1C1C',
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  illustrationImage: { width: '100%', height: '100%' },
   labelPill: {
     position: 'absolute',
     top: 12,

@@ -4,13 +4,26 @@
 // always looks like the same card, which is why the colours live here rather
 // than in the palette.
 //
+// The look is a printed greeting card: a bright plate scattered with painted
+// shapes, bold stacked lettering, and a watercolour illustration panel.
+//
 // Covers are stored on the draft by id only, so a saved draft keeps working
 // when the artwork or its words change.
 
-export type CoverDecoration = 'blobs' | 'checker' | 'confetti' | 'arch' | 'sunburst' | 'none';
+export type CoverDecoration =
+  | 'blobs'
+  | 'checker'
+  | 'confetti'
+  | 'squiggles'
+  | 'dots'
+  | 'arch'
+  | 'sunburst'
+  | 'none';
 export type CoverTitleStyle = 'block' | 'script';
 /** Where the printed words sit on the card. */
 export type CoverLayout = 'titleTop' | 'titleCenter' | 'titleBottom' | 'motifOnly';
+/** A painted illustration panel printed on the card, bundled with the app. */
+export type CoverIllustration = 'birthday' | 'bath' | 'flowers' | 'fireworks';
 
 export interface GiftCover {
   id: string;
@@ -30,34 +43,49 @@ export interface GiftCover {
   ink: string;
   decoration: CoverDecoration;
   decorationColor: string;
+  /** Painted shape colours scattered over the plate. */
+  palette?: string[];
+  /** One colour per printed word, cycling if there are fewer colours than words. */
+  titleColors?: string[];
+  /** Watercolour panel printed on the card, replacing the glyph motif. */
+  illustration?: CoverIllustration;
   layout: CoverLayout;
   titleStyle: CoverTitleStyle;
   titleColor: string;
 }
+
+/** The painted card colours: coral, tangerine, butter, navy and violet. */
+const WARM_PALETTE = ['#E0453F', '#F79A3C', '#F6CE45', '#3E5BA9', '#8B6BD9'];
 
 export const GIFT_COVERS: GiftCover[] = [
   {
     id: 'thankYou',
     nameKey: 'thankYou',
     glyph: 'bloom',
-    background: '#F6B4CE',
-    backgroundTo: '#E96E9E',
-    ink: '#FFFFFF',
-    decoration: 'blobs',
-    decorationColor: '#FFFFFF',
-    layout: 'titleCenter',
+    background: '#FFF2DC',
+    backgroundTo: '#FFDFBE',
+    ink: '#E0453F',
+    decoration: 'confetti',
+    decorationColor: '#F6CE45',
+    palette: WARM_PALETTE,
+    titleColors: ['#E0453F'],
+    illustration: 'flowers',
+    layout: 'titleTop',
     titleStyle: 'script',
-    titleColor: '#FFFFFF',
+    titleColor: '#E0453F',
   },
   {
     id: 'birthday',
     nameKey: 'birthday',
     glyph: 'birthday',
-    background: '#F7A85B',
-    backgroundTo: '#EE7568',
+    background: '#FFB45C',
+    backgroundTo: '#F87A5C',
     ink: '#FFF6E8',
-    decoration: 'checker',
-    decorationColor: '#1C1C1C',
+    decoration: 'confetti',
+    decorationColor: '#FFF6E8',
+    palette: ['#FFFFFF', '#F6CE45', '#F4567C', '#3FA9A0', '#8B6BD9'],
+    titleColors: ['#FFFFFF', '#FFF0B0'],
+    illustration: 'birthday',
     layout: 'titleTop',
     titleStyle: 'block',
     titleColor: '#FFFFFF',
@@ -66,11 +94,13 @@ export const GIFT_COVERS: GiftCover[] = [
     id: 'congrats',
     nameKey: 'congrats',
     glyph: 'congratulations',
-    background: '#E8578A',
-    backgroundTo: '#F2903C',
+    background: '#FF84AB',
+    backgroundTo: '#F0507F',
     ink: '#FFF6E8',
-    decoration: 'confetti',
-    decorationColor: '#FFF6E8',
+    decoration: 'squiggles',
+    decorationColor: '#FFF0B0',
+    palette: ['#FFF0B0', '#F79A3C', '#3FA9A0', '#8B6BD9'],
+    titleColors: ['#FFFFFF', '#FFE066'],
     layout: 'titleTop',
     titleStyle: 'block',
     titleColor: '#FFFFFF',
@@ -79,24 +109,28 @@ export const GIFT_COVERS: GiftCover[] = [
     id: 'goodLuck',
     nameKey: 'goodLuck',
     glyph: 'sprout',
-    background: '#FBE0C9',
-    backgroundTo: '#F5C2A0',
-    ink: '#4B9C93',
-    decoration: 'none',
-    decorationColor: '#F5C2A0',
+    background: '#FBF3D4',
+    backgroundTo: '#F0E1A9',
+    ink: '#2F7D67',
+    decoration: 'dots',
+    decorationColor: '#2F7D67',
+    palette: ['#7FBF6A', '#F6CE45', '#F79A3C', '#3FA9A0'],
+    titleColors: ['#2F7D67'],
     layout: 'titleCenter',
     titleStyle: 'script',
-    titleColor: '#3E5BA9',
+    titleColor: '#2F7D67',
   },
   {
     id: 'anniversary',
     nameKey: 'anniversary',
     glyph: 'trophy',
-    background: '#6E1B45',
-    backgroundTo: '#3C0D25',
+    background: '#4E1032',
+    backgroundTo: '#26061A',
     ink: '#F2B233',
-    decoration: 'arch',
-    decorationColor: '#A6315F',
+    decoration: 'squiggles',
+    decorationColor: '#F2B233',
+    palette: ['#F4A0C0', '#F2B233', '#8FD3A8', '#C9A9F5'],
+    titleColors: ['#FFFFFF', '#FFD9A0'],
     layout: 'titleCenter',
     titleStyle: 'block',
     titleColor: '#FFFFFF',
@@ -105,37 +139,45 @@ export const GIFT_COVERS: GiftCover[] = [
     id: 'love',
     nameKey: 'love',
     glyph: 'heart',
-    background: '#FDE7E4',
-    backgroundTo: '#F7C4BE',
-    ink: '#D9534F',
-    decoration: 'blobs',
-    decorationColor: '#E88C86',
+    background: '#FFE4E9',
+    backgroundTo: '#FFBDCD',
+    ink: '#C4314B',
+    decoration: 'confetti',
+    decorationColor: '#C4314B',
+    palette: ['#C4314B', '#F4567C', '#F79A3C', '#F6CE45'],
+    titleColors: ['#C4314B'],
     layout: 'titleCenter',
     titleStyle: 'script',
-    titleColor: '#A83E3A',
+    titleColor: '#C4314B',
   },
   {
     id: 'justBecause',
     nameKey: 'justBecause',
     glyph: 'star',
-    background: '#2A38B8',
-    backgroundTo: '#151D74',
-    ink: '#F2B233',
-    decoration: 'sunburst',
-    decorationColor: '#F2B233',
-    layout: 'titleBottom',
+    background: '#3E5BD6',
+    backgroundTo: '#2233B0',
+    ink: '#F6CE45',
+    decoration: 'dots',
+    decorationColor: '#F6CE45',
+    palette: ['#F6CE45', '#F4567C', '#3FD0C0', '#C9A9F5'],
+    titleColors: ['#FFE066', '#FFFFFF'],
+    illustration: 'fireworks',
+    layout: 'titleTop',
     titleStyle: 'block',
-    titleColor: '#FFD9A0',
+    titleColor: '#FFE066',
   },
   {
     id: 'treatYourself',
     nameKey: 'treatYourself',
     glyph: 'spa',
-    background: '#95D096',
-    backgroundTo: '#5AA76A',
+    background: '#B6E3A6',
+    backgroundTo: '#7CC489',
     ink: '#FFFFFF',
-    decoration: 'none',
-    decorationColor: '#5AA76A',
+    decoration: 'dots',
+    decorationColor: '#FFFFFF',
+    palette: ['#FFFFFF', '#3FA9A0', '#F6CE45', '#F4567C'],
+    titleColors: ['#E0453F', '#FFFFFF'],
+    illustration: 'bath',
     layout: 'titleTop',
     titleStyle: 'block',
     titleColor: '#E0453F',
@@ -145,10 +187,12 @@ export const GIFT_COVERS: GiftCover[] = [
     nameKey: 'giftBox',
     glyph: 'gift',
     background: '#FCEFDC',
-    backgroundTo: '#F3DDBC',
-    ink: '#D9534F',
+    backgroundTo: '#F6D6AE',
+    ink: '#C4314B',
     decoration: 'checker',
     decorationColor: '#F0A8BC',
+    palette: ['#F0A8BC', '#C4314B', '#F79A3C'],
+    titleColors: ['#8A3450', '#C4314B'],
     layout: 'titleCenter',
     titleStyle: 'block',
     titleColor: '#8A3450',
