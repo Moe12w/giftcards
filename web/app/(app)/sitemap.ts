@@ -30,6 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPaths: { path: string; meta: EntryMeta }[] = [
     { path: '', meta: { lastModified: now, changeFrequency: 'weekly', priority: 1 } },
     { path: '/ai-gift-cards', meta: { lastModified: now, changeFrequency: 'weekly', priority: 0.9 } },
+    { path: '/plug-in-integrations', meta: { lastModified: now, changeFrequency: 'monthly', priority: 0.7 } },
     { path: '/vendors', meta: { lastModified: now, changeFrequency: 'daily', priority: 0.9 } },
     { path: '/corporate', meta: { lastModified: now, changeFrequency: 'monthly', priority: 0.8 } },
     { path: '/download', meta: { lastModified: now, changeFrequency: 'monthly', priority: 0.7 } },

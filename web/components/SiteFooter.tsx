@@ -26,6 +26,7 @@ export function SiteFooter() {
       links: [
         { href: '/vendor/register', label: t.vendorSignUp },
         { href: '/enterprise/register', label: t.partnerSignUp },
+        { href: '/plug-in-integrations', label: t.plugInIntegrations },
         { href: '/contact', label: t.contact },
         { href: '/terms', label: t.terms },
         { href: '/privacy', label: t.privacy },

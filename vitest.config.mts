@@ -25,6 +25,7 @@ export default defineConfig({
       'supabase/**/*.test.ts',
       'web/lib/**/*.test.ts',
       'web/app/**/*.test.ts',
+      'packages/**/*.test.ts',
       'tests/**/*.test.ts',
     ],
     globals: true,
