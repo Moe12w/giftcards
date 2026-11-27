@@ -450,10 +450,10 @@ describeDb('integration redemption engine (real database, rolled back)', { timeo
            reference, platform_id, mapping_id, voucher_id, vendor_id, external_order_id,
            amount_minor, currency, status, idempotency_key, expires_at, capture_started_at
          )
-         select 'RSV-EXPIRED-' || substr($3::text, 1, 8), $1, $2, $4, $5, 'db-expired',
+         select 'RSV-EXPIRED-' || substr($3::text, 1, 8), $1::uuid, $2::uuid, $4::uuid, $5::uuid, 'db-expired',
                 1000, 'KWD', 'active', $3, now() - interval '1 minute', null
          union all
-         select 'RSV-STUCK-' || substr($3::text, 1, 8), $1, $2, $4, $5, 'db-stuck',
+         select 'RSV-STUCK-' || substr($3::text, 1, 8), $1::uuid, $2::uuid, $4::uuid, $5::uuid, 'db-stuck',
                 1000, 'KWD', 'active', $6, now() - interval '1 minute', now() - interval '2 minutes'`,
         [fixture.platformId, fixture.mappingId, 'db_expired_key', fixture.voucherId, fixture.vendorId, 'db_stuck_key'],
       );
