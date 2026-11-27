@@ -9,6 +9,7 @@ and POS systems).
 
 | Document | Purpose | Status |
 |---|---|---|
+| `04-wordpress-install.md` | Vendor-facing install steps and the go-live verification checklist | Current |
 | `01-codebase-audit.md` | Phase 1 audit of the existing marketplace, gift-card engine, business model, payments, APIs and tests | Complete |
 | `02-integration-architecture.md` | Phase 2 architecture, data model, API contract, reservation lifecycle, SDK, sandbox and phased plan | Approved; implemented through Phase 5 (Level 1) |
 | `03-platform-capability-assessments.md` | What is actually known about Snoonu, Talabat and Keeta, and what must be obtained before a connector is written | Investigation open |
@@ -23,7 +24,8 @@ and POS systems).
 | 4 — redemption engine | Implemented, DB tests written but unrun (no `TEST_DATABASE_URL`) | `supabase/migrations/0175_integration_redemption.sql`, `0176_integration_authenticate_fix.sql`, `0177_integration_variable_conflict.sql`, `0178_integration_refund_conflict.sql`, `tests/db/integrations.test.ts` |
 | 5 — gateway | Implemented; unit + signed HTTP E2E tests pass | `web/lib/integrations/gateway.ts`, `web/lib/integrations/errors.ts`, `web/lib/integrations/errors.test.ts`, `web/app/(app)/api/integrations/v1/**`, `web/app/(app)/api/cron/route.ts`, `tests/integrations/gateway.e2e.test.ts` |
 | 6 — checkout SDK | Implemented, unit-tested, no live-platform certification | `packages/checkout-sdk/` |
-| WordPress / WooCommerce | Scaffold implemented, untested against WordPress | `packages/wordpress/tazella-gift-cards/` |
+| WordPress / WooCommerce | Installable plugin; ZIP published at `/downloads/tazella-gift-cards.zip`. Verified end to end on a local WordPress 7.1.5 + WooCommerce 11.3.1 install (HPOS on and off) against a stand-in gateway; not yet against the production gateway | `packages/wordpress/tazella-gift-cards/`, `packages/wordpress/tazella-gift-cards/tests/sandbox/`, `scripts/package-wordpress-plugin.mjs` |
+| WordPress install runbook | Vendor install steps plus the go-live verification list | `04-wordpress-install.md` |
 | Integration dashboards | Admin console + vendor self-service key issuance | `web/app/(app)/admin/(dashboard)/integrations/page.tsx`, `web/app/(app)/vendor/(dashboard)/settings/page.tsx`, `supabase/migrations/0180_integration_dashboard_rpcs.sql` |
 | 6–10 — sandbox, connectors, dashboards, release | Not started | — |
 
@@ -93,7 +95,9 @@ creates real (fake) redemptions and refunds, so use sandbox data only.
 The repository has **Level 1 infrastructure running on the live database**:
 migrations `0174`–`0180` are applied, a vendor-bound WordPress credential and a
 mock sandbox credential exist, and the signed HTTP suite passes 8/8 against a
-real server and the live Supabase project. The SQL-only DB tests in
+real server and the live Supabase project. Migrations `0181`–`0183` must also be
+applied: `0183` is what lets a caller omit `X-Platform-Code` / `X-Environment`
+and have the credential's own platform and environment used. The SQL-only DB tests in
 `tests/db/integrations.test.ts` are still skipped because this environment cannot
 resolve the direct Postgres host; they remain the remaining Level 1 evidence
 gap. No third-party platform capability has been verified and no production

@@ -66,6 +66,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:db": "vitest run tests/db",
+    "package:wordpress": "node scripts/package-wordpress-plugin.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
     "lint:web": "npm --prefix web run lint"

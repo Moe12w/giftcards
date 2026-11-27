@@ -4,10 +4,12 @@ import {
   ArrowRight,
   BadgeCheck,
   Check,
+  Download,
   Gift,
   Globe2,
   KeyRound,
   Layers3,
+  PackageCheck,
   Plug,
   ReceiptText,
   RefreshCcw,
@@ -16,13 +18,17 @@ import {
   Wallet,
 } from 'lucide-react';
 import { integrationsCopy } from '@/lib/i18n/integrations';
-import { pick } from '@/lib/i18n';
+import { fill, pick } from '@/lib/i18n';
 import { getPublicLocale } from '@/lib/i18n/server';
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tazella.com.qa').replace(
   /\/$/,
   '',
 );
+
+/** Kept in step with packages/wordpress/tazella-gift-cards/composer.json. */
+const PLUGIN_VERSION = '0.1.0';
+const PLUGIN_DOWNLOAD = '/downloads/tazella-gift-cards.zip';
 
 function pageUrl(locale: string) {
   return `${SITE_URL}/${locale}/plug-in-integrations`;
@@ -250,6 +256,61 @@ export default async function PlugInIntegrationsPage() {
             <p className="lede">{t.wordpress.body}</p>
           </div>
         </div>
+        <div className="ai-mcp card" style={{ marginBottom: 22 }}>
+          <div className="grid-2" style={{ alignItems: 'start' }}>
+            <div>
+              <span className="icon-tile mint">
+                <PackageCheck size={22} />
+              </span>
+              <h3 style={{ marginTop: 12 }}>{t.wordpress.downloadTitle}</h3>
+              <p className="small" style={{ marginTop: 8 }}>
+                {fill(t.wordpress.downloadBody, { version: PLUGIN_VERSION })}
+              </p>
+              <a className="btn primary" href={PLUGIN_DOWNLOAD} download style={{ marginTop: 14 }}>
+                <Download size={16} /> {t.wordpress.downloadCta}
+              </a>
+              <p className="small muted" style={{ marginTop: 10 }}>
+                {t.wordpress.downloadNote}
+              </p>
+              <p className="small muted" style={{ marginTop: 10 }}>
+                <code>tazella-gift-cards.zip</code> · v{PLUGIN_VERSION}
+              </p>
+            </div>
+            <div>
+              <h3>{t.wordpress.requirementsTitle}</h3>
+              <ul className="check-list">
+                {t.wordpress.requirements.map((requirement) => (
+                  <li key={requirement}>
+                    <Check size={16} /> {requirement}
+                  </li>
+                ))}
+              </ul>
+              <div className="callout info" style={{ marginTop: 18 }}>
+                <KeyRound size={16} />{' '}
+                <Link href="/vendor/settings#integrations" style={{ textDecoration: 'underline' }}>
+                  {t.wordpress.keysCta}
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 style={{ marginBottom: 12 }}>{t.wordpress.installTitle}</h3>
+            <div className="timeline-card">
+              {t.wordpress.installSteps.map((step, index) => (
+                <div className="timeline-item" key={step}>
+                  <span className="timeline-dot" />
+                  <div>
+                    <strong>
+                      {index + 1}. {step}
+                    </strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="grid-3">
           {t.wordpress.steps.map((step, index) => {
             const Icon = [KeyRound, Plug, Wallet][index] ?? Gift;

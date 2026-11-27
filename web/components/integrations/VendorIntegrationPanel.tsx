@@ -37,6 +37,8 @@ export interface VendorIntegrationPanelProps {
   canManage: boolean;
   showMappingSelector?: boolean;
   defaultMappingId?: string | null;
+  /** Which server RPC may issue the key. Each one re-checks authorisation. */
+  scope?: 'vendor' | 'admin';
 }
 
 const initialState: CredentialIssueState = { status: 'idle' };
@@ -48,12 +50,13 @@ export function VendorIntegrationPanel({
   canManage,
   showMappingSelector = false,
   defaultMappingId = null,
+  scope = 'vendor',
 }: VendorIntegrationPanelProps) {
   const [state, formAction, pending] = useActionState(issueVendorCredential, initialState);
   const activeMappings = mappings.filter((mapping) => mapping.status === 'active');
 
   return (
-    <section className="panel">
+    <section className="panel" id="integrations">
       <div className="panel-head">
         <h3>{labels.title}</h3>
       </div>
@@ -66,6 +69,7 @@ export function VendorIntegrationPanel({
           <>
             {canManage ? (
               <form action={formAction} className="form" style={{ display: 'grid', gap: 12 }}>
+                <input type="hidden" name="scope" value={scope} />
                 {showMappingSelector ? (
                   <div className="field">
                     <label htmlFor="tazella_mapping">{labels.mapping}</label>

@@ -1,0 +1,118 @@
+# WordPress / WooCommerce: install and go-live checklist
+
+This is the vendor-facing runbook for the Tazella Gift Cards plugin. It is the
+same flow described on `/plug-in-integrations#wordpress`.
+
+## 1. Where the ZIP comes from
+
+| Who | Step |
+|---|---|
+| Tazella | `node scripts/package-wordpress-plugin.mjs` (or `npm run package:wordpress`) |
+| Tazella | Commit `web/public/downloads/tazella-gift-cards.zip` |
+| Vendor | Download it from `https://<site>/downloads/tazella-gift-cards.zip`, or from the button on `/plug-in-integrations` |
+
+The script builds both the versioned archive in `packages/wordpress/` and the
+public copy in `web/public/downloads/`. It fails if the plugin header version and
+`composer.json` version disagree, so the download can never lag the source
+silently. Never hand a vendor a ZIP built from an older checkout.
+
+## 2. What the vendor needs before installing
+
+1. A Tazella vendor account with a **verified** store mapping on the
+   `wordpress` platform. Support creates and verifies the mapping; a store ID the
+   vendor types in is not proof of ownership.
+2. A key issued from **Vendor dashboard → Settings → WordPress payment keys**.
+   The API key and signing secret are shown exactly once, for one environment
+   (sandbox or production) and one mapping.
+3. A WooCommerce store on HTTPS with a currency that matches the credential
+   (QAR today). No conversion is performed.
+
+## 3. Install
+
+1. Plugins → Add New → Upload Plugin → choose the ZIP → **Install Now**.
+2. Activate **Tazella Gift Cards**.
+3. WooCommerce → Settings → Payments → **Tazella gift cards**.
+4. Paste the API key and signing secret.
+5. Set **Environment** to the environment the key was issued for.
+6. Leave **Platform code** as `wordpress` and **External vendor ID** empty.
+7. Save. The page must show **Connection verified: wordpress (sandbox, platform
+   active)**. If it does not, the message names the failure:
+   - `UNAUTHORIZED` — key, secret or environment do not match the credential.
+   - `PLATFORM_NOT_ACTIVE` — Tazella support has suspended the platform/credential.
+   - `MAPPING_NOT_ACTIVE` — the store mapping is not active yet.
+8. Enable the payment method.
+9. Place a sandbox order and pay with a sandbox card code.
+
+## 4. Go-live verification (Tazella side)
+
+Run these against a real WordPress install before telling a vendor "production":
+
+- [ ] Plugin activates with WooCommerce active and no PHP notice.
+- [ ] Payment method is hidden when credentials are empty or the currency differs.
+- [ ] Classic checkout: card field renders, a bad code is rejected in the
+      checkout form, a good code completes the order.
+- [ ] Blocks checkout: card field renders, empty code blocks submission, a good
+      code completes the order.
+- [ ] Order meta ends with `_tazella_status = captured`, a reservation reference,
+      a redemption UUID, and **no `_tazella_card_code`**.
+- [ ] Order total equals `_tazella_applied_minor` (no partial payment marked paid).
+- [ ] Cancelling a pending order releases the hold.
+- [ ] Refunding from WooCommerce succeeds and writes a reversal in Tazella
+      (`integration_refund` with the redemption UUID).
+- [ ] Two refunds of the same amount on one order create **two** reversals.
+- [ ] HPOS enabled: no incompatibility warning; orders still capture and refund.
+- [ ] Disconnect the network mid-checkout, retry: no second hold or redemption
+      (stable idempotency keys).
+- [ ] Debug log contains error codes and request IDs only — never secrets or card
+      codes.
+
+### 4.1 How this checklist was executed locally
+
+`packages/wordpress/tazella-gift-cards/tests/sandbox/` turns §4 into executable
+assertions against a real WordPress + WooCommerce store and a stand-in for the
+gateway (`mock-gateway.mjs`, which mirrors `web/lib/integrations/gateway.ts`:
+HMAC signature, 300 s skew, idempotency replay, envelope and error codes).
+
+```bash
+node packages/wordpress/tazella-gift-cards/tests/sandbox/mock-gateway.mjs &
+PHP=/path/to/php WORK=/tmp/tazella-wp \
+  bash packages/wordpress/tazella-gift-cards/tests/sandbox/setup-wordpress.sh
+/path/to/wp wp --path=/tmp/tazella-wp/wordpress \
+  eval-file packages/wordpress/tazella-gift-cards/tests/sandbox/checklist.php
+```
+
+Results from the last run:
+
+| Configuration | Assertions |
+|---|---|
+| WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS off | 84 passed |
+| Same stack, fresh install, HPOS on | 88 passed |
+| Blocks checkout through the Store API (HPOS on) | 12 passed |
+
+Two defects were found and fixed by that run and are worth knowing about when
+re-testing:
+
+- `Blocks.php` declared `$settings` as `private`, which conflicts with
+  `AbstractPaymentMethodType::$settings` and fataled the site on activation with
+  WooCommerce 11.
+- Release/report hooks were bound to whichever gateway instance WooCommerce
+  constructed first, so a settings change in the same process could leave
+  cancellation release running with empty credentials. Hook work now resolves
+  the live gateway.
+
+WooCommerce 11 also renamed the `wc_create_refund()` argument `api_refund` to
+`refund_payment`; refund tests must pass the new key or the gateway is never
+called.
+
+Not covered by the local run: the production gateway and its Postgres RPCs, a
+live Tazella sandbox card, the browser-side `blocks.js` validation, and the
+vendor dashboard key issuance.
+
+## 5. Known limitations
+
+- One gift card must cover the whole order. Partial gift-card payment is not
+  implemented; the order fails instead of being marked paid.
+- No subscriptions, no multi-currency, no WordPress.org release.
+- The plugin is verified against a local WordPress + WooCommerce install with a
+  stand-in gateway (§4.1), not yet against the production gateway or a live
+  vendor store.

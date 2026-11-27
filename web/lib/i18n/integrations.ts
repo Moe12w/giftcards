@@ -149,9 +149,31 @@ const en = {
       {
         title: 'Take payments',
         body:
-          'Works with classic shortcode checkout and WooCommerce Blocks. Store, currency and environment are derived from the key.',
+          'Works with classic shortcode checkout and WooCommerce Blocks. The card must match the store currency; no conversion is performed.',
       },
     ],
+    downloadTitle: 'Download the plugin',
+    downloadBody:
+      'The installable ZIP is built from the same source as the gateway. Version {version}. Upload it to WordPress as-is — do not unzip it first.',
+    downloadCta: 'Download plugin (ZIP)',
+    downloadNote:
+      'The connection check on the payment settings page must read “Connection verified” before you enable the method.',
+    requirementsTitle: 'Before you start',
+    requirements: [
+      'WordPress 6.4 or newer with WooCommerce 8.0 or newer active.',
+      'PHP 7.4 or newer, and HTTPS on the store domain.',
+      'A verified store mapping in Tazella. A key is issued for exactly one mapping.',
+      'Store currency equal to the currency configured in the plugin. No conversion is performed.',
+    ],
+    installTitle: 'Install in five steps',
+    installSteps: [
+      'Download the ZIP below and keep it zipped.',
+      'In WordPress open Plugins → Add New → Upload Plugin, choose the ZIP, then Install Now.',
+      'Activate “Tazella Gift Cards”.',
+      'Open WooCommerce → Settings → Payments → Tazella gift cards, paste the API key and signing secret, and pick the environment the key was issued for.',
+      'Save the settings. Confirm the connection check passes, enable the method, and place a sandbox order.',
+    ],
+    keysCta: 'Open WordPress payment keys',
     note:
       'This is an early plugin. Run it in sandbox first; production access requires verification and a production key.',
   },
@@ -223,6 +245,10 @@ const en = {
       {
         q: 'Can I use this on my WordPress or WooCommerce store?',
         a: 'Yes, in sandbox. The WooCommerce plugin supports classic and block checkout. Generate a key in your vendor dashboard, paste the key and signing secret into the plugin, and everything else is derived from the key. It is not yet production-certified.',
+      },
+      {
+        q: 'Where do I download the WordPress plugin?',
+        a: 'From the WordPress section of this page. The ZIP is public and versioned. Upload it in Plugins → Add New → Upload Plugin. You still need a sandbox key from your vendor dashboard before the payment method appears at checkout.',
       },
       {
         q: 'How do I start an integration?',
@@ -368,8 +394,30 @@ const ar: typeof en = {
     steps: [
       { title: 'احصل على المفتاح', body: 'في لوحة البائع افتح الإعدادات ← مفاتيح دفع ووردبريس وأنشئ مفتاحاً تجريبياً. يظهر مرة واحدة فقط.' },
       { title: 'ثبّت الإضافة', body: 'ارفع ملف Tazella Gift Cards ZIP في ووردبريس، فعّله، ثم الصق مفتاح الواجهة وسر التوقيع في إعدادات الدفع.' },
-      { title: 'استقبل المدفوعات', body: 'يعمل مع إتمام الطلب التقليدي وكتل WooCommerce. المتجر والعملة والبيئة تُستمد من المفتاح.' },
+      { title: 'استقبل المدفوعات', body: 'يعمل مع إتمام الطلب التقليدي وكتل WooCommerce. يجب أن تطابق البطاقة عملة المتجر؛ ولا يتم أي تحويل عملة.' },
     ],
+    downloadTitle: 'حمّل الإضافة',
+    downloadBody:
+      'ملف ZIP القابل للتركيب مبني من المصدر نفسه المستخدم في البوابة. الإصدار {version}. ارفعه إلى ووردبريس كما هو — دون فك الضغط أولاً.',
+    downloadCta: 'تحميل الإضافة (ZIP)',
+    downloadNote:
+      'يجب أن يظهر «تم التحقق من الاتصال» في صفحة إعدادات الدفع قبل تفعيل وسيلة الدفع.',
+    requirementsTitle: 'قبل أن تبدأ',
+    requirements: [
+      'ووردبريس 6.4 أو أحدث مع WooCommerce 8.0 أو أحدث مفعّل.',
+      'PHP 7.4 أو أحدث، وHTTPS على نطاق المتجر.',
+      'ربط متجر مؤكد في تازيلا. يُصدر المفتاح لربط واحد فقط.',
+      'عملة المتجر مطابقة للعملة المضبوطة في الإضافة. لا يتم أي تحويل.',
+    ],
+    installTitle: 'التثبيت في خمس خطوات',
+    installSteps: [
+      'حمّل ملف ZIP أدناه واتركه مضغوطاً.',
+      'في ووردبريس افتح إضافات ← أضف جديداً ← رفع إضافة، اختر الملف ثم «ثبّت الآن».',
+      'فعّل «Tazella Gift Cards».',
+      'افتح WooCommerce ← الإعدادات ← الدفع ← Tazella gift cards، والصق مفتاح الواجهة وسر التوقيع، واختر البيئة التي أُصدر لها المفتاح.',
+      'احفظ الإعدادات. تأكد من نجاح فحص الاتصال، ثم فعّل وسيلة الدفع ونفّذ طلباً تجريبياً.',
+    ],
+    keysCta: 'افتح مفاتيح دفع ووردبريس',
     note: 'هذه إضافة مبكرة. اختبرها أولاً في البيئة التجريبية؛ الوصول للإنتاج يتطلب التحقق ومفتاح إنتاج.',
   },
   api: {
@@ -435,6 +483,10 @@ const ar: typeof en = {
       {
         q: 'هل أستطيع استخدام هذا على متجري ووردبريس أو WooCommerce؟',
         a: 'نعم، في البيئة التجريبية. تدعم إضافة WooCommerce إتمام الطلب التقليدي وكتل WooCommerce. أنشئ مفتاحاً من لوحة البائع، الصق المفتاح وسر التوقيع في الإضافة، وكل شيء آخر يُستمد من المفتاح. لم تُعتمد للإنتاج بعد.',
+      },
+      {
+        q: 'من أين أحمّل إضافة ووردبريس؟',
+        a: 'من قسم ووردبريس في هذه الصفحة. ملف ZIP متاح للعموم ومُصدّر بإصدار. ارفعه من إضافات ← أضف جديداً ← رفع إضافة. ما زلت تحتاج مفتاحاً تجريبياً من لوحة البائع قبل ظهور وسيلة الدفع عند إتمام الطلب.',
       },
       {
         q: 'كيف أبدأ التكامل؟',

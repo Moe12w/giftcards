@@ -23,28 +23,39 @@ export async function issueVendorCredential(
   const mappingId = String(formData.get('mapping_id') ?? '').trim();
   const environment = String(formData.get('environment') ?? '').trim();
   const label = String(formData.get('label') ?? '').trim().slice(0, 80);
+  // The same panel is used by vendors and by the admin console. Each scope has
+  // its own RPC, and both re-check authorisation in Postgres.
+  const scope = String(formData.get('scope') ?? '').trim() === 'admin' ? 'admin' : 'vendor';
 
   if (!mappingId || (environment !== 'sandbox' && environment !== 'production')) {
     return { status: 'error', message: 'Invalid mapping or environment.' };
   }
 
-  const apiKey = `tz_live_${randomBytes(24).toString('hex')}`;
+  // The prefix has to match the environment: a sandbox key labelled `tz_live_`
+  // led vendors to believe they were taking real payments.
+  const apiKey = `${environment === 'production' ? 'tz_live_' : 'tz_sandbox_'}${randomBytes(24).toString('hex')}`;
   const signingSecret = randomBytes(32).toString('hex');
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc('integration_vendor_issue_credential', {
-    p_mapping_id: mappingId,
-    p_environment: environment,
-    p_label: label || 'wordpress',
-    p_key: apiKey,
-    p_signing_secret: signingSecret,
-  });
+  const { error } = await supabase.rpc(
+    scope === 'admin'
+      ? 'integration_admin_create_vendor_credential'
+      : 'integration_vendor_issue_credential',
+    {
+      p_mapping_id: mappingId,
+      p_environment: environment,
+      p_label: label || 'wordpress',
+      p_key: apiKey,
+      p_signing_secret: signingSecret,
+    },
+  );
 
   if (error) {
     return { status: 'error', message: error.message };
   }
 
   revalidatePath('/vendor/settings');
+  revalidatePath('/admin/integrations');
   return { status: 'success', apiKey, signingSecret };
 }
 

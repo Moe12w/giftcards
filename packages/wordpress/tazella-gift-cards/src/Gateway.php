@@ -14,6 +14,9 @@ use Tazella\GiftCards\TazellaException;
 
 class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
 {
+    /** @var bool Guards against duplicate hook registration. */
+    private static $hooks_registered = false;
+
     public function __construct()
     {
         $this->id = 'tazella_gift_cards';
@@ -24,6 +27,7 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             'Accept Tazella gift cards as a payment method. Requires a verified platform credential and mapping.',
             'tazella-gift-cards'
         );
+        $this->supports = ['products', 'refunds'];
 
         $this->init_form_fields();
         $this->init_settings();
@@ -33,6 +37,12 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         $this->enabled = $this->get_option('enabled', 'no');
 
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
+
+        if (self::$hooks_registered) {
+            return;
+        }
+        self::$hooks_registered = true;
+
         add_action('woocommerce_store_api_checkout_update_order_from_request', [$this, 'capture_block_card_code'], 10, 2);
         add_action('woocommerce_order_status_cancelled', [$this, 'maybe_release_on_cancel'], 10, 1);
         add_action('woocommerce_order_status_refunded', [$this, 'maybe_report_refunded'], 10, 1);
@@ -67,7 +77,10 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                     'production' => __('Production', 'tazella-gift-cards'),
                 ],
                 'default' => 'sandbox',
-                'description' => __('Sandbox credentials cannot reach production data.', 'tazella-gift-cards'),
+                'description' => __(
+                    'Must match the environment the key was issued for. Sandbox credentials cannot reach production data.',
+                    'tazella-gift-cards'
+                ),
             ],
             'base_url' => [
                 'title' => __('Site URL', 'tazella-gift-cards'),
@@ -79,6 +92,7 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                 'title' => __('Platform code', 'tazella-gift-cards'),
                 'type' => 'text',
                 'default' => 'wordpress',
+                'description' => __('Leave as wordpress unless Tazella gave you a different code.', 'tazella-gift-cards'),
             ],
             'api_key' => [
                 'title' => __('API key', 'tazella-gift-cards'),
@@ -91,12 +105,15 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                 'description' => __('Server-side only. Used for HMAC request signatures.', 'tazella-gift-cards'),
             ],
             'external_vendor_id' => [
-                'title' => __('External vendor ID', 'tazella-gift-cards'),
+                'title' => __('External vendor ID (optional)', 'tazella-gift-cards'),
                 'type' => 'text',
-                'description' => __('The verified ID Tazella mapped to this store.', 'tazella-gift-cards'),
+                'description' => __(
+                    'Leave empty. The verified store is resolved from your key. Only fill this if Tazella support asks you to.',
+                    'tazella-gift-cards'
+                ),
             ],
             'external_branch_id' => [
-                'title' => __('External branch ID', 'tazella-gift-cards'),
+                'title' => __('External branch ID (optional)', 'tazella-gift-cards'),
                 'type' => 'text',
                 'default' => '',
             ],
@@ -104,7 +121,10 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                 'title' => __('Currency', 'tazella-gift-cards'),
                 'type' => 'text',
                 'default' => 'QAR',
-                'description' => __('Orders in any other currency are rejected. No conversion is performed.', 'tazella-gift-cards'),
+                'description' => __(
+                    'Orders in any other currency are rejected. No conversion is performed.',
+                    'tazella-gift-cards'
+                ),
             ],
             'ttl_seconds' => [
                 'title' => __('Hold lifetime (seconds)', 'tazella-gift-cards'),
@@ -134,34 +154,75 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         try {
             $health = $this->client()->health();
             $code = isset($health['platform']['code']) ? (string) $health['platform']['code'] : '';
+            $environment = isset($health['environment']) ? (string) $health['environment'] : '';
+            $status = isset($health['platform']['status']) ? (string) $health['platform']['status'] : '';
+
             echo '<div class="notice notice-success inline"><p>'
                 . esc_html(sprintf(
-                    /* translators: %s: platform code */
-                    __('Connection verified: %s (%s).', 'tazella-gift-cards'),
-                    $code,
-                    $this->setting('environment', 'TAZELLA_WC_ENVIRONMENT') ?: 'sandbox'
+                    /* translators: 1: platform code, 2: environment, 3: platform status */
+                    __('Connection verified: %1$s (%2$s, platform %3$s).', 'tazella-gift-cards'),
+                    $code !== '' ? $code : '—',
+                    $environment !== '' ? $environment : '—',
+                    $status !== '' ? $status : '—'
                 ))
                 . '</p></div>';
         } catch (TazellaException $error) {
+            $this->log('health ' . $error->errorCode() . ' ' . ($error->requestId() ?? 'no-request-id'));
             echo '<div class="notice notice-error inline"><p>'
                 . esc_html(sprintf(
-                    /* translators: %s: error code */
-                    __('Connection check failed: %s. Check the key, secret, platform code and environment.', 'tazella-gift-cards'),
-                    $error->errorCode()
+                    /* translators: 1: error code, 2: HTTP status */
+                    __('Connection check failed: %1$s (HTTP %2$s). Check the key, signing secret, platform code and environment.', 'tazella-gift-cards'),
+                    $error->errorCode(),
+                    $error->httpStatus() !== null ? (string) $error->httpStatus() : '—'
                 ))
+                . '</p></div>';
+        } catch (Throwable $error) {
+            echo '<div class="notice notice-error inline"><p>'
+                . esc_html__('Connection check failed unexpectedly. See the WooCommerce logs.', 'tazella-gift-cards')
                 . '</p></div>';
         }
     }
 
+    /**
+     * Hide the method unless it can actually work: credentials, a usable
+     * currency, and the store currency matching the configured one. Showing it
+     * and failing at submit is a worse experience than hiding it.
+     */
     public function is_available()
     {
         if (!parent::is_available()) {
             return false;
         }
+        if (!$this->has_credentials()) {
+            return false;
+        }
 
-        return $this->has_credentials()
-            && $this->setting('external_vendor_id', 'TAZELLA_WC_VENDOR_ID') !== ''
-            && $this->setting('currency', 'TAZELLA_WC_CURRENCY') !== '';
+        $configured = strtoupper(trim($this->setting('currency', 'TAZELLA_WC_CURRENCY')));
+        $store = function_exists('get_woocommerce_currency')
+            ? strtoupper((string) get_woocommerce_currency())
+            : $configured;
+
+        return $configured !== '' && $store === $configured;
+    }
+
+    /**
+     * Hooks are registered by whichever instance WooCommerce built first, and
+     * that instance keeps the settings it was constructed with. A settings
+     * save in the same process (or any code that builds a gateway early) would
+     * therefore leave release/report running against stale or empty
+     * credentials. Resolve the live gateway for hook work.
+     */
+    private static function live_gateway()
+    {
+        if (function_exists('WC') && WC()->payment_gateways()) {
+            $gateways = WC()->payment_gateways()->payment_gateways();
+            $gateway = isset($gateways['tazella_gift_cards']) ? $gateways['tazella_gift_cards'] : null;
+            if ($gateway instanceof self) {
+                return $gateway;
+            }
+        }
+
+        return null;
     }
 
     private function has_credentials()
@@ -193,13 +254,39 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
     {
         return new Client(
             $this->setting('base_url', 'TAZELLA_WC_BASE_URL') ?: 'https://tazella.com.qa',
-            '',
-            '',
+            $this->setting('platform_code', 'TAZELLA_WC_PLATFORM_CODE') ?: 'wordpress',
+            $this->setting('environment', 'TAZELLA_WC_ENVIRONMENT') ?: 'sandbox',
             $this->setting('api_key', 'TAZELLA_WC_API_KEY'),
             $this->setting('signing_secret', 'TAZELLA_WC_SIGNING_SECRET')
         );
     }
 
+    /**
+     * The validate endpoint reports a lowercase reason such as `not_found`.
+     * Translate it into the gateway error code so the customer sees the same
+     * wording as the marketplace uses.
+     */
+    private function reasonToCode($reason)
+    {
+        switch (strtolower((string) $reason)) {
+            case 'not_found':
+            case 'wrong_business':
+                return 'CARD_NOT_FOUND';
+            case 'not_monetary':
+            case 'inactive':
+                return 'CARD_INACTIVE';
+            case 'expired':
+                return 'CARD_EXPIRED';
+            case 'currency_mismatch':
+                return 'CURRENCY_MISMATCH';
+            case 'no_balance':
+                return 'INSUFFICIENT_BALANCE';
+            default:
+                return 'CARD_INACTIVE';
+        }
+    }
+
+    /** Tazella minor units are hundredths of the currency unit. */
     private function minor($amount)
     {
         return (int) round(((float) wc_format_decimal($amount)) * 100);
@@ -211,24 +298,43 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         $vendor = $this->setting('external_vendor_id', 'TAZELLA_WC_VENDOR_ID');
         $branch = $this->setting('external_branch_id', 'TAZELLA_WC_BRANCH_ID');
 
-        if ($vendor !== '') $request['external_vendor_id'] = $vendor;
-        if ($branch !== '') $request['external_branch_id'] = $branch;
+        if ($vendor !== '') {
+            $request['external_vendor_id'] = $vendor;
+        }
+        if ($branch !== '') {
+            $request['external_branch_id'] = $branch;
+        }
 
         return $request;
     }
 
     private function log($message)
     {
-        if ($this->get_option('debug', 'no') === 'yes') {
-            error_log('[tazella-gift-cards] ' . $message);
+        if ($this->get_option('debug', 'no') !== 'yes') {
+            return;
         }
+
+        if (function_exists('wc_get_logger')) {
+            wc_get_logger()->warning($message, ['source' => 'tazella-gift-cards']);
+            return;
+        }
+
+        error_log('[tazella-gift-cards] ' . $message);
     }
 
     public function payment_fields()
     {
+        $value = isset($_POST['tazella_card_code'])
+            ? sanitize_text_field(wp_unslash($_POST['tazella_card_code']))
+            : '';
+
+        if ($this->description !== '') {
+            echo '<p class="tazella-gift-card-description">' . esc_html($this->description) . '</p>';
+        }
+
         echo '<div class="tazella-gift-card-fields">';
         echo '<label for="tazella_card_code">' . esc_html__('Gift card code', 'tazella-gift-cards') . '</label> ';
-        echo '<input type="text" id="tazella_card_code" name="tazella_card_code" autocomplete="off" dir="auto" placeholder="GFT-XXXXXXXXXX" />';
+        echo '<input type="text" id="tazella_card_code" name="tazella_card_code" value="' . esc_attr($value) . '" autocomplete="off" autocapitalize="characters" spellcheck="false" dir="ltr" maxlength="64" placeholder="GFT-XXXXXXXXXX" />';
         echo '<p class="description">' . esc_html__('The amount is confirmed by Tazella before payment.', 'tazella-gift-cards') . '</p>';
         echo '</div>';
     }
@@ -261,8 +367,12 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         }
 
         foreach ($paymentData as $item) {
-            if (!is_array($item) || !isset($item['key'], $item['value'])) continue;
-            if ($item['key'] !== 'tazella_card_code') continue;
+            if (!is_array($item) || !isset($item['key'], $item['value'])) {
+                continue;
+            }
+            if ($item['key'] !== 'tazella_card_code') {
+                continue;
+            }
 
             $order->update_meta_data('_tazella_card_code', sanitize_text_field(wp_unslash($item['value'])));
             $order->save_meta_data();
@@ -282,11 +392,15 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             : (string) $order->get_meta('_tazella_card_code');
         $code = sanitize_text_field($code);
         $currency = strtoupper($order->get_currency());
-        $configured = strtoupper($this->setting('currency', 'TAZELLA_WC_CURRENCY'));
+        $configured = strtoupper(trim($this->setting('currency', 'TAZELLA_WC_CURRENCY')));
         $orderMinor = $this->minor($order->get_total());
 
-        if ($code === '' || $currency !== $configured || $orderMinor <= 0) {
+        if ($code === '' || $orderMinor <= 0) {
             wc_add_notice(__('This order cannot be paid with a gift card.', 'tazella-gift-cards'), 'error');
+            return ['result' => 'failure'];
+        }
+        if ($currency !== $configured) {
+            wc_add_notice(TazellaException::publicMessage('CURRENCY_MISMATCH'), 'error');
             return ['result' => 'failure'];
         }
 
@@ -301,33 +415,75 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
 
             if (empty($validation['valid'])) {
                 $reason = isset($validation['reason']) ? (string) $validation['reason'] : '';
-                $message = TazellaException::publicMessage($reason);
-                throw new TazellaException($reason ?: 'CARD_INACTIVE', $message, false);
+                $code = $this->reasonToCode($reason);
+                throw new TazellaException($code, TazellaException::publicMessage($code), false);
             }
 
-            $available = (int) ($validation['available_minor'] ?? 0);
-            $requested = min($available, $orderMinor);
+            $available = isset($validation['available_minor']) ? (int) $validation['available_minor'] : 0;
+
+            // This gateway is the only payment method for the order, so it must
+            // cover the whole total. Taking a partial amount and marking the
+            // order paid would leave the store unpaid for the difference.
+            if ($available < $orderMinor) {
+                throw new TazellaException(
+                    'INSUFFICIENT_BALANCE',
+                    TazellaException::publicMessage('INSUFFICIENT_BALANCE'),
+                    false
+                );
+            }
 
             $reservation = $client->reserve(array_merge($vendor, [
-                'external_order_id' => (string) $order->get_id(),
+                'external_order_id' => 'woo_' . $order->get_id(),
                 'card_code' => $code,
                 'order_amount_minor' => $orderMinor,
-                'requested_amount_minor' => $requested,
+                'requested_amount_minor' => $orderMinor,
                 'currency' => $currency,
-                'ttl_seconds' => (int) $this->get_option('ttl_seconds', '600'),
-                'idempotency_key' => Client::idempotencyKey('reserve_' . $order->get_id()),
+                'ttl_seconds' => max(60, (int) $this->get_option('ttl_seconds', '600')),
+                'idempotency_key' => Client::stableKey('reserve:woo:' . $order->get_id() . ':' . $code),
             ]));
 
-            $reference = isset($reservation['reservation_reference']) ? (string) $reservation['reservation_reference'] : '';
-            $applied = (int) ($reservation['applied_amount_minor'] ?? 0);
+            $reference = isset($reservation['reservation_reference'])
+                ? (string) $reservation['reservation_reference']
+                : '';
+            $applied = isset($reservation['applied_amount_minor'])
+                ? (int) $reservation['applied_amount_minor']
+                : 0;
+
             if ($reference === '' || $applied <= 0) {
-                throw new TazellaException('INTERNAL_ERROR', TazellaException::publicMessage('INTERNAL_ERROR'), false);
+                throw new TazellaException(
+                    'INTERNAL_ERROR',
+                    TazellaException::publicMessage('INTERNAL_ERROR'),
+                    false
+                );
             }
 
             $order->update_meta_data('_tazella_reservation_reference', $reference);
+
+            // A hold smaller than the order total must never become a paid
+            // order. Release it and fail cleanly instead.
+            if ($applied < $orderMinor) {
+                try {
+                    $client->release($reference, array_merge($vendor, [
+                        'reason' => 'woocommerce_underpaid',
+                        'idempotency_key' => Client::stableKey('release-underpaid:woo:' . $order->get_id()),
+                    ]));
+                } catch (Throwable $releaseError) {
+                    $this->log('release-after-underpay ' . $releaseError->getMessage());
+                }
+
+                throw new TazellaException(
+                    'INSUFFICIENT_BALANCE',
+                    TazellaException::publicMessage('INSUFFICIENT_BALANCE'),
+                    false
+                );
+            }
+
             $order->update_meta_data('_tazella_applied_minor', $applied);
             $order->update_meta_data('_tazella_status', 'active');
-            $order->update_meta_data('_tazella_card_masked', isset($reservation['card']['masked_code']) ? (string) $reservation['card']['masked_code'] : '');
+            $order->update_meta_data(
+                '_tazella_card_masked',
+                isset($reservation['card']['masked_code']) ? (string) $reservation['card']['masked_code'] : ''
+            );
             $order->save_meta_data();
 
             // WooCommerce's checkout submission is the verified payment event
@@ -336,8 +492,16 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                 'external_payment_reference' => 'woo_' . $order->get_id(),
                 'confirmed_order_amount_minor' => $orderMinor,
                 'currency' => $currency,
-                'idempotency_key' => Client::idempotencyKey('capture_' . $order->get_id()),
+                'idempotency_key' => Client::stableKey('capture:woo:' . $order->get_id()),
             ]));
+
+            if (isset($capture['status']) && (string) $capture['status'] === 'reconciliation') {
+                throw new TazellaException(
+                    'RECONCILIATION_REQUIRED',
+                    TazellaException::publicMessage('RECONCILIATION_REQUIRED'),
+                    false
+                );
+            }
 
             if (($capture['status'] ?? '') !== 'captured') {
                 throw new TazellaException(
@@ -347,17 +511,30 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                 );
             }
 
-            $redemptionId = isset($capture['redemption_reference']) ? (string) $capture['redemption_reference'] : '';
-            $order->update_meta_data('_tazella_redemption_id', $redemptionId);
-            $order->update_meta_data('_tazella_status', 'captured');
-            $order->save_meta_data();
-            $order->add_order_note(sprintf(
-                __('Tazella gift card applied: %d minor units. Redemption: %s', 'tazella-gift-cards'),
-                $applied,
-                $redemptionId
-            ));
-            $order->payment_complete($redemptionId);
+            // The refund endpoint takes the redemption UUID, not the readable
+            // reference. Storing the reference here broke every refund.
+            $redemptionId = isset($capture['redemption_id']) ? (string) $capture['redemption_id'] : '';
+            $redemptionReference = isset($capture['redemption_reference'])
+                ? (string) $capture['redemption_reference']
+                : '';
 
+            $order->update_meta_data('_tazella_redemption_id', $redemptionId);
+            $order->update_meta_data('_tazella_redemption_reference', $redemptionReference);
+            $order->update_meta_data('_tazella_status', 'captured');
+            // The card code is a bearer instrument: once it is spent, do not
+            // keep the plaintext on the order.
+            $order->delete_meta_data('_tazella_card_code');
+            $order->save_meta_data();
+
+            $order->add_order_note(sprintf(
+                /* translators: 1: amount in minor units, 2: redemption reference */
+                __('Tazella gift card applied: %1$d minor units. Redemption: %2$s', 'tazella-gift-cards'),
+                $applied,
+                $redemptionReference !== '' ? $redemptionReference : $redemptionId
+            ));
+            $order->payment_complete($redemptionReference !== '' ? $redemptionReference : $redemptionId);
+
+            // Reporting is best-effort and must never undo a completed payment.
             $this->report_event($order, 'order.paid', $client, $orderMinor, $currency);
 
             return [
@@ -367,10 +544,20 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         } catch (TazellaException $error) {
             $this->log($error->errorCode() . ' ' . ($error->requestId() ?? 'no-request-id'));
             $order->update_status('failed', sprintf(
-                __('Tazella gift card payment failed: %s', 'tazella-gift-cards'),
-                $error->errorCode()
+                /* translators: 1: error code, 2: request id */
+                __('Tazella gift card payment failed: %1$s (request %2$s)', 'tazella-gift-cards'),
+                $error->errorCode(),
+                $error->requestId() ?? '—'
             ));
             wc_add_notice($error->getMessage(), 'error');
+            return ['result' => 'failure'];
+        } catch (Throwable $error) {
+            $this->log('unexpected ' . $error->getMessage());
+            $order->update_status('failed', __('Tazella gift card payment failed unexpectedly.', 'tazella-gift-cards'));
+            wc_add_notice(
+                TazellaException::publicMessage('INTERNAL_ERROR'),
+                'error'
+            );
             return ['result' => 'failure'];
         }
     }
@@ -384,43 +571,81 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
 
         $redemptionId = (string) $order->get_meta('_tazella_redemption_id');
         if ($redemptionId === '' || !$this->has_credentials()) {
-            return false;
+            return new WP_Error(
+                'tazella_refund_unavailable',
+                __('This order has no recorded Tazella redemption to reverse.', 'tazella-gift-cards')
+            );
         }
 
         $amountMinor = $amount === null
             ? $this->minor($order->get_total())
             : $this->minor($amount);
         if ($amountMinor <= 0) {
-            return false;
+            return new WP_Error(
+                'tazella_refund_invalid_amount',
+                __('Enter a refund amount greater than zero.', 'tazella-gift-cards')
+            );
         }
+
+        // The refund object already exists when this runs, so the count
+        // distinguishes two identical partial refunds on the same order.
+        $refundCount = method_exists($order, 'get_refunds') ? count($order->get_refunds()) : 1;
 
         try {
             $refund = $this->client()->refund($redemptionId, array_merge($this->vendorRequest(), [
                 'amount_minor' => $amountMinor,
                 'reason' => $reason !== '' ? sanitize_text_field($reason) : 'woocommerce_refund',
-                'idempotency_key' => Client::idempotencyKey('refund_' . $order->get_id() . '_' . $amountMinor),
+                'idempotency_key' => Client::stableKey(
+                    'refund:' . $redemptionId . ':' . $amountMinor . ':' . $refundCount
+                ),
             ]));
 
-            $order->update_meta_data('_tazella_refunded_minor', (int) ($refund['refunded_total_minor'] ?? $amountMinor));
+            $order->update_meta_data(
+                '_tazella_refunded_minor',
+                isset($refund['refunded_total_minor'])
+                    ? (int) $refund['refunded_total_minor']
+                    : $amountMinor
+            );
             $order->save_meta_data();
             $order->add_order_note(sprintf(
+                /* translators: %d: refunded amount in minor units */
                 __('Tazella gift-card reversal completed: %d minor units.', 'tazella-gift-cards'),
                 $amountMinor
             ));
-            $this->report_event($order, 'order.refunded', $this->client(), $amountMinor, strtoupper($order->get_currency()));
+
+            $this->report_event(
+                $order,
+                'order.refunded',
+                $this->client(),
+                $amountMinor,
+                strtoupper($order->get_currency())
+            );
+
             return true;
         } catch (TazellaException $error) {
             $this->log('refund ' . $error->errorCode() . ' ' . ($error->requestId() ?? 'no-request-id'));
-            return function_exists('is_wp_error') && class_exists('WP_Error')
-                ? new WP_Error('tazella_refund_failed', $error->getMessage())
-                : false;
+            return new WP_Error(
+                'tazella_refund_failed',
+                $error->getMessage(),
+                ['request_id' => $error->requestId(), 'code' => $error->errorCode()]
+            );
+        } catch (Throwable $error) {
+            $this->log('refund unexpected ' . $error->getMessage());
+            return new WP_Error(
+                'tazella_refund_failed',
+                TazellaException::publicMessage('INTERNAL_ERROR')
+            );
         }
     }
 
     public function maybe_release_on_cancel($order_id)
     {
+        $gateway = self::live_gateway() ?: $this;
         $order = wc_get_order($order_id);
-        if (!$order || !$this->has_credentials()) {
+        if (!$order || !$gateway->has_credentials()) {
+            return;
+        }
+        if ((string) $order->get_payment_method() !== $gateway->id) {
             return;
         }
 
@@ -431,50 +656,58 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         }
 
         try {
-            $this->client()->release($reference, array_merge($this->vendorRequest(), [
+            $gateway->client()->release($reference, array_merge($gateway->vendorRequest(), [
                 'reason' => 'woocommerce_order_cancelled',
-                'idempotency_key' => Client::idempotencyKey('release_' . $order->get_id()),
+                'idempotency_key' => Client::stableKey('release:woo:' . $order->get_id()),
             ]));
             $order->update_meta_data('_tazella_status', 'released');
             $order->save_meta_data();
         } catch (TazellaException $error) {
             // A captured reservation cannot be released; leave it recorded.
-            $this->log('release ' . $error->errorCode() . ' ' . ($error->requestId() ?? 'no-request-id'));
+            $gateway->log('release ' . $error->errorCode() . ' ' . ($error->requestId() ?? 'no-request-id'));
         }
     }
 
     public function maybe_report_refunded($order_id)
     {
+        $gateway = self::live_gateway() ?: $this;
         $order = wc_get_order($order_id);
-        if (!$order || !$this->has_credentials() || (string) $order->get_meta('_tazella_redemption_id') === '') {
+        if (!$order || !$gateway->has_credentials() || (string) $order->get_meta('_tazella_redemption_id') === '') {
+            return;
+        }
+        if ((string) $order->get_payment_method() !== $gateway->id) {
             return;
         }
 
-        try {
-            $this->report_event(
-                $order,
-                'order.refunded',
-                $this->client(),
-                $this->minor($order->get_total()),
-                strtoupper($order->get_currency())
-            );
-        } catch (TazellaException $error) {
-            $this->log('event ' . $error->errorCode());
-        }
+        $gateway->report_event(
+            $order,
+            'order.refunded',
+            $gateway->client(),
+            $this->minor($order->get_total()),
+            strtoupper($order->get_currency())
+        );
     }
 
+    /**
+     * Reconciliation events are informative. A failure here must never turn a
+     * captured payment or a completed refund into a failure.
+     */
     private function report_event($order, $type, Client $client, $amountMinor, $currency)
     {
-        $client->orderEvent([
-            'event_id' => 'woo_' . $order->get_id() . '_' . $type,
-            'event_type' => $type,
-            'external_order_id' => (string) $order->get_id(),
-            'reservation_reference' => (string) $order->get_meta('_tazella_reservation_reference'),
-            'amount_minor' => $amountMinor,
-            'currency' => $currency,
-            'occurred_at' => gmdate('c'),
-            'idempotency_key' => Client::idempotencyKey('event_' . $order->get_id() . '_' . $type),
-        ]);
+        try {
+            $client->orderEvent([
+                'event_id' => 'woo_' . $order->get_id() . '_' . $type,
+                'event_type' => $type,
+                'external_order_id' => 'woo_' . $order->get_id(),
+                'reservation_reference' => (string) $order->get_meta('_tazella_reservation_reference'),
+                'amount_minor' => $amountMinor,
+                'currency' => $currency,
+                'occurred_at' => gmdate('c'),
+                'idempotency_key' => Client::stableKey('event:' . $order->get_id() . ':' . $type),
+            ]);
+        } catch (Throwable $error) {
+            $this->log('event ' . $type . ' ' . $error->getMessage());
+        }
     }
 
     public function thankyou_page($order_id)
@@ -485,9 +718,10 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         }
         $applied = (int) $order->get_meta('_tazella_applied_minor');
         if ($applied > 0) {
-            echo '<p class="woocommerce-order-overview">' . esc_html(sprintf(
+            echo '<p class="woocommerce-order-overview">' . wp_kses_post(sprintf(
+                /* translators: %s: formatted gift-card amount */
                 __('Paid with Tazella gift card: %s', 'tazella-gift-cards'),
-                wc_price($applied / 100)
+                wc_price($applied / 100, ['currency' => $order->get_currency()])
             )) . '</p>';
         }
     }
@@ -500,6 +734,7 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         $masked = (string) $order->get_meta('_tazella_card_masked');
         if ($masked !== '') {
             echo '<p class="tazella-gift-card-summary">' . esc_html(sprintf(
+                /* translators: %s: masked card code */
                 __('Tazella gift card: %s', 'tazella-gift-cards'),
                 $masked
             )) . '</p>';

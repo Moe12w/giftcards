@@ -71,6 +71,7 @@ export default async function AdminIntegrationsPage() {
           }>}
           canManage
           showMappingSelector
+          scope="admin"
         />
 
         <section className="panel">
@@ -78,7 +79,8 @@ export default async function AdminIntegrationsPage() {
             <h3>Platforms</h3>
           </div>
           <div className="panel-body">
-            <table className="table">
+            <div className="table-wrap">
+            <table className="data">
               <thead>
                 <tr>
                   <th>Code</th>
@@ -111,6 +113,7 @@ export default async function AdminIntegrationsPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </section>
 
@@ -122,7 +125,8 @@ export default async function AdminIntegrationsPage() {
             {!reservations.data?.length ? (
               <p className="small muted">No reservations yet.</p>
             ) : (
-              <table className="table">
+              <div className="table-wrap">
+              <table className="data">
                 <thead>
                   <tr>
                     <th>Reference</th>
@@ -144,6 +148,7 @@ export default async function AdminIntegrationsPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         </section>
@@ -156,7 +161,8 @@ export default async function AdminIntegrationsPage() {
             {!cases.data?.length ? (
               <p className="small muted">No open cases.</p>
             ) : (
-              <table className="table">
+              <div className="table-wrap">
+              <table className="data">
                 <thead>
                   <tr>
                     <th>Order</th>
@@ -187,6 +193,7 @@ export default async function AdminIntegrationsPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         </section>

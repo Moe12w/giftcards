@@ -379,6 +379,7 @@ export default async function VendorSettingsPage({
           created_at: string;
         }>}
         canManage={canManage}
+        showMappingSelector={integrationMappings.length > 1}
       />
 
       <div className="card lavender">

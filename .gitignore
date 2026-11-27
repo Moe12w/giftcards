@@ -39,6 +39,9 @@ yarn-error.*
 # exported web build
 dist-web/
 *.zip
+# The WooCommerce plugin ZIP is a build product, but vendors download it from
+# the public site. `node scripts/package-wordpress-plugin.mjs` regenerates it.
+!web/public/downloads/tazella-gift-cards.zip
 
 # Supabase local
 .supabase/

@@ -103,9 +103,24 @@ final class Client
             : new CurlHttpClient());
     }
 
+    /**
+     * Random key for a one-off operation. Do not use this for a request that
+     * may be retried: a retry with a new key creates a second reservation or
+     * redemption instead of replaying the first one.
+     */
     public static function idempotencyKey(string $scope): string
     {
         return 'php_' . $scope . '_' . bin2hex(random_bytes(12));
+    }
+
+    /**
+     * Deterministic key derived from the operation's identity. A retried
+     * request (timeout, browser resend, admin retry) replays the original
+     * response instead of moving money twice.
+     */
+    public static function stableKey(string $scope): string
+    {
+        return 'php_' . substr(hash('sha256', $scope), 0, 40);
     }
 
     public function health(): array
