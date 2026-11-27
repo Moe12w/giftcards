@@ -1,7 +1,8 @@
 // src/components/CoverCard.tsx
 // An envelope cover, standing upright. It uses the app's card language — 2px
-// ink frame, hard bottom edge, pastel art panel with an outlined circle and a
-// translucent tag, white body — but in portrait, like a real envelope.
+// ink frame, hard bottom edge, a printed plate on top and a white body — but in
+// portrait, like a real envelope. The plate is the same printed artwork as the
+// gift card itself: bright gradient, painted confetti and a watercolour panel.
 import React from 'react';
 import { Image } from 'expo-image';
 import { Text, View } from 'react-native';
@@ -9,6 +10,7 @@ import { Text, View } from 'react-native';
 import { giftCover, type GiftCover } from '../lib/gift-covers';
 import type { AccentTone } from '../lib/types';
 import { colors, edges, fonts, fontSizes, radii, spacing, themedStyles } from '../theme';
+import { COVER_ILLUSTRATIONS, CoverPlate } from './GiftCoverArt';
 import { Glyph } from './Glyph';
 
 interface CoverCardProps {
@@ -40,14 +42,6 @@ export function coverTone(cover: GiftCover): AccentTone {
   }
 }
 
-const ART: Record<AccentTone, string> = {
-  get teal() { return colors.teal; },
-  get pink() { return colors.pink; },
-  get lavender() { return colors.lavender; },
-  get gold() { return colors.gold; },
-  get sky() { return colors.sky; },
-};
-
 export function CoverCard({
   cover,
   name,
@@ -60,24 +54,45 @@ export function CoverCard({
   framed = true,
   style,
 }: CoverCardProps) {
-  const art = colors.lavender;
   const resolved = cover && cover.id ? giftCover(cover.id) : cover;
+  const printed = cover ?? resolved;
+  const illustrationSize = Math.min(compact ? 62 : 98, height * 0.34);
   return (
     <View style={[framed ? styles.edge : styles.plain, { height }, style]}>
       <View style={styles.surface}>
-        {/* Portrait art panel */}
-        <View style={[styles.art, { backgroundColor: ART[coverTone(resolved)] ?? art }]}>
-          <View style={styles.circle} />
+        {/* Portrait printed plate */}
+        <View style={[styles.art, { backgroundColor: printed.background }]}>
+          <CoverPlate cover={printed} />
           <View style={styles.tag}>
             <Text style={styles.tagText} numberOfLines={1}>{name}</Text>
           </View>
           <View style={styles.artIcon}>
-            {logoUrl ? (
+            {printed.imageUrl ? (
+              <Image source={printed.imageUrl} style={styles.photo} contentFit="cover" cachePolicy="memory-disk" />
+            ) : logoUrl ? (
               <View style={styles.logo}>
                 <Image source={logoUrl} style={styles.logoImage} contentFit="contain" cachePolicy="memory-disk" />
               </View>
+            ) : printed.illustration ? (
+              <View
+                style={[
+                  styles.illustration,
+                  {
+                    width: illustrationSize,
+                    height: illustrationSize,
+                    transform: [{ rotate: printed.id.length % 2 === 0 ? '2.5deg' : '-2.5deg' }],
+                  },
+                ]}
+              >
+                <Image
+                  source={COVER_ILLUSTRATIONS[printed.illustration]}
+                  style={styles.illustrationImage}
+                  contentFit="cover"
+                  transition={150}
+                />
+              </View>
             ) : (
-              <Glyph name={resolved.glyph} size={compact ? 40 : 56} color={colors.ink} strokeWidth={1.8} />
+              <Glyph name={resolved.glyph} size={compact ? 40 : 56} color={printed.ink} strokeWidth={1.8} />
             )}
           </View>
         </View>
@@ -121,17 +136,7 @@ const styles = themedStyles(() => ({
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },
-  circle: {
-    position: 'absolute',
-    right: -46,
-    top: -46,
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: 'rgba(255,255,255,0.28)',
-  },
+  photo: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   tag: {
     position: 'absolute',
     top: spacing.sm,
@@ -139,14 +144,22 @@ const styles = themedStyles(() => ({
     maxWidth: '84%',
     borderRadius: radii.pill,
     borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: 'rgba(255,255,255,0.82)',
+    borderColor: '#1C1C1C',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
     paddingHorizontal: 9,
     paddingVertical: 2,
   },
-  tagText: { fontFamily: fonts.extrabold, fontSize: 10, letterSpacing: 0.4, color: colors.textOnPastel, textTransform: 'uppercase' },
+  tagText: { fontFamily: fonts.extrabold, fontSize: 10, letterSpacing: 0.4, color: '#1C1C1C', textTransform: 'uppercase' },
   artIcon: { marginBottom: spacing.sm },
-  logo: { width: 52, height: 52, borderRadius: radii.pill, borderWidth: 2, borderColor: colors.border, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' },
+  illustration: {
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: '#1C1C1C',
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  illustrationImage: { width: '100%', height: '100%' },
+  logo: { width: 52, height: 52, borderRadius: radii.pill, borderWidth: 2, borderColor: '#1C1C1C', backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' },
   logoImage: { width: 36, height: 36 },
   body: { flex: 1, padding: spacing.md, gap: 4 },
   subtitle: { fontFamily: fonts.regular, fontSize: fontSizes.xs, color: colors.textMuted },

@@ -24,7 +24,7 @@ const VIEW_HEIGHT = 260;
 const CHECKER = 20;
 
 /** Watercolour panels generated for the printed covers, bundled with the app. */
-const ILLUSTRATION_SOURCES: Record<CoverIllustration, number> = {
+export const COVER_ILLUSTRATIONS: Record<CoverIllustration, number> = {
   birthday: require('../../assets/covers/birthday.jpg'),
   bath: require('../../assets/covers/bath.jpg'),
   flowers: require('../../assets/covers/flowers.jpg'),
@@ -239,6 +239,33 @@ function decoration(cover: GiftCover) {
   }
 }
 
+/**
+ * The printed plate — the bright gradient and its scattered painted shapes —
+ * filling whatever box it is placed in. Shared by the card face and the
+ * envelope cover so both carry the same printed artwork.
+ */
+export function CoverPlate({ cover }: { cover: GiftCover }) {
+  const gradientId = `cover-plate-${cover.id}`;
+  return (
+    <Svg
+      style={styles.canvas}
+      width="100%"
+      height="100%"
+      viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+      preserveAspectRatio="xMidYMid slice"
+    >
+      <Defs>
+        <LinearGradient id={gradientId} x1="0" y1="0" x2="0.35" y2="1">
+          <Stop offset="0" stopColor={cover.background} />
+          <Stop offset="1" stopColor={cover.backgroundTo} />
+        </LinearGradient>
+      </Defs>
+      <Rect width={VIEW_WIDTH} height={VIEW_HEIGHT} fill={`url(#${gradientId})`} />
+      {cover.imageUrl ? null : decoration(cover)}
+    </Svg>
+  );
+}
+
 interface GiftCoverArtProps {
   coverId?: string | null;
   stickerId?: string | null;
@@ -278,7 +305,6 @@ export function GiftCoverArt({
   // a true miniature of the full-size card rather than a cropped version.
   const scale = compact ? 0.52 : 1;
   const block = cover.titleStyle === 'block';
-  const gradientId = `cover-${cover.id}`;
 
   // A long single word ("Anniversary" on a narrow gallery tile) would otherwise
   // run past the printed edge. Shrink the words just enough to fit the card.
@@ -332,7 +358,7 @@ export function GiftCoverArt({
       ]}
     >
       <Image
-        source={ILLUSTRATION_SOURCES[cover.illustration]}
+        source={COVER_ILLUSTRATIONS[cover.illustration]}
         style={styles.illustrationImage}
         contentFit="cover"
         transition={150}
@@ -358,22 +384,7 @@ export function GiftCoverArt({
       style={[styles.art, { height, backgroundColor: cover.background }]}
       onLayout={(event) => setArtWidth(event.nativeEvent.layout.width)}
     >
-      <Svg
-        style={styles.canvas}
-        width="100%"
-        height="100%"
-        viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
-        preserveAspectRatio="xMidYMid slice"
-      >
-        <Defs>
-          <LinearGradient id={gradientId} x1="0" y1="0" x2="0.35" y2="1">
-            <Stop offset="0" stopColor={cover.background} />
-            <Stop offset="1" stopColor={cover.backgroundTo} />
-          </LinearGradient>
-        </Defs>
-        <Rect width={VIEW_WIDTH} height={VIEW_HEIGHT} fill={`url(#${gradientId})`} />
-        {cover.imageUrl ? null : decoration(cover)}
-      </Svg>
+      <CoverPlate cover={cover} />
 
       {cover.imageUrl ? (
         <Image source={cover.imageUrl} style={styles.photo} contentFit="cover" transition={150} />
