@@ -601,7 +601,9 @@ X-Idempotency-Key: <platform-generated uuid>
 Content-Type: application/json
 ```
 
-- Bearer key identifies the credential row (SHA-256 lookup).
+- Bearer key identifies the credential row (SHA-256 lookup). The key also
+  determines the platform and environment; `X-Platform-Code` and
+  `X-Environment` are optional and, when supplied, must match the credential.
 - HMAC proves body integrity and replay resistance.
 - Reject timestamp skew > 300 seconds.
 - Reject if `X-Platform-Code` does not match the credential's platform.

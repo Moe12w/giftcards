@@ -70,6 +70,7 @@ export default async function AdminIntegrationsPage() {
             created_at: string;
           }>}
           canManage
+          showMappingSelector
         />
 
         <section className="panel">

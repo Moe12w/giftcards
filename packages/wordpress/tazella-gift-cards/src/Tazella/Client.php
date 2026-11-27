@@ -199,12 +199,17 @@ final class Client
 
         $headers = [
             'Authorization' => 'Bearer ' . $this->apiKey,
-            'X-Platform-Code' => $this->platformCode,
-            'X-Environment' => $this->environment,
             'X-Timestamp' => $timestamp,
             'X-Signature' => $signature,
             'Accept' => 'application/json',
         ];
+
+        if ($this->platformCode !== '') {
+            $headers['X-Platform-Code'] = $this->platformCode;
+        }
+        if ($this->environment !== '') {
+            $headers['X-Environment'] = $this->environment;
+        }
 
         if ($method === 'POST') {
             $headers['Content-Type'] = 'application/json';

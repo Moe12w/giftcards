@@ -40,7 +40,7 @@ export async function POST(
     operation: 'capture',
     idempotent: true,
     handler: async (context) => {
-      const externalVendorId = requireString(context.body, 'external_vendor_id', {
+      const externalVendorId = optionalString(context.body, 'external_vendor_id', {
         maxLength: 200,
       });
       const externalBranchId = optionalString(context.body, 'external_branch_id', {

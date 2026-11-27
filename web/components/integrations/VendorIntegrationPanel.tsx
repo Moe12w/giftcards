@@ -35,6 +35,8 @@ export interface VendorIntegrationPanelProps {
   mappings: VendorMappingSummary[];
   credentials: CredentialSummary[];
   canManage: boolean;
+  showMappingSelector?: boolean;
+  defaultMappingId?: string | null;
 }
 
 const initialState: CredentialIssueState = { status: 'idle' };
@@ -44,6 +46,8 @@ export function VendorIntegrationPanel({
   mappings,
   credentials,
   canManage,
+  showMappingSelector = false,
+  defaultMappingId = null,
 }: VendorIntegrationPanelProps) {
   const [state, formAction, pending] = useActionState(issueVendorCredential, initialState);
   const activeMappings = mappings.filter((mapping) => mapping.status === 'active');
@@ -62,18 +66,22 @@ export function VendorIntegrationPanel({
           <>
             {canManage ? (
               <form action={formAction} className="form" style={{ display: 'grid', gap: 12 }}>
-                <div className="field">
-                  <label htmlFor="tazella_mapping">{labels.mapping}</label>
-                  <select id="tazella_mapping" name="mapping_id" required defaultValue="">
-                    <option value="">—</option>
-                    {activeMappings.map((mapping) => (
-                      <option key={mapping.id} value={mapping.id}>
-                        {mapping.external_vendor_id}
-                        {mapping.external_branch_id ? ` / ${mapping.external_branch_id}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {showMappingSelector ? (
+                  <div className="field">
+                    <label htmlFor="tazella_mapping">{labels.mapping}</label>
+                    <select id="tazella_mapping" name="mapping_id" required defaultValue="">
+                      <option value="">—</option>
+                      {activeMappings.map((mapping) => (
+                        <option key={mapping.id} value={mapping.id}>
+                          {mapping.external_vendor_id}
+                          {mapping.external_branch_id ? ` / ${mapping.external_branch_id}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <input type="hidden" name="mapping_id" value={defaultMappingId ?? activeMappings[0]?.id ?? ''} />
+                )}
                 <div className="field">
                   <label htmlFor="tazella_environment">{labels.environment}</label>
                   <select id="tazella_environment" name="environment" defaultValue="sandbox">

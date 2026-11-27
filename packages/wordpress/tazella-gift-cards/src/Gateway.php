@@ -193,8 +193,8 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
     {
         return new Client(
             $this->setting('base_url', 'TAZELLA_WC_BASE_URL') ?: 'https://tazella.com.qa',
-            $this->setting('platform_code', 'TAZELLA_WC_PLATFORM_CODE') ?: 'wordpress',
-            $this->setting('environment', 'TAZELLA_WC_ENVIRONMENT') === 'production' ? 'production' : 'sandbox',
+            '',
+            '',
             $this->setting('api_key', 'TAZELLA_WC_API_KEY'),
             $this->setting('signing_secret', 'TAZELLA_WC_SIGNING_SECRET')
         );
@@ -207,10 +207,14 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
 
     private function vendorRequest()
     {
-        return [
-            'external_vendor_id' => $this->setting('external_vendor_id', 'TAZELLA_WC_VENDOR_ID'),
-            'external_branch_id' => $this->setting('external_branch_id', 'TAZELLA_WC_BRANCH_ID'),
-        ];
+        $request = [];
+        $vendor = $this->setting('external_vendor_id', 'TAZELLA_WC_VENDOR_ID');
+        $branch = $this->setting('external_branch_id', 'TAZELLA_WC_BRANCH_ID');
+
+        if ($vendor !== '') $request['external_vendor_id'] = $vendor;
+        if ($branch !== '') $request['external_branch_id'] = $branch;
+
+        return $request;
     }
 
     private function log($message)

@@ -48,9 +48,11 @@ No credential is present in the browser bundle.
 1. Copy `tazella-gift-cards/` into `wp-content/plugins/`.
 2. Activate **Tazella Gift Cards** in WordPress.
 3. Go to **WooCommerce → Settings → Payments → Tazella gift cards**.
-4. Set environment (`sandbox` first), site URL, platform code, API key, signing
-   secret, verified external vendor ID/branch ID, and currency.
-5. Enable the method and run a sandbox order.
+4. Enter the **API key** and **signing secret** generated in the vendor dashboard.
+5. Enable the method and run a sandbox order (the environment is derived from the key).
+
+The platform code, environment, external vendor ID and branch are derived from
+the key, so the vendor never has to paste internal identifiers into WordPress.
 
 Credentials are stored by WordPress in the options table, in the payment
 gateway settings. Restrict access to that settings page to administrators and
@@ -63,12 +65,11 @@ work). A constant takes precedence over the settings page:
 ```php
 define('TAZELLA_WC_API_KEY', 'tz_live_...');
 define('TAZELLA_WC_SIGNING_SECRET', '...');
-define('TAZELLA_WC_PLATFORM_CODE', 'wordpress');
-define('TAZELLA_WC_ENVIRONMENT', 'sandbox');
-define('TAZELLA_WC_VENDOR_ID', 'verified-store-id');
-define('TAZELLA_WC_BRANCH_ID', 'verified-store-id-01');
-define('TAZELLA_WC_CURRENCY', 'QAR');
 ```
+
+Optional overrides (normally derived from the key): `TAZELLA_WC_BASE_URL`,
+`TAZELLA_WC_ENVIRONMENT`, `TAZELLA_WC_VENDOR_ID`, `TAZELLA_WC_BRANCH_ID`,
+`TAZELLA_WC_CURRENCY`.
 
 The gateway settings page runs a `/health` check with the configured key and
 shows whether the connection is valid.

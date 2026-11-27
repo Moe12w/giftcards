@@ -206,13 +206,14 @@ async function authenticate(
     throw new IntegrationError('UNAUTHORIZED', { detail: 'missing api key' });
   }
 
-  const platformCode = headers.get('x-platform-code')?.trim();
-  const environment = headers.get('x-environment')?.trim();
-  if (!platformCode || (environment !== 'sandbox' && environment !== 'production')) {
-    throw new IntegrationError('UNAUTHORIZED', {
-      detail: 'missing platform code or environment',
-    });
+  // Platform code and environment are optional. The key itself identifies
+  // both. If a caller supplies either header it must match the credential.
+  const platformCode = headers.get('x-platform-code')?.trim() || null;
+  const rawEnvironment = headers.get('x-environment')?.trim() || null;
+  if (rawEnvironment && rawEnvironment !== 'sandbox' && rawEnvironment !== 'production') {
+    throw new IntegrationError('UNAUTHORIZED', { detail: 'invalid environment' });
   }
+  const environment = rawEnvironment as 'sandbox' | 'production' | null;
 
   const admin = createAdminClient();
 
@@ -503,9 +504,59 @@ export interface ResolvedMapping {
 
 export async function resolveMapping(
   context: IntegrationContext,
-  externalVendorId: string,
+  externalVendorId: string | null,
   externalBranchId: string | null,
 ): Promise<ResolvedMapping> {
+  // A bound credential carries its own mapping. The caller does not need to
+  // know (or supply) the external identifiers at all.
+  if (context.credentialMappingId) {
+    const { data, error } = await context.admin
+      .from('integration_vendor_mappings')
+      .select('id, vendor_id, partner_id, status, external_vendor_id, external_branch_id, internal_location_id')
+      .eq('id', context.credentialMappingId)
+      .maybeSingle();
+    if (error) throw mapRpcError(error);
+    if (!data) throw new IntegrationError('MAPPING_NOT_FOUND');
+
+    const row = data as {
+      id: string;
+      vendor_id: string | null;
+      partner_id: string | null;
+      status: string;
+      external_vendor_id: string;
+      external_branch_id: string;
+      internal_location_id: string | null;
+    };
+    const mapping: ResolvedMapping = {
+      mapping_id: row.id,
+      vendor_id: row.vendor_id,
+      partner_id: row.partner_id,
+      status: row.status,
+      external_vendor_id: row.external_vendor_id,
+      external_branch_id: row.external_branch_id,
+      internal_location_id: row.internal_location_id,
+    };
+    if (mapping.status !== 'active') throw new IntegrationError('MAPPING_NOT_ACTIVE');
+    if (!mapping.vendor_id) throw new IntegrationError('MAPPING_NOT_ACTIVE');
+
+    // Backwards compatibility: if a caller still sends an ID, it must match.
+    if (
+      externalVendorId &&
+      externalVendorId.trim() &&
+      externalVendorId.trim() !== mapping.external_vendor_id
+    ) {
+      throw new IntegrationError('FORBIDDEN_SCOPE', {
+        detail: 'credential is bound to a different mapping',
+      });
+    }
+
+    return mapping;
+  }
+
+  if (!externalVendorId) {
+    throw new IntegrationError('INVALID_REQUEST', { detail: 'external_vendor_id is required' });
+  }
+
   const { data, error } = await context.admin.rpc('integration_resolve_mapping', {
     p_platform_id: context.platformId,
     p_external_vendor_id: externalVendorId,
