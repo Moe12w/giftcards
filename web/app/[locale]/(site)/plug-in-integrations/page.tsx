@@ -219,16 +219,54 @@ export default async function PlugInIntegrationsPage() {
               <p className="small" style={{ marginTop: 8 }}>
                 {platform.body}
               </p>
-              <span className={`tag ${platform.status === 'review' ? 'warning' : ''}`}>
+              <span
+                className={`tag ${
+                  platform.status === 'wordpress'
+                    ? 'success'
+                    : platform.status === 'review'
+                      ? 'warning'
+                      : ''
+                }`}
+              >
                 {platform.status === 'review'
                   ? t.platforms.statusReview
-                  : t.platforms.statusInternal}
+                  : platform.status === 'wordpress'
+                    ? t.platforms.statusWordpress
+                    : t.platforms.statusInternal}
               </span>
             </article>
           ))}
         </div>
         <div className="callout warn" style={{ marginTop: 22 }}>
           <BadgeCheck size={16} /> {t.platforms.disclaimer}
+        </div>
+      </section>
+
+      <section className="container section tight" id="wordpress">
+        <div className="section-head">
+          <div className="copy">
+            <span className="eyebrow coral">{t.wordpress.eyebrow}</span>
+            <h2>{t.wordpress.title}</h2>
+            <p className="lede">{t.wordpress.body}</p>
+          </div>
+        </div>
+        <div className="grid-3">
+          {t.wordpress.steps.map((step, index) => {
+            const Icon = [KeyRound, Plug, Wallet][index] ?? Gift;
+            return (
+              <article className="card step-card" key={step.title}>
+                <div className="btn-row" style={{ justifyContent: 'space-between' }}>
+                  <span className="step-number">{index + 1}</span>
+                  <Icon size={22} />
+                </div>
+                <h3>{step.title}</h3>
+                <p className="small">{step.body}</p>
+              </article>
+            );
+          })}
+        </div>
+        <div className="callout warn" style={{ marginTop: 22 }}>
+          <ShieldCheck size={16} /> {t.wordpress.note}
         </div>
       </section>
 
@@ -255,6 +293,9 @@ export default async function PlugInIntegrationsPage() {
                   </div>
                 ))}
               </div>
+              <p className="small muted" style={{ marginTop: 10 }}>
+                {t.api.headersNote}
+              </p>
               <div className="callout info" style={{ marginTop: 18 }}>
                 <KeyRound size={16} /> {t.api.note}
               </div>

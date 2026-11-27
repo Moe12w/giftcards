@@ -27,7 +27,7 @@ const en = {
     trustTwo: 'Backend-authorised',
     trustThree: 'Sandbox first',
     statusNote:
-      'Early infrastructure. No third-party platform connection is live yet; connections require official documentation, credentials and written approval.',
+      'Early infrastructure. WordPress/WooCommerce can be tested in sandbox today; marketplace connections need official documentation, credentials and written approval.',
   },
   value: {
     eyebrow: 'Why plug in',
@@ -99,6 +99,7 @@ const en = {
       'Capabilities are tracked separately for each platform. A name on this page is a target for integration, not a live connection.',
     statusReview: 'Under review · not live',
     statusInternal: 'Internal testing only',
+    statusWordpress: 'Sandbox available',
     disclaimer:
       'We do not claim access to a platform API until the platform has provided official documentation, credentials and written approval. No platform restriction is bypassed.',
     items: [
@@ -118,11 +119,41 @@ const en = {
         body: 'Capability review open. No card acceptance is enabled.',
       },
       {
+        name: 'WordPress / WooCommerce',
+        status: 'wordpress',
+        body: 'Early plugin available in sandbox. Store identity comes from your key, not from a field you have to fill in.',
+      },
+      {
         name: 'Internal test platform',
         status: 'internal',
         body: 'Sandbox-only lifecycle testing against the same gateway.',
       },
     ],
+  },
+  wordpress: {
+    eyebrow: 'For WordPress',
+    title: 'Drop it into WooCommerce.',
+    body:
+      'Generate a key in your vendor dashboard, paste it into the plugin, and the gift-card method appears at checkout.',
+    steps: [
+      {
+        title: 'Get your key',
+        body:
+          'In the vendor dashboard open Settings → WordPress payment keys and create a sandbox key. It is shown once.',
+      },
+      {
+        title: 'Install the plugin',
+        body:
+          'Upload the Tazella Gift Cards ZIP in WordPress, activate it, then paste the API key and signing secret into the payment settings.',
+      },
+      {
+        title: 'Take payments',
+        body:
+          'Works with classic shortcode checkout and WooCommerce Blocks. Store, currency and environment are derived from the key.',
+      },
+    ],
+    note:
+      'This is an early plugin. Run it in sandbox first; production access requires verification and a production key.',
   },
   api: {
     eyebrow: 'For developers',
@@ -132,11 +163,11 @@ const en = {
     headersTitle: 'Request headers',
     headers: [
       { name: 'Authorization', body: 'Bearer platform API key, stored server-side as a hash.' },
-      { name: 'X-Platform-Code', body: 'The platform the credential belongs to.' },
-      { name: 'X-Environment', body: 'sandbox or production. The two never share credentials.' },
       { name: 'X-Timestamp / X-Signature', body: 'HMAC-SHA256 over the timestamp and raw body.' },
       { name: 'X-Idempotency-Key', body: 'Required on every money-moving operation.' },
     ],
+    headersNote:
+      'Platform, environment and store are derived from the key. Optional matching headers are accepted for platform-level connectors.',
     endpointsTitle: 'Operations',
     endpoints: [
       { method: 'GET', path: '/health', body: 'Credential and platform status.' },
@@ -191,7 +222,7 @@ const en = {
       },
       {
         q: 'Can I use this on my WordPress or WooCommerce store?',
-        a: 'There is an early WooCommerce gateway scaffold and a PHP client. It is not yet certified against a sandbox or a live store. It still requires a verified store mapping, matching currency and sandbox credentials, and the browser never receives the API key.',
+        a: 'Yes, in sandbox. The WooCommerce plugin supports classic and block checkout. Generate a key in your vendor dashboard, paste the key and signing secret into the plugin, and everything else is derived from the key. It is not yet production-certified.',
       },
       {
         q: 'How do I start an integration?',
@@ -258,7 +289,7 @@ const ar: typeof en = {
     trustTwo: 'قرار من الخادم',
     trustThree: 'بيئة تجريبية أولاً',
     statusNote:
-      'بنية تحتية في مرحلة مبكرة. لا يوجد أي ربط نشط مع منصة خارجية بعد؛ الروابط تتطلب توثيقاً رسمياً وبيانات دخول وموافقة كتابية.',
+      'بنية تحتية في مرحلة مبكرة. يمكن اختبار ووردبريس/WooCommerce في البيئة التجريبية اليوم؛ أما ربط المنصات الأخرى فيتطلب توثيقاً رسمياً وبيانات دخول وموافقة كتابية.',
   },
   value: {
     eyebrow: 'لماذا نربط',
@@ -319,14 +350,27 @@ const ar: typeof en = {
     body: 'تُتابع القدرات لكل منصة على حدة. ذكر المنصة هنا هدف للتكامل، وليس رابطاً نشطاً.',
     statusReview: 'قيد المراجعة · غير مفعّل',
     statusInternal: 'اختبار داخلي فقط',
+    statusWordpress: 'متاح تجريبياً',
     disclaimer:
       'لا ندّعي الوصول إلى واجهة أي منصة قبل أن توفر توثيقاً رسمياً وبيانات دخول وموافقة كتابية. لا يتم تجاوز أي قيد من قيود المنصات.',
     items: [
       { name: 'Snoonu', status: 'review', body: 'مراجعة القدرات مفتوحة. لا يوجد قبول للبطاقات بعد.' },
       { name: 'Talabat', status: 'review', body: 'مراجعة القدرات مفتوحة. لا يوجد قبول للبطاقات بعد.' },
       { name: 'Keeta', status: 'review', body: 'مراجعة القدرات مفتوحة. لا يوجد قبول للبطاقات بعد.' },
+      { name: 'WordPress / WooCommerce', status: 'wordpress', body: 'إضافة مبكرة متاحة في البيئة التجريبية. هوية المتجر تأتي من المفتاح، لا من حقل تملؤه بنفسك.' },
       { name: 'منصة الاختبار الداخلية', status: 'internal', body: 'اختبار دورة كاملة في بيئة تجريبية عبر البوابة نفسها.' },
     ],
+  },
+  wordpress: {
+    eyebrow: 'لووردبريس',
+    title: 'أضفه إلى WooCommerce.',
+    body: 'أنشئ مفتاحاً من لوحة البائع، الصقه في الإضافة، وستظهر وسيلة الدفع ببطاقة الهدايا عند إتمام الطلب.',
+    steps: [
+      { title: 'احصل على المفتاح', body: 'في لوحة البائع افتح الإعدادات ← مفاتيح دفع ووردبريس وأنشئ مفتاحاً تجريبياً. يظهر مرة واحدة فقط.' },
+      { title: 'ثبّت الإضافة', body: 'ارفع ملف Tazella Gift Cards ZIP في ووردبريس، فعّله، ثم الصق مفتاح الواجهة وسر التوقيع في إعدادات الدفع.' },
+      { title: 'استقبل المدفوعات', body: 'يعمل مع إتمام الطلب التقليدي وكتل WooCommerce. المتجر والعملة والبيئة تُستمد من المفتاح.' },
+    ],
+    note: 'هذه إضافة مبكرة. اختبرها أولاً في البيئة التجريبية؛ الوصول للإنتاج يتطلب التحقق ومفتاح إنتاج.',
   },
   api: {
     eyebrow: 'للمطورين',
@@ -335,11 +379,10 @@ const ar: typeof en = {
     headersTitle: 'ترويسات الطلب',
     headers: [
       { name: 'Authorization', body: 'مفتاح منصة يحمله الرابط، ويُخزّن كتجزئة على الخادم.' },
-      { name: 'X-Platform-Code', body: 'المنصة التي ينتمي إليها بيانات الدخول.' },
-      { name: 'X-Environment', body: 'sandbox أو production. لا تشترك البيئتان في بيانات الدخول.' },
       { name: 'X-Timestamp / X-Signature', body: 'توقيع HMAC-SHA256 على الطابع الزمني وجسم الطلب.' },
       { name: 'X-Idempotency-Key', body: 'مطلوب في كل عملية تحوّل أموالاً.' },
     ],
+    headersNote: 'المنصة والبيئة والمتجر تُستمد من المفتاح. تُقبل ترويسات مطابقة اختيارية لتكاملات مستوى المنصة.',
     endpointsTitle: 'العمليات',
     endpoints: [
       { method: 'GET', path: '/health', body: 'حالة بيانات الدخول والمنصة.' },
@@ -391,7 +434,7 @@ const ar: typeof en = {
       },
       {
         q: 'هل أستطيع استخدام هذا على متجري ووردبريس أو WooCommerce؟',
-        a: 'توجد نسخة أولية من بوابة دفع WooCommerce وعميل PHP، لكنها لم تُختبر على متجر فعلي أو بيئة تجريبية بعد. لا تزال تحتاج ربط متجر مؤكد وعملة مطابقة وبيانات دخول تجريبية، ولا يصل المتصفح إلى مفتاح الواجهة أبداً.',
+        a: 'نعم، في البيئة التجريبية. تدعم إضافة WooCommerce إتمام الطلب التقليدي وكتل WooCommerce. أنشئ مفتاحاً من لوحة البائع، الصق المفتاح وسر التوقيع في الإضافة، وكل شيء آخر يُستمد من المفتاح. لم تُعتمد للإنتاج بعد.',
       },
       {
         q: 'كيف أبدأ التكامل؟',
