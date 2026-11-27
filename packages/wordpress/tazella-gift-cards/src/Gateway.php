@@ -33,6 +33,7 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         $this->enabled = $this->get_option('enabled', 'no');
 
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
+        add_action('woocommerce_store_api_checkout_update_order_from_request', [$this, 'capture_block_card_code'], 10, 2);
         add_action('woocommerce_order_status_cancelled', [$this, 'maybe_release_on_cancel'], 10, 1);
         add_action('woocommerce_order_status_refunded', [$this, 'maybe_report_refunded'], 10, 1);
         add_action('woocommerce_thankyou_' . $this->id, [$this, 'thankyou_page'], 10, 1);
@@ -240,6 +241,31 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         return true;
     }
 
+    /** Store API (Blocks checkout) passes the card code in payment_data. */
+    public function capture_block_card_code($order, $request)
+    {
+        if (!is_object($order) || !method_exists($order, 'get_payment_method')) {
+            return;
+        }
+        if ($order->get_payment_method() !== $this->id || !method_exists($request, 'get_param')) {
+            return;
+        }
+
+        $paymentData = $request->get_param('payment_data');
+        if (!is_array($paymentData)) {
+            return;
+        }
+
+        foreach ($paymentData as $item) {
+            if (!is_array($item) || !isset($item['key'], $item['value'])) continue;
+            if ($item['key'] !== 'tazella_card_code') continue;
+
+            $order->update_meta_data('_tazella_card_code', sanitize_text_field(wp_unslash($item['value'])));
+            $order->save_meta_data();
+            return;
+        }
+    }
+
     public function process_payment($order_id)
     {
         $order = wc_get_order($order_id);
@@ -249,7 +275,8 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
 
         $code = isset($_POST['tazella_card_code'])
             ? sanitize_text_field(wp_unslash($_POST['tazella_card_code']))
-            : '';
+            : (string) $order->get_meta('_tazella_card_code');
+        $code = sanitize_text_field($code);
         $currency = strtoupper($order->get_currency());
         $configured = strtoupper($this->setting('currency', 'TAZELLA_WC_CURRENCY'));
         $orderMinor = $this->minor($order->get_total());

@@ -22,6 +22,17 @@ Browser (card code only)
 No credential, signing secret, full card code or buyer identity is placed in
 browser JavaScript. The checkout field only collects the card code.
 
+Both checkout styles are supported:
+
+- **Classic shortcode checkout** — the card field is rendered by `payment_fields()`.
+- **WooCommerce Blocks / Store API** — `src/Blocks.php` registers the method and
+  `assets/js/blocks.js` collects the card code. The code is passed as
+  `payment_data` and stored in order meta by
+  `woocommerce_store_api_checkout_update_order_from_request`; `process_payment`
+  reads it from either source.
+
+No credential is present in the browser bundle.
+
 ## Requirements
 
 - WordPress with WooCommerce active.
@@ -130,9 +141,6 @@ safe error mapping. No WordPress runtime is required for those tests.
 ## Known gaps
 
 - No end-to-end run against WooCommerce or a Tazella sandbox.
-- No WooCommerce Blocks (`Store API`) checkout integration; the classic
-  shortcode checkout is covered.
-- No subscriptions, partial captures above reservations, or multi-currency
-  stores.
+- No subscriptions, partial captures above reservations, or multi-currency stores.
 - No activation-time capability check against the Tazella platform registry.
 - No compiled distribution or WordPress.org release.

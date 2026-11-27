@@ -15,11 +15,24 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+define('TAZELLA_WC_PLUGIN_FILE', __FILE__);
+
 require_once __DIR__ . '/src/Tazella/Exception.php';
 require_once __DIR__ . '/src/Tazella/Client.php';
 
 if (class_exists('WC_Payment_Gateway')) {
     require_once __DIR__ . '/src/Gateway.php';
+}
+
+if (class_exists('Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType')) {
+    require_once __DIR__ . '/src/Blocks.php';
+
+    add_action(
+        'woocommerce_blocks_payment_method_type_registration',
+        function ($registry) {
+            $registry->register(new Tazella_Blocks_Payment_Method());
+        }
+    );
 }
 
 function tazella_gift_cards_load_textdomain()
