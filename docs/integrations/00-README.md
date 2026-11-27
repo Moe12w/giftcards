@@ -24,6 +24,7 @@ and POS systems).
 | 5 — gateway | Implemented; pure gateway tests pass, no end-to-end run | `web/lib/integrations/gateway.ts`, `web/lib/integrations/errors.ts`, `web/lib/integrations/errors.test.ts`, `web/app/(app)/api/integrations/v1/**`, `web/app/(app)/api/cron/route.ts` |
 | 6 — checkout SDK | Implemented, unit-tested, no live-platform certification | `packages/checkout-sdk/` |
 | WordPress / WooCommerce | Scaffold implemented, untested against WordPress | `packages/wordpress/tazella-gift-cards/` |
+| Integration dashboards | Admin console + vendor self-service key issuance | `web/app/(app)/admin/(dashboard)/integrations/page.tsx`, `web/app/(app)/vendor/(dashboard)/settings/page.tsx`, `supabase/migrations/0180_integration_dashboard_rpcs.sql` |
 | 6–10 — sandbox, connectors, dashboards, release | Not started | — |
 
 A public, bilingual information page lives at `/plug-in-integrations` and is

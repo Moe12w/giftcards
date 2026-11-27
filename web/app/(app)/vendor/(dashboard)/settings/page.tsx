@@ -19,6 +19,8 @@ import { VendorImageUpload } from '@/components/VendorImageUpload';
 import { pick } from '@/lib/i18n';
 import { common } from '@/lib/i18n/common';
 import { getLocale } from '@/lib/i18n/server';
+import { VendorIntegrationPanel } from '@/components/integrations/VendorIntegrationPanel';
+import { integrationsCopy } from '@/lib/i18n/integrations';
 import { vendorCopy } from '@/lib/i18n/vendor';
 
 export default async function VendorSettingsPage({
@@ -33,24 +35,33 @@ export default async function VendorSettingsPage({
   const t = pick(vendorCopy, locale).settings;
   const c = pick(common, locale);
 
-  const [categoriesResult, locationsResult, documentsResult] = await Promise.all([
-    ctx.supabase.from('categories').select('id, name').eq('active', true).order('sort_order'),
-    ctx.supabase
-      .from('vendor_locations')
-      .select('*')
-      .eq('vendor_id', vendor.id)
-      .order('is_primary', { ascending: false })
-      .order('created_at', { ascending: true }),
-    ctx.supabase
-      .from('vendor_documents')
-      .select('id, doc_type, file_url, status, created_at')
-      .eq('vendor_id', vendor.id)
-      .order('created_at', { ascending: false }),
-  ]);
+  const [categoriesResult, locationsResult, documentsResult, mappingsResult, credentialsResult] =
+    await Promise.all([
+      ctx.supabase.from('categories').select('id, name').eq('active', true).order('sort_order'),
+      ctx.supabase
+        .from('vendor_locations')
+        .select('*')
+        .eq('vendor_id', vendor.id)
+        .order('is_primary', { ascending: false })
+        .order('created_at', { ascending: true }),
+      ctx.supabase
+        .from('vendor_documents')
+        .select('id, doc_type, file_url, status, created_at')
+        .eq('vendor_id', vendor.id)
+        .order('created_at', { ascending: false }),
+      ctx.supabase
+        .from('integration_vendor_mappings')
+        .select('id, external_vendor_id, external_branch_id, status')
+        .eq('vendor_id', vendor.id)
+        .order('created_at', { ascending: false }),
+      ctx.supabase.rpc('integration_vendor_list_credentials', { p_vendor_id: vendor.id }),
+    ]);
 
   const categories = categoriesResult.data ?? [];
   const locations = locationsResult.data ?? [];
   const documents = documentsResult.data ?? [];
+  const integrationMappings = mappingsResult.data ?? [];
+  const integrationCredentials = credentialsResult.data ?? [];
   const canManage = ctx.role === 'owner' || ctx.role === 'manager';
   const commissionPercent = (Number(vendor.commission_bps ?? 0) / 100).toFixed(2);
 
@@ -347,6 +358,28 @@ export default async function VendorSettingsPage({
           ) : null}
         </div>
       </section>
+
+      <VendorIntegrationPanel
+        labels={pick(integrationsCopy, locale).dashboard}
+        mappings={integrationMappings as Array<{
+          id: string;
+          external_vendor_id: string;
+          external_branch_id: string | null;
+          status: string;
+        }>}
+        credentials={integrationCredentials as Array<{
+          credential_id: string;
+          mapping_id: string | null;
+          platform_code: string;
+          environment: string;
+          label: string;
+          key_prefix: string;
+          status: string;
+          last_used_at: string | null;
+          created_at: string;
+        }>}
+        canManage={canManage}
+      />
 
       <div className="card lavender">
         <span className="icon-tile">
