@@ -31,6 +31,12 @@ linked from the site footer (`web/components/SiteFooter.tsx`). It describes the
 integration surface and platform status without claiming any live third-party
 connection.
 
+On the live database, `mock` remains the generic internal API test platform. A
+separate `wordpress` platform row was added for the WooCommerce plugin, with its
+own sandbox credential and verified mapping. Capabilities are marked supported
+but **not yet verified** for checkout/payment lifecycle until a real WordPress
+run is completed.
+
 The gateway endpoints are documented in `02-integration-architecture.md` §5.
 Every platform capability remains declared `supported: false, verified: false`
 until real documentation, credentials and platform approval exist. No connector
