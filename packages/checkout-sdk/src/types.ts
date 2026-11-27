@@ -70,6 +70,7 @@ export interface StatusData {
 export interface CaptureData {
   status: string;
   reservation_reference: string;
+  redemption_id: string | null;
   redemption_reference: string | null;
   amount_minor: number;
   currency: string;

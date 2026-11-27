@@ -87,6 +87,7 @@ export async function POST(
           operation: 'capture',
           status: row.status,
           reservation_reference: row.reservation_reference,
+          redemption_id: row.redemption_id,
           redemption_reference: row.redemption_reference,
           amount_minor: row.amount_minor,
           currency: row.currency,

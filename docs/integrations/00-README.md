@@ -21,7 +21,7 @@ and POS systems).
 | 2 — design | Approved | `02-integration-architecture.md` |
 | 3 — identity | Implemented, not live-DB verified | `supabase/migrations/0174_integration_identity.sql` |
 | 4 — redemption engine | Implemented, DB tests written but unrun (no `TEST_DATABASE_URL`) | `supabase/migrations/0175_integration_redemption.sql`, `0176_integration_authenticate_fix.sql`, `0177_integration_variable_conflict.sql`, `0178_integration_refund_conflict.sql`, `tests/db/integrations.test.ts` |
-| 5 — gateway | Implemented; pure gateway tests pass, no end-to-end run | `web/lib/integrations/gateway.ts`, `web/lib/integrations/errors.ts`, `web/lib/integrations/errors.test.ts`, `web/app/(app)/api/integrations/v1/**`, `web/app/(app)/api/cron/route.ts` |
+| 5 — gateway | Implemented; unit + signed HTTP E2E tests pass | `web/lib/integrations/gateway.ts`, `web/lib/integrations/errors.ts`, `web/lib/integrations/errors.test.ts`, `web/app/(app)/api/integrations/v1/**`, `web/app/(app)/api/cron/route.ts`, `tests/integrations/gateway.e2e.test.ts` |
 | 6 — checkout SDK | Implemented, unit-tested, no live-platform certification | `packages/checkout-sdk/` |
 | WordPress / WooCommerce | Scaffold implemented, untested against WordPress | `packages/wordpress/tazella-gift-cards/` |
 | Integration dashboards | Admin console + vendor self-service key issuance | `web/app/(app)/admin/(dashboard)/integrations/page.tsx`, `web/app/(app)/vendor/(dashboard)/settings/page.tsx`, `supabase/migrations/0180_integration_dashboard_rpcs.sql` |
@@ -58,9 +58,21 @@ node scripts/run-integration-db-tests.mjs --apply-migrations
 ```
 
 `--apply-migrations` changes the schema of the target database; use a branch or
-staging database where possible. The tests themselves always roll back. Do NOT
-use the live database for WooCommerce end-to-end runs: those are separate HTTP
-transactions and would permanently write orders and redemptions.
+staging database where possible. The tests themselves always roll back.
+
+## Running the signed HTTP end-to-end tests
+
+Start the web app, then run the signed gateway suite:
+
+```bash
+npm run dev
+node scripts/run-integration-e2e.mjs
+```
+
+The suite uses the sandbox seed credential/cards in
+`supabase/sandbox/README.md` unless `INTEGRATION_*` variables are set. It ran
+successfully against the live Supabase project with 8/8 tests passing. It
+creates real (fake) redemptions and refunds, so use sandbox data only.
 
 ## Non-negotiable rules
 
@@ -78,12 +90,15 @@ transactions and would permanently write orders and redemptions.
 
 ## Current production readiness
 
-The repository has **Level 1 infrastructure code written, but the Level 1
-evidence gate is not met**: the migrations have not been applied to a live or
-test database, and the new database tests in `tests/db/integrations.test.ts`
-are skipped until `TEST_DATABASE_URL` is set. No
-platform capability has been verified and no connector or production credential
-exists, so this is not usable for production payment acceptance.
+The repository has **Level 1 infrastructure running on the live database**:
+migrations `0174`–`0180` are applied, a vendor-bound WordPress credential and a
+mock sandbox credential exist, and the signed HTTP suite passes 8/8 against a
+real server and the live Supabase project. The SQL-only DB tests in
+`tests/db/integrations.test.ts` are still skipped because this environment cannot
+resolve the direct Postgres host; they remain the remaining Level 1 evidence
+gap. No third-party platform capability has been verified and no production
+credential or external connector exists, so this is not ready for real customer
+payments.
 
 Read `02-integration-architecture.md` §16 for the Level 1–7 definitions and the
 evidence required to claim each level.
