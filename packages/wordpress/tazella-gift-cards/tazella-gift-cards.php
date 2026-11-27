@@ -22,6 +22,16 @@ if (class_exists('WC_Payment_Gateway')) {
     require_once __DIR__ . '/src/Gateway.php';
 }
 
+function tazella_gift_cards_load_textdomain()
+{
+    load_plugin_textdomain(
+        'tazella-gift-cards',
+        false,
+        dirname(plugin_basename(__FILE__)) . '/languages'
+    );
+}
+add_action('plugins_loaded', 'tazella_gift_cards_load_textdomain');
+
 function tazella_gift_cards_add_gateway($methods)
 {
     $methods[] = 'Tazella_WooCommerce_Gateway';

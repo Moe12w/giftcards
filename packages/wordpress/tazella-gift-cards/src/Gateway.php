@@ -119,6 +119,39 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         ];
     }
 
+    public function admin_options()
+    {
+        parent::admin_options();
+
+        if (!$this->has_credentials()) {
+            echo '<div class="notice notice-warning inline"><p>'
+                . esc_html__('Add an API key and signing secret, or define TAZELLA_WC_API_KEY and TAZELLA_WC_SIGNING_SECRET in wp-config.php.', 'tazella-gift-cards')
+                . '</p></div>';
+            return;
+        }
+
+        try {
+            $health = $this->client()->health();
+            $code = isset($health['platform']['code']) ? (string) $health['platform']['code'] : '';
+            echo '<div class="notice notice-success inline"><p>'
+                . esc_html(sprintf(
+                    /* translators: %s: platform code */
+                    __('Connection verified: %s (%s).', 'tazella-gift-cards'),
+                    $code,
+                    $this->setting('environment', 'TAZELLA_WC_ENVIRONMENT') ?: 'sandbox'
+                ))
+                . '</p></div>';
+        } catch (TazellaException $error) {
+            echo '<div class="notice notice-error inline"><p>'
+                . esc_html(sprintf(
+                    /* translators: %s: error code */
+                    __('Connection check failed: %s. Check the key, secret, platform code and environment.', 'tazella-gift-cards'),
+                    $error->errorCode()
+                ))
+                . '</p></div>';
+        }
+    }
+
     public function is_available()
     {
         if (!parent::is_available()) {
@@ -126,23 +159,43 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         }
 
         return $this->has_credentials()
-            && $this->get_option('external_vendor_id') !== ''
-            && $this->get_option('currency') !== '';
+            && $this->setting('external_vendor_id', 'TAZELLA_WC_VENDOR_ID') !== ''
+            && $this->setting('currency', 'TAZELLA_WC_CURRENCY') !== '';
     }
 
     private function has_credentials()
     {
-        return $this->get_option('api_key') !== '' && $this->get_option('signing_secret') !== '';
+        return $this->setting('api_key', 'TAZELLA_WC_API_KEY') !== ''
+            && $this->setting('signing_secret', 'TAZELLA_WC_SIGNING_SECRET') !== '';
+    }
+
+    /**
+     * Credentials can be supplied as PHP constants in wp-config.php or as
+     * environment variables. When present they take precedence over the
+     * settings page, so the plaintext never has to live in wp_options.
+     */
+    private function setting($key, $constant = null)
+    {
+        if ($constant && defined($constant)) {
+            return (string) constant($constant);
+        }
+        if ($constant) {
+            $fromEnv = getenv($constant);
+            if ($fromEnv !== false && $fromEnv !== '') {
+                return (string) $fromEnv;
+            }
+        }
+        return (string) $this->get_option($key, '');
     }
 
     private function client()
     {
         return new Client(
-            $this->get_option('base_url', 'https://tazella.com.qa'),
-            $this->get_option('platform_code', 'wordpress'),
-            $this->get_option('environment', 'sandbox') === 'production' ? 'production' : 'sandbox',
-            $this->get_option('api_key'),
-            $this->get_option('signing_secret')
+            $this->setting('base_url', 'TAZELLA_WC_BASE_URL') ?: 'https://tazella.com.qa',
+            $this->setting('platform_code', 'TAZELLA_WC_PLATFORM_CODE') ?: 'wordpress',
+            $this->setting('environment', 'TAZELLA_WC_ENVIRONMENT') === 'production' ? 'production' : 'sandbox',
+            $this->setting('api_key', 'TAZELLA_WC_API_KEY'),
+            $this->setting('signing_secret', 'TAZELLA_WC_SIGNING_SECRET')
         );
     }
 
@@ -154,8 +207,8 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
     private function vendorRequest()
     {
         return [
-            'external_vendor_id' => $this->get_option('external_vendor_id'),
-            'external_branch_id' => $this->get_option('external_branch_id', ''),
+            'external_vendor_id' => $this->setting('external_vendor_id', 'TAZELLA_WC_VENDOR_ID'),
+            'external_branch_id' => $this->setting('external_branch_id', 'TAZELLA_WC_BRANCH_ID'),
         ];
     }
 
@@ -198,7 +251,7 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             ? sanitize_text_field(wp_unslash($_POST['tazella_card_code']))
             : '';
         $currency = strtoupper($order->get_currency());
-        $configured = strtoupper($this->get_option('currency'));
+        $configured = strtoupper($this->setting('currency', 'TAZELLA_WC_CURRENCY'));
         $orderMinor = $this->minor($order->get_total());
 
         if ($code === '' || $currency !== $configured || $orderMinor <= 0) {

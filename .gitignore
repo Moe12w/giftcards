@@ -38,6 +38,7 @@ yarn-error.*
 
 # exported web build
 dist-web/
+*.zip
 
 # Supabase local
 .supabase/

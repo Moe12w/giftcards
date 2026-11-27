@@ -45,6 +45,23 @@ Credentials are stored by WordPress in the options table, in the payment
 gateway settings. Restrict access to that settings page to administrators and
 keep backups encrypted.
 
+For sites that prefer not to store the plaintext in `wp_options`, define these
+constants in `wp-config.php` (environment variables with the same names also
+work). A constant takes precedence over the settings page:
+
+```php
+define('TAZELLA_WC_API_KEY', 'tz_live_...');
+define('TAZELLA_WC_SIGNING_SECRET', '...');
+define('TAZELLA_WC_PLATFORM_CODE', 'wordpress');
+define('TAZELLA_WC_ENVIRONMENT', 'sandbox');
+define('TAZELLA_WC_VENDOR_ID', 'verified-store-id');
+define('TAZELLA_WC_BRANCH_ID', 'verified-store-id-01');
+define('TAZELLA_WC_CURRENCY', 'QAR');
+```
+
+The gateway settings page runs a `/health` check with the configured key and
+shows whether the connection is valid.
+
 ## Payment lifecycle in WooCommerce
 
 1. `validate` checks the card against the mapped business before the order is
@@ -88,6 +105,15 @@ $card = $client->validate([
 custom `HttpClient` implementation can be injected for tests. Errors are
 `TazellaException` with `errorCode()`, `requestId()`, `httpStatus()` and a safe
 display message.
+
+## Building the installable ZIP
+
+```bash
+node scripts/package-wordpress-plugin.mjs
+```
+
+This writes `packages/wordpress/tazella-gift-cards-<version>.zip`, ready for
+WordPress → Plugins → Add new → Upload plugin. The generated ZIP is gitignored.
 
 ## Tests
 
