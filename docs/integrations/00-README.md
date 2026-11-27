@@ -20,7 +20,7 @@ and POS systems).
 | 1 — audit | Complete | `01-codebase-audit.md` |
 | 2 — design | Approved | `02-integration-architecture.md` |
 | 3 — identity | Implemented, not live-DB verified | `supabase/migrations/0174_integration_identity.sql` |
-| 4 — redemption engine | Implemented, DB tests written but unrun (no `TEST_DATABASE_URL`) | `supabase/migrations/0175_integration_redemption.sql`, `tests/db/integrations.test.ts` |
+| 4 — redemption engine | Implemented, DB tests written but unrun (no `TEST_DATABASE_URL`) | `supabase/migrations/0175_integration_redemption.sql`, `0176_integration_authenticate_fix.sql`, `0177_integration_variable_conflict.sql`, `0178_integration_refund_conflict.sql`, `tests/db/integrations.test.ts` |
 | 5 — gateway | Implemented; pure gateway tests pass, no end-to-end run | `web/lib/integrations/gateway.ts`, `web/lib/integrations/errors.ts`, `web/lib/integrations/errors.test.ts`, `web/app/(app)/api/integrations/v1/**`, `web/app/(app)/api/cron/route.ts` |
 | 6 — checkout SDK | Implemented, unit-tested, no live-platform certification | `packages/checkout-sdk/` |
 | WordPress / WooCommerce | Scaffold implemented, untested against WordPress | `packages/wordpress/tazella-gift-cards/` |
