@@ -35,6 +35,8 @@ const publicRewritePaths = [
   'privacy',
   'terms',
   'ai-gift-cards',
+  'plug-in-integrations',
+  'account-deletion',
 ];
 
 function publicLocaleRewrites() {
