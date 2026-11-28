@@ -44,6 +44,7 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         self::$hooks_registered = true;
 
         add_action('woocommerce_store_api_checkout_update_order_from_request', [$this, 'capture_block_card_code'], 10, 2);
+        add_filter('woocommerce_cancel_unpaid_order', [$this, 'keep_captured_orders_from_cancellation'], 10, 2);
         add_action('woocommerce_order_status_cancelled', [$this, 'maybe_release_on_cancel'], 10, 1);
         add_action('woocommerce_order_status_refunded', [$this, 'maybe_report_refunded'], 10, 1);
         add_action('woocommerce_thankyou_' . $this->id, [$this, 'thankyou_page'], 10, 1);
@@ -355,6 +356,24 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
     private function allow_partial_payments()
     {
         return $this->get_option('partial_payments', 'no') === 'yes';
+    }
+
+    /**
+     * Whether the card has already been charged for (part of) this order. Such
+     * an order can no longer be treated as unpaid: cancelling it would take the
+     * money and leave the customer with nothing.
+     */
+    private function has_captured_amount($order)
+    {
+        if ((int) $order->get_meta('_tazella_applied_minor') > 0) {
+            return true;
+        }
+
+        return in_array(
+            (string) $order->get_meta('_tazella_status'),
+            ['captured', 'partially_captured', 'reversed', 'refund_required'],
+            true
+        );
     }
 
     private function client()
@@ -877,6 +896,40 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         return $released;
     }
 
+    /**
+     * WooCommerce cancels unpaid orders on a schedule. A split-tender order may
+     * be pending for a moment after its card capture (a fatal in the checkout
+     * request, a slow status write), and the cron would then cancel an order
+     * the customer has already paid for. Never let that happen: leave the order
+     * for a human to resolve instead, and say so on the order.
+     */
+    public function keep_captured_orders_from_cancellation($should_cancel, $order)
+    {
+        if (!$should_cancel || !is_object($order) || !method_exists($order, 'get_meta')) {
+            return $should_cancel;
+        }
+        if ((string) $order->get_payment_method() !== $this->id) {
+            return $should_cancel;
+        }
+        if (!$this->has_captured_amount($order)) {
+            return $should_cancel;
+        }
+
+        if ((string) $order->get_meta('_tazella_cancel_blocked') !== 'yes') {
+            $order->update_meta_data('_tazella_cancel_blocked', 'yes');
+            $order->save_meta_data();
+            $order->add_order_note(__(
+                'WooCommerce did not cancel this unpaid order automatically: a Tazella gift card has already captured part of its total. Collect the remaining balance, or cancel the order and reverse the card payment.',
+                'tazella-gift-cards'
+            ));
+        }
+
+        $this->log('unpaid-cancel blocked order=' . $order->get_id()
+            . ' applied=' . (int) $order->get_meta('_tazella_applied_minor'));
+
+        return false;
+    }
+
     public function maybe_release_on_cancel($order_id)
     {
         $gateway = self::live_gateway() ?: $this;
@@ -885,6 +938,14 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             return;
         }
         if ((string) $order->get_payment_method() !== $gateway->id) {
+            return;
+        }
+
+        // Cancelling a captured order must not leave the card charged. Return
+        // whatever part of the capture has not been refunded yet; a hold that
+        // was never captured is released below instead.
+        if ($gateway->has_captured_amount($order)) {
+            $gateway->reverse_cancelled_capture($order);
             return;
         }
 
@@ -904,6 +965,85 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         } catch (TazellaException $error) {
             // A captured reservation cannot be released; leave it recorded.
             $gateway->log('release ' . $error->errorCode() . ' ' . ($error->requestId() ?? 'no-request-id'));
+        }
+    }
+
+    /**
+     * An order cancelled after the card was charged is refunded in full through
+     * the audited reversal endpoint. If the reversal cannot be made, the order
+     * is left flagged for a human rather than silently keeping the money.
+     */
+    private function reverse_cancelled_capture($order)
+    {
+        if ((string) $order->get_meta('_tazella_status') === 'reversed') {
+            return;
+        }
+
+        $applied = (int) $order->get_meta('_tazella_applied_minor');
+        $alreadyRefunded = (int) $order->get_meta('_tazella_refunded_minor');
+        $outstanding = $applied - $alreadyRefunded;
+        if ($outstanding <= 0) {
+            return;
+        }
+
+        $redemptionId = (string) $order->get_meta('_tazella_redemption_id');
+        if ($redemptionId === '') {
+            $order->update_meta_data('_tazella_status', 'refund_required');
+            $order->save_meta_data();
+            $order->add_order_note(__(
+                'This order was cancelled after a Tazella gift card was charged, but no redemption was recorded. Refund the card in Tazella.',
+                'tazella-gift-cards'
+            ));
+            $this->log('cancel-refund missing-redemption order=' . $order->get_id());
+            return;
+        }
+
+        try {
+            $refund = $this->client()->refund($redemptionId, array_merge($this->vendorRequest(), [
+                'amount_minor' => $outstanding,
+                'reason' => 'woocommerce_order_cancelled',
+                'idempotency_key' => Client::stableKey('cancel-refund:' . $redemptionId . ':' . $outstanding),
+            ]));
+
+            $order->update_meta_data(
+                '_tazella_refunded_minor',
+                isset($refund['refunded_total_minor'])
+                    ? (int) $refund['refunded_total_minor']
+                    : $applied
+            );
+            $order->update_meta_data('_tazella_status', 'reversed');
+            $order->update_meta_data('_tazella_remaining_minor', 0);
+            $order->save_meta_data();
+
+            $order->add_order_note(sprintf(
+                /* translators: 1: refunded amount, 2: currency, 3: redemption reference or id */
+                __('Order cancelled after the Tazella gift card captured %1$s. That amount was returned to the card. Reversal: %2$s', 'tazella-gift-cards'),
+                wc_price($outstanding / 100, ['currency' => $order->get_currency()]),
+                (string) $order->get_meta('_tazella_redemption_reference') !== ''
+                    ? (string) $order->get_meta('_tazella_redemption_reference')
+                    : $redemptionId
+            ));
+            $this->log('cancel-refund order=' . $order->get_id() . ' amount=' . $outstanding);
+        } catch (TazellaException $error) {
+            $order->update_meta_data('_tazella_status', 'refund_required');
+            $order->save_meta_data();
+            $order->add_order_note(sprintf(
+                /* translators: 1: error code, 2: amount still to refund, 3: request id */
+                __('The Tazella gift-card reversal for this cancelled order failed: %1$s. Refund %2$s manually (request %3$s).', 'tazella-gift-cards'),
+                $error->errorCode(),
+                wc_price($outstanding / 100, ['currency' => $order->get_currency()]),
+                $error->requestId() ?? '—'
+            ));
+            $this->log('cancel-refund ' . $error->errorCode() . ' ' . ($error->requestId() ?? 'no-request-id'));
+        } catch (Throwable $error) {
+            $order->update_meta_data('_tazella_status', 'refund_required');
+            $order->save_meta_data();
+            $order->add_order_note(sprintf(
+                /* translators: %s: amount still to refund */
+                __('The Tazella gift-card reversal for this cancelled order failed unexpectedly. Refund %s manually in Tazella.', 'tazella-gift-cards'),
+                wc_price($outstanding / 100, ['currency' => $order->get_currency()])
+            ));
+            $this->log('cancel-refund unexpected ' . $error->getMessage());
         }
     }
 

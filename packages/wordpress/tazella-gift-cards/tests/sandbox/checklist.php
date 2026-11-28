@@ -648,6 +648,130 @@ $order = make_order('150.00');
 check('split tender is off by default', ($result['result'] ?? '') === 'failure' && $order->is_paid() === false);
 $gateway = gateway();
 
+WP_CLI::log('— cancellation after capture ————————————————————————');
+
+// WooCommerce cancels unpaid orders on its own schedule. A split-tender order
+// that stayed pending after the card capture (a fatal in the checkout request,
+// a slow status write) must never be cancelled: the customer would be charged
+// on a cancelled order. Exercise the real cron, not just the filter.
+$heldStockMinutes = get_option('woocommerce_hold_stock_minutes');
+$manageStock = get_option('woocommerce_manage_stock');
+update_option('woocommerce_hold_stock_minutes', '60');
+update_option('woocommerce_manage_stock', 'yes');
+
+// Put an order back where the cron looks for it: pending, last updated long
+// before the hold window, and created through the checkout (WooCommerce only
+// cancels checkout-created orders by default).
+$forcePastCron = static function ($order) {
+    $order->set_created_via('store-api');
+    $order->set_status('pending');
+    $order->save();
+    $order->set_date_modified(gmdate('Y-m-d H:i:s', time() - 3 * HOUR_IN_SECONDS));
+    $order->save();
+    return wc_get_order($order->get_id());
+};
+
+$dataStore = WC_Data_Store::load('order');
+$cronEligible = static function ($orderId) use ($dataStore) {
+    $ids = array_map('intval', (array) $dataStore->get_unpaid_orders(strtotime('-60 MINUTES')));
+    return in_array((int) $orderId, $ids, true);
+};
+
+mock_reset();
+$split = gateway(['partial_payments' => 'yes']);
+clear_notices();
+$order = make_order('150.00');
+[$result, $order] = pay($order, $split, 'SBX-LOW');
+check('split tender captured before the cancellation test', ($result['result'] ?? '') === 'success' && (int) $order->get_meta('_tazella_applied_minor') === 1000);
+
+$order = $forcePastCron($order);
+$splitId = $order->get_id();
+$splitRedemptionId = (string) $order->get_meta('_tazella_redemption_id');
+check('the cron considers the pending captured order unpaid', $cronEligible($splitId), 'order ' . $splitId);
+
+wc_cancel_unpaid_orders();
+$order = wc_get_order($splitId);
+check(
+    'the unpaid-order cron does not cancel a split-tender order after capture',
+    $order->get_status() !== 'cancelled',
+    'status=' . $order->get_status()
+);
+check('the blocked cancellation is recorded on the order', $order->get_meta('_tazella_cancel_blocked') === 'yes');
+check(
+    'the capture survives the cron',
+    $order->get_meta('_tazella_status') === 'partially_captured'
+    && (int) $order->get_meta('_tazella_applied_minor') === 1000
+);
+$notes = wc_get_order_notes(['order_id' => $splitId]);
+$noteText = implode(' | ', array_map(static fn ($note) => $note->content, $notes));
+check('the order explains why it was not cancelled', strpos($noteText, 'did not cancel this unpaid order automatically') !== false, $noteText);
+$state = mock_state();
+check('the cron does not reverse the capture', count($state['refunds'] ?? []) === 0, wp_json_encode($state['refunds'] ?? []));
+
+// An administrator cancelling anyway must return the card's money, not keep it.
+$order->update_status('cancelled', 'sandbox admin cancel');
+$order = wc_get_order($splitId);
+$state = mock_state();
+$cancelRefunds = array_values(array_filter(
+    $state['refunds'] ?? [],
+    static fn ($refund) => ($refund['redemption_id'] ?? '') === $splitRedemptionId
+));
+check(
+    'cancelling after capture returns the captured amount to the card',
+    count($cancelRefunds) === 1 && (int) ($cancelRefunds[0]['amount_minor'] ?? 0) === 1000,
+    wp_json_encode($state['refunds'] ?? [])
+);
+check(
+    'the order records the reversal',
+    $order->get_meta('_tazella_status') === 'reversed' && (int) $order->get_meta('_tazella_refunded_minor') === 1000,
+    $order->get_meta('_tazella_status') . ' / ' . $order->get_meta('_tazella_refunded_minor')
+);
+check('a cancelled split-tender order leaves nothing due', (int) $order->get_meta('_tazella_remaining_minor') === 0);
+$notes = wc_get_order_notes(['order_id' => $splitId]);
+$noteText = implode(' | ', array_map(static fn ($note) => $note->content, $notes));
+check('the cancellation note says the money went back', strpos($noteText, 'returned to the card') !== false, $noteText);
+
+// The guard is not split-tender specific: any captured order left pending by a
+// failed request is protected the same way.
+mock_reset();
+$gateway = gateway();
+clear_notices();
+$order = make_order();
+[$result, $order] = pay($order, $gateway, 'SBX-GOOD');
+$order = $forcePastCron($order);
+$capturedId = $order->get_id();
+check('the cron considers the fully captured order unpaid', $cronEligible($capturedId), 'order ' . $capturedId);
+wc_cancel_unpaid_orders();
+$order = wc_get_order($capturedId);
+check(
+    'a fully captured order is never cancelled as unpaid',
+    $order->get_status() !== 'cancelled' && $order->get_meta('_tazella_status') === 'captured',
+    'status=' . $order->get_status()
+);
+check('the fully captured order records the blocked cancellation', $order->get_meta('_tazella_cancel_blocked') === 'yes');
+
+// An unpaid order whose hold was never captured must still be cleaned up.
+mock_reset();
+clear_notices();
+$order = make_order();
+mock_call('/__test/fail-next-capture');
+pay($order, $gateway, 'SBX-GOOD');
+$order = wc_get_order($order->get_id());
+check('the fixture holds an uncaptured reservation', $order->get_meta('_tazella_status') === 'active');
+$order = $forcePastCron($order);
+$holdOnlyId = $order->get_id();
+wc_cancel_unpaid_orders();
+$order = wc_get_order($holdOnlyId);
+check(
+    'the cron still cancels an unpaid order with no capture',
+    $order->get_status() === 'cancelled',
+    'status=' . $order->get_status()
+);
+check('cancelling that order releases the uncaptured hold', $order->get_meta('_tazella_status') === 'released');
+
+update_option('woocommerce_hold_stock_minutes', $heldStockMinutes);
+update_option('woocommerce_manage_stock', $manageStock);
+
 WP_CLI::log('— HPOS ———————————————————————————————————————————————');
 
 $pluginBasename = plugin_basename(TAZELLA_WC_PLUGIN_FILE);

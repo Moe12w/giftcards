@@ -1,6 +1,6 @@
 # Tazella Gift Cards for WordPress / WooCommerce
 
-Early infrastructure (`0.2.0`). This package contains:
+Early infrastructure (`0.2.1`). This package contains:
 
 - `src/Tazella/Client.php` — a PHP SDK for the Tazella integration gateway. It
   owns the platform credential, signs every request and enforces idempotency.
@@ -206,7 +206,8 @@ MySQL or MariaDB, and Node 18+ for the mock.
 | `mock-gateway.mjs` | Dependency-free `/api/integrations/v1/*` stand-in: bearer auth, HMAC signature and skew window, idempotency replay/conflict, validate, reserve, capture, release, refund and order events, in the same envelope as `web/lib/integrations/gateway.ts`. Test-only control routes live under `/__test/`. |
 | `setup-wordpress.sh` | Downloads WordPress + WooCommerce, writes `wp-config.php`, installs the plugin **from the packaged ZIP**, and points the gateway at the mock. |
 | `checklist.php` | The go-live checklist as assertions, run with `wp eval-file`. |
-| `store-api-checkout.mjs` | A real Blocks checkout over the WooCommerce Store API (`cart` → `add-item` → `checkout` with `payment_data`). |
+| `prepare-store-api.php` | Configures the gateway for the Blocks test (credentials, split tender on), ensures a published 150.00 product, prints its id. |
+| `store-api-checkout.mjs` | A real Blocks checkout over the WooCommerce Store API (`cart` → `add-item` → `checkout` with `payment_data`), in full and with split tender. |
 
 ```bash
 # 1. start the stand-in gateway (127.0.0.1:9099)
@@ -218,9 +219,10 @@ PHP=/path/to/php WORK=/tmp/tazella-wp bash tests/sandbox/setup-wordpress.sh
 # 3. run the checklist inside WordPress
 /path/to/wp wp --path=/tmp/tazella-wp/wordpress eval-file tests/sandbox/checklist.php
 
-# 4. exercise the Blocks checkout over HTTP
+# 4. exercise the Blocks checkout over HTTP (in full, then split tender)
 PHP=/path/to/php -S 127.0.0.1:8088 -t /tmp/tazella-wp/wordpress &
-SITE_URL=http://127.0.0.1:8088 PRODUCT_ID=<published product id> REST_ROUTE=1 \
+/path/to/wp wp --path=/tmp/tazella-wp/wordpress eval-file tests/sandbox/prepare-store-api.php
+SITE_URL=http://127.0.0.1:8088 PRODUCT_ID=<printed product id> REST_ROUTE=1 \
   node tests/sandbox/store-api-checkout.mjs
 ```
 
@@ -233,23 +235,30 @@ capture transport failure (one hold, one redemption), release on cancellation,
 refunds by redemption UUID including two identical partial refunds, `order.paid`
 / `order.refunded` events, log hygiene (no key, secret or card code), Blocks
 registration, HPOS compatibility declarations and an HPOS capture/refund cycle,
-and a clean `debug.log`.
+and a clean `debug.log`. It also runs the real `wc_cancel_unpaid_orders()` cron
+against pending orders: a captured order is never cancelled (the order is noted
+and left for a human), an administrator cancelling anyway gets the captured
+amount returned to the card, and an order with only an uncaptured hold is still
+cancelled and released.
 
 Last run in this repository's sandbox:
 
 | Setup | Result |
 |---|---|
-| WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS **on** | 121/121 assertions |
-| Blocks checkout over the Store API (HPOS on) | 12/12 assertions |
+| WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS **on** | 138/138 assertions |
+| Blocks checkout over the Store API (HPOS on) | 20/20 assertions |
 
 That run covers the throttle (three guesses, fourth refused locally without a
 gateway call, a second client unaffected, counter cleared on success), the hold
 sweep (expired hold released, unexpired and captured orders untouched, second
-run idempotent) and split tender (partial capture, on-hold order, remaining
-amount, capped refunds, still off by default).
+run idempotent), split tender (partial capture, on-hold order, remaining
+amount, capped refunds, still off by default, and the same flow through the
+Blocks checkout), and cancellation after capture (the unpaid-order cron is
+blocked, manual cancellation reverses the capture, uncaptured holds are still
+cleaned up).
 
 The legacy posts-table run from the previous release was 84/84 and was not
-repeated for `0.2.0`: flipping HPOS on a live sandbox from the CLI is not
+repeated for `0.2.1`: flipping HPOS on a live sandbox from the CLI is not
 supported cleanly, and the new order queries use `wc_get_orders()` with a
 `meta_query`, which both data stores implement.
 

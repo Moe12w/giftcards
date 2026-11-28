@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Tazella Gift Cards
  * Description: Accept Tazella gift cards as a WooCommerce payment method through the Tazella integration gateway.
- * Version: 0.2.0
+ * Version: 0.2.1
  * Author: Tazella
  * Author URI: https://tazella.com.qa
  * Plugin URI: https://tazella.com.qa/en/plug-in-integrations
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 }
 
 define('TAZELLA_WC_PLUGIN_FILE', __FILE__);
-define('TAZELLA_WC_PLUGIN_VERSION', '0.2.0');
+define('TAZELLA_WC_PLUGIN_VERSION', '0.2.1');
 
 require_once __DIR__ . '/src/Tazella/Exception.php';
 require_once __DIR__ . '/src/Tazella/Client.php';

@@ -7,6 +7,12 @@
  * This drives the same HTTP endpoints the block checkout uses: cart → add-item →
  * checkout with `payment_data`, so the plugin's Blocks integration and the
  * `capture_block_card_code` hook are exercised for real, not just registered.
+ * It pays the 150.00 order twice: in full with SBX-GOOD, then with the 10.00
+ * SBX-LOW card to prove split tender through Blocks captures only the available
+ * balance and leaves the order on hold.
+ *
+ * Split tender has to be enabled in the gateway settings first:
+ *   wp eval-file tests/sandbox/prepare-store-api.php
  *
  * It also proves the server refuses an order with no card code, which is the
  * backstop for the client-side validation in assets/js/blocks.js.
@@ -159,6 +165,74 @@ async function main() {
 
   if (process.env.ORDER_ID_CHECK) {
     console.log(`order id: ${done.body?.order_id}`);
+  }
+
+  // --- split tender through the block checkout ---------------------------
+  // A card that cannot cover the total must be captured for its available
+  // balance and leave the order awaiting the remainder, through the same Store
+  // API path. Split tender has to be enabled first:
+  //   wp eval-file tests/sandbox/prepare-store-api.php
+  if (process.env.SPLIT_TENDER === '0') {
+    console.log('SKIP  split-tender block checkout disabled with SPLIT_TENDER=0');
+  } else {
+    const splitCard = process.env.SPLIT_CARD || 'SBX-LOW';
+    await mockReset();
+
+    const splitCartResponse = await storeRequest('/cart');
+    const splitNonce = splitCartResponse.headers.get('nonce') || splitCartResponse.headers.get('Nonce');
+    const splitToken =
+      splitCartResponse.headers.get('cart-token') || splitCartResponse.headers.get('Cart-Token');
+    check(
+      'a second Store API cart returns its nonce and token',
+      Boolean(splitNonce && splitToken),
+      `nonce=${Boolean(splitNonce)} token=${Boolean(splitToken)}`,
+    );
+
+    const splitAdded = await storeRequest('/cart/add-item', {
+      method: 'POST',
+      headers: headersFrom(null, splitNonce, splitToken),
+      body: JSON.stringify({ id: PRODUCT_ID, quantity: 1 }),
+    });
+    check('the split-tender cart total is 150.00', String(splitAdded.body?.totals?.total_price) === '15000', String(splitAdded.body?.totals?.total_price));
+
+    const splitDone = await storeRequest('/checkout', {
+      method: 'POST',
+      headers: headersFrom(null, splitNonce, splitToken),
+      body: JSON.stringify({
+        ...baseCheckout,
+        payment_data: [{ key: 'tazella_card_code', value: splitCard }],
+      }),
+    });
+    check(
+      'a card below the total completes the block checkout',
+      splitDone.status === 200,
+      `${splitDone.status} ${JSON.stringify(splitDone.body).slice(0, 300)}`,
+    );
+    check(
+      'the split-tender block order waits on hold',
+      splitDone.body?.status === 'on-hold',
+      String(splitDone.body?.status),
+    );
+
+    const splitState = await mockState();
+    const splitReservations = Object.values(splitState.reservations ?? {});
+    const splitRedemptions = Object.values(splitState.redemptions ?? {});
+    check('split tender creates one hold through the block checkout', splitReservations.length === 1, String(splitReservations.length));
+    check('split tender captures exactly one redemption', splitRedemptions.length === 1, String(splitRedemptions.length));
+    check(
+      'the block checkout captures only the available balance',
+      splitRedemptions[0]?.amount_minor === 1000,
+      String(splitRedemptions[0]?.amount_minor),
+    );
+    check(
+      'the block checkout does not charge the full total',
+      splitRedemptions[0]?.amount_minor !== 15000,
+      String(splitRedemptions[0]?.amount_minor),
+    );
+
+    if (process.env.ORDER_ID_CHECK) {
+      console.log(`split-tender order id: ${splitDone.body?.order_id}`);
+    }
   }
 
   console.log('');

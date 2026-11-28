@@ -74,6 +74,12 @@ Run these against a real WordPress install before telling a vendor "production":
       balance, leaves the order **on hold** with `_tazella_remaining_minor`, shows
       the remainder to the customer, and is not reported as `order.paid`.
 - [ ] Split tender refunds are capped at the captured amount.
+- [ ] An order the card has already captured is never cancelled by
+      WooCommerce's unpaid-order cron: the order is noted and left for a human
+      to resolve. If an administrator cancels it anyway, the captured amount is
+      returned to the card (`_tazella_status = reversed`) and nothing is left
+      due; an order with only an uncaptured hold is still cancelled and the hold
+      released.
 - [ ] Debug log contains error codes and request IDs only — never secrets or card
       codes.
 
@@ -90,16 +96,27 @@ PHP=/path/to/php WORK=/tmp/tazella-wp \
   bash packages/wordpress/tazella-gift-cards/tests/sandbox/setup-wordpress.sh
 /path/to/wp wp --path=/tmp/tazella-wp/wordpress \
   eval-file packages/wordpress/tazella-gift-cards/tests/sandbox/checklist.php
+
+# Blocks checkout over the Store API: full payment, then split tender
+PHP=/path/to/php -S 127.0.0.1:8088 -t /tmp/tazella-wp/wordpress &
+/path/to/wp wp --path=/tmp/tazella-wp/wordpress \
+  eval-file packages/wordpress/tazella-gift-cards/tests/sandbox/prepare-store-api.php
+SITE_URL=http://127.0.0.1:8088 PRODUCT_ID=<printed id> REST_ROUTE=1 \
+  node packages/wordpress/tazella-gift-cards/tests/sandbox/store-api-checkout.mjs
 ```
 
 Results from the last run:
 
 | Configuration | Assertions |
 |---|---|
-| WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS on (`0.2.0`) | 121 passed |
-| Blocks checkout through the Store API (HPOS on) | 12 passed |
+| WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS on (`0.2.1`) | 138 passed |
+| Blocks checkout through the Store API (HPOS on), full payment and split tender | 20 passed |
 
-The `0.2.0` run added the throttle, hold-sweep and split-tender sections. The
+The `0.2.0` run added the throttle, hold-sweep and split-tender sections;
+`0.2.1` added the cancellation-after-capture section (the real
+`wc_cancel_unpaid_orders()` cron, manual cancellation reversal, and an
+uncaptured hold still being cleaned up) and the split-tender case through the
+Blocks checkout. The
 HPOS-off configuration from `0.1.0` (84 passed) was not repeated: toggling HPOS
 on a populated sandbox from WP-CLI is not supported cleanly. The new queries use
 `wc_get_orders()` with a `meta_query`, which both order stores implement.
@@ -130,6 +147,9 @@ vendor dashboard key issuance.
 - With split tender on, the gift card's share is captured and the order is left
   on hold for the remainder. WooCommerce still cannot charge a second live
   payment method in the same checkout, so the balance is collected by the store.
+- WooCommerce's unpaid-order cron is blocked for any order the card has already
+  captured; those orders stay pending until someone collects the remainder or
+  cancels them (which reverses the card capture automatically).
 - The attempt counter is per client address, so a distributed guessing campaign
   is throttled per address rather than globally.
 - No subscriptions, no multi-currency, no WordPress.org release.
