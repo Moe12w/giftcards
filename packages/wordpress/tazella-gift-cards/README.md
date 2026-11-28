@@ -1,6 +1,6 @@
 # Tazella Gift Cards for WordPress / WooCommerce
 
-Early infrastructure (`0.1.0`). This package contains:
+Early infrastructure (`0.2.0`). This package contains:
 
 - `src/Tazella/Client.php` — a PHP SDK for the Tazella integration gateway. It
   owns the platform credential, signs every request and enforces idempotency.
@@ -105,21 +105,43 @@ Optional overrides: `TAZELLA_WC_BASE_URL`, `TAZELLA_WC_ENVIRONMENT`,
 ## Payment lifecycle in WooCommerce
 
 1. `validate` checks the card against the mapped business before the order is
-   charged.
-2. If the available balance is lower than the order total, the payment fails
-   before a hold is taken. This gateway is the only method for the order, so a
-   partial gift-card payment is never marked paid.
+   charged. Failed lookups are counted per client address; after
+   **Card attempts per client** failures (default 10) within the cooldown window
+   (default 15 minutes) further attempts are refused locally with
+   `RATE_LIMITED` and never reach the gateway, so the checkout page cannot be
+   used as an unlimited oracle for guessing codes. A completed payment clears
+   the counter.
+2. If the available balance is lower than the order total the payment fails
+   before a hold is taken, unless **Split tender** is enabled (see below).
 3. `reserve` creates a short-lived hold for the exact order total. If the hold
-   comes back smaller than the total, it is released and the payment fails.
-4. WooCommerce's own checkout submission is the verified payment event for this
+   comes back smaller than the total, it is released and the payment fails;
+   with split tender the covered part is captured instead.
+4. The hold's expiry is recorded on the order (`_tazella_hold_expires_at`). An
+   hourly WP-Cron sweep releases holds whose checkout never finished, so an
+   abandoned tab does not leave the customer's balance reserved until the
+   reservation lapses. The sweep only ever touches orders that were never
+   captured.
+5. WooCommerce's own checkout submission is the verified payment event for this
    self-hosted gateway. `capture` writes the redemption and ledger entry, then
    `$order->payment_complete()` runs.
-5. Cancelling an uncaptured order calls `release`. A captured order is never
+6. Cancelling an uncaptured order calls `release`. A captured order is never
    released.
-6. A WooCommerce refund calls the audited `refund` endpoint with the redemption
-   UUID returned by capture.
-7. `order.paid` and `order.refunded` events are reported for reconciliation. A
+7. A WooCommerce refund calls the audited `refund` endpoint with the redemption
+   UUID returned by capture, and is capped at the amount the card actually paid.
+8. `order.paid` and `order.refunded` events are reported for reconciliation. A
    failing report is logged and never changes the payment result.
+
+### Split tender (opt-in)
+
+With **Split tender** disabled (the default) the card must cover the whole
+order. When enabled, a card that cannot cover the total is captured for its
+available balance, the order is left **on hold** with `_tazella_remaining_minor`
+recorded, and the customer is told the remainder is still due. The store
+collects the difference itself (transfer, cash on delivery, a second invoice).
+WooCommerce still cannot charge two payment methods in one checkout, so this is
+not a second card charge — it is a partial capture with an explicit balance due.
+A partially paid order is never reported as `order.paid` and its refunds are
+capped at the captured amount.
 
 Idempotency keys are derived from the order and operation (`Client::stableKey`),
 so a retried checkout replays the original response instead of taking a second
@@ -217,9 +239,19 @@ Last run in this repository's sandbox:
 
 | Setup | Result |
 |---|---|
-| WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS **off** | 84/84 assertions |
-| Same, fresh install with HPOS **on** | 88/88 assertions |
+| WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS **on** | 121/121 assertions |
 | Blocks checkout over the Store API (HPOS on) | 12/12 assertions |
+
+That run covers the throttle (three guesses, fourth refused locally without a
+gateway call, a second client unaffected, counter cleared on success), the hold
+sweep (expired hold released, unexpired and captured orders untouched, second
+run idempotent) and split tender (partial capture, on-hold order, remaining
+amount, capped refunds, still off by default).
+
+The legacy posts-table run from the previous release was 84/84 and was not
+repeated for `0.2.0`: flipping HPOS on a live sandbox from the CLI is not
+supported cleanly, and the new order queries use `wc_get_orders()` with a
+`meta_query`, which both data stores implement.
 
 What it still does not cover: the production gateway and its Postgres RPCs, a
 live Tazella sandbox card, the browser-side `blocks.js` validation in a real
@@ -228,6 +260,9 @@ browser, and the vendor dashboard that issues the key.
 ## Known gaps
 
 - Not yet run against the production Tazella gateway or a live vendor store.
-- No subscriptions, partial gift-card payments, or multi-currency stores.
+- Split tender collects the remainder outside WooCommerce; a single order still
+  cannot be charged to two live payment methods.
+- No subscriptions, multi-currency stores, or per-card attempt limits (the
+  counter is per client address).
 - No activation-time capability check against the Tazella platform registry.
 - No WordPress.org release; distribution is the ZIP link above.

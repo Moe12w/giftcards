@@ -131,6 +131,30 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                 'type' => 'number',
                 'default' => '600',
             ],
+            'partial_payments' => [
+                'title' => __('Split tender', 'tazella-gift-cards'),
+                'type' => 'checkbox',
+                'label' => __('Accept the card\'s available balance and leave the remainder due on the order', 'tazella-gift-cards'),
+                'default' => 'no',
+                'description' => __(
+                    'When off, the card must cover the whole order. When on, an order the card cannot cover is captured for the available balance, left on hold, and the remainder is collected by the store.',
+                    'tazella-gift-cards'
+                ),
+            ],
+            'max_attempts' => [
+                'title' => __('Card attempts per client', 'tazella-gift-cards'),
+                'type' => 'number',
+                'default' => '10',
+                'description' => __(
+                    'Reject this many failed card lookups from one client before pausing further attempts. Set 0 to disable. Guessing card codes is otherwise unlimited.',
+                    'tazella-gift-cards'
+                ),
+            ],
+            'attempt_window_minutes' => [
+                'title' => __('Attempt cooldown (minutes)', 'tazella-gift-cards'),
+                'type' => 'number',
+                'default' => '15',
+            ],
             'debug' => [
                 'title' => __('Debug log', 'tazella-gift-cards'),
                 'type' => 'checkbox',
@@ -248,6 +272,89 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             }
         }
         return (string) $this->get_option($key, '');
+    }
+
+    /**
+     * A card code is a bearer instrument and `validate` answers whether a guess
+     * exists. Without a local counter, a checkout page doubles as an unlimited
+     * oracle. Attempts are counted per client address, not per card, so one
+     * visitor's failures cannot lock a legitimate card holder out.
+     */
+    private function client_ip()
+    {
+        $ip = '';
+        if (class_exists('WC_Geolocation')) {
+            $ip = (string) WC_Geolocation::get_ip_address();
+        }
+        if ($ip === '' && isset($_SERVER['REMOTE_ADDR'])) {
+            $ip = (string) wp_unslash($_SERVER['REMOTE_ADDR']);
+        }
+
+        return (string) apply_filters('tazella_gift_cards_client_ip', $ip);
+    }
+
+    private function attempt_key()
+    {
+        return 'tazella_gc_attempts_' . md5($this->client_ip());
+    }
+
+    private function attempt_state()
+    {
+        $state = get_transient($this->attempt_key());
+        if (!is_array($state)) {
+            return ['failures' => 0, 'blocked_until' => 0];
+        }
+
+        return array_merge(['failures' => 0, 'blocked_until' => 0], $state);
+    }
+
+    private function attempt_window()
+    {
+        return max(1, (int) $this->get_option('attempt_window_minutes', '15')) * MINUTE_IN_SECONDS;
+    }
+
+    private function assert_not_throttled()
+    {
+        if ((int) $this->get_option('max_attempts', '10') <= 0) {
+            return;
+        }
+
+        $state = $this->attempt_state();
+        if ((int) $state['blocked_until'] > time()) {
+            throw new TazellaException(
+                'RATE_LIMITED',
+                TazellaException::publicMessage('RATE_LIMITED'),
+                true
+            );
+        }
+    }
+
+    private function register_failed_attempt()
+    {
+        $max = (int) $this->get_option('max_attempts', '10');
+        if ($max <= 0) {
+            return;
+        }
+
+        $state = $this->attempt_state();
+        $state['failures'] = (int) $state['failures'] + 1;
+        if ($state['failures'] >= $max) {
+            $state['blocked_until'] = time() + $this->attempt_window();
+        }
+        set_transient($this->attempt_key(), $state, $this->attempt_window());
+
+        $this->log('attempt failures=' . $state['failures']
+            . ' blocked=' . ($state['blocked_until'] > time() ? 'yes' : 'no'));
+    }
+
+    private function clear_attempts()
+    {
+        delete_transient($this->attempt_key());
+    }
+
+    private function allow_partial_payments()
+    {
+        return $this->get_option('partial_payments', 'no') === 'yes';
     }
 
     private function client()
@@ -406,8 +513,11 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
 
         $client = $this->client();
         $vendor = $this->vendorRequest();
+        $allowPartial = $this->allow_partial_payments();
 
         try {
+            $this->assert_not_throttled();
+
             $validation = $client->validate(array_merge($vendor, [
                 'card_code' => $code,
                 'currency' => $currency,
@@ -421,10 +531,11 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
 
             $available = isset($validation['available_minor']) ? (int) $validation['available_minor'] : 0;
 
-            // This gateway is the only payment method for the order, so it must
-            // cover the whole total. Taking a partial amount and marking the
-            // order paid would leave the store unpaid for the difference.
-            if ($available < $orderMinor) {
+            // Without split tender this gateway must cover the whole total:
+            // taking a partial amount and marking the order paid would leave the
+            // store unpaid for the difference. With split tender the reserve step
+            // asks only for the covered part and the order stays on hold.
+            if ($available < $orderMinor && !$allowPartial) {
                 throw new TazellaException(
                     'INSUFFICIENT_BALANCE',
                     TazellaException::publicMessage('INSUFFICIENT_BALANCE'),
@@ -432,13 +543,17 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                 );
             }
 
+            $ttl = max(60, (int) $this->get_option('ttl_seconds', '600'));
             $reservation = $client->reserve(array_merge($vendor, [
                 'external_order_id' => 'woo_' . $order->get_id(),
                 'card_code' => $code,
                 'order_amount_minor' => $orderMinor,
-                'requested_amount_minor' => $orderMinor,
+                // In split-tender mode the hold asks only for what the card can
+                // cover; otherwise it asks for the full total and the gateway
+                // decides whether the balance is sufficient.
+                'requested_amount_minor' => $allowPartial ? min($orderMinor, $available) : $orderMinor,
                 'currency' => $currency,
-                'ttl_seconds' => max(60, (int) $this->get_option('ttl_seconds', '600')),
+                'ttl_seconds' => $ttl,
                 'idempotency_key' => Client::stableKey('reserve:woo:' . $order->get_id() . ':' . $code),
             ]));
 
@@ -459,9 +574,21 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
 
             $order->update_meta_data('_tazella_reservation_reference', $reference);
 
-            // A hold smaller than the order total must never become a paid
-            // order. Release it and fail cleanly instead.
-            if ($applied < $orderMinor) {
+            // Record when the hold lapses so an abandoned checkout can be swept
+            // up instead of leaving the customer's balance reserved.
+            $expiresAt = isset($reservation['expires_at'])
+                ? strtotime((string) $reservation['expires_at'])
+                : false;
+            $order->update_meta_data(
+                '_tazella_hold_expires_at',
+                $expiresAt ? (int) $expiresAt : time() + $ttl
+            );
+
+            // A hold smaller than the order total must never silently become a
+            // paid order. Either release it, or — when split tender is enabled —
+            // capture the covered amount and leave the rest due.
+            $partial = $applied < $orderMinor;
+            if ($partial && !$allowPartial) {
                 try {
                     $client->release($reference, array_merge($vendor, [
                         'reason' => 'woocommerce_underpaid',
@@ -478,7 +605,6 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                 );
             }
 
-            $order->update_meta_data('_tazella_applied_minor', $applied);
             $order->update_meta_data('_tazella_status', 'active');
             $order->update_meta_data(
                 '_tazella_card_masked',
@@ -487,10 +613,11 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             $order->save_meta_data();
 
             // WooCommerce's checkout submission is the verified payment event
-            // for this self-hosted gateway. Capture only the confirmed total.
+            // for this self-hosted gateway. Capture only the confirmed amount.
+            $capturedMinor = $partial ? $applied : $orderMinor;
             $capture = $client->capture($reference, array_merge($vendor, [
                 'external_payment_reference' => 'woo_' . $order->get_id(),
-                'confirmed_order_amount_minor' => $orderMinor,
+                'confirmed_order_amount_minor' => $capturedMinor,
                 'currency' => $currency,
                 'idempotency_key' => Client::stableKey('capture:woo:' . $order->get_id()),
             ]));
@@ -518,21 +645,57 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                 ? (string) $capture['redemption_reference']
                 : '';
 
+            $order->update_meta_data('_tazella_applied_minor', $capturedMinor);
             $order->update_meta_data('_tazella_redemption_id', $redemptionId);
             $order->update_meta_data('_tazella_redemption_reference', $redemptionReference);
-            $order->update_meta_data('_tazella_status', 'captured');
+            $order->update_meta_data('_tazella_status', $partial ? 'partially_captured' : 'captured');
             // The card code is a bearer instrument: once it is spent, do not
             // keep the plaintext on the order.
             $order->delete_meta_data('_tazella_card_code');
             $order->save_meta_data();
+            $this->clear_attempts();
+
+            $redemptionLabel = $redemptionReference !== '' ? $redemptionReference : $redemptionId;
+
+            if ($partial) {
+                $remainingMinor = $orderMinor - $capturedMinor;
+                $order->update_meta_data('_tazella_remaining_minor', $remainingMinor);
+                $order->save_meta_data();
+
+                $order->add_order_note(sprintf(
+                    /* translators: 1: gift-card amount, 2: order total, 3: amount still due, 4: redemption reference */
+                    __('Tazella gift card covered %1$s of %2$s. %3$s is still due; the order was left on hold. Redemption: %4$s', 'tazella-gift-cards'),
+                    wc_price($capturedMinor / 100, ['currency' => $currency]),
+                    wc_price($orderMinor / 100, ['currency' => $currency]),
+                    wc_price($remainingMinor / 100, ['currency' => $currency]),
+                    $redemptionLabel
+                ));
+
+                wc_add_notice(sprintf(
+                    /* translators: 1: gift-card amount, 2: amount still due */
+                    __('Gift card applied: %1$s. %2$s is still due; the store will contact you to collect it.', 'tazella-gift-cards'),
+                    wc_price($capturedMinor / 100, ['currency' => $currency]),
+                    wc_price($remainingMinor / 100, ['currency' => $currency])
+                ), 'notice');
+
+                // Not payment_complete(): the order is not paid in full, so it
+                // must stay visible as awaiting the remaining balance.
+                $order->update_status('on-hold', __('Partially paid with a Tazella gift card; the remaining balance is still due.', 'tazella-gift-cards'));
+                $order->save();
+
+                return [
+                    'result' => 'success',
+                    'redirect' => $this->get_return_url($order),
+                ];
+            }
 
             $order->add_order_note(sprintf(
                 /* translators: 1: amount in minor units, 2: redemption reference */
                 __('Tazella gift card applied: %1$d minor units. Redemption: %2$s', 'tazella-gift-cards'),
-                $applied,
-                $redemptionReference !== '' ? $redemptionReference : $redemptionId
+                $capturedMinor,
+                $redemptionLabel
             ));
-            $order->payment_complete($redemptionReference !== '' ? $redemptionReference : $redemptionId);
+            $order->payment_complete($redemptionLabel);
 
             // Reporting is best-effort and must never undo a completed payment.
             $this->report_event($order, 'order.paid', $client, $orderMinor, $currency);
@@ -543,6 +706,11 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             ];
         } catch (TazellaException $error) {
             $this->log($error->errorCode() . ' ' . ($error->requestId() ?? 'no-request-id'));
+            // Only lookups that betray a guessed code count toward the limit; a
+            // genuine but underfunded card is not an attack.
+            if (in_array($error->errorCode(), ['CARD_NOT_FOUND', 'CARD_INACTIVE', 'CARD_EXPIRED', 'CARD_WRONG_BUSINESS'], true)) {
+                $this->register_failed_attempt();
+            }
             $order->update_status('failed', sprintf(
                 /* translators: 1: error code, 2: request id */
                 __('Tazella gift card payment failed: %1$s (request %2$s)', 'tazella-gift-cards'),
@@ -577,9 +745,18 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             );
         }
 
+        // A split-tender order is worth more than the card covered, so the
+        // default refund must never exceed the captured amount.
+        $capturedMinor = (int) $order->get_meta('_tazella_applied_minor');
         $amountMinor = $amount === null
-            ? $this->minor($order->get_total())
+            ? ($capturedMinor > 0 ? $capturedMinor : $this->minor($order->get_total()))
             : $this->minor($amount);
+        if ($capturedMinor > 0 && $amountMinor > $capturedMinor) {
+            return new WP_Error(
+                'tazella_refund_exceeds_capture',
+                __('The refund is larger than the amount this gift card paid.', 'tazella-gift-cards')
+            );
+        }
         if ($amountMinor <= 0) {
             return new WP_Error(
                 'tazella_refund_invalid_amount',
@@ -636,6 +813,68 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                 TazellaException::publicMessage('INTERNAL_ERROR')
             );
         }
+    }
+
+    /**
+     * Release holds whose checkout never finished. When a customer closes the
+     * tab after the hold is taken, the balance stays reserved at Tazella until
+     * the reservation lapses; nobody releases it and the vendor's support queue
+     * inherits the complaint. Only orders that were never captured are swept,
+     * and a release always uses the deterministic key so a retry is harmless.
+     */
+    public static function sweep_expired_holds($limit = 50)
+    {
+        $gateway = self::live_gateway();
+        if (!$gateway || !$gateway->has_credentials()) {
+            return 0;
+        }
+
+        $orders = wc_get_orders([
+            'limit' => max(1, (int) $limit),
+            'status' => ['pending', 'failed', 'on-hold', 'cancelled', 'checkout-draft'],
+            'orderby' => 'date',
+            'order' => 'ASC',
+            'meta_query' => [
+                ['key' => '_tazella_status', 'value' => 'active'],
+                ['key' => '_tazella_hold_expires_at', 'value' => time(), 'compare' => '<', 'type' => 'NUMERIC'],
+            ],
+        ]);
+
+        $released = 0;
+        foreach ($orders as $order) {
+            if (!is_object($order) || !method_exists($order, 'get_meta')) {
+                continue;
+            }
+            if ((string) $order->get_payment_method() !== $gateway->id) {
+                continue;
+            }
+
+            $reference = (string) $order->get_meta('_tazella_reservation_reference');
+            if ($reference === '') {
+                continue;
+            }
+
+            try {
+                $gateway->client()->release($reference, array_merge($gateway->vendorRequest(), [
+                    'reason' => 'woocommerce_hold_expired',
+                    'idempotency_key' => Client::stableKey('sweep-release:woo:' . $order->get_id()),
+                ]));
+                $order->update_meta_data('_tazella_status', 'released');
+                $order->save_meta_data();
+                $order->add_order_note(__(
+                    'Tazella gift-card hold expired and was released automatically.',
+                    'tazella-gift-cards'
+                ));
+                $released++;
+            } catch (TazellaException $error) {
+                // A hold that was captured meanwhile is not ours to release.
+                $gateway->log('sweep ' . $error->errorCode() . ' ' . ($error->requestId() ?? 'no-request-id'));
+            } catch (Throwable $error) {
+                $gateway->log('sweep unexpected ' . $error->getMessage());
+            }
+        }
+
+        return $released;
     }
 
     public function maybe_release_on_cancel($order_id)
@@ -723,6 +962,15 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                 __('Paid with Tazella gift card: %s', 'tazella-gift-cards'),
                 wc_price($applied / 100, ['currency' => $order->get_currency()])
             )) . '</p>';
+
+            $remaining = (int) $order->get_meta('_tazella_remaining_minor');
+            if ($remaining > 0) {
+                echo '<p class="woocommerce-order-overview">' . wp_kses_post(sprintf(
+                    /* translators: %s: formatted amount still due */
+                    __('Still due, to be collected by the store: %s', 'tazella-gift-cards'),
+                    wc_price($remaining / 100, ['currency' => $order->get_currency()])
+                )) . '</p>';
+            }
         }
     }
 

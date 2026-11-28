@@ -63,6 +63,17 @@ Run these against a real WordPress install before telling a vendor "production":
 - [ ] HPOS enabled: no incompatibility warning; orders still capture and refund.
 - [ ] Disconnect the network mid-checkout, retry: no second hold or redemption
       (stable idempotency keys).
+- [ ] Guessing codes: after the configured number of failed lookups from one
+      client, further attempts are refused locally with `RATE_LIMITED` and never
+      reach the gateway; a second client is unaffected; a success clears the
+      counter.
+- [ ] Abandoned checkout: a hold whose expiry has passed is released by the
+      hourly sweep with an order note; unexpired holds and captured orders are
+      untouched, and a second sweep releases nothing.
+- [ ] Split tender (if enabled): a card below the total captures its available
+      balance, leaves the order **on hold** with `_tazella_remaining_minor`, shows
+      the remainder to the customer, and is not reported as `order.paid`.
+- [ ] Split tender refunds are capped at the captured amount.
 - [ ] Debug log contains error codes and request IDs only — never secrets or card
       codes.
 
@@ -85,9 +96,13 @@ Results from the last run:
 
 | Configuration | Assertions |
 |---|---|
-| WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS off | 84 passed |
-| Same stack, fresh install, HPOS on | 88 passed |
+| WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS on (`0.2.0`) | 121 passed |
 | Blocks checkout through the Store API (HPOS on) | 12 passed |
+
+The `0.2.0` run added the throttle, hold-sweep and split-tender sections. The
+HPOS-off configuration from `0.1.0` (84 passed) was not repeated: toggling HPOS
+on a populated sandbox from WP-CLI is not supported cleanly. The new queries use
+`wc_get_orders()` with a `meta_query`, which both order stores implement.
 
 Two defects were found and fixed by that run and are worth knowing about when
 re-testing:
@@ -110,8 +125,13 @@ vendor dashboard key issuance.
 
 ## 5. Known limitations
 
-- One gift card must cover the whole order. Partial gift-card payment is not
-  implemented; the order fails instead of being marked paid.
+- With split tender off (the default) one gift card must cover the whole order;
+  the order fails rather than being marked partly paid.
+- With split tender on, the gift card's share is captured and the order is left
+  on hold for the remainder. WooCommerce still cannot charge a second live
+  payment method in the same checkout, so the balance is collected by the store.
+- The attempt counter is per client address, so a distributed guessing campaign
+  is throttled per address rather than globally.
 - No subscriptions, no multi-currency, no WordPress.org release.
 - The plugin is verified against a local WordPress + WooCommerce install with a
   stand-in gateway (§4.1), not yet against the production gateway or a live

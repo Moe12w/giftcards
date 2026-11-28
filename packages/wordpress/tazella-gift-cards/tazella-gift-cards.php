@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Tazella Gift Cards
  * Description: Accept Tazella gift cards as a WooCommerce payment method through the Tazella integration gateway.
- * Version: 0.1.0
+ * Version: 0.2.0
  * Author: Tazella
  * Author URI: https://tazella.com.qa
  * Plugin URI: https://tazella.com.qa/en/plug-in-integrations
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 }
 
 define('TAZELLA_WC_PLUGIN_FILE', __FILE__);
-define('TAZELLA_WC_PLUGIN_VERSION', '0.1.0');
+define('TAZELLA_WC_PLUGIN_VERSION', '0.2.0');
 
 require_once __DIR__ . '/src/Tazella/Exception.php';
 require_once __DIR__ . '/src/Tazella/Client.php';
@@ -121,6 +121,34 @@ function tazella_gift_cards_settings_link($links)
     return $links;
 }
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'tazella_gift_cards_settings_link');
+
+/**
+ * Sweep holds left behind by abandoned checkouts. Hourly is enough: holds live
+ * for minutes, so a released one costs the customer at most an hour of blocked
+ * balance on a checkout they never finished.
+ */
+function tazella_gift_cards_schedule_hold_sweep()
+{
+    if (!wp_next_scheduled('tazella_gift_cards_sweep_holds')) {
+        wp_schedule_event(time() + 300, 'hourly', 'tazella_gift_cards_sweep_holds');
+    }
+}
+add_action('init', 'tazella_gift_cards_schedule_hold_sweep');
+
+function tazella_gift_cards_run_hold_sweep()
+{
+    if (
+        class_exists('Tazella_WooCommerce_Gateway')
+        && method_exists('Tazella_WooCommerce_Gateway', 'sweep_expired_holds')
+    ) {
+        Tazella_WooCommerce_Gateway::sweep_expired_holds();
+    }
+}
+add_action('tazella_gift_cards_sweep_holds', 'tazella_gift_cards_run_hold_sweep');
+
+register_deactivation_hook(__FILE__, function () {
+    wp_clear_scheduled_hook('tazella_gift_cards_sweep_holds');
+});
 
 register_activation_hook(__FILE__, function () {
     // Nothing is written on activation. Credentials are configured in the

@@ -492,6 +492,162 @@ if ($blocksRegistered) {
     check('blocks script is registered with its registry dependency', wp_script_is('tazella-blocks-integration', 'registered'));
 }
 
+WP_CLI::log('— card-code attempt throttling —————————————————————');
+
+$GLOBALS['tazella_test_ip'] = '203.0.113.7';
+add_filter('tazella_gift_cards_client_ip', static function () {
+    return $GLOBALS['tazella_test_ip'] ?? '127.0.0.1';
+});
+delete_transient('tazella_gc_attempts_' . md5('203.0.113.7'));
+delete_transient('tazella_gc_attempts_' . md5('198.51.100.9'));
+
+mock_reset();
+$throttled = gateway(['max_attempts' => '3', 'attempt_window_minutes' => '15']);
+clear_notices();
+for ($attempt = 1; $attempt <= 3; $attempt++) {
+    $order = make_order();
+    pay($order, $throttled, 'SBX-GUESS' . $attempt);
+}
+
+$state = mock_state();
+$validateCalls = static function (array $state): int {
+    return count(array_filter(
+        $state['requests'] ?? [],
+        static fn ($request) => ($request['path'] ?? '') === '/api/integrations/v1/gift-cards/validate'
+    ));
+};
+$validateBefore = $validateCalls($state);
+check('three guessing attempts reach the gateway', $validateBefore === 3, (string) $validateBefore);
+
+clear_notices();
+$order = make_order();
+[$result, $order] = pay($order, $throttled, 'SBX-GOOD');
+check('an attempt over the limit fails', ($result['result'] ?? '') === 'failure');
+check(
+    'the customer sees the RATE_LIMITED message',
+    in_array('Too many attempts. Please wait a moment.', notices(), true),
+    implode(' | ', notices())
+);
+$state = mock_state();
+check('a throttled attempt never reaches the gateway', $validateCalls($state) === $validateBefore, (string) $validateCalls($state));
+check('a throttled attempt takes no hold', count($state['reservations'] ?? []) === 0);
+check('a throttled attempt does not charge a good card', $order->is_paid() === false);
+
+// The counter is per client, so one visitor must not lock out another.
+$GLOBALS['tazella_test_ip'] = '198.51.100.9';
+clear_notices();
+$order = make_order();
+[$result, $order] = pay($order, $throttled, 'SBX-GOOD');
+check('a different client is unaffected by another client\'s failures', ($result['result'] ?? '') === 'success', wp_json_encode($result));
+check('a successful payment clears that client\'s counter', get_transient('tazella_gc_attempts_' . md5('198.51.100.9')) === false);
+
+$GLOBALS['tazella_test_ip'] = '127.0.0.1';
+delete_transient('tazella_gc_attempts_' . md5('203.0.113.7'));
+$gateway = gateway();
+
+WP_CLI::log('— abandoned hold sweep ——————————————————————————————');
+
+check('the hold sweep is scheduled', wp_next_scheduled('tazella_gift_cards_sweep_holds') !== false);
+
+mock_reset();
+clear_notices();
+$order = make_order();
+mock_call('/__test/fail-next-capture');
+pay($order, $gateway, 'SBX-GOOD');
+$order = wc_get_order($order->get_id());
+$reference = (string) $order->get_meta('_tazella_reservation_reference');
+check('an abandoned checkout leaves an active hold', $order->get_meta('_tazella_status') === 'active' && $reference !== '', wp_json_encode($order->get_meta('_tazella_status')));
+check('the hold expiry is recorded', (int) $order->get_meta('_tazella_hold_expires_at') > 0);
+
+$order->update_meta_data('_tazella_hold_expires_at', time() - 5);
+$order->save_meta_data();
+$swept = Tazella_WooCommerce_Gateway::sweep_expired_holds();
+$order = wc_get_order($order->get_id());
+$state = mock_state();
+check('the sweep releases the expired hold at the gateway', ($state['reservations'][$reference]['status'] ?? '') === 'released', wp_json_encode($state['reservations'] ?? []));
+check('the order records the release', $order->get_meta('_tazella_status') === 'released');
+check('the sweep reports one release', $swept === 1, (string) $swept);
+check('no active hold is left behind', count(array_filter($state['reservations'] ?? [], static fn ($r) => ($r['status'] ?? '') === 'active')) === 0);
+
+$notes = wc_get_order_notes(['order_id' => $order->get_id()]);
+$noteText = implode(' | ', array_map(static fn ($note) => $note->content, $notes));
+check('the order explains the automatic release', strpos($noteText, 'hold expired and was released automatically') !== false, $noteText);
+
+// A hold that has not expired, and a captured order, must survive a sweep.
+mock_reset();
+clear_notices();
+$live = make_order();
+$live->update_meta_data('_tazella_status', 'active');
+$live->update_meta_data('_tazella_reservation_reference', 'rsv_not_expired');
+$live->update_meta_data('_tazella_hold_expires_at', time() + 300);
+$live->set_payment_method('tazella_gift_cards');
+$live->save_meta_data();
+
+$capturedOrder = make_order();
+[$result, $capturedOrder] = pay($capturedOrder, $gateway, 'SBX-GOOD');
+$capturedOrder->update_meta_data('_tazella_hold_expires_at', time() - 5);
+$capturedOrder->save_meta_data();
+$secondSweep = Tazella_WooCommerce_Gateway::sweep_expired_holds();
+$live = wc_get_order($live->get_id());
+$capturedOrder = wc_get_order($capturedOrder->get_id());
+check('an unexpired hold is left alone', $live->get_meta('_tazella_status') === 'active');
+check('a captured order is never swept', $capturedOrder->get_meta('_tazella_status') === 'captured' && $capturedOrder->is_paid() === true);
+check('the second sweep releases nothing', $secondSweep === 0, (string) $secondSweep);
+
+WP_CLI::log('— split tender (opt-in partial payment) —————————————');
+
+mock_reset();
+$split = gateway(['partial_payments' => 'yes']);
+clear_notices();
+$order = make_order('150.00');
+$orderTotalMinor = (int) round(((float) $order->get_total()) * 100);
+[$result, $order] = pay($order, $split, 'SBX-LOW');
+check('split tender captures a card that cannot cover the order', ($result['result'] ?? '') === 'success', wp_json_encode($result));
+check('a split-tender order is not marked paid', $order->is_paid() === false, 'status=' . $order->get_status());
+check('a split-tender order waits on hold', $order->get_status() === 'on-hold', 'status=' . $order->get_status());
+check('the applied amount is the available balance', (int) $order->get_meta('_tazella_applied_minor') === 1000, (string) $order->get_meta('_tazella_applied_minor'));
+check('the remaining amount is recorded', (int) $order->get_meta('_tazella_remaining_minor') === $orderTotalMinor - 1000, (string) $order->get_meta('_tazella_remaining_minor'));
+check('split tender keeps no card code', $order->get_meta('_tazella_card_code') === '');
+check(
+    'the customer is told the remainder is due',
+    strpos(implode(' | ', notices('notice')), 'still due') !== false,
+    implode(' | ', notices('notice'))
+);
+
+$state = mock_state();
+check('split tender takes exactly one hold', count($state['reservations'] ?? []) === 1);
+check('split tender captures exactly one redemption', count($state['redemptions'] ?? []) === 1);
+$redemption = array_values($state['redemptions'] ?? [])[0] ?? [];
+check('the redemption is for the covered amount only', (int) ($redemption['amount_minor'] ?? 0) === 1000, (string) ($redemption['amount_minor'] ?? ''));
+check('split tender is not reported as a paid order', empty(array_filter(
+    $state['events'] ?? [],
+    static fn ($event) => ($event['event_type'] ?? '') === 'order.paid'
+)));
+
+$partialRefund = wc_create_refund([
+    'order_id' => $order->get_id(),
+    'amount' => 10,
+    'reason' => 'split tender partial refund',
+    'refund_payment' => true,
+]);
+check('a refund within the covered amount succeeds', !is_wp_error($partialRefund), is_wp_error($partialRefund) ? $partialRefund->get_error_message() : '');
+
+$overRefund = wc_create_refund([
+    'order_id' => $order->get_id(),
+    'amount' => 145,
+    'reason' => 'more than the card paid',
+    'refund_payment' => true,
+]);
+check('a refund above the covered amount is refused', is_wp_error($overRefund) || $overRefund === false);
+
+// Split tender is opt-in: the default must still refuse a short card.
+$gateway = gateway(['partial_payments' => 'no']);
+clear_notices();
+$order = make_order('150.00');
+[$result, $order] = pay($order, $gateway, 'SBX-LOW');
+check('split tender is off by default', ($result['result'] ?? '') === 'failure' && $order->is_paid() === false);
+$gateway = gateway();
+
 WP_CLI::log('— HPOS ———————————————————————————————————————————————');
 
 $pluginBasename = plugin_basename(TAZELLA_WC_PLUGIN_FILE);

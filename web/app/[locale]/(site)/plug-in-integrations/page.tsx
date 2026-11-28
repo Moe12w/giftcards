@@ -27,7 +27,7 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tazella.com.qa').
 );
 
 /** Kept in step with packages/wordpress/tazella-gift-cards/composer.json. */
-const PLUGIN_VERSION = '0.1.0';
+const PLUGIN_VERSION = '0.2.0';
 const PLUGIN_DOWNLOAD = '/downloads/tazella-gift-cards.zip';
 
 function pageUrl(locale: string) {

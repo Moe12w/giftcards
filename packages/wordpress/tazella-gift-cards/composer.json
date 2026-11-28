@@ -1,7 +1,7 @@
 {
   "name": "tazella/gift-cards-woocommerce",
   "description": "WooCommerce payment gateway and PHP client for the Tazella gift-card integration gateway.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "wordpress-plugin",
   "license": "proprietary",
   "require": {
