@@ -110,16 +110,24 @@ Results from the last run:
 | Configuration | Assertions |
 |---|---|
 | WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS on (`0.2.1`) | 138 passed |
+| Same, clean install with HPOS off (`0.2.1`, orders in `wp_posts`, no `wp_wc_orders` table) | 134 passed |
 | Blocks checkout through the Store API (HPOS on), full payment and split tender | 20 passed |
 
 The `0.2.0` run added the throttle, hold-sweep and split-tender sections;
 `0.2.1` added the cancellation-after-capture section (the real
 `wc_cancel_unpaid_orders()` cron, manual cancellation reversal, and an
 uncaptured hold still being cleaned up) and the split-tender case through the
-Blocks checkout. The
-HPOS-off configuration from `0.1.0` (84 passed) was not repeated: toggling HPOS
-on a populated sandbox from WP-CLI is not supported cleanly. The new queries use
-`wc_get_orders()` with a `meta_query`, which both order stores implement.
+Blocks checkout. The HPOS-off case is now covered on a clean install built with
+`woocommerce_custom_orders_table_enabled=no` set before WooCommerce was
+activated: 134/134, which is the HPOS-on total minus its four HPOS-only
+assertions, with all 23 orders stored as `shop_order` posts. Reaching that
+green first required three checklist fixes: pin the store currency (a fresh
+store defaults to USD, but the gateway is QAR-gated), refresh the gateway
+instance WooCommerce built before any settings existed so the sweep and refund
+hooks see credentials, and backdate `post_modified`/`post_modified_gmt`
+directly because legacy storage rewrites `date_modified` on every save. The
+checklist also now pins `partial_payments` to `no` in its defaults, so a second
+run does not inherit split tender from the cancellation section.
 
 Two defects were found and fixed by that run and are worth knowing about when
 re-testing:

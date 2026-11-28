@@ -30,6 +30,12 @@ add_filter('pre_wp_mail', static function () {
     return true;
 });
 
+// A fresh WooCommerce store defaults to USD. These checks describe a QAR shop,
+// so pin the store currency instead of inheriting whatever the install chose.
+if (function_exists('get_woocommerce_currency') && get_woocommerce_currency() !== 'QAR') {
+    update_option('woocommerce_currency', 'QAR');
+}
+
 function check($name, $condition, $detail = '')
 {
     $results = &$GLOBALS['tazella_results'];
@@ -78,9 +84,23 @@ function gateway($overrides = [])
         'currency' => 'QAR',
         'external_vendor_id' => '',
         'external_branch_id' => '',
+        // Explicit: earlier sections switch split tender on, and a re-run must
+        // not inherit that from wp_options.
+        'partial_payments' => 'no',
         'debug' => 'yes',
     ], $overrides);
     update_option('woocommerce_tazella_gift_cards_settings', $settings);
+
+    // WooCommerce builds its gateway instances at init. On a fresh install that
+    // happens before any settings exist, so the instance the checkout, sweep and
+    // refund paths use would otherwise keep empty credentials for this process.
+    if (function_exists('WC') && WC()->payment_gateways()) {
+        $live = WC()->payment_gateways()->payment_gateways()['tazella_gift_cards'] ?? null;
+        if ($live instanceof Tazella_WooCommerce_Gateway) {
+            $live->init_settings();
+        }
+    }
+
     return new Tazella_WooCommerce_Gateway();
 }
 
@@ -668,6 +688,24 @@ $forcePastCron = static function ($order) {
     $order->save();
     $order->set_date_modified(gmdate('Y-m-d H:i:s', time() - 3 * HOUR_IN_SECONDS));
     $order->save();
+
+    // HPOS stores date_modified as given, but legacy post storage rewrites
+    // post_modified on every save. Set the columns the unpaid-order query
+    // reads so the cron sees a genuinely backdated order on both stores.
+    $usesHpos = wc_get_container()->get(
+        Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController::class
+    )->custom_orders_table_usage_is_enabled();
+    if (!$usesHpos) {
+        global $wpdb;
+        $past = gmdate('Y-m-d H:i:s', time() - 3 * HOUR_IN_SECONDS);
+        $wpdb->update(
+            $wpdb->posts,
+            ['post_modified' => $past, 'post_modified_gmt' => $past],
+            ['ID' => $order->get_id()]
+        );
+        clean_post_cache($order->get_id());
+    }
+
     return wc_get_order($order->get_id());
 };
 

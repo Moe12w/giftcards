@@ -246,6 +246,7 @@ Last run in this repository's sandbox:
 | Setup | Result |
 |---|---|
 | WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS **on** | 138/138 assertions |
+| Same, clean install with HPOS **off** (orders as `shop_order` posts, no `wp_wc_orders` table) | 134/134 assertions |
 | Blocks checkout over the Store API (HPOS on) | 20/20 assertions |
 
 That run covers the throttle (three guesses, fourth refused locally without a
@@ -257,10 +258,16 @@ Blocks checkout), and cancellation after capture (the unpaid-order cron is
 blocked, manual cancellation reverses the capture, uncaptured holds are still
 cleaned up).
 
-The legacy posts-table run from the previous release was 84/84 and was not
-repeated for `0.2.1`: flipping HPOS on a live sandbox from the CLI is not
-supported cleanly, and the new order queries use `wc_get_orders()` with a
-`meta_query`, which both data stores implement.
+The HPOS-off number is the HPOS-on total minus its four HPOS-only assertions,
+run on a clean install where HPOS was disabled before WooCommerce was activated
+(23 orders in `wp_posts`, no `wp_wc_orders` table). Making that run green needed
+three harness fixes, all in `checklist.php`: pin the store currency to QAR
+(a fresh store defaults to USD and the gateway is correctly hidden), refresh the
+gateway instance WooCommerce built before settings existed so the sweep and
+refund hooks see credentials in a single process, and backdate
+`post_modified`/`post_modified_gmt` directly since legacy storage rewrites
+`date_modified` on every save. The helper also pins `partial_payments` to `no`
+so re-runs do not inherit split tender from the cancellation section.
 
 What it still does not cover: the production gateway and its Postgres RPCs, a
 live Tazella sandbox card, the browser-side `blocks.js` validation in a real
