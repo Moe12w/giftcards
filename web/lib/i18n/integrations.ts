@@ -167,7 +167,7 @@ const en = {
     ],
     installTitle: 'Install in five steps',
     installSteps: [
-      'Download the ZIP below and keep it zipped.',
+      'Download the ZIP above and keep it zipped.',
       'In WordPress open Plugins → Add New → Upload Plugin, choose the ZIP, then Install Now.',
       'Activate “Tazella Gift Cards”.',
       'Open WooCommerce → Settings → Payments → Tazella gift cards, paste the API key and signing secret, and pick the environment the key was issued for.',
@@ -411,7 +411,7 @@ const ar: typeof en = {
     ],
     installTitle: 'التثبيت في خمس خطوات',
     installSteps: [
-      'حمّل ملف ZIP أدناه واتركه مضغوطاً.',
+      'حمّل ملف ZIP أعلاه واتركه مضغوطاً.',
       'في ووردبريس افتح إضافات ← أضف جديداً ← رفع إضافة، اختر الملف ثم «ثبّت الآن».',
       'فعّل «Tazella Gift Cards».',
       'افتح WooCommerce ← الإعدادات ← الدفع ← Tazella gift cards، والصق مفتاح الواجهة وسر التوقيع، واختر البيئة التي أُصدر لها المفتاح.',

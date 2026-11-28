@@ -1996,7 +1996,8 @@ table.data .sub {
 .timeline-item::before {
   content: '';
   position: absolute;
-  left: 10px;
+  /* Logical inset so the rail sits beside the dot in RTL too. */
+  inset-inline-start: 10px;
   top: 18px;
   bottom: 0;
   width: 2px;
