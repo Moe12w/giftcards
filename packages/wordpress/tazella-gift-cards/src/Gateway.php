@@ -20,7 +20,7 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
     public function __construct()
     {
         $this->id = 'tazella_gift_cards';
-        $this->icon = '';
+        $this->icon = plugins_url('assets/images/tazella-wordmark.svg', TAZELLA_WC_PLUGIN_FILE);
         $this->has_fields = true;
         $this->method_title = __('Tazella gift cards', 'tazella-gift-cards');
         $this->method_description = __(
@@ -121,9 +121,9 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             'currency' => [
                 'title' => __('Currency', 'tazella-gift-cards'),
                 'type' => 'text',
-                'default' => 'QAR',
+                'default' => '',
                 'description' => __(
-                    'Orders in any other currency are rejected. No conversion is performed.',
+                    'Leave empty to use the store currency. Orders in any other currency are rejected. No conversion is performed.',
                     'tazella-gift-cards'
                 ),
             ],
@@ -168,6 +168,19 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
     public function admin_options()
     {
         parent::admin_options();
+
+        $storeCurrency = $this->store_currency();
+        $configuredCurrency = $this->configured_currency();
+        if ($storeCurrency !== '' && $configuredCurrency !== '' && $storeCurrency !== $configuredCurrency) {
+            echo '<div class="notice notice-warning inline"><p>'
+                . esc_html(sprintf(
+                    /* translators: 1: store currency code, 2: configured currency code */
+                    __('The store currency is %1$s but Tazella gift cards are configured for %2$s. The payment method stays hidden until these match, or until the currency field is cleared.', 'tazella-gift-cards'),
+                    $storeCurrency,
+                    $configuredCurrency
+                ))
+                . '</p></div>';
+        }
 
         if (!$this->has_credentials()) {
             echo '<div class="notice notice-warning inline"><p>'
@@ -222,12 +235,10 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             return false;
         }
 
-        $configured = strtoupper(trim($this->setting('currency', 'TAZELLA_WC_CURRENCY')));
-        $store = function_exists('get_woocommerce_currency')
-            ? strtoupper((string) get_woocommerce_currency())
-            : $configured;
+        $configured = $this->configured_currency();
+        $store = $this->store_currency();
 
-        return $configured !== '' && $store === $configured;
+        return $configured !== '' && ($store === '' || $store === $configured);
     }
 
     /**
@@ -254,6 +265,30 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
     {
         return $this->setting('api_key', 'TAZELLA_WC_API_KEY') !== ''
             && $this->setting('signing_secret', 'TAZELLA_WC_SIGNING_SECRET') !== '';
+    }
+
+    /** The currency the store actually charges in. */
+    private function store_currency()
+    {
+        return function_exists('get_woocommerce_currency')
+            ? strtoupper((string) get_woocommerce_currency())
+            : '';
+    }
+
+    /**
+     * The currency this gateway accepts. An empty setting means "the store
+     * currency", so a fresh install is not silently hidden by the old QAR
+     * default. A non-empty value that differs from the store is surfaced as an
+     * admin warning and keeps the method hidden.
+     */
+    private function configured_currency()
+    {
+        $configured = strtoupper(trim($this->setting('currency', 'TAZELLA_WC_CURRENCY')));
+        if ($configured === '') {
+            $configured = $this->store_currency();
+        }
+
+        return $configured;
     }
 
     /**
@@ -371,7 +406,7 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
 
         return in_array(
             (string) $order->get_meta('_tazella_status'),
-            ['captured', 'partially_captured', 'reversed', 'refund_required'],
+            ['captured', 'partially_captured', 'reversed', 'refund_required', 'reconciliation'],
             true
         );
     }
@@ -453,15 +488,44 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         $value = isset($_POST['tazella_card_code'])
             ? sanitize_text_field(wp_unslash($_POST['tazella_card_code']))
             : '';
+        $wordmark = plugins_url('assets/images/tazella-wordmark.svg', TAZELLA_WC_PLUGIN_FILE);
+        $helpId = 'tazella-card-code-help';
+
+        echo '<div class="tazella-gift-card-panel">';
+
+        echo '<div class="tazella-gift-card-panel-head">';
+        echo '<img class="tazella-gift-card-wordmark" src="' . esc_url($wordmark) . '" alt="'
+            . esc_attr__('Tazella', 'tazella-gift-cards') . '" width="122" height="25" decoding="async" />';
+        echo '<span class="tazella-gift-card-secured">'
+            . '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">'
+            . '<rect x="4.5" y="10" width="15" height="10.5" rx="2.2" stroke="currentColor" stroke-width="1.7"/>'
+            . '<path d="M8 10V7.6a4 4 0 0 1 8 0V10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'
+            . '</svg>'
+            . esc_html__('Secured by Tazella', 'tazella-gift-cards')
+            . '</span>';
+        echo '</div>';
 
         if ($this->description !== '') {
             echo '<p class="tazella-gift-card-description">' . esc_html($this->description) . '</p>';
         }
 
-        echo '<div class="tazella-gift-card-fields">';
-        echo '<label for="tazella_card_code">' . esc_html__('Gift card code', 'tazella-gift-cards') . '</label> ';
-        echo '<input type="text" id="tazella_card_code" name="tazella_card_code" value="' . esc_attr($value) . '" autocomplete="off" autocapitalize="characters" spellcheck="false" dir="ltr" maxlength="64" placeholder="GFT-XXXXXXXXXX" />';
-        echo '<p class="description">' . esc_html__('The amount is confirmed by Tazella before payment.', 'tazella-gift-cards') . '</p>';
+        echo '<div class="tazella-gift-card-field">';
+        echo '<label class="tazella-gift-card-label" for="tazella_card_code">'
+            . esc_html__('Gift card code', 'tazella-gift-cards') . '</label>';
+        echo '<div class="tazella-gift-card-control">';
+        echo '<svg class="tazella-gift-card-control-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">'
+            . '<rect x="2.5" y="5" width="19" height="14" rx="2.5" stroke="currentColor" stroke-width="1.6"/>'
+            . '<path d="M2.5 9.5h19" stroke="currentColor" stroke-width="1.6"/>'
+            . '<path d="M6 14.5h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'
+            . '</svg>';
+        echo '<input class="tazella-gift-card-input" type="text" id="tazella_card_code" name="tazella_card_code" value="'
+            . esc_attr($value) . '" autocomplete="off" autocapitalize="characters" spellcheck="false" dir="ltr"'
+            . ' maxlength="64" placeholder="GFT-XXXXXXXXXX" aria-describedby="' . esc_attr($helpId) . '" />';
+        echo '</div>';
+        echo '<p class="tazella-gift-card-help" id="' . esc_attr($helpId) . '">'
+            . esc_html__('The amount is confirmed by Tazella before payment.', 'tazella-gift-cards') . '</p>';
+        echo '</div>';
+
         echo '</div>';
     }
 
@@ -518,14 +582,14 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             : (string) $order->get_meta('_tazella_card_code');
         $code = sanitize_text_field($code);
         $currency = strtoupper($order->get_currency());
-        $configured = strtoupper(trim($this->setting('currency', 'TAZELLA_WC_CURRENCY')));
+        $configured = $this->configured_currency();
         $orderMinor = $this->minor($order->get_total());
 
         if ($code === '' || $orderMinor <= 0) {
             wc_add_notice(__('This order cannot be paid with a gift card.', 'tazella-gift-cards'), 'error');
             return ['result' => 'failure'];
         }
-        if ($currency !== $configured) {
+        if ($configured === '' || $currency !== $configured) {
             wc_add_notice(TazellaException::publicMessage('CURRENCY_MISMATCH'), 'error');
             return ['result' => 'failure'];
         }
@@ -634,27 +698,45 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             // WooCommerce's checkout submission is the verified payment event
             // for this self-hosted gateway. Capture only the confirmed amount.
             $capturedMinor = $partial ? $applied : $orderMinor;
-            $capture = $client->capture($reference, array_merge($vendor, [
+            $captureRequest = array_merge($vendor, [
                 'external_payment_reference' => 'woo_' . $order->get_id(),
                 'confirmed_order_amount_minor' => $capturedMinor,
                 'currency' => $currency,
                 'idempotency_key' => Client::stableKey('capture:woo:' . $order->get_id()),
-            ]));
+            ]);
 
-            if (isset($capture['status']) && (string) $capture['status'] === 'reconciliation') {
-                throw new TazellaException(
-                    'RECONCILIATION_REQUIRED',
-                    TazellaException::publicMessage('RECONCILIATION_REQUIRED'),
-                    false
-                );
+            // A transport timeout can happen after Tazella has already captured.
+            // The deterministic idempotency key makes one immediate retry safe:
+            // it replays the original capture instead of charging twice.
+            $capture = null;
+            $captureUncertain = false;
+            try {
+                $capture = $client->capture($reference, $captureRequest);
+            } catch (TazellaException $captureError) {
+                if (!$this->capture_outcome_uncertain($captureError)) {
+                    throw $captureError;
+                }
+
+                $this->log('capture retry ' . $captureError->errorCode()
+                    . ' ' . ($captureError->requestId() ?? 'no-request-id'));
+
+                try {
+                    $capture = $client->capture($reference, $captureRequest);
+                } catch (TazellaException $retryError) {
+                    if (!$this->capture_outcome_uncertain($retryError)) {
+                        throw $retryError;
+                    }
+                    $captureUncertain = true;
+                }
             }
 
-            if (($capture['status'] ?? '') !== 'captured') {
-                throw new TazellaException(
-                    'RECONCILIATION_REQUIRED',
-                    TazellaException::publicMessage('RECONCILIATION_REQUIRED'),
-                    false
-                );
+            if (
+                $captureUncertain
+                || !is_array($capture)
+                || !isset($capture['status'])
+                || (string) $capture['status'] !== 'captured'
+            ) {
+                return $this->hold_for_reconciliation($order, $reference);
             }
 
             // The refund endpoint takes the redemption UUID, not the readable
@@ -749,6 +831,69 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         }
     }
 
+    /**
+     * Whether a failed capture request may still have reached Tazella. Those
+     * outcomes must never mark the order failed: the card may be charged, so a
+     * human has to reconcile it.
+     */
+    private function capture_outcome_uncertain(TazellaException $error)
+    {
+        if ($error->isRetryable()) {
+            return true;
+        }
+        if (in_array($error->errorCode(), [
+            'IDEMPOTENCY_IN_PROGRESS',
+            'RESERVATION_ALREADY_CAPTURED',
+            'RECONCILIATION_REQUIRED',
+        ], true)) {
+            return true;
+        }
+
+        $status = $error->httpStatus();
+        if ($status !== null && $status >= 500) {
+            return true;
+        }
+
+        // An unreadable success response may be a capture whose body was lost.
+        return $error->errorCode() === 'INTERNAL_ERROR' && $status === 200;
+    }
+
+    /**
+     * Leave a possibly-captured order on hold for an operator instead of
+     * marking it failed (which would hide a real charge) or paid (which would
+     * release goods without a confirmed capture).
+     */
+    private function hold_for_reconciliation($order, $reference)
+    {
+        $order->update_meta_data('_tazella_status', 'reconciliation');
+        $order->update_meta_data('_tazella_reservation_reference', $reference);
+        $order->save_meta_data();
+
+        $order->add_order_note(__(
+            'Tazella gift-card payment needs review: the gateway did not confirm whether the card was captured. The order was left on hold. Check the reservation in Tazella before fulfilling, refunding or releasing it.',
+            'tazella-gift-cards'
+        ));
+
+        if (method_exists($order, 'update_status')) {
+            $order->update_status('on-hold', __(
+                'Tazella gift-card payment needs reconciliation.',
+                'tazella-gift-cards'
+            ));
+        }
+
+        wc_add_notice(__(
+            'Your gift-card payment is being verified. The store will confirm it before fulfilling your order.',
+            'tazella-gift-cards'
+        ), 'notice');
+
+        $this->log('reconciliation order=' . $order->get_id() . ' reference=' . $reference);
+
+        return [
+            'result' => 'success',
+            'redirect' => $this->get_return_url($order),
+        ];
+    }
+
     public function process_refund($order_id, $amount = null, $reason = '')
     {
         $order = wc_get_order($order_id);
@@ -765,15 +910,27 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
         }
 
         // A split-tender order is worth more than the card covered, so the
-        // default refund must never exceed the captured amount.
+        // default refund must never exceed what the card actually paid, and a
+        // second refund must not exceed what is still outstanding.
         $capturedMinor = (int) $order->get_meta('_tazella_applied_minor');
+        $refundedMinor = max(0, (int) $order->get_meta('_tazella_refunded_minor'));
+        $hasCaptureLimit = $capturedMinor > 0;
+        $outstandingMinor = $hasCaptureLimit ? max(0, $capturedMinor - $refundedMinor) : 0;
+
         $amountMinor = $amount === null
-            ? ($capturedMinor > 0 ? $capturedMinor : $this->minor($order->get_total()))
+            ? ($hasCaptureLimit ? $outstandingMinor : $this->minor($order->get_total()))
             : $this->minor($amount);
-        if ($capturedMinor > 0 && $amountMinor > $capturedMinor) {
+
+        if ($hasCaptureLimit && $outstandingMinor <= 0) {
+            return new WP_Error(
+                'tazella_refund_already_refunded',
+                __('This Tazella gift-card payment has already been fully refunded.', 'tazella-gift-cards')
+            );
+        }
+        if ($hasCaptureLimit && $amountMinor > $outstandingMinor) {
             return new WP_Error(
                 'tazella_refund_exceeds_capture',
-                __('The refund is larger than the amount this gift card paid.', 'tazella-gift-cards')
+                __('The refund is larger than the amount still refundable to this gift card.', 'tazella-gift-cards')
             );
         }
         if ($amountMinor <= 0) {
@@ -783,16 +940,15 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
             );
         }
 
-        // The refund object already exists when this runs, so the count
-        // distinguishes two identical partial refunds on the same order.
-        $refundCount = method_exists($order, 'get_refunds') ? count($order->get_refunds()) : 1;
-
         try {
             $refund = $this->client()->refund($redemptionId, array_merge($this->vendorRequest(), [
                 'amount_minor' => $amountMinor,
                 'reason' => $reason !== '' ? sanitize_text_field($reason) : 'woocommerce_refund',
+                // The already-refunded total is the deterministic part of a
+                // retry: two identical partial refunds get different keys, while
+                // a retry of the same refund replays the original response.
                 'idempotency_key' => Client::stableKey(
-                    'refund:' . $redemptionId . ':' . $amountMinor . ':' . $refundCount
+                    'refund:' . $redemptionId . ':' . $amountMinor . ':' . $refundedMinor
                 ),
             ]));
 
@@ -800,7 +956,7 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
                 '_tazella_refunded_minor',
                 isset($refund['refunded_total_minor'])
                     ? (int) $refund['refunded_total_minor']
-                    : $amountMinor
+                    : $refundedMinor + $amountMinor
             );
             $order->save_meta_data();
             $order->add_order_note(sprintf(
@@ -976,6 +1132,16 @@ class Tazella_WooCommerce_Gateway extends WC_Payment_Gateway
     private function reverse_cancelled_capture($order)
     {
         if ((string) $order->get_meta('_tazella_status') === 'reversed') {
+            return;
+        }
+
+        // A reconciliation order may or may not have been captured. Never
+        // release or refund it blindly; leave a note for the operator.
+        if ((string) $order->get_meta('_tazella_status') === 'reconciliation') {
+            $order->add_order_note(__(
+                'This order was cancelled while its Tazella capture was unconfirmed. Check the reservation in Tazella: release it if it was never captured, or refund it if it was.',
+                'tazella-gift-cards'
+            ));
             return;
         }
 

@@ -41,13 +41,18 @@ final class Tazella_Blocks_Payment_Method extends AbstractPaymentMethodType
             return false;
         }
 
-        // Match the gateway: a currency mismatch would only fail at submit.
+        // Match the gateway: an empty setting means the store currency, and a
+        // real mismatch would only fail at submit.
         $configured = strtoupper($this->credential('currency', 'TAZELLA_WC_CURRENCY'));
         $store = function_exists('get_woocommerce_currency')
             ? strtoupper((string) get_woocommerce_currency())
             : $configured;
 
-        return $configured !== '' && $store === $configured;
+        if ($configured === '') {
+            $configured = $store;
+        }
+
+        return $configured !== '' && ($store === '' || $store === $configured);
     }
 
     private function credential($key, $constant)
@@ -83,6 +88,8 @@ final class Tazella_Blocks_Payment_Method extends AbstractPaymentMethodType
         return [
             'title' => isset($this->settings['title']) ? (string) $this->settings['title'] : 'Tazella gift card',
             'description' => isset($this->settings['description']) ? (string) $this->settings['description'] : '',
+            'icon' => plugins_url('assets/images/tazella-wordmark.svg', TAZELLA_WC_PLUGIN_FILE),
+            'mark' => plugins_url('assets/images/tazella-mark.svg', TAZELLA_WC_PLUGIN_FILE),
             'currency' => function_exists('get_woocommerce_currency') ? (string) get_woocommerce_currency() : '',
             'supports' => $this->get_supported_features(),
         ];

@@ -17,9 +17,80 @@
   var data = settingsStore.getSetting('tazella_gift_cards_data', {}) || {};
   var title = data.title || 'Tazella gift card';
   var description = data.description || __('Pay with a Tazella gift card.', 'tazella-gift-cards');
+  var wordmark = data.icon || '';
+  var mark = data.mark || '';
+
+  function LockIcon() {
+    return createElement(
+      'svg',
+      { viewBox: '0 0 24 24', fill: 'none', 'aria-hidden': 'true', focusable: 'false' },
+      createElement('rect', {
+        x: '4.5',
+        y: '10',
+        width: '15',
+        height: '10.5',
+        rx: '2.2',
+        stroke: 'currentColor',
+        strokeWidth: '1.7',
+      }),
+      createElement('path', {
+        d: 'M8 10V7.6a4 4 0 0 1 8 0V10',
+        stroke: 'currentColor',
+        strokeWidth: '1.7',
+        strokeLinecap: 'round',
+      })
+    );
+  }
+
+  function CardIcon() {
+    return createElement(
+      'svg',
+      {
+        className: 'tazella-gift-card-control-icon',
+        viewBox: '0 0 24 24',
+        fill: 'none',
+        'aria-hidden': 'true',
+        focusable: 'false',
+      },
+      createElement('rect', {
+        x: '2.5',
+        y: '5',
+        width: '19',
+        height: '14',
+        rx: '2.5',
+        stroke: 'currentColor',
+        strokeWidth: '1.6',
+      }),
+      createElement('path', {
+        d: 'M2.5 9.5h19',
+        stroke: 'currentColor',
+        strokeWidth: '1.6',
+      }),
+      createElement('path', {
+        d: 'M6 14.5h4',
+        stroke: 'currentColor',
+        strokeWidth: '1.6',
+        strokeLinecap: 'round',
+      })
+    );
+  }
 
   function Label() {
-    return createElement('span', null, title);
+    return createElement(
+      'span',
+      { className: 'tazella-blocks-label' },
+      mark
+        ? createElement('img', {
+            src: mark,
+            alt: '',
+            className: 'tazella-blocks-mark',
+            width: 22,
+            height: 22,
+            'aria-hidden': 'true',
+          })
+        : null,
+      createElement('span', null, title)
+    );
   }
 
   function Content(props) {
@@ -66,28 +137,69 @@
 
     return createElement(
       'div',
-      { className: 'tazella-blocks-payment' },
-      createElement('p', { className: 'woocommerce-description' }, description),
-      createElement('input', {
-        type: 'text',
-        value: cardCode,
-        onChange: function (event) {
-          setCardCode(event.target.value);
-          if (error) setError('');
-        },
-        placeholder: 'GFT-XXXXXXXXXX',
-        autoComplete: 'off',
-        autoCapitalize: 'characters',
-        spellCheck: false,
-        maxLength: 64,
-        'aria-label': __('Gift card code', 'tazella-gift-cards'),
-        'aria-invalid': error ? 'true' : 'false',
-        style: { width: '100%', maxWidth: '320px', direction: 'ltr' },
-      }),
+      { className: 'tazella-gift-card-panel tazella-blocks-panel' },
+      createElement(
+        'div',
+        { className: 'tazella-gift-card-panel-head' },
+        wordmark
+          ? createElement('img', {
+              className: 'tazella-gift-card-wordmark',
+              src: wordmark,
+              alt: 'Tazella',
+              width: 122,
+              height: 25,
+            })
+          : createElement('span', { className: 'tazella-gift-card-name' }, 'Tazella'),
+        createElement(
+          'span',
+          { className: 'tazella-gift-card-secured' },
+          createElement(LockIcon),
+          __('Secured by Tazella', 'tazella-gift-cards')
+        )
+      ),
+      description
+        ? createElement('p', { className: 'tazella-gift-card-description' }, description)
+        : null,
+      createElement(
+        'label',
+        { className: 'tazella-gift-card-field' },
+        createElement(
+          'span',
+          { className: 'tazella-gift-card-label' },
+          __('Gift card code', 'tazella-gift-cards')
+        ),
+        createElement(
+          'span',
+          { className: 'tazella-gift-card-control' },
+          createElement(CardIcon),
+          createElement('input', {
+            className: 'tazella-gift-card-input',
+            type: 'text',
+            value: cardCode,
+            onChange: function (event) {
+              setCardCode(event.target.value);
+              if (error) setError('');
+            },
+            placeholder: 'GFT-XXXXXXXXXX',
+            autoComplete: 'off',
+            autoCapitalize: 'characters',
+            spellCheck: false,
+            dir: 'ltr',
+            maxLength: 64,
+            'aria-label': __('Gift card code', 'tazella-gift-cards'),
+            'aria-invalid': error ? 'true' : 'false',
+          })
+        )
+      ),
+      createElement(
+        'p',
+        { className: 'tazella-gift-card-help' },
+        __('The amount is confirmed by Tazella before payment.', 'tazella-gift-cards')
+      ),
       error
         ? createElement(
             'p',
-            { className: 'tazella-blocks-error', role: 'alert', style: { color: '#b32d2e', marginTop: '6px' } },
+            { className: 'tazella-gift-card-error', role: 'alert' },
             error
           )
         : null

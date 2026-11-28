@@ -1,6 +1,6 @@
 # Tazella Gift Cards for WordPress / WooCommerce
 
-Early infrastructure (`0.2.1`). This package contains:
+Early infrastructure (`0.2.2`). This package contains:
 
 - `src/Tazella/Client.php` — a PHP SDK for the Tazella integration gateway. It
   owns the platform credential, signs every request and enforces idempotency.
@@ -54,6 +54,14 @@ Both checkout styles are supported:
   `payment_data` and stored in order meta by
   `woocommerce_store_api_checkout_update_order_from_request`; `process_payment`
   reads it from either source.
+
+Both checkouts use the same branded panel: the Tazella wordmark, a bordered
+card-code field with a lavender focus ring, a short helper line and a
+"Secured by Tazella" label. The styling lives in `assets/css/checkout.css`
+and is enqueued on the checkout and order-pay screens only. The gateway icon
+(`assets/images/tazella-wordmark.svg`) and the compact Blocks mark
+(`assets/images/tazella-mark.svg`) are local SVG assets, so no external request
+is made during checkout.
 
 ## Requirements
 
@@ -123,11 +131,18 @@ Optional overrides: `TAZELLA_WC_BASE_URL`, `TAZELLA_WC_ENVIRONMENT`,
    captured.
 5. WooCommerce's own checkout submission is the verified payment event for this
    self-hosted gateway. `capture` writes the redemption and ledger entry, then
-   `$order->payment_complete()` runs.
+   `$order->payment_complete()` runs. A capture that may have reached Tazella
+   but did not return a confirmation (timeout, 5xx, `RECONCILIATION_REQUIRED`)
+   is retried once with the same idempotency key; if it is still unconfirmed the
+   order is left **on hold** with `_tazella_status = reconciliation` for an
+   operator, never marked failed.
 6. Cancelling an uncaptured order calls `release`. A captured order is never
    released.
 7. A WooCommerce refund calls the audited `refund` endpoint with the redemption
-   UUID returned by capture, and is capped at the amount the card actually paid.
+   UUID returned by capture. Each refund is capped at what is still outstanding
+   for the card, and the idempotency key uses `_tazella_refunded_minor`, so two
+   identical partial refunds stay distinct while a retry of the same refund
+   replays the original response.
 8. `order.paid` and `order.refunded` events are reported for reconciliation. A
    failing report is logged and never changes the payment result.
 
@@ -241,7 +256,8 @@ and left for a human), an administrator cancelling anyway gets the captured
 amount returned to the card, and an order with only an uncaptured hold is still
 cancelled and released.
 
-Last run in this repository's sandbox:
+Last recorded run in this repository's sandbox (0.2.1; 0.2.2 added four more
+assertions and has not been re-run here):
 
 | Setup | Result |
 |---|---|

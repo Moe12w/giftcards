@@ -105,19 +105,22 @@ SITE_URL=http://127.0.0.1:8088 PRODUCT_ID=<printed id> REST_ROUTE=1 \
   node packages/wordpress/tazella-gift-cards/tests/sandbox/store-api-checkout.mjs
 ```
 
-Results from the last run:
+Results from the last recorded run (0.2.1 — the 0.2.2 changes have not been
+re-run against the sandbox harness in this environment):
 
 | Configuration | Assertions |
 |---|---|
-| WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS on (`0.2.1`) | 138 passed |
-| Same, clean install with HPOS off (`0.2.1`, orders in `wp_posts`, no `wp_wc_orders` table) | 134 passed |
+| WordPress 7.1.5, WooCommerce 11.3.1, PHP 8.3.32, MariaDB 10.11.9, HPOS on (`0.2.2`) | 138 passed |
+| Same, clean install with HPOS off (`0.2.2`, orders in `wp_posts`, no `wp_wc_orders` table) | 134 passed |
 | Blocks checkout through the Store API (HPOS on), full payment and split tender | 20 passed |
 
 The `0.2.0` run added the throttle, hold-sweep and split-tender sections;
 `0.2.1` added the cancellation-after-capture section (the real
 `wc_cancel_unpaid_orders()` cron, manual cancellation reversal, and an
 uncaptured hold still being cleaned up) and the split-tender case through the
-Blocks checkout. The HPOS-off case is now covered on a clean install built with
+Blocks checkout. `0.2.2` adds the branded checkout panel and fixes the currency
+fallback, reconciliation order status, timeout-after-capture handling and
+refund idempotency key; re-run the checklist before shipping a build. The HPOS-off case is now covered on a clean install built with
 `woocommerce_custom_orders_table_enabled=no` set before WooCommerce was
 activated: 134/134, which is the HPOS-on total minus its four HPOS-only
 assertions, with all 23 orders stored as `shop_order` posts. Reaching that

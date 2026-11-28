@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Tazella Gift Cards
  * Description: Accept Tazella gift cards as a WooCommerce payment method through the Tazella integration gateway.
- * Version: 0.2.1
+ * Version: 0.2.2
  * Author: Tazella
  * Author URI: https://tazella.com.qa
  * Plugin URI: https://tazella.com.qa/en/plug-in-integrations
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 }
 
 define('TAZELLA_WC_PLUGIN_FILE', __FILE__);
-define('TAZELLA_WC_PLUGIN_VERSION', '0.2.1');
+define('TAZELLA_WC_PLUGIN_VERSION', '0.2.2');
 
 require_once __DIR__ . '/src/Tazella/Exception.php';
 require_once __DIR__ . '/src/Tazella/Client.php';
@@ -93,6 +93,28 @@ function tazella_gift_cards_load_textdomain()
     );
 }
 add_action('plugins_loaded', 'tazella_gift_cards_load_textdomain');
+
+/**
+ * Checkout styling for both the classic and Blocks checkout. Loaded on the
+ * checkout and order-pay screens only, so it never touches the rest of the
+ * storefront.
+ */
+function tazella_gift_cards_enqueue_checkout_assets()
+{
+    $isCheckout = function_exists('is_checkout') && is_checkout();
+    $isPayPage = function_exists('is_checkout_pay_page') && is_checkout_pay_page();
+    if (!$isCheckout && !$isPayPage) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'tazella-gift-cards-checkout',
+        plugins_url('assets/css/checkout.css', __FILE__),
+        [],
+        TAZELLA_WC_PLUGIN_VERSION
+    );
+}
+add_action('wp_enqueue_scripts', 'tazella_gift_cards_enqueue_checkout_assets');
 
 function tazella_gift_cards_add_gateway($methods)
 {

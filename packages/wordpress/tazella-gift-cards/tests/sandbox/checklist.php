@@ -203,8 +203,12 @@ check('hidden without credentials', $noCreds->is_available() === false);
 $wrongCurrency = gateway(['currency' => 'USD']);
 check('hidden when store currency differs from the configured currency', $wrongCurrency->is_available() === false);
 
+$autoCurrency = gateway(['currency' => '']);
+check('empty currency falls back to the store currency', $autoCurrency->is_available() === true);
+
 $gateway = gateway();
 check('available with credentials and matching currency', $gateway->is_available() === true);
+check('gateway exposes the Tazella icon', strpos($gateway->get_icon(), 'tazella-wordmark.svg') !== false, $gateway->get_icon());
 
 WP_CLI::log('— connection check ——————————————————————————————————');
 
@@ -234,6 +238,8 @@ ob_start();
 $gateway->payment_fields();
 $fields = ob_get_clean();
 check('card field renders in the classic checkout', strpos($fields, 'name="tazella_card_code"') !== false, $fields);
+check('classic checkout renders the branded Tazella panel', strpos($fields, 'tazella-gift-card-panel') !== false, $fields);
+check('classic checkout shows the Tazella wordmark', strpos($fields, 'tazella-wordmark.svg') !== false, $fields);
 
 $_POST['tazella_card_code'] = '';
 $emptyOk = $gateway->validate_fields();

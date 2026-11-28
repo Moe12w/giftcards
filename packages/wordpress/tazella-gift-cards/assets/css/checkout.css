@@ -1,0 +1,210 @@
+/**
+ * Tazella gift cards — checkout styling.
+ *
+ * Loaded on the cart, checkout and order-pay screens for both the classic
+ * shortcode checkout and the WooCommerce Blocks checkout. Everything is scoped
+ * to the Tazella panel so the rest of the theme is untouched.
+ */
+
+.tazella-gift-card-panel {
+  --tazella-ink: #1c1c1c;
+  --tazella-muted: #6b6673;
+  --tazella-border: #e3deec;
+  --tazella-lavender: #cdb8f2;
+  --tazella-lavender-strong: #a98fd6;
+  --tazella-mint: #4b9c93;
+  --tazella-surface: #ffffff;
+
+  box-sizing: border-box;
+  margin: 0.25rem 0 0.75rem;
+  padding: 1.125rem 1.25rem 1.25rem;
+  border: 1px solid var(--tazella-border);
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(205, 184, 242, 0.18), transparent 55%),
+    radial-gradient(120% 140% at 0% 100%, rgba(114, 194, 184, 0.1), transparent 55%),
+    var(--tazella-surface);
+  box-shadow:
+    0 1px 2px rgba(28, 28, 28, 0.04),
+    0 14px 32px -22px rgba(28, 28, 28, 0.45);
+  color: var(--tazella-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+}
+
+.tazella-gift-card-panel *,
+.tazella-gift-card-panel *::before,
+.tazella-gift-card-panel *::after {
+  box-sizing: border-box;
+}
+
+.tazella-gift-card-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.875rem;
+}
+
+.tazella-gift-card-wordmark {
+  display: block;
+  height: 22px;
+  width: auto;
+  max-width: 160px;
+}
+
+.tazella-gift-card-name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.tazella-gift-card-secured {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--tazella-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tazella-gift-card-secured svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+.tazella-gift-card-description {
+  margin: 0 0 0.875rem;
+  color: var(--tazella-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.tazella-gift-card-field {
+  display: block;
+  margin: 0;
+}
+
+.tazella-gift-card-label {
+  display: block;
+  margin-bottom: 0.375rem;
+  color: var(--tazella-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.tazella-gift-card-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--tazella-border);
+  border-radius: 10px;
+  background: #ffffff;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.tazella-gift-card-control:hover {
+  border-color: #d2c9e0;
+}
+
+.tazella-gift-card-control:focus-within {
+  border-color: var(--tazella-lavender-strong);
+  box-shadow: 0 0 0 3px rgba(169, 143, 214, 0.28);
+}
+
+.tazella-gift-card-control-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--tazella-lavender-strong);
+}
+
+.tazella-gift-card-panel input.tazella-gift-card-input[type="text"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--tazella-ink);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9375rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tazella-gift-card-panel input.tazella-gift-card-input[type="text"]::placeholder {
+  color: #a8a2b2;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+.tazella-gift-card-panel input.tazella-gift-card-input[type="text"]:focus {
+  border: 0;
+  outline: none;
+  box-shadow: none;
+}
+
+.tazella-gift-card-help {
+  margin: 0.4375rem 0 0;
+  color: var(--tazella-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.tazella-gift-card-error {
+  margin: 0.5rem 0 0;
+  color: #b32d2e;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* The gateway icon shown beside the method name in the classic checkout. */
+.wc_payment_method.payment_method_tazella_gift_cards > label img {
+  display: inline-block;
+  width: auto;
+  max-width: 112px;
+  max-height: 20px;
+  margin-inline-start: 0.4rem;
+  vertical-align: middle;
+}
+
+/* Blocks: the label carries the compact mark; the content reuses the panel. */
+.tazella-blocks-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tazella-blocks-mark {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  flex: none;
+}
+
+.tazella-blocks-panel {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .tazella-gift-card-panel {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .tazella-gift-card-panel-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+}
